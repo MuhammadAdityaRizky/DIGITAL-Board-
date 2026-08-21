@@ -6,6 +6,9 @@ use App\Models\Agenda;
 use App\Models\Dosen;
 use App\Models\Laboratorium;
 use App\Models\Pengumuman;
+use App\Models\Perizinan;
+use App\Models\Mahasiswa;
+use App\Models\Absensi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -23,17 +26,34 @@ class DosenController extends Controller
         $agendas = Agenda::with(['lab', 'absensi.mahasiswa.user'])
             ->where('dosen_id', $dosen->id)
             ->orderBy('tanggal', 'desc')
-            ->orderBy('waktu_masuk', 'desc')
+            ->orderBy('jam_mulai', 'desc')
             ->get();
 
         $labs = Laboratorium::all();
+        $fakultas = \App\Models\Fakultas::all();
+        $prodis = \App\Models\Prodi::with('fakultas')->get();
 
         $pengumuman = Pengumuman::with('admin')
-            ->orderBy('tanggal', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('dosen.dashboard', compact('dosen', 'agendas', 'labs', 'pengumuman'));
+        $izinPendingCount = Perizinan::where('status_persetujuan', 'pending')
+            ->whereIn('agenda_id', $agendas->pluck('id'))
+            ->count();
+
+        $today = date('Y-m-d');
+        $todayAgendas = $agendas->filter(function($ag) use ($today) {
+            return $ag->tanggal === $today;
+        });
+
+        $activeOrNextAgenda = $todayAgendas->first(function($ag) {
+            return $ag->status_agenda === 'Berlangsung' || $ag->status_agenda === 'Akan Datang';
+        });
+
+        return view('dosen.dashboard', compact(
+            'dosen', 'agendas', 'labs', 'fakultas', 'prodis', 'pengumuman', 
+            'izinPendingCount', 'todayAgendas', 'activeOrNextAgenda'
+        ));
     }
 
     public function storeAgenda(Request $request)
@@ -41,6 +61,10 @@ class DosenController extends Controller
         $request->validate([
             'lab_id' => 'required|exists:laboratorium,id',
             'judul_agenda' => 'required|string|max:150',
+            'kelas' => 'required|string|max:50',
+            'semester' => 'required|string|max:20',
+            'jurusan' => 'required|string|max:100',
+            'fakultas' => 'required|string|max:100',
             'tanggal' => 'required|date',
             'waktu_masuk' => 'required',
             'waktu_keluar' => 'required',
@@ -49,20 +73,90 @@ class DosenController extends Controller
 
         $dosen = Dosen::where('user_id', auth()->id())->first();
 
-        $token = 'TOKEN_QR_' . Str::upper(Str::random(6)) . '_' . date('Ymd', strtotime($request->tanggal));
+        // Check for time overlap
+        $overlap = Agenda::where('dosen_id', $dosen->id)
+            ->where('tanggal', $request->tanggal)
+            ->where(function ($query) use ($request) {
+                $query->where('jam_mulai', '<', $request->waktu_keluar)
+                      ->where('jam_selesai', '>', $request->waktu_masuk);
+            })
+            ->exists();
+
+        if ($overlap) {
+            return back()->withErrors(['waktu_masuk' => 'Jadwal berbenturan dengan agenda Anda yang lain pada hari dan jam tersebut.'])->withInput();
+        }
 
         Agenda::create([
             'dosen_id' => $dosen->id,
             'lab_id' => $request->lab_id,
-            'judul_agenda' => $request->judul_agenda,
+            'mata_kuliah' => $request->judul_agenda,
+            'kelas' => $request->kelas,
+            'semester' => $request->semester,
+            'jurusan' => $request->jurusan,
+            'fakultas' => $request->fakultas,
             'tanggal' => $request->tanggal,
-            'waktu_masuk' => $request->waktu_masuk,
-            'waktu_keluar' => $request->waktu_keluar,
-            'rencana_pembelajaran' => $request->rencana_pembelajaran,
-            'qr_code_token' => $token,
+            'jam_mulai' => $request->waktu_masuk,
+            'jam_selesai' => $request->waktu_keluar,
+            'status_agenda' => 'Akan Datang',
+            'catatan' => $request->rencana_pembelajaran,
         ]);
 
-        return back()->with('success', 'Agenda pembelajaran & Token QR berhasil dibuat.');
+        return back()->with('success', 'Agenda pembelajaran berhasil dibuat.');
+    }
+
+    public function updateAgenda(Request $request, $id)
+    {
+        $request->validate([
+            'lab_id' => 'required|exists:laboratorium,id',
+            'judul_agenda' => 'required|string|max:150',
+            'kelas' => 'required|string|max:50',
+            'semester' => 'required|string|max:20',
+            'jurusan' => 'required|string|max:100',
+            'fakultas' => 'required|string|max:100',
+            'tanggal' => 'required|date',
+            'waktu_masuk' => 'required',
+            'waktu_keluar' => 'required',
+            'rencana_pembelajaran' => 'required|string',
+        ]);
+
+        $agenda = Agenda::findOrFail($id);
+
+        // Check for time overlap (excluding this agenda)
+        $overlap = Agenda::where('dosen_id', $agenda->dosen_id)
+            ->where('id', '!=', $id)
+            ->where('tanggal', $request->tanggal)
+            ->where(function ($query) use ($request) {
+                $query->where('jam_mulai', '<', $request->waktu_keluar)
+                      ->where('jam_selesai', '>', $request->waktu_masuk);
+            })
+            ->exists();
+
+        if ($overlap) {
+            return back()->withErrors(['waktu_masuk' => 'Jadwal berbenturan dengan agenda Anda yang lain pada hari dan jam tersebut.'])->withInput();
+        }
+
+        $agenda->update([
+            'lab_id' => $request->lab_id,
+            'mata_kuliah' => $request->judul_agenda,
+            'kelas' => $request->kelas,
+            'semester' => $request->semester,
+            'jurusan' => $request->jurusan,
+            'fakultas' => $request->fakultas,
+            'tanggal' => $request->tanggal,
+            'jam_mulai' => $request->waktu_masuk,
+            'jam_selesai' => $request->waktu_keluar,
+            'catatan' => $request->rencana_pembelajaran,
+        ]);
+
+        return back()->with('success', 'Agenda pembelajaran berhasil diperbarui.');
+    }
+
+    public function deleteAgenda($id)
+    {
+        $agenda = Agenda::findOrFail($id);
+        $agenda->delete();
+
+        return back()->with('success', 'Agenda pembelajaran berhasil dihapus.');
     }
 
     public function updateRealisasi(Request $request, $id)
@@ -72,19 +166,291 @@ class DosenController extends Controller
         ]);
 
         $agenda = Agenda::findOrFail($id);
+        
         $agenda->update([
-            'realisasi_pembelajaran' => $request->realisasi_pembelajaran,
+            'materi_realisasi' => $request->realisasi_pembelajaran,
         ]);
 
         return back()->with('success', 'Realisasi pembelajaran berhasil diperbarui.');
     }
 
+    public function submitAttendance(Request $request)
+    {
+        $request->validate([
+            'qr_code_token' => 'required|string',
+        ]);
+
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->first();
+
+        if (!$dosen) {
+            return back()->withErrors(['qr_code_token' => 'Data dosen tidak ditemukan.']);
+        }
+
+        $token = trim($request->qr_code_token);
+        $agendaId = null;
+        if (str_starts_with($token, 'AGENDA_ID_')) {
+            $agendaId = str_replace('AGENDA_ID_', '', $token);
+        } else {
+            $agendaId = $token;
+        }
+
+        $agenda = Agenda::find($agendaId);
+
+        if (!$agenda) {
+            return back()->withErrors(['qr_code_token' => 'Token QR / ID Agenda tidak valid.']);
+        }
+
+        if ($agenda->dosen_id !== $dosen->id) {
+            return back()->withErrors(['qr_code_token' => 'Anda bukan Dosen pengajar untuk agenda ini.']);
+        }
+
+        if ($agenda->dosen_waktu_masuk) {
+            return back()->with('info', 'Anda sudah melakukan absensi masuk untuk agenda ini!');
+        }
+
+        $agenda->update([
+            'dosen_waktu_masuk' => now(),
+        ]);
+
+        return back()->with('success', 'Absensi Dosen BERHASIL dicatat untuk: ' . $agenda->mata_kuliah);
+    }
+
     public function generateNewQrToken($id)
     {
-        $agenda = Agenda::findOrFail($id);
-        $token = 'TOKEN_QR_' . Str::upper(Str::random(6)) . '_' . date('Ymd');
-        $agenda->update(['qr_code_token' => $token]);
+        return back()->with('success', 'Token QR diperbarui secara otomatis menggunakan ID Agenda.');
+    }
 
-        return back()->with('success', 'Token QR baru berhasil dibuat: ' . $token);
+    public function agenda(Request $request)
+    {
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+
+        $query = Agenda::with(['lab', 'absensi.mahasiswa.user'])
+            ->where('dosen_id', $dosen->id)
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('jam_mulai', 'desc');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('mata_kuliah', 'like', "%{$search}%")
+                  ->orWhere('catatan', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('tanggal')) {
+            $query->where('tanggal', $request->tanggal);
+        }
+
+        $agendas = $query->paginate(10)->withQueryString();
+        $labs = Laboratorium::all();
+        $fakultas = \App\Models\Fakultas::all();
+        $prodis = \App\Models\Prodi::with('fakultas')->get();
+
+        if ($request->ajax()) {
+            $html = view('dosen.agenda_partial', compact('dosen', 'agendas', 'labs', 'fakultas', 'prodis'))->render();
+            return response()->json(['html' => $html]);
+        }
+
+        return view('dosen.agenda', compact('dosen', 'agendas', 'labs', 'fakultas', 'prodis'));
+    }
+
+    public function mahasiswa(Request $request)
+    {
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+
+        $query = Mahasiswa::with(['user', 'prodi', 'perizinan.agenda.lab']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nim', 'like', "%{$search}%")
+                  ->orWhere('nama_lengkap', 'like', "%{$search}%");
+            });
+        }
+
+        $mahasiswas = $query->get()->map(function($mhs) use ($dosen) {
+            $hadirCount = Absensi::where('mahasiswa_id', $mhs->id)
+                ->whereHas('agenda', function($q) use ($dosen) {
+                    $q->where('dosen_id', $dosen->id);
+                })
+                ->where('status_kehadiran', 'Hadir')
+                ->count();
+
+            $izinCount = Absensi::where('mahasiswa_id', $mhs->id)
+                ->whereHas('agenda', function($q) use ($dosen) {
+                    $q->where('dosen_id', $dosen->id);
+                })
+                ->where('status_kehadiran', 'Izin')
+                ->count();
+
+            $alpaCount = Absensi::where('mahasiswa_id', $mhs->id)
+                ->whereHas('agenda', function($q) use ($dosen) {
+                    $q->where('dosen_id', $dosen->id);
+                })
+                ->where('status_kehadiran', 'Alpa')
+                ->count();
+
+            $mhs->hadir_count = $hadirCount;
+            $mhs->izin_count = $izinCount;
+            $mhs->alpa_count = $alpaCount;
+            $mhs->total_agenda = $hadirCount + $izinCount + $alpaCount;
+            $mhs->kehadiran_percentage = $mhs->total_agenda > 0 ? round(($mhs->hadir_count / $mhs->total_agenda) * 100, 1) : 100;
+
+            return $mhs;
+        });
+
+        return view('dosen.mahasiswa', compact('dosen', 'mahasiswas'));
+    }
+
+    public function perizinan(Request $request)
+    {
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+
+        $agendaIds = Agenda::where('dosen_id', $dosen->id)->pluck('id');
+
+        $perizinans = Perizinan::with(['mahasiswa.user', 'agenda.lab'])
+            ->whereIn('agenda_id', $agendaIds)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('dosen.perizinan', compact('dosen', 'perizinans'));
+    }
+
+    public function verifikasiIzin(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:disetujui,ditolak',
+        ]);
+
+        $perizinan = Perizinan::findOrFail($id);
+        $perizinan->update([
+            'status_persetujuan' => $request->status,
+        ]);
+
+        if ($request->status === 'disetujui') {
+            Absensi::updateOrCreate(
+                [
+                    'agenda_id' => $perizinan->agenda_id,
+                    'mahasiswa_id' => $perizinan->mahasiswa_id,
+                ],
+                [
+                    'waktu_masuk' => now(),
+                    'status_kehadiran' => $perizinan->kategori === 'Sakit' ? 'Sakit' : 'Izin',
+                ]
+            );
+        } else {
+            $absensi = Absensi::where('agenda_id', $perizinan->agenda_id)
+                ->where('mahasiswa_id', $perizinan->mahasiswa_id)
+                ->first();
+            if ($absensi) {
+                $absensi->update(['status_kehadiran' => 'Alpa']);
+            }
+        }
+
+        return back()->with('success', 'Status pengajuan izin mahasiswa berhasil diperbarui menjadi: ' . strtoupper($request->status));
+    }
+
+    public function pengaturan()
+    {
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+        return view('dosen.pengaturan', compact('dosen'));
+    }
+
+    public function updatePengaturan(Request $request)
+    {
+        $user = auth()->user();
+
+        $request->validate([
+            'password_lama' => 'required',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        if (!\Hash::check($request->password_lama, $user->password)) {
+            return back()->withErrors(['password_lama' => 'Password lama yang Anda masukkan salah.']);
+        }
+
+        $user->update([
+            'password' => \Hash::make($request->password),
+        ]);
+
+        return back()->with('success', 'Password akun berhasil diperbarui.');
+    }
+
+    public function exportKehadiran($id)
+    {
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+        $agenda = Agenda::with(['dosen', 'lab', 'absensi.mahasiswa'])->where('dosen_id', $dosen->id)->findOrFail($id);
+        
+        return view('dosen.export_agenda_kehadiran', compact('agenda'));
+    }
+
+    public function exportMahasiswa(Request $request)
+    {
+        $user = auth()->user();
+        $dosen = Dosen::with(['fakultas', 'prodi'])->where('user_id', $user->id)->firstOrFail();
+
+        $query = Mahasiswa::with(['user', 'prodi']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nim', 'like', "%{$search}%")
+                  ->orWhere('nama_lengkap', 'like', "%{$search}%");
+            });
+        }
+
+        $mahasiswas = $query->get()->map(function($mhs) use ($dosen) {
+            $hadirCount = Absensi::where('mahasiswa_id', $mhs->id)
+                ->whereHas('agenda', function($q) use ($dosen) {
+                    $q->where('dosen_id', $dosen->id);
+                })
+                ->where('status_kehadiran', 'Hadir')
+                ->count();
+
+            $izinCount = Absensi::where('mahasiswa_id', $mhs->id)
+                ->whereHas('agenda', function($q) use ($dosen) {
+                    $q->where('dosen_id', $dosen->id);
+                })
+                ->where('status_kehadiran', 'Izin')
+                ->count();
+
+            $alpaCount = Absensi::where('mahasiswa_id', $mhs->id)
+                ->whereHas('agenda', function($q) use ($dosen) {
+                    $q->where('dosen_id', $dosen->id);
+                })
+                ->where('status_kehadiran', 'Alpa')
+                ->count();
+
+            $mhs->hadir_count = $hadirCount;
+            $mhs->izin_count = $izinCount;
+            $mhs->alpa_count = $alpaCount;
+            $mhs->total_agenda = $hadirCount + $izinCount + $alpaCount;
+            
+            return $mhs;
+        });
+
+        return view('dosen.export_rekap_mahasiswa', compact('dosen', 'mahasiswas'));
+    }
+
+    public function bulkDeleteAgendas(Request $request)
+    {
+        $request->validate([
+            'agenda_ids' => 'required|array',
+            'agenda_ids.*' => 'exists:agenda,id',
+        ]);
+
+        $dosen = Dosen::where('user_id', auth()->id())->firstOrFail();
+
+        Agenda::whereIn('id', $request->agenda_ids)
+            ->where('dosen_id', $dosen->id)
+            ->delete();
+
+        return back()->with('success', 'Agenda terpilih berhasil dihapus.');
     }
 }
