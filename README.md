@@ -108,17 +108,7 @@ Buka `http://localhost:8000` pada peramban web Anda.
 
 ---
 
-## 🔑 Akun Demo (Default Credentials)
 
-Berikut adalah beberapa akun bawaan hasil *seeding* database untuk keperluan pengujian:
-
-| Role | Username / NIP / NIM | Password |
-| :--- | :--- | :--- |
-| **Admin** | `admin1` | `password` |
-| **Dosen** | `198501012010121001` | `password` |
-| **Mahasiswa** | `2023001001` | `password` |
-
----
 
 ## 📁 Struktur Direktori Penting
 
