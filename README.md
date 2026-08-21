@@ -1,58 +1,135 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Digital Board 🖥️🎓
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+[![Laravel Version](https://img.shields.io/badge/Laravel-v11.x-red.svg?style=flat-flat&logo=laravel)](https://laravel.com)
+[![PHP Version](https://img.shields.io/badge/PHP-v8.2+-blue.svg?style=flat-flat&logo=php)](https://php.net)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-## About Laravel
+**Digital Board** adalah platform manajemen presensi praktikum, penjadwalan laboratorium, dan portal informasi akademik berbasis web yang dirancang khusus untuk mahasiswa, dosen, dan administrator laboratorium. Sistem ini mengintegrasikan presensi real-time berbasis kode token/QR scan guna meminimalisir kecurangan absensi serta mempercepat rekapitulasi data akademik.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🚀 Fitur Utama Berdasarkan Peran
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Sistem **Digital Board** membagi hak akses pengguna ke dalam 3 portal utama:
 
-## Learning Laravel
+### 1. 🎓 Portal Mahasiswa (Student Portal)
+*   **Dashboard Interaktif**: Scan token/QR code kelas, pantau status check-in, dan lihat kelas aktif hari ini.
+*   **Pengajuan Izin**: Formulir digital untuk mengunggah bukti surat izin/sakit langsung dari dashboard.
+*   **Riwayat Kehadiran**: Rekapitulasi statistik kehadiran (Hadir, Izin, Alfa) lengkap dengan log filter tanggal dan mata kuliah.
+*   **Pengaturan Profil**: Mengubah nama, NIM, dan memperbarui kata sandi secara mandiri.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 2. 👨‍🏫 Portal Dosen (Lecturer Portal)
+*   **Manajemen Sesi Praktikum**: Membuat agenda kelas baru, membuka sesi presensi, serta menghasilkan token absensi secara dinamis.
+*   **Verifikasi Izin**: Meninjau dan menyetujui/menolak pengajuan perizinan mahasiswa beserta bukti fisiknya.
+*   **Rekap & Ekspor Laporan**: Mengunduh data absensi per kelas maupun per mahasiswa dalam format cetak (HTML Print) atau spreadsheet.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 3. 🛡️ Konsol Admin (Admin Console)
+*   **Bento-style Dashboard**: Visualisasi data statistik pengguna, log aktivitas presensi, monitoring laboratorium aktif, dan pengumuman terbaru.
+*   **Manajemen Pengguna**: CRUD akun admin, dosen, dan mahasiswa dengan fitur pencarian, filter, dan penghapusan relasional (*cascading delete*).
+*   **Manajemen Laboratorium**: Konfigurasi daftar ruang laboratorium beserta lokasi gedung.
+*   **Oversight Agenda & Laporan**: Pemantauan semua agenda praktikum yang sedang berjalan serta rekapitulasi absensi global.
+*   **Penerbitan Pengumuman**: Menyebarluaskan pengumuman resmi ke seluruh portal pengguna.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+---
 
-## Agentic Development
+## 🛠️ Tech Stack & Prasyarat
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Sebelum memulai instalasi, pastikan lingkungan pengembangan Anda telah memenuhi spesifikasi berikut:
 
+*   **Runtime**: PHP `>= 8.2`
+*   **Database**: MySQL / MariaDB (Direkomendasikan menggunakan Laragon atau XAMPP)
+*   **Package Manager**: Composer & Node.js (NPM)
+*   **Framework**: Laravel 11.x
+*   **Frontend**: Tailwind CSS (via Vite) & Blade Templating Engine
+
+---
+
+## 💻 Instalasi dan Konfigurasi
+
+Ikuti langkah-langkah di bawah ini untuk menjalankan proyek **Digital Board** di server lokal Anda:
+
+### 1. Clone Repositori
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/MuhammadAdityaRizky/DIGITAL-Board-.git
+cd "DIGITAL-Board-"
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Instal Dependensi PHP & JavaScript
+```bash
+# Instal dependensi backend Laravel
+composer install
 
-## Contributing
+# Instal dependensi frontend
+npm install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Konfigurasi Environment File
+Salin file konfigurasi `.env.example` menjadi `.env`:
+```bash
+cp .env.example .env
+```
+Sesuaikan konfigurasi database pada file `.env` Anda:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=digital_board
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-## Code of Conduct
+### 4. Generate Application Key
+```bash
+php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 5. Setup Database & Seeding
+Anda dapat menyiapkan database dengan dua cara:
 
-## Security Vulnerabilities
+> [!TIP]
+> **Cara A: Menjalankan Migrasi Laravel (Direkomendasikan untuk pengembangan)**
+> ```bash
+> php artisan migrate --seed
+> ```
+> 
+> **Cara B: Mengimpor SQL Dump Manual**
+> Impor file `digital_board yg baru.sql` yang tersedia di direktori root ke dalam database MySQL Anda (`digital_board`).
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 6. Jalankan Server Lokal
+Jalankan server Laravel dan compiler aset frontend (Vite) secara bersamaan:
+```bash
+# Terminal 1: Menjalankan Server Laravel
+php artisan serve
 
-## License
+# Terminal 2: Menjalankan Vite Dev Server
+npm run dev
+```
+Buka `http://localhost:8000` pada peramban web Anda.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 🔑 Akun Demo (Default Credentials)
+
+Berikut adalah beberapa akun bawaan hasil *seeding* database untuk keperluan pengujian:
+
+| Role | Username / NIP / NIM | Password |
+| :--- | :--- | :--- |
+| **Admin** | `admin1` | `password` |
+| **Dosen** | `198501012010121001` | `password` |
+| **Mahasiswa** | `2023001001` | `password` |
+
+---
+
+## 📁 Struktur Direktori Penting
+
+*   `app/Http/Controllers/` — Logika pengendali alur aplikasi (Admin, Dosen, Mahasiswa, Autentikasi).
+*   `app/Models/` — Model Eloquent yang memetakan entitas database (Mahasiswa, Dosen, Absensi, Agenda, Kelas, dll).
+*   `database/migrations/` — Definisi skema tabel database.
+*   `resources/views/` — Tampilan UI Blade (Terbagi menjadi folder admin, dosen, mahasiswa, dan layout bersama).
+*   `routes/web.php` — Definisi routing URL web.
+
+---
+
+## 📄 Lisensi
+
+Proyek ini dirilis di bawah lisensi [MIT](LICENSE). Anda bebas menggunakannya untuk tujuan belajar maupun pengembangan lebih lanjut.
