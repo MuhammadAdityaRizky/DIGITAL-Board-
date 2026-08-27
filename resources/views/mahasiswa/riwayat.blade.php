@@ -297,25 +297,28 @@
             </div>
 
         </main>
-    </div>
-
-    <!-- Bottom Navigation Bar (Mobile Only - Figma Design) -->
+    <!-- Bottom Navigation Bar (Mobile Only - Floating Center Scan QR) -->
     <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-lg">
         <a href="{{ route('mahasiswa.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
-            <i class="fa-solid fa-qrcode text-lg"></i>
-            <span class="text-[9px] font-medium">Absen</span>
+            <i class="fa-solid fa-border-all text-lg"></i>
+            <span class="text-[9px] font-medium">Dashboard</span>
         </a>
         <a href="{{ route('mahasiswa.agenda') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
-            <i class="fa-solid fa-calendar-days text-lg"></i>
+            <i class="fa-solid fa-calendar-alt text-lg"></i>
             <span class="text-[9px] font-medium">Agenda</span>
         </a>
-        <a href="{{ route('mahasiswa.riwayat') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-900 font-bold">
+        <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-800 text-white rounded-2xl shadow-xl border-4 border-white">
+            <button type="button" onclick="startMahasiswaQRScanner()" class="flex items-center justify-center w-full h-full text-white bg-teal-800 rounded-xl hover:bg-teal-900 transition-all" title="Scan QR Presensi">
+                <i class="fa-solid fa-qrcode text-2xl text-white"></i>
+            </button>
+        </div>
+        <a href="{{ route('mahasiswa.riwayat') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-bold">
             <i class="fa-solid fa-clock-rotate-left text-lg"></i>
             <span class="text-[9px] font-bold">Riwayat</span>
         </a>
         <a href="{{ route('mahasiswa.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
             <i class="fa-solid fa-gear text-lg"></i>
-            <span class="text-[9px] font-medium">Settings</span>
+            <span class="text-[9px] font-medium">Pengaturan</span>
         </a>
     </nav>
 
@@ -376,8 +379,118 @@
         }
     </script>
 
+    <!-- Hidden form for QR attendance submission -->
+    <form id="mahasiswa-absensi-form" action="{{ route('mahasiswa.absensi.submit') }}" method="POST" class="hidden">
+        @csrf
+        <input type="hidden" name="qr_code_token" id="mahasiswa-qr-token-input">
+    </form>
+
+    <!-- QR Scanner Modal -->
+    <div id="modal-qr-scanner" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100 text-slate-800">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-camera text-teal-800"></i> Pindai QR Code Presensi
+                </h3>
+                <button type="button" onclick="closeScannerModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+            
+            <div class="space-y-4">
+                <div id="qr-reader" class="overflow-hidden rounded-xl border border-slate-200" style="width: 100%; min-height: 250px;"></div>
+                <div id="qr-reader-results" class="text-center text-xs text-slate-500 font-mono"></div>
+            </div>
+            
+            <div class="flex pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeScannerModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-xs">Tutup</button>
+            </div>
         </div>
-    </main>
+    </div>
+
+    <!-- html5-qrcode script -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script>
+        let html5QrcodeScanner = null;
+
+        function startMahasiswaQRScanner() {
+            document.getElementById('modal-qr-scanner').classList.remove('hidden');
+            
+            html5QrcodeScanner = new Html5Qrcode("qr-reader");
+            const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+            
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    let cameraId = devices[0].id;
+                    for (let i = 0; i < devices.length; i++) {
+                        const label = devices[i].label.toLowerCase();
+                        if (label.includes('back') || label.includes('rear') || label.includes('lingkungan') || label.includes('belakang')) {
+                            cameraId = devices[i].id;
+                            break;
+                        }
+                    }
+                    
+                    html5QrcodeScanner.start(
+                        cameraId,
+                        config,
+                        (decodedText, decodedResult) => {
+                            let inputToken = document.getElementById('mahasiswa-qr-token-input');
+                            if (inputToken) inputToken.value = decodedText;
+                            document.getElementById('mahasiswa-absensi-form').submit();
+                            closeScannerModal();
+                        },
+                        (errorMessage) => {}
+                    ).catch((err) => {
+                        console.error("Gagal memulai kamera: ", err);
+                        alert("Gagal mengakses kamera. Detail: " + err);
+                        closeScannerModal();
+                    });
+                } else {
+                    html5QrcodeScanner.start(
+                        { facingMode: "environment" },
+                        config,
+                        (decodedText, decodedResult) => {
+                            let inputToken = document.getElementById('mahasiswa-qr-token-input');
+                            if (inputToken) inputToken.value = decodedText;
+                            document.getElementById('mahasiswa-absensi-form').submit();
+                            closeScannerModal();
+                        },
+                        (errorMessage) => {}
+                    ).catch((err) => {
+                        console.error("Gagal memulai kamera: ", err);
+                        alert("Gagal mengakses kamera. Detail: " + err);
+                        closeScannerModal();
+                    });
+                }
+            }).catch(err => {
+                console.error("Gagal getCameras: ", err);
+                html5QrcodeScanner.start(
+                    { facingMode: "environment" },
+                    config,
+                    (decodedText, decodedResult) => {
+                        let inputToken = document.getElementById('mahasiswa-qr-token-input');
+                        if (inputToken) inputToken.value = decodedText;
+                        document.getElementById('mahasiswa-absensi-form').submit();
+                        closeScannerModal();
+                    },
+                    (errorMessage) => {}
+                ).catch((err2) => {
+                    console.error("Gagal memulai kamera: ", err2);
+                    alert("Gagal mengakses kamera. Detail:\n1. " + err + "\n2. " + err2);
+                    closeScannerModal();
+                });
+            });
+        }
+
+        function closeScannerModal() {
+            document.getElementById('modal-qr-scanner').classList.add('hidden');
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    html5QrcodeScanner = null;
+                }).catch(err => {
+                    console.error("Gagal menghentikan scanner: ", err);
+                });
+            }
+        }
+    </script>
 
     <!-- AlpineJS for Simple Tabs -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
