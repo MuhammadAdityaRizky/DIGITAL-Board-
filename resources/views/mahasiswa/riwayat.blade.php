@@ -11,71 +11,75 @@
         body { font-family: 'Inter', sans-serif; background-color: #F7F9FB; }
     </style>
 </head>
-<body class="flex flex-col h-screen overflow-hidden text-slate-800 pb-16 lg:pb-0">
+<body class="flex h-screen overflow-hidden text-slate-800 pb-16 lg:pb-0">
 
-    <!-- Top Navbar -->
-    <header class="h-16 bg-teal-900 text-white flex items-center justify-between px-6 lg:px-8 flex-shrink-0 shadow-md">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center">
-                <i class="fa-solid fa-user-graduate text-white text-lg"></i>
+    <!-- Sidebar (Desktop Only) -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 h-full hidden lg:flex">
+        <div class="p-6 flex items-center gap-3 border-b border-slate-800">
+            <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                <i class="fa-solid fa-user-graduate"></i>
             </div>
             <div>
                 <h1 class="font-bold text-sm leading-tight">DIGITAL Board</h1>
-                <p class="text-[10px] font-semibold text-teal-300 tracking-wider">MAHASISWA PORTAL</p>
+                <p class="text-[10px] font-semibold tracking-wider text-teal-400">Portal Mahasiswa</p>
             </div>
         </div>
+        
+        <nav class="flex-1 px-3 py-4 space-y-1">
+            <a href="{{ route('mahasiswa.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-qrcode"></i>
+                <span class="text-xs font-semibold tracking-wide">Absensi Mandiri</span>
+            </a>
+            <a href="{{ route('mahasiswa.agenda') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span class="text-xs font-semibold tracking-wide">Agenda Kuliah</span>
+            </a>
+            <a href="{{ route('mahasiswa.riwayat') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-850 text-white rounded-xl w-full font-bold">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span class="text-xs font-semibold tracking-wide">Riwayat Kehadiran</span>
+            </a>
+            <a href="{{ route('mahasiswa.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-gear"></i>
+                <span class="text-xs font-semibold tracking-wide">Pengaturan</span>
+            </a>
+        </nav>
 
-        <div class="flex items-center gap-4">
-            <div class="text-right hidden sm:block">
-                <p class="font-bold text-xs text-white">{{ $mahasiswa->nama_lengkap }}</p>
-                <p class="text-[9px] font-semibold tracking-wider text-teal-300">NIM: {{ $mahasiswa->nim }}</p>
-            </div>
-            
-            <form action="{{ route('logout') }}" method="POST" class="inline">
+        <div class="p-6 border-t border-slate-800">
+            <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" class="w-8 h-8 rounded-lg bg-teal-950/40 text-teal-200 hover:text-white flex items-center justify-center transition-all text-xs" title="Logout">
-                    <i class="fa-solid fa-right-from-bracket"></i>
+                <button type="submit" class="flex items-center gap-3 text-rose-400 hover:text-rose-300 text-xs font-bold w-full transition">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </button>
             </form>
         </div>
-    </header>
+    </aside>
 
-    <!-- Main Workspace -->
-    <div class="flex-1 flex overflow-hidden">
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
         
-        <!-- Sidebar Navigation (Desktop) -->
-        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 h-full hidden lg:flex">
-            <div class="p-6">
-                <div class="bg-teal-50 border border-teal-100 rounded-2xl p-4 text-center">
-                    <div class="w-12 h-12 rounded-full bg-teal-800 text-white font-bold flex items-center justify-center mx-auto text-lg mb-2">
-                        {{ substr($mahasiswa->nama_lengkap, 0, 1) }}
-                    </div>
-                    <h4 class="font-bold text-slate-800 text-sm truncate">{{ $mahasiswa->nama_lengkap }}</h4>
-                    <p class="text-[10px] font-semibold tracking-wide text-slate-500 mt-0.5">{{ $mahasiswa->nim }}</p>
+        <!-- Top Navbar -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0 shadow-sm">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-teal-800 text-white rounded-lg flex lg:hidden items-center justify-center font-bold">
+                    <i class="fa-solid fa-user-graduate text-sm"></i>
+                </div>
+                <h2 class="font-bold text-base text-slate-800 lg:hidden">DIGITAL Board</h2>
+                <h2 class="font-bold text-base text-slate-800 hidden lg:block">Riwayat Kehadiran & Perizinan</h2>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <p class="font-bold text-xs text-slate-800">{{ $mahasiswa->nama_lengkap }}</p>
+                    <p class="text-[9px] font-semibold tracking-wider text-slate-500">NIM: {{ $mahasiswa->nim }} • {{ $mahasiswa->prodi->nama_prodi ?? 'Mahasiswa' }}</p>
+                </div>
+                <div class="w-9 h-9 rounded-full bg-teal-100 text-teal-850 flex items-center justify-center font-bold text-xs">
+                    {{ substr($mahasiswa->nama_lengkap, 0, 2) }}
                 </div>
             </div>
-            <nav class="flex-1 px-3 space-y-1">
-                <a href="{{ route('mahasiswa.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-100 rounded-xl w-full transition">
-                    <i class="fa-solid fa-qrcode"></i>
-                    <span class="text-xs font-semibold tracking-wide">Absensi Mandiri</span>
-                </a>
-                <a href="{{ route('mahasiswa.agenda') }}" class="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-100 rounded-xl w-full transition">
-                    <i class="fa-solid fa-calendar-days"></i>
-                    <span class="text-xs font-semibold tracking-wide">Agenda Kuliah</span>
-                </a>
-                <a href="{{ route('mahasiswa.riwayat') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-50 text-teal-900 rounded-xl w-full font-bold">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span class="text-xs font-semibold tracking-wide">Riwayat Kehadiran</span>
-                </a>
-                <a href="{{ route('mahasiswa.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-700 hover:bg-slate-100 rounded-xl w-full transition">
-                    <i class="fa-solid fa-gear"></i>
-                    <span class="text-xs font-semibold tracking-wide">Pengaturan</span>
-                </a>
-            </nav>
-        </aside>
+        </header>
 
         <!-- Content Area -->
-        <main class="flex-grow overflow-auto p-4 md:p-6 space-y-6">
+        <div class="flex-grow overflow-auto p-4 md:p-6 space-y-6">
             
             <!-- Mobile Profile Summary Card -->
             <div class="bg-teal-50 border border-teal-100 rounded-2xl p-4 flex items-center gap-4 lg:hidden shadow-sm">
@@ -371,6 +375,9 @@
             document.getElementById('modal-detail-izin').classList.remove('hidden');
         }
     </script>
+
+        </div>
+    </main>
 
     <!-- AlpineJS for Simple Tabs -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
