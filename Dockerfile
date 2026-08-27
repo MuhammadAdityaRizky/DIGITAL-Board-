@@ -1,4 +1,6 @@
-FROM php:8.2-fpm-alpine
+FROM php:8.3-fpm-alpine
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # Install system dependencies & PHP extensions
 RUN apk add --no-cache \
