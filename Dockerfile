@@ -1,11 +1,9 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.3-cli-alpine
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # Install system dependencies & PHP extensions
 RUN apk add --no-cache \
-    nginx \
-    supervisor \
     mysql-client \
     libpng-dev \
     libzip-dev \
@@ -28,52 +26,9 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader
 RUN npm install && npm run build
 
-# Configure Nginx
-RUN mkdir -p /run/nginx
-
-RUN echo 'server { \
-    listen 8080; \
-    server_name _; \
-    root /var/www/html/public; \
-    index index.php index.html; \
-    location / { \
-        try_files $uri $uri/ /index.php?$query_string; \
-    } \
-    location ~ \.php$ { \
-        fastcgi_pass 127.0.0.1:9000; \
-        fastcgi_index index.php; \
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
-        include fastcgi_params; \
-    } \
-    location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ { \
-        expires max; \
-        log_not_found off; \
-    } \
-}' > /etc/nginx/http.d/default.conf
-
-# Configure Supervisor
-RUN mkdir -p /etc/supervisor/conf.d
-
-RUN echo '[supervisord] \
-nodaemon=true \
-\
-[program:php-fpm] \
-command=php-fpm \
-autostart=true \
-autorestart=true \
-\
-[program:nginx] \
-command=nginx -g "daemon off;" \
-autostart=true \
-autorestart=true' > /etc/supervisor/conf.d/supervisord.conf
-
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public \
     && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
 EXPOSE 8080
 
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["sh", "-c", "php artisan storage:link || true && php artisan config:clear && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
