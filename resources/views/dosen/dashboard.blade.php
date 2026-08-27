@@ -234,13 +234,6 @@
                                             
                                             <!-- Actions -->
                                             <div class="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-200 w-full">
-                                                <form action="{{ route('dosen.agenda.qr', $ag->id) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 transition flex items-center gap-1.5">
-                                                        <i class="fa-solid fa-arrows-rotate"></i> Reset QR Token
-                                                    </button>
-                                                </form>
-                                                
                                                 @if(!$ag->dosen_waktu_masuk)
                                                     <button type="button" onclick="startDosenQRScanner()" class="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-850 text-xs font-bold rounded-lg border border-teal-200 transition flex items-center gap-1.5">
                                                         <i class="fa-solid fa-camera"></i> Absen QR Board
@@ -256,12 +249,6 @@
                                                     {{ $ag->absensi->count() }} Mahasiswa Hadir
                                                 </div>
                                             </div>
-                                        </div>
-                                        
-                                        <!-- QR Code Display (Desktop only inside card) -->
-                                        <div class="flex flex-col items-center p-3 bg-white border border-slate-200 rounded-xl shadow-sm hidden md:flex shrink-0">
-                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode('AGENDA_ID_' . $ag->id) }}" alt="QR" class="w-20 h-20">
-                                            <span class="text-[9px] font-mono font-bold text-slate-400 mt-1.5 truncate w-20 text-center">ID: {{ $ag->id }}</span>
                                         </div>
                                     </div>
 
