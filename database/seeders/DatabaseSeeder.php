@@ -241,8 +241,15 @@ class DatabaseSeeder extends Seeder
                 'id_fakultas' => 3,
                 'id_prodi' => 11,
                 'kelas' => 'TI-1B',
-                'created_at' => now(),
             ],
+        ]);
+
+        // 5.5. Master Kelas Akademik
+        DB::table('kelas')->insert([
+            ['id' => 1, 'nama_kelas' => 'IF-A 2023', 'created_at' => now()],
+            ['id' => 2, 'nama_kelas' => 'SI-B 2023', 'created_at' => now()],
+            ['id' => 3, 'nama_kelas' => 'TI-1A', 'created_at' => now()],
+            ['id' => 4, 'nama_kelas' => 'TI-1B', 'created_at' => now()],
         ]);
 
         // 6. Laboratorium

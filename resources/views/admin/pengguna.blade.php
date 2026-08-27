@@ -314,21 +314,9 @@
                             <label class="block text-slate-700 font-bold mb-1">Kelas</label>
                             <select name="kelas" id="user-kelas" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                                 <option value="">-- Pilih Kelas --</option>
-                                <option value="TI-1A">TI-1A</option>
-                                <option value="TI-1B">TI-1B</option>
-                                <option value="TI-1C">TI-1C</option>
-                                <option value="TI-2A">TI-2A</option>
-                                <option value="TI-2B">TI-2B</option>
-                                <option value="TI-2C">TI-2C</option>
-                                <option value="TI-3A">TI-3A</option>
-                                <option value="TI-3B">TI-3B</option>
-                                <option value="TI-3C">TI-3C</option>
-                                <option value="TI-4A">TI-4A</option>
-                                <option value="TI-4B">TI-4B</option>
-                                <option value="TI-4C">TI-4C</option>
-                                <option value="A">Kelas A</option>
-                                <option value="B">Kelas B</option>
-                                <option value="C">Kelas C</option>
+                                @foreach($kelases as $kls)
+                                    <option value="{{ $kls->nama_kelas }}">{{ $kls->nama_kelas }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div>

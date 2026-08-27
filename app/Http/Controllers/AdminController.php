@@ -68,8 +68,9 @@ class AdminController extends Controller
         $users = $query->paginate(15)->withQueryString();
         $fakultas = Fakultas::all();
         $prodis = Prodi::all();
+        $kelases = Kelas::all();
 
-        return view('admin.pengguna', compact('users', 'fakultas', 'prodis'));
+        return view('admin.pengguna', compact('users', 'fakultas', 'prodis', 'kelases'));
     }
 
     public function deleteUser($id)
