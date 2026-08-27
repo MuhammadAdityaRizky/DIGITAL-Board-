@@ -175,9 +175,9 @@
             <span class="text-[9px] font-medium">Agenda</span>
         </a>
         <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-850 text-white rounded-2xl shadow-md border-4 border-slate-50">
-            <a href="{{ route('dosen.perizinan') }}" class="flex items-center justify-center w-full h-full text-white">
-                <i class="fa-solid fa-file-signature text-lg"></i>
-            </a>
+            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white" title="Scan QR Presensi">
+                <i class="fa-solid fa-qrcode text-xl"></i>
+            </button>
         </div>
         <a href="{{ route('dosen.mahasiswa') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
             <i class="fa-solid fa-users text-lg"></i>
@@ -189,5 +189,114 @@
         </a>
     </nav>
 
+    <!-- Hidden form for QR attendance submission -->
+    <form id="dosen-absensi-form" action="{{ route('dosen.absensi.submit') }}" method="POST" class="hidden">
+        @csrf
+        <input type="hidden" name="qr_code_token" id="dosen-qr-token-input">
+    </form>
+
+    <!-- QR Scanner Modal -->
+    <div id="modal-qr-scanner" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100 text-slate-800">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-camera text-teal-800"></i> Pindai QR Code Board
+                </h3>
+                <button type="button" onclick="closeScannerModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+            
+            <div class="space-y-4">
+                <div id="qr-reader" class="overflow-hidden rounded-xl border border-slate-200" style="width: 100%; min-height: 250px;"></div>
+                <div id="qr-reader-results" class="text-center text-xs text-slate-500 font-mono"></div>
+            </div>
+            
+            <div class="flex pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeScannerModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-xs">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- html5-qrcode script -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script>
+        let html5QrcodeScanner = null;
+
+        function startDosenQRScanner() {
+            document.getElementById('modal-qr-scanner').classList.remove('hidden');
+            
+            html5QrcodeScanner = new Html5Qrcode("qr-reader");
+            const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+            
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    let cameraId = devices[0].id;
+                    for (let i = 0; i < devices.length; i++) {
+                        const label = devices[i].label.toLowerCase();
+                        if (label.includes('back') || label.includes('rear') || label.includes('lingkungan') || label.includes('belakang')) {
+                            cameraId = devices[i].id;
+                            break;
+                        }
+                    }
+                    
+                    html5QrcodeScanner.start(
+                        cameraId,
+                        config,
+                        (decodedText, decodedResult) => {
+                            document.getElementById('dosen-qr-token-input').value = decodedText;
+                            document.getElementById('dosen-absensi-form').submit();
+                            closeScannerModal();
+                        },
+                        (errorMessage) => {}
+                    ).catch((err) => {
+                        console.error("Gagal memulai kamera: ", err);
+                        alert("Gagal mengakses kamera. Detail: " + err);
+                        closeScannerModal();
+                    });
+                } else {
+                    html5QrcodeScanner.start(
+                        { facingMode: "environment" },
+                        config,
+                        (decodedText, decodedResult) => {
+                            document.getElementById('dosen-qr-token-input').value = decodedText;
+                            document.getElementById('dosen-absensi-form').submit();
+                            closeScannerModal();
+                        },
+                        (errorMessage) => {}
+                    ).catch((err) => {
+                        console.error("Gagal memulai kamera: ", err);
+                        alert("Gagal mengakses kamera. Detail: " + err);
+                        closeScannerModal();
+                    });
+                }
+            }).catch(err => {
+                console.error("Gagal getCameras: ", err);
+                html5QrcodeScanner.start(
+                    { facingMode: "environment" },
+                    config,
+                    (decodedText, decodedResult) => {
+                        document.getElementById('dosen-qr-token-input').value = decodedText;
+                        document.getElementById('dosen-absensi-form').submit();
+                        closeScannerModal();
+                    },
+                    (errorMessage) => {}
+                ).catch((err2) => {
+                    console.error("Gagal memulai kamera: ", err2);
+                    alert("Gagal mengakses kamera. Detail:\n1. " + err + "\n2. " + err2);
+                    closeScannerModal();
+                });
+            });
+        }
+
+        function closeScannerModal() {
+            document.getElementById('modal-qr-scanner').classList.add('hidden');
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    html5QrcodeScanner = null;
+                }).catch(err => {
+                    console.error("Gagal menghentikan scanner: ", err);
+                });
+            }
+        }
+    </script>
 </body>
 </html>
