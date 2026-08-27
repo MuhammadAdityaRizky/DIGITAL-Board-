@@ -159,6 +159,22 @@
                         </div>
                     </form>
                 </div>
+
+                <!-- Logout Card (Mobile & Desktop) -->
+                <div class="bg-rose-50 border border-rose-200 shadow-sm rounded-xl p-6">
+                    <h3 class="font-bold text-sm text-rose-800 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-right-from-bracket text-rose-600"></i> Keluar dari Akun
+                    </h3>
+                    <p class="text-xs text-rose-700/80 mb-4">
+                        Tekan tombol di bawah ini untuk mengakhiri sesi login Dosen pada perangkat ini secara aman.
+                    </p>
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-right-from-bracket"></i> Logout Sekarang
+                        </button>
+                    </form>
+                </div>
             </div>
             
         </div>
