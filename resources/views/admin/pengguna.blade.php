@@ -190,7 +190,7 @@
                                                     <span class="text-[10px] text-slate-455 block mt-0.5">
                                                         <i class="fa-solid fa-graduation-cap"></i> Kelas: {{ $u->mahasiswa->kelas }}
                                                         @if($u->mahasiswa->semester)
-                                                            • Sem: {{ $u->mahasiswa->semester }}
+                                                            • Semester: {{ $u->mahasiswa->semester }}
                                                         @endif
                                                     </span>
                                                 @elseif($u->role === 'dosen' && $u->dosen && $u->dosen->kompetensi)

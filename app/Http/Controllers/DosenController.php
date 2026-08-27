@@ -9,6 +9,9 @@ use App\Models\Pengumuman;
 use App\Models\Perizinan;
 use App\Models\Mahasiswa;
 use App\Models\Absensi;
+use App\Models\Fakultas;
+use App\Models\Prodi;
+use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -261,7 +264,7 @@ class DosenController extends Controller
         $user = auth()->user();
         $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
 
-        $query = Mahasiswa::with(['user', 'prodi', 'perizinan.agenda.lab']);
+        $query = Mahasiswa::with(['user', 'fakultas', 'prodi', 'perizinan.agenda.lab']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -269,6 +272,22 @@ class DosenController extends Controller
                 $q->where('nim', 'like', "%{$search}%")
                   ->orWhere('nama_lengkap', 'like', "%{$search}%");
             });
+        }
+
+        if ($request->filled('fakultas_id')) {
+            $query->where('id_fakultas', $request->fakultas_id);
+        }
+
+        if ($request->filled('prodi_id')) {
+            $query->where('id_prodi', $request->prodi_id);
+        }
+
+        if ($request->filled('kelas')) {
+            $query->where('kelas', $request->kelas);
+        }
+
+        if ($request->filled('semester')) {
+            $query->where('semester', $request->semester);
         }
 
         $mahasiswas = $query->get()->map(function($mhs) use ($dosen) {
@@ -302,7 +321,12 @@ class DosenController extends Controller
             return $mhs;
         });
 
-        return view('dosen.mahasiswa', compact('dosen', 'mahasiswas'));
+        $fakultas = Fakultas::all();
+        $prodis = Prodi::with('fakultas')->get();
+        $kelases = Kelas::all();
+        $semesters = [1, 2, 3, 4, 5, 6, 7, 8];
+
+        return view('dosen.mahasiswa', compact('dosen', 'mahasiswas', 'fakultas', 'prodis', 'kelases', 'semesters'));
     }
 
     public function perizinan(Request $request)
@@ -395,7 +419,7 @@ class DosenController extends Controller
         $user = auth()->user();
         $dosen = Dosen::with(['fakultas', 'prodi'])->where('user_id', $user->id)->firstOrFail();
 
-        $query = Mahasiswa::with(['user', 'prodi']);
+        $query = Mahasiswa::with(['user', 'fakultas', 'prodi']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -403,6 +427,22 @@ class DosenController extends Controller
                 $q->where('nim', 'like', "%{$search}%")
                   ->orWhere('nama_lengkap', 'like', "%{$search}%");
             });
+        }
+
+        if ($request->filled('fakultas_id')) {
+            $query->where('id_fakultas', $request->fakultas_id);
+        }
+
+        if ($request->filled('prodi_id')) {
+            $query->where('id_prodi', $request->prodi_id);
+        }
+
+        if ($request->filled('kelas')) {
+            $query->where('kelas', $request->kelas);
+        }
+
+        if ($request->filled('semester')) {
+            $query->where('semester', $request->semester);
         }
 
         $mahasiswas = $query->get()->map(function($mhs) use ($dosen) {

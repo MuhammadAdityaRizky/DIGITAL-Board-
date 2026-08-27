@@ -50,20 +50,34 @@
             <td class="label">Fakultas:</td>
             <td class="value">{{ $dosen->fakultas->nama_fakultas ?? 'Teknik & Ilmu Komputer' }}</td>
         </tr>
+        @if(request()->hasAny(['search', 'fakultas_id', 'prodi_id', 'kelas', 'semester']))
+            <tr>
+                <td class="label">Filter Aktif:</td>
+                <td class="value" colspan="3">
+                    @if(request('search')) [Pencarian: "{{ request('search') }}"] @endif
+                    @if(request('fakultas_id')) [Fakultas ID: {{ request('fakultas_id') }}] @endif
+                    @if(request('prodi_id')) [Prodi ID: {{ request('prodi_id') }}] @endif
+                    @if(request('kelas')) [Kelas: {{ request('kelas') }}] @endif
+                    @if(request('semester')) [Semester: {{ request('semester') }}] @endif
+                </td>
+            </tr>
+        @endif
     </table>
 
     <table class="data-table">
         <thead>
             <tr>
-                <th style="width: 40px;">No</th>
+                <th style="width: 30px;">No</th>
                 <th>Nama Lengkap</th>
-                <th style="width: 120px;">NIM</th>
-                <th style="width: 150px;">Program Studi</th>
-                <th style="width: 60px;" class="center">Hadir</th>
-                <th style="width: 60px;" class="center">Izin</th>
-                <th style="width: 60px;" class="center">Alpa</th>
-                <th style="width: 90px;" class="center">Total Sesi</th>
-                <th style="width: 100px;" class="center">Persentase</th>
+                <th style="width: 100px;">NIM</th>
+                <th style="width: 160px;">Fakultas & Prodi</th>
+                <th style="width: 80px;" class="center">Kelas</th>
+                <th style="width: 55px;" class="center">Semester</th>
+                <th style="width: 50px;" class="center">Hadir</th>
+                <th style="width: 50px;" class="center">Izin</th>
+                <th style="width: 50px;" class="center">Alpa</th>
+                <th style="width: 65px;" class="center">Total Sesi</th>
+                <th style="width: 75px;" class="center">Persentase</th>
             </tr>
         </thead>
         <tbody>
@@ -73,7 +87,12 @@
                         <td class="center">{{ $idx + 1 }}</td>
                         <td><strong>{{ $mhs->nama_lengkap }}</strong></td>
                         <td>{{ $mhs->nim }}</td>
-                        <td>{{ $mhs->prodi->nama_prodi ?? '-' }} ({{ $mhs->kelas }})</td>
+                        <td>
+                            <strong style="color: #0d9488;">{{ $mhs->fakultas->nama_fakultas ?? 'FTIK' }}</strong><br>
+                            <span style="color: #555; font-size: 11px;">{{ $mhs->prodi->nama_prodi ?? '-' }}</span>
+                        </td>
+                        <td class="center"><strong>{{ $mhs->kelas ?? '-' }}</strong></td>
+                        <td class="center">{{ $mhs->semester ?? '-' }}</td>
                         <td class="center">{{ $mhs->hadir_count }}</td>
                         <td class="center">{{ $mhs->izin_count }}</td>
                         <td class="center">{{ $mhs->alpa_count }}</td>
@@ -83,7 +102,7 @@
                 @endforeach
             @else
                 <tr>
-                    <td colspan="9" style="text-align: center; color: #666; font-style: italic; padding: 20px;">Belum ada data mahasiswa terdaftar.</td>
+                    <td colspan="11" style="text-align: center; color: #666; font-style: italic; padding: 20px;">Belum ada data mahasiswa terdaftar.</td>
                 </tr>
             @endif
         </tbody>

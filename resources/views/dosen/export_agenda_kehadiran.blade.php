@@ -49,7 +49,7 @@
             <td class="value">{{ date('d M Y', strtotime($agenda->tanggal)) }}</td>
         </tr>
         <tr>
-            <td class="label">Kelas / Sem:</td>
+            <td class="label">Kelas / Semester:</td>
             <td class="value">{{ $agenda->kelas }} / Semester {{ $agenda->semester ?? '1' }}</td>
             <td class="label">Waktu:</td>
             <td class="value">{{ substr($agenda->jam_mulai,0,5) }} - {{ substr($agenda->jam_selesai,0,5) }} WIB</td>

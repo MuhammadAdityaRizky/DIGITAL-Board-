@@ -46,10 +46,6 @@
                 <i class="fa-solid fa-file-invoice"></i>
                 <span class="text-xs">Laporan Absensi</span>
             </a>
-            <a href="{{ route('admin.pengumuman') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-850 text-white rounded-xl w-full font-bold">
-                <i class="fa-solid fa-bullhorn"></i>
-                <span class="text-xs">Pengumuman Lab</span>
-            </a>
             <a href="{{ route('admin.statistik') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
                 <i class="fa-solid fa-chart-pie"></i>
                 <span class="text-xs">Statistik Kehadiran</span>
@@ -57,6 +53,10 @@
             <a href="{{ route('admin.akademik') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
                 <i class="fa-solid fa-graduation-cap"></i>
                 <span class="text-xs">Data Akademik</span>
+            </a>
+            <a href="{{ route('admin.pengumuman') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-850 text-white rounded-xl w-full font-bold">
+                <i class="fa-solid fa-bullhorn"></i>
+                <span class="text-xs">Pengumuman Lab</span>
             </a>
         </nav>
 

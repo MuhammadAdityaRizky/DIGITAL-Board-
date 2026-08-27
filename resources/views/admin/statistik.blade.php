@@ -117,7 +117,7 @@
                                         <div class="min-w-0 flex-1">
                                             <span class="font-bold text-slate-800 block truncate">{{ $ag->mata_kuliah }}</span>
                                             <span class="text-[10px] text-slate-500 font-semibold block mt-0.5">
-                                                Kelas: {{ $ag->kelas ?: '-' }} • Sem: {{ $ag->semester ?: '1' }}
+                                                Kelas: {{ $ag->kelas ?: '-' }} • Semester: {{ $ag->semester ?: '1' }}
                                             </span>
                                             <span class="text-[9px] text-slate-400 font-mono block">
                                                 {{ date('d M Y', strtotime($ag->tanggal)) }} | {{ substr($ag->jam_mulai,0,5) }} WIB

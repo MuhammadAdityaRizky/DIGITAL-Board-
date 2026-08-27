@@ -85,22 +85,101 @@
         <!-- Content Area -->
         <div class="flex-grow overflow-auto p-4 md:p-6 space-y-6">
             
-            <!-- Search & Info Bar -->
-            <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm w-full md:w-96 text-xs">
-                    <form action="{{ route('dosen.mahasiswa') }}" method="GET" class="relative">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Nama Mahasiswa atau NIM..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
-                    </form>
-                </div>
-                
-                <div class="bg-teal-50 border border-teal-150 rounded-2xl px-5 py-4 flex items-center gap-3 w-full md:w-auto">
-                    <i class="fa-solid fa-graduation-cap text-teal-850 text-xl"></i>
-                    <div>
-                        <h4 class="font-bold text-xs text-teal-900 leading-tight">Total Mahasiswa</h4>
-                        <p class="text-[10px] font-medium text-teal-700 mt-0.5">{{ $mahasiswas->count() }} orang mahasiswa terdaftar</p>
+            <!-- Filter & Summary Bar -->
+            <div class="space-y-4">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                        <i class="fa-solid fa-users text-teal-700"></i>
+                        <span>Menampilkan <strong class="text-slate-800 font-bold">{{ $mahasiswas->count() }}</strong> mahasiswa</span>
+                        @if(request()->hasAny(['search', 'fakultas_id', 'prodi_id', 'kelas', 'semester']))
+                            <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md text-[10px] font-bold">Filter Aktif</span>
+                        @endif
+                    </div>
+                    
+                    <div class="bg-teal-50 border border-teal-150 rounded-xl px-4 py-2 flex items-center gap-2.5 text-xs">
+                        <i class="fa-solid fa-graduation-cap text-teal-850 text-base"></i>
+                        <div>
+                            <span class="font-bold text-teal-900 leading-none">Total Mahasiswa:</span>
+                            <span class="font-semibold text-teal-700 ml-1">{{ $mahasiswas->count() }} Orang</span>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Filter Box Card -->
+                <form action="{{ route('dosen.mahasiswa') }}" method="GET" id="filterForm" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4 text-xs">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2 font-bold text-slate-800">
+                            <i class="fa-solid fa-filter text-teal-700"></i>
+                            <span>Filter Data Rekapitulasi</span>
+                        </div>
+                        @if(request()->hasAny(['search', 'fakultas_id', 'prodi_id', 'kelas', 'semester']))
+                            <a href="{{ route('dosen.mahasiswa') }}" class="text-[11px] font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1 transition">
+                                <i class="fa-solid fa-rotate-left"></i> Reset Filter
+                            </a>
+                        @endif
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                        <!-- Search Input -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Pencarian</label>
+                            <div class="relative">
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama / NIM..." class="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                            </div>
+                        </div>
+
+                        <!-- Fakultas Select -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Fakultas</label>
+                            <select name="fakultas_id" id="filter_fakultas" onchange="filterProdiByFakultas()" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs text-slate-700">
+                                <option value="">Semua Fakultas</option>
+                                @foreach($fakultas as $fak)
+                                    <option value="{{ $fak->id }}" {{ request('fakultas_id') == $fak->id ? 'selected' : '' }}>{{ $fak->nama_fakultas }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Prodi Select -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Program Studi</label>
+                            <select name="prodi_id" id="filter_prodi" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs text-slate-700">
+                                <option value="">Semua Prodi</option>
+                                @foreach($prodis as $prd)
+                                    <option value="{{ $prd->id }}" data-fakultas="{{ $prd->fakultas_id }}" {{ request('prodi_id') == $prd->id ? 'selected' : '' }}>{{ $prd->nama_prodi }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Kelas Select -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Kelas</label>
+                            <select name="kelas" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs text-slate-700">
+                                <option value="">Semua Kelas</option>
+                                @foreach($kelases as $kls)
+                                    <option value="{{ $kls->nama_kelas }}" {{ request('kelas') == $kls->nama_kelas ? 'selected' : '' }}>{{ $kls->nama_kelas }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Semester Select -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Semester</label>
+                            <select name="semester" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs text-slate-700">
+                                <option value="">Semua Semester</option>
+                                @foreach($semesters as $sem)
+                                    <option value="{{ $sem }}" {{ request('semester') == $sem ? 'selected' : '' }}>Semester {{ $sem }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                        <button type="submit" class="px-4 py-2 bg-teal-850 hover:bg-teal-900 text-white rounded-xl font-bold transition flex items-center gap-1.5 shadow-sm text-xs">
+                            <i class="fa-solid fa-filter"></i> Terapkan Filter
+                        </button>
+                    </div>
+                </form>
             </div>
 
             <!-- Students List (Table/Grid) -->
@@ -123,6 +202,7 @@
                                         <th class="p-4">No</th>
                                         <th class="p-4">Nama Mahasiswa</th>
                                         <th class="p-4">NIM</th>
+                                        <th class="p-4">Kelas & Semester</th>
                                         <th class="p-4 text-center">Hadir</th>
                                         <th class="p-4 text-center">Izin</th>
                                         <th class="p-4 text-center">Alpa</th>
@@ -137,9 +217,19 @@
                                             <td class="p-4 font-mono text-slate-400">{{ $idx + 1 }}</td>
                                             <td class="p-4">
                                                 <span class="font-bold text-slate-800 text-sm block">{{ $mhs->nama_lengkap }}</span>
-                                                <span class="text-[10px] text-slate-450">{{ $mhs->prodi->nama_prodi ?? 'Informatika' }}</span>
+                                                <div class="text-[10px] text-slate-500 font-medium flex items-center gap-1 flex-wrap mt-0.5">
+                                                    <span class="text-teal-700 font-semibold">{{ $mhs->fakultas->nama_fakultas ?? 'Fakultas Teknik & Ilmu Komputer' }}</span>
+                                                    <span class="text-slate-300">•</span>
+                                                    <span>{{ $mhs->prodi->nama_prodi ?? 'Informatika' }}</span>
+                                                </div>
                                             </td>
                                             <td class="p-4 font-mono text-teal-800 font-bold">{{ $mhs->nim }}</td>
+                                            <td class="p-4">
+                                                <span class="px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-200 font-bold rounded-lg text-xs inline-block">
+                                                    {{ $mhs->kelas ?? '-' }}
+                                                </span>
+                                                <span class="text-[10px] text-slate-450 block mt-0.5 font-medium">Semester {{ $mhs->semester ?? '1' }}</span>
+                                            </td>
                                             <td class="p-4 text-center">
                                                 <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold rounded-lg">
                                                     {{ $mhs->hadir_count }}
@@ -297,6 +387,29 @@
                 modal.classList.toggle('hidden');
             }
         }
+
+        function filterProdiByFakultas() {
+            const fakultasSelect = document.getElementById('filter_fakultas');
+            const prodiSelect = document.getElementById('filter_prodi');
+            if (!fakultasSelect || !prodiSelect) return;
+            
+            const selectedFakultas = fakultasSelect.value;
+            
+            Array.from(prodiSelect.options).forEach(option => {
+                if (!option.value) return;
+                const optionFakultas = option.getAttribute('data-fakultas');
+                if (!selectedFakultas || optionFakultas === selectedFakultas) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                    if (option.selected) {
+                        prodiSelect.value = '';
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', filterProdiByFakultas);
     </script>
 </body>
 </html>
