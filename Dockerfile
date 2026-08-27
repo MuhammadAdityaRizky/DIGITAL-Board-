@@ -45,6 +45,10 @@ RUN echo 'server { \
         fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
         include fastcgi_params; \
     } \
+    location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ { \
+        expires max; \
+        log_not_found off; \
+    } \
 }' > /etc/nginx/http.d/default.conf
 
 # Configure Supervisor
@@ -63,8 +67,8 @@ command=nginx -g "daemon off;" \
 autostart=true \
 autorestart=true' > /etc/supervisor/conf.d/supervisord.conf
 
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public \
+    && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
 EXPOSE 8080
 
