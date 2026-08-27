@@ -722,7 +722,7 @@
 
     <!-- Bottom Navigation Bar (Mobile Only - Floating Scan QR) -->
     <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-lg">
-        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-850 font-bold">
+        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-bold">
             <i class="fa-solid fa-border-all text-lg"></i>
             <span class="text-[9px] font-bold">Dashboard</span>
         </a>
@@ -730,9 +730,9 @@
             <i class="fa-solid fa-calendar-alt text-lg"></i>
             <span class="text-[9px] font-medium">Agenda</span>
         </a>
-        <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-850 text-white rounded-2xl shadow-md border-4 border-slate-50">
-            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white" title="Scan QR Presensi">
-                <i class="fa-solid fa-qrcode text-xl"></i>
+        <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-800 text-white rounded-2xl shadow-xl border-4 border-white">
+            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white bg-teal-800 rounded-xl hover:bg-teal-900 transition-all" title="Scan QR Presensi">
+                <i class="fa-solid fa-qrcode text-2xl text-white"></i>
             </button>
         </div>
         <a href="{{ route('dosen.mahasiswa') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">

@@ -174,16 +174,16 @@
             <i class="fa-solid fa-calendar-alt text-lg"></i>
             <span class="text-[9px] font-medium">Agenda</span>
         </a>
-        <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-850 text-white rounded-2xl shadow-md border-4 border-slate-50">
-            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white" title="Scan QR Presensi">
-                <i class="fa-solid fa-qrcode text-xl"></i>
+        <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-800 text-white rounded-2xl shadow-xl border-4 border-white">
+            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white bg-teal-800 rounded-xl hover:bg-teal-900 transition-all" title="Scan QR Presensi">
+                <i class="fa-solid fa-qrcode text-2xl text-white"></i>
             </button>
         </div>
         <a href="{{ route('dosen.mahasiswa') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
             <i class="fa-solid fa-users text-lg"></i>
             <span class="text-[9px] font-medium">Mahasiswa</span>
         </a>
-        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-850 font-bold">
+        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-bold">
             <i class="fa-solid fa-gear text-lg"></i>
             <span class="text-[9px] font-bold">Pengaturan</span>
         </a>
