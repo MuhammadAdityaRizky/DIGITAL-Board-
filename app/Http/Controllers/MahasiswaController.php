@@ -67,7 +67,15 @@ class MahasiswaController extends Controller
         ]);
 
         $user = auth()->user();
-        $mahasiswa = Mahasiswa::where('user_id', $user->id)->first();
+        $mahasiswa = Mahasiswa::with(['prodi', 'fakultas'])->where('user_id', $user->id)->first();
+
+        if (!$mahasiswa) {
+            return back()->withErrors(['qr_code_token' => 'Data profil Mahasiswa tidak ditemukan.']);
+        }
+
+        if (!$mahasiswa->id_fakultas || !$mahasiswa->id_prodi || !$mahasiswa->kelas || !$mahasiswa->fakultas || !$mahasiswa->prodi) {
+            return back()->withErrors(['qr_code_token' => 'Profil Anda belum lengkap (Fakultas, Prodi, atau Kelas). Silakan lengkapi profil di Pengaturan terlebih dahulu.']);
+        }
 
         $token = trim($request->qr_code_token);
         $agendaId = null;
@@ -82,6 +90,29 @@ class MahasiswaController extends Controller
         if (!$agenda) {
             return back()->withErrors(['qr_code_token' => 'Token QR / ID Agenda tidak valid.']);
         }
+
+        // 1. Validasi Fakultas (Fakultas harus sama)
+        if ($agenda->fakultas && $agenda->fakultas !== $mahasiswa->fakultas->nama_fakultas) {
+            return back()->withErrors([
+                'qr_code_token' => 'Absensi ditolak! Agenda ini ditujukan untuk ' . $agenda->fakultas . ', bukan Fakultas Anda (' . $mahasiswa->fakultas->nama_fakultas . ').'
+            ]);
+        }
+
+        // 2. Validasi Program Studi / Jurusan (Jurusan harus sama)
+        if ($agenda->jurusan && $agenda->jurusan !== $mahasiswa->prodi->nama_prodi) {
+            return back()->withErrors([
+                'qr_code_token' => 'Absensi ditolak! Agenda ini ditujukan untuk Program Studi ' . $agenda->jurusan . ', bukan Program Studi Anda (' . $mahasiswa->prodi->nama_prodi . ').'
+            ]);
+        }
+
+        // 3. Validasi Kelas (Kelas harus sama)
+        if ($agenda->kelas && $agenda->kelas !== $mahasiswa->kelas) {
+            return back()->withErrors([
+                'qr_code_token' => 'Absensi ditolak! Agenda ini ditujukan untuk Kelas ' . $agenda->kelas . ', bukan Kelas Anda (' . $mahasiswa->kelas . ').'
+            ]);
+        }
+
+        // Catatan: Semester sengaja tidak dibatasi (menerima presensi meskipun semester mahasiswa berbeda).
 
         $existing = Absensi::where('agenda_id', $agenda->id)
             ->where('mahasiswa_id', $mahasiswa->id)
