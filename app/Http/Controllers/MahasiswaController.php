@@ -77,19 +77,12 @@ class MahasiswaController extends Controller
             return back()->withErrors(['qr_code_token' => 'Profil Anda belum lengkap (Fakultas, Prodi, atau Kelas). Silakan lengkapi profil di Pengaturan terlebih dahulu.']);
         }
 
-        $token = trim($request->qr_code_token);
-        $agendaId = null;
-        if (str_starts_with($token, 'AGENDA_ID_')) {
-            $agendaId = str_replace('AGENDA_ID_', '', $token);
-        } else {
-            $agendaId = $token;
+        $tokenValidation = Agenda::validateDynamicQrToken($request->qr_code_token);
+        if (!$tokenValidation['agenda']) {
+            return back()->withErrors(['qr_code_token' => $tokenValidation['error']]);
         }
 
-        $agenda = Agenda::find($agendaId);
-
-        if (!$agenda) {
-            return back()->withErrors(['qr_code_token' => 'Token QR / ID Agenda tidak valid.']);
-        }
+        $agenda = $tokenValidation['agenda'];
 
         // 1. Validasi Fakultas (Fakultas harus sama)
         if ($agenda->fakultas && $agenda->fakultas !== $mahasiswa->fakultas->nama_fakultas) {

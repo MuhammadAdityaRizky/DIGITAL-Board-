@@ -190,19 +190,12 @@ class DosenController extends Controller
             return back()->withErrors(['qr_code_token' => 'Data dosen tidak ditemukan.']);
         }
 
-        $token = trim($request->qr_code_token);
-        $agendaId = null;
-        if (str_starts_with($token, 'AGENDA_ID_')) {
-            $agendaId = str_replace('AGENDA_ID_', '', $token);
-        } else {
-            $agendaId = $token;
+        $tokenValidation = Agenda::validateDynamicQrToken($request->qr_code_token);
+        if (!$tokenValidation['agenda']) {
+            return back()->withErrors(['qr_code_token' => $tokenValidation['error']]);
         }
 
-        $agenda = Agenda::find($agendaId);
-
-        if (!$agenda) {
-            return back()->withErrors(['qr_code_token' => 'Token QR / ID Agenda tidak valid.']);
-        }
+        $agenda = $tokenValidation['agenda'];
 
         if ($agenda->dosen_id !== $dosen->id) {
             return back()->withErrors(['qr_code_token' => 'Anda bukan Dosen pengajar untuk agenda ini.']);

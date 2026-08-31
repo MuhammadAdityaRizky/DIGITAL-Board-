@@ -203,37 +203,48 @@
         <!-- Scan QR Card -->
         <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col">
             <!-- Banner Header -->
-            <div class="bg-[#ebf3fc] px-5 py-3.5 border-b border-slate-150 flex items-center gap-2.5">
-                <i class="fa-solid fa-qrcode text-[#0c4ea6] text-base"></i>
-                <span class="font-extrabold text-[#0c4ea6] text-xs uppercase tracking-wider">Scan untuk Akses Presensi</span>
+            <div class="bg-[#ebf3fc] px-5 py-3.5 border-b border-slate-150 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-qrcode text-[#0c4ea6] text-base"></i>
+                    <span class="font-extrabold text-[#0c4ea6] text-xs uppercase tracking-wider">Scan untuk Akses Presensi</span>
+                </div>
+                @if($activeAgenda && $activeAgenda->id)
+                    <span class="inline-flex items-center gap-1 text-[9px] font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full border border-emerald-200 uppercase">
+                        <i class="fa-solid fa-arrows-rotate text-[8px] animate-spin"></i> 5s Dynamic
+                    </span>
+                @endif
             </div>
 
             <!-- QR Center Body -->
             <div class="flex-grow flex flex-col items-center justify-center py-8 px-6 bg-white">
-                <!-- Scanner Bracket Container -->
-                <div class="relative p-6 bg-white shrink-0 shadow-sm border border-slate-100 rounded-xl mb-3">
-                    <!-- Corners -->
-                    <div class="absolute top-0 left-0 w-5 h-5 border-t-4 border-l-4 border-[#00b87c] rounded-tl-sm"></div>
-                    <div class="absolute top-0 right-0 w-5 h-5 border-t-4 border-r-4 border-[#00b87c] rounded-tr-sm"></div>
-                    <div class="absolute bottom-0 left-0 w-5 h-5 border-b-4 border-l-4 border-[#00b87c] rounded-bl-sm"></div>
-                    <div class="absolute bottom-0 right-0 w-5 h-5 border-b-4 border-r-4 border-[#00b87c] rounded-br-sm"></div>
+                @php
+                    $dynamicQrToken = ($activeAgenda && $activeAgenda->id) 
+                        ? \App\Models\Agenda::generateDynamicQrToken($activeAgenda->id) 
+                        : 'NO_ACTIVE_AGENDA';
+                @endphp
 
+                <!-- QR Container -->
+                <div class="p-3 bg-white shrink-0 mb-3 flex items-center justify-center">
                     <!-- QR Image -->
                     @if($activeAgenda && $activeAgenda->id)
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ urlencode('AGENDA_ID_' . $activeAgenda->id) }}" 
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data={{ urlencode($dynamicQrToken) }}" 
                              alt="Presensi QR Code" 
-                             class="w-36 h-36 md:w-44 md:h-44 object-contain">
+                             class="w-48 h-48 md:w-56 md:h-56 object-contain drop-shadow-sm">
                     @else
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=NO_ACTIVE_AGENDA" 
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=NO_ACTIVE_AGENDA" 
                              alt="Fallback QR Code" 
-                             class="w-36 h-36 md:w-44 md:h-44 object-contain opacity-35">
+                             class="w-48 h-48 md:w-56 md:h-56 object-contain opacity-35">
                     @endif
                 </div>
 
                 @if($activeAgenda && $activeAgenda->id)
                     <div class="text-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 w-full max-w-[240px] shadow-sm">
-                        <p class="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider">KODE PRESENSI MANUAL</p>
-                        <p class="text-xs font-extrabold text-teal-850 tracking-widest font-mono mt-0.5 select-all">AGENDA_ID_{{ $activeAgenda->id }}</p>
+                        <p class="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider">KODE PRESENSI MANUAL (5s REFRESH)</p>
+                        <p class="text-xs font-extrabold text-teal-850 tracking-widest font-mono mt-0.5 select-all">{{ $dynamicQrToken }}</p>
+                    </div>
+                    <div class="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                        <i class="fa-solid fa-shield-halved text-[9px]"></i>
+                        <span>Dynamic Anti-Cheat (Refresh 5dtk)</span>
                     </div>
                 @endif
             </div>
