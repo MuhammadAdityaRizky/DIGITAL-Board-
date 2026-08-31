@@ -117,9 +117,14 @@
                     </form>
                 </div>
 
-                <button onclick="toggleModal('modal-lab')" class="w-full sm:w-auto px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
-                    <i class="fa-solid fa-plus"></i> Tambah Lab Baru
-                </button>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="toggleModal('modal-import-lab')" class="w-full sm:w-auto px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-import"></i> Import Lab
+                    </button>
+                    <button onclick="toggleModal('modal-lab')" class="w-full sm:w-auto px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-plus"></i> Tambah Lab Baru
+                    </button>
+                </div>
             </div>
 
             <!-- Labs Grid -->
@@ -215,6 +220,27 @@
             <span>Absen</span>
         </a>
     </nav>
+
+    <!-- MODAL IMPORT LAB -->
+    <div id="modal-import-lab" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-sm w-full p-6 space-y-5">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                <h3 class="font-bold text-base text-slate-800">Import Data Laboratorium</h3>
+                <button onclick="toggleModal('modal-import-lab')" class="text-slate-400 hover:text-slate-660 text-lg">&times;</button>
+            </div>
+            <form action="{{ route('admin.laboratorium.import') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+                @csrf
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
+                    <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                </div>
+                <div class="flex gap-2.5 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="toggleModal('modal-import-lab')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg font-bold shadow-sm">Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
         function toggleModal(modalId) {

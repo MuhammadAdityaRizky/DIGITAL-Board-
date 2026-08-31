@@ -144,9 +144,14 @@
             <div x-show="activeTab === 'fakultas'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-6 max-w-4xl">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-sm text-slate-800">Daftar Fakultas</h3>
-                    <button onclick="openModal('modal-add-fakultas')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                        <i class="fa-solid fa-plus"></i> Tambah Fakultas
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openModal('modal-import-fakultas')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-import"></i> Import Fakultas
+                        </button>
+                        <button onclick="openModal('modal-add-fakultas')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Tambah Fakultas
+                        </button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto rounded-xl border border-slate-100 text-xs">
                     <table class="w-full text-left text-slate-650">
@@ -183,9 +188,14 @@
             <div x-show="activeTab === 'prodi'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-6 max-w-4xl" style="display: none;">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-sm text-slate-800">Daftar Program Studi / Jurusan</h3>
-                    <button onclick="openModal('modal-add-prodi')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                        <i class="fa-solid fa-plus"></i> Tambah Prodi
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openModal('modal-import-prodi')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-import"></i> Import Prodi
+                        </button>
+                        <button onclick="openModal('modal-add-prodi')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Tambah Prodi
+                        </button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto rounded-xl border border-slate-100 text-xs">
                     <table class="w-full text-left text-slate-650">
@@ -224,39 +234,59 @@
             <div x-show="activeTab === 'kelas'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-6 max-w-4xl" style="display: none;">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-sm text-slate-800">Daftar Kelas</h3>
-                    <button onclick="openModal('modal-add-kelas')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                        <i class="fa-solid fa-plus"></i> Tambah Kelas
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="submitBulkDeleteKelas()" id="btn-bulk-delete-kelas" class="px-3.5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm hidden">
+                            <i class="fa-solid fa-trash-can"></i> Hapus Terpilih (<span id="bulk-delete-count-kelas">0</span>)
+                        </button>
+                        <button onclick="openModal('modal-import-kelas')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-import"></i> Import Kelas
+                        </button>
+                        <button onclick="openModal('modal-add-kelas')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Tambah Kelas
+                        </button>
+                    </div>
                 </div>
-                <div class="overflow-x-auto rounded-xl border border-slate-100 text-xs">
-                    <table class="w-full text-left text-slate-650">
-                        <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                            <tr>
-                                <th class="p-3">ID</th>
-                                <th class="p-3">Nama Kelas</th>
-                                <th class="p-3 text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @foreach($kelas as $k)
-                            <tr class="hover:bg-slate-50/50 transition">
-                                <td class="p-3 font-mono text-slate-400">{{ $k->id }}</td>
-                                <td class="p-3 font-bold text-slate-800 text-sm">{{ $k->nama_kelas }}</td>
-                                <td class="p-3 text-center">
-                                    <div class="flex items-center justify-center gap-3">
-                                        <button onclick="openEditKelasModal({{ $k->id }}, '{{ addslashes($k->nama_kelas) }}')" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-                                        <form action="{{ route('admin.akademik.kelas.delete', $k->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus Kelas ini?')" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Hapus</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                <form id="bulk-delete-kelas-form" action="{{ route('admin.akademik.kelas.bulk-delete') }}" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <div class="overflow-x-auto rounded-xl border border-slate-100 text-xs">
+                        <table class="w-full text-left text-slate-650">
+                            <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                                <tr>
+                                    <th class="p-3 w-10 text-center">
+                                        <input type="checkbox" id="select-all-kelas" class="rounded border-slate-300 text-teal-700 focus:ring-teal-700">
+                                    </th>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">Nama Kelas</th>
+                                    <th class="p-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @foreach($kelas as $k)
+                                <tr class="hover:bg-slate-50/50 transition">
+                                    <td class="p-3 text-center">
+                                        <input type="checkbox" name="ids[]" value="{{ $k->id }}" class="checkbox-kelas rounded border-slate-300 text-teal-700 focus:ring-teal-700">
+                                    </td>
+                                    <td class="p-3 font-mono text-slate-400">{{ $k->id }}</td>
+                                    <td class="p-3 font-bold text-slate-800 text-sm">{{ $k->nama_kelas }}</td>
+                                    <td class="p-3 text-center">
+                                        <div class="flex items-center justify-center gap-3">
+                                            <button type="button" onclick="openEditKelasModal({{ $k->id }}, '{{ addslashes($k->nama_kelas) }}')" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                                            <button type="button" onclick="if(confirm('Apakah Anda yakin ingin menghapus Kelas ini?')) { document.getElementById('delete-kelas-{{ $k->id }}').submit(); }" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+                @foreach($kelas as $k)
+                <form id="delete-kelas-{{ $k->id }}" action="{{ route('admin.akademik.kelas.delete', $k->id) }}" method="POST" class="hidden">
+                    @csrf
+                    @method('DELETE')
+                </form>
+                @endforeach
             </div>
 
         </div>
@@ -390,6 +420,61 @@
         </div>
     </div>
 
+    <!-- IMPORT MODALS -->
+    <!-- FAKULTAS -->
+    <div id="modal-import-fakultas" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden text-xs">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl border border-slate-100">
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center text-slate-850">
+                <h4 class="font-bold text-sm">Import Fakultas</h4>
+                <button type="button" onclick="closeModal('modal-import-fakultas')" class="text-slate-400 hover:text-slate-650 text-base"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form action="{{ route('admin.akademik.fakultas.import') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
+                    <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold transition shadow-sm">Import Data</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PRODI -->
+    <div id="modal-import-prodi" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden text-xs">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl border border-slate-100">
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center text-slate-850">
+                <h4 class="font-bold text-sm">Import Program Studi</h4>
+                <button type="button" onclick="closeModal('modal-import-prodi')" class="text-slate-400 hover:text-slate-650 text-base"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form action="{{ route('admin.akademik.prodi.import') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
+                    <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold transition shadow-sm">Import Data</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- KELAS -->
+    <div id="modal-import-kelas" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden text-xs">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl border border-slate-100">
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center text-slate-850">
+                <h4 class="font-bold text-sm">Import Kelas</h4>
+                <button type="button" onclick="closeModal('modal-import-kelas')" class="text-slate-400 hover:text-slate-650 text-base"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form action="{{ route('admin.akademik.kelas.import') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
+                    <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold transition shadow-sm">Import Data</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         function openModal(id) {
             document.getElementById(id).classList.remove('hidden');
@@ -415,6 +500,45 @@
             document.getElementById('edit-kelas-form').action = `{{ url('admin/akademik/kelas') }}/${id}`;
             document.getElementById('edit-kelas-nama').value = nama;
             openModal('modal-edit-kelas');
+        }
+
+        // Bulk Delete Logic for Kelas
+        const selectAllKelas = document.getElementById('select-all-kelas');
+        const checkboxKelas = document.querySelectorAll('.checkbox-kelas');
+        const btnBulkDeleteKelas = document.getElementById('btn-bulk-delete-kelas');
+        const bulkDeleteCountKelas = document.getElementById('bulk-delete-count-kelas');
+
+        function updateBulkDeleteBtnKelas() {
+            const checkedCount = document.querySelectorAll('.checkbox-kelas:checked').length;
+            if(checkedCount > 0) {
+                btnBulkDeleteKelas.classList.remove('hidden');
+                bulkDeleteCountKelas.innerText = checkedCount;
+            } else {
+                btnBulkDeleteKelas.classList.add('hidden');
+            }
+        }
+
+        if(selectAllKelas) {
+            selectAllKelas.addEventListener('change', function() {
+                checkboxKelas.forEach(cb => {
+                    cb.checked = selectAllKelas.checked;
+                });
+                updateBulkDeleteBtnKelas();
+            });
+        }
+
+        checkboxKelas.forEach(cb => {
+            cb.addEventListener('change', function() {
+                const allChecked = document.querySelectorAll('.checkbox-kelas:checked').length === checkboxKelas.length;
+                selectAllKelas.checked = allChecked;
+                updateBulkDeleteBtnKelas();
+            });
+        });
+
+        function submitBulkDeleteKelas() {
+            if(confirm('Apakah Anda yakin ingin menghapus kelas yang dipilih?')) {
+                document.getElementById('bulk-delete-kelas-form').submit();
+            }
         }
     </script>
 

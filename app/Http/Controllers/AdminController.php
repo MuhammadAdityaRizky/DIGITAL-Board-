@@ -15,6 +15,14 @@ use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\MahasiswaImport;
+use App\Imports\DosenImport;
+use App\Imports\AgendaImport;
+use App\Imports\LaboratoriumImport;
+use App\Imports\FakultasImport;
+use App\Imports\ProdiImport;
+use App\Imports\KelasImport;
 
 class AdminController extends Controller
 {
@@ -80,6 +88,25 @@ class AdminController extends Controller
         }
         User::destroy($id);
         return back()->with('success', 'Akun pengguna berhasil dihapus.');
+    }
+
+    public function bulkDeleteUsers(Request $request)
+    {
+        $ids = $request->ids;
+        if (!$ids || empty($ids)) {
+            return back()->withErrors(['msg' => 'Tidak ada pengguna yang dipilih untuk dihapus.']);
+        }
+
+        // Prevent admin from deleting themselves in bulk
+        $ids = array_diff($ids, [auth()->id()]);
+
+        if (empty($ids)) {
+            return back()->withErrors(['msg' => 'Anda tidak dapat menghapus akun Anda sendiri.']);
+        }
+
+        User::whereIn('id', $ids)->delete();
+        
+        return back()->with('success', count($ids) . ' akun pengguna berhasil dihapus.');
     }
 
     public function laboratorium(Request $request)
@@ -577,5 +604,113 @@ class AdminController extends Controller
     {
         Kelas::destroy($id);
         return back()->with('success', 'Kelas berhasil dihapus.');
+    }
+
+    public function bulkDeleteKelas(Request $request)
+    {
+        $ids = $request->ids;
+        if (!$ids || empty($ids)) {
+            return back()->withErrors(['msg' => 'Tidak ada kelas yang dipilih untuk dihapus.']);
+        }
+        Kelas::whereIn('id', $ids)->delete();
+        return back()->with('success', count($ids) . ' kelas berhasil dihapus.');
+    }
+
+    public function importMahasiswa(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            Excel::import(new MahasiswaImport, $request->file('file_excel'));
+            return back()->with('success', 'Data Mahasiswa berhasil diimpor.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+        }
+    }
+
+    public function importDosen(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            Excel::import(new DosenImport, $request->file('file_excel'));
+            return back()->with('success', 'Data Dosen berhasil diimpor.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+        }
+    }
+
+    public function importAgenda(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            Excel::import(new AgendaImport, $request->file('file_excel'));
+            return back()->with('success', 'Data Agenda berhasil diimpor.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+        }
+    }
+
+    public function importLaboratorium(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            Excel::import(new LaboratoriumImport, $request->file('file_excel'));
+            return back()->with('success', 'Data Laboratorium berhasil diimpor.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+        }
+    }
+
+    public function importFakultas(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            Excel::import(new FakultasImport, $request->file('file_excel'));
+            return back()->with('success', 'Data Fakultas berhasil diimpor.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+        }
+    }
+
+    public function importProdi(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            Excel::import(new ProdiImport, $request->file('file_excel'));
+            return back()->with('success', 'Data Program Studi berhasil diimpor.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+        }
+    }
+
+    public function importKelas(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            Excel::import(new KelasImport, $request->file('file_excel'));
+            return back()->with('success', 'Data Kelas berhasil diimpor.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+        }
     }
 }

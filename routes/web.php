@@ -34,11 +34,18 @@ Route::middleware('auth')->group(function () {
         // New Admin sub-pages
         Route::get('/pengguna', [AdminController::class, 'pengguna'])->name('pengguna');
         Route::delete('/pengguna/{id}', [AdminController::class, 'deleteUser'])->name('pengguna.delete');
+        Route::post('/pengguna/import/mahasiswa', [AdminController::class, 'importMahasiswa'])->name('pengguna.import-mahasiswa');
+        Route::post('/pengguna/import/dosen', [AdminController::class, 'importDosen'])->name('pengguna.import-dosen');
+        
         Route::get('/laboratorium', [AdminController::class, 'laboratorium'])->name('laboratorium');
         Route::put('/laboratorium/{id}', [AdminController::class, 'updateLab'])->name('laboratorium.update');
         Route::delete('/laboratorium/{id}', [AdminController::class, 'deleteLab'])->name('laboratorium.delete');
+        Route::post('/laboratorium/import', [AdminController::class, 'importLaboratorium'])->name('laboratorium.import');
+        
         Route::get('/agenda', [AdminController::class, 'agenda'])->name('agenda');
         Route::delete('/agenda/{id}', [AdminController::class, 'deleteAgenda'])->name('agenda.delete');
+        Route::post('/agenda/import', [AdminController::class, 'importAgenda'])->name('agenda.import');
+        
         Route::get('/absensi', [AdminController::class, 'absensi'])->name('absensi');
         Route::get('/absensi/export', [AdminController::class, 'exportAbsensi'])->name('absensi.export');
         Route::get('/pengumuman', [AdminController::class, 'pengumuman'])->name('pengumuman');
@@ -49,12 +56,18 @@ Route::middleware('auth')->group(function () {
         Route::post('/akademik/fakultas', [AdminController::class, 'storeFakultas'])->name('akademik.fakultas.store');
         Route::put('/akademik/fakultas/{id}', [AdminController::class, 'updateFakultas'])->name('akademik.fakultas.update');
         Route::delete('/akademik/fakultas/{id}', [AdminController::class, 'deleteFakultas'])->name('akademik.fakultas.delete');
+        Route::post('/akademik/fakultas/import', [AdminController::class, 'importFakultas'])->name('akademik.fakultas.import');
+        
         Route::post('/akademik/prodi', [AdminController::class, 'storeProdi'])->name('akademik.prodi.store');
         Route::put('/akademik/prodi/{id}', [AdminController::class, 'updateProdi'])->name('akademik.prodi.update');
         Route::delete('/akademik/prodi/{id}', [AdminController::class, 'deleteProdi'])->name('akademik.prodi.delete');
+        Route::post('/akademik/prodi/import', [AdminController::class, 'importProdi'])->name('akademik.prodi.import');
+        
         Route::post('/akademik/kelas', [AdminController::class, 'storeKelas'])->name('akademik.kelas.store');
         Route::put('/akademik/kelas/{id}', [AdminController::class, 'updateKelas'])->name('akademik.kelas.update');
+        Route::delete('/akademik/kelas/bulk-delete', [AdminController::class, 'bulkDeleteKelas'])->name('akademik.kelas.bulk-delete');
         Route::delete('/akademik/kelas/{id}', [AdminController::class, 'deleteKelas'])->name('akademik.kelas.delete');
+        Route::post('/akademik/kelas/import', [AdminController::class, 'importKelas'])->name('akademik.kelas.import');
     });
 
     // Dosen Routes
