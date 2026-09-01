@@ -892,11 +892,13 @@
                         }
                     });
 
-                    const submitBtn = form.querySelector('button[type="submit"]');
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
-                    }
+                    setTimeout(() => {
+                        const submitBtn = form.querySelector('button[type="submit"]');
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                        }
+                    }, 10);
                 });
             });
         });
