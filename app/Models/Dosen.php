@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Dosen extends Model
 {
+    use LogsActivity;
+
     protected $table = 'dosen';
     public $timestamps = false;
     protected $guarded = [];
@@ -29,4 +34,14 @@ class Dosen extends Model
     {
         return $this->belongsTo(Prodi::class, 'id_prodi');
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logUnguarded()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
+
 }
+

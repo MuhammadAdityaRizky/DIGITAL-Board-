@@ -64,6 +64,13 @@
                 <span class="text-xs">Pengumuman Lab</span>
             </a>
             
+                        <a href="{{ route('admin.aktivitas') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span class="text-xs">Riwayat Aktivitas</span>
+            </a>
+
+            
+            
             <div class="pt-2 border-t border-slate-800/80 my-2"></div>
             <a href="{{ route('board') }}" target="_blank" class="flex items-center justify-between px-4 py-2.5 bg-[#0c4ea6]/40 hover:bg-[#0c4ea6] text-teal-300 hover:text-white rounded-xl w-full transition font-bold border border-teal-500/20">
                 <div class="flex items-center gap-3">
@@ -508,3 +515,7 @@
     </script>
 </body>
 </html>
+
+
+
+

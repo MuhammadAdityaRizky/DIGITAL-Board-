@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/absensi', [AdminController::class, 'absensi'])->name('absensi');
         Route::get('/absensi/export', [AdminController::class, 'exportAbsensi'])->name('absensi.export');
         Route::get('/pengumuman', [AdminController::class, 'pengumuman'])->name('pengumuman');
+        Route::get('/aktivitas', [AdminController::class, 'aktivitas'])->name('aktivitas');
         
         // Statistik & Akademik
         Route::get('/statistik', [AdminController::class, 'statistik'])->name('statistik');
@@ -99,6 +100,7 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/riwayat', [MahasiswaController::class, 'riwayat'])->name('riwayat');
         Route::get('/agenda', [MahasiswaController::class, 'agenda'])->name('agenda');
+        Route::get('/pengumuman', [MahasiswaController::class, 'pengumuman'])->name('pengumuman');
         Route::get('/pengaturan', [MahasiswaController::class, 'pengaturan'])->name('pengaturan');
         Route::put('/pengaturan', [MahasiswaController::class, 'updatePengaturan'])->name('pengaturan.update');
     });

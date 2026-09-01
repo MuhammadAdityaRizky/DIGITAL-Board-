@@ -39,6 +39,10 @@
                 <i class="fa-solid fa-clock-rotate-left"></i>
                 <span class="text-xs font-semibold tracking-wide">Riwayat Kehadiran</span>
             </a>
+            <a href="{{ route('mahasiswa.pengumuman') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-bullhorn"></i>
+                <span class="text-xs font-semibold tracking-wide">Pengumuman</span>
+            </a>
             <a href="{{ route('mahasiswa.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
                 <i class="fa-solid fa-gear"></i>
                 <span class="text-xs font-semibold tracking-wide">Pengaturan</span>
@@ -127,23 +131,7 @@
                 </div>
             @endif
 
-            <!-- Announcement Section -->
-            @if(isset($pengumuman) && $pengumuman->count() > 0)
-                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-4 items-start shadow-sm">
-                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0 text-lg">
-                        <i class="fa-solid fa-bullhorn"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-amber-800 text-sm flex items-center gap-2">
-                            PENGUMUMAN RESMI
-                            <span class="text-[10px] font-normal text-amber-600/80">({{ date('d M Y', strtotime($pengumuman->first()->created_at)) }})</span>
-                        </h3>
-                        <p class="text-amber-700 text-sm mt-1">
-                            <strong>{{ $pengumuman->first()->judul }}:</strong> {{ $pengumuman->first()->isi_pengumuman }}
-                        </p>
-                    </div>
-                </div>
-            @endif
+
 
             <!-- Hidden form for attendance submission -->
             <form action="{{ route('mahasiswa.absensi.submit') }}" method="POST" id="mahasiswa-absensi-form" class="hidden">
@@ -573,7 +561,11 @@
         </div>
         <a href="{{ route('mahasiswa.riwayat') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
             <i class="fa-solid fa-clock-rotate-left text-lg"></i>
-            <span class="text-[9px] font-medium">Riwayat</span>
+            <span class="text-[9px] font-semibold">Riwayat</span>
+        </a>
+        <a href="{{ route('mahasiswa.pengumuman') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
+            <i class="fa-solid fa-bullhorn text-lg"></i>
+            <span class="text-[9px] font-semibold">Pengumuman</span>
         </a>
         <a href="{{ route('mahasiswa.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
             <i class="fa-solid fa-gear text-lg"></i>
