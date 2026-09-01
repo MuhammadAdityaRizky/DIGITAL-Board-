@@ -11,11 +11,22 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 
 class MahasiswaImport implements ToModel, WithHeadingRow
 {
-    public function model(array $row)
+    public function model(array $row): \Illuminate\Database\Eloquent\Model|array|null
     {
         // Pastikan NIM ada dan belum terdaftar di tabel mahasiswa
         if (!isset($row['nim'])) {
             return null;
+        }
+
+        $id_prodi = $row['id_prodi'] ?? null;
+        $id_fakultas = $row['id_fakultas'] ?? null;
+
+        if (empty($id_prodi) && !empty($row['prodi'])) {
+            $prodi = \App\Models\Prodi::where('nama_prodi', 'like', '%' . $row['prodi'] . '%')->first();
+            if ($prodi) {
+                $id_prodi = $prodi->id;
+                $id_fakultas = $prodi->fakultas_id;
+            }
         }
 
         $existingMahasiswa = Mahasiswa::where('nim', $row['nim'])->first();
@@ -32,14 +43,49 @@ class MahasiswaImport implements ToModel, WithHeadingRow
             ]
         );
 
+        $semester = $row['semester'] ?? null;
+
+        if (empty($semester) && !empty($row['angkatan'])) {
+            $angkatan = (int) $row['angkatan'];
+            $currentYear = (int) date('Y');
+            $currentMonth = (int) date('m');
+            
+            // Rumus semester: ((Tahun Sekarang - Tahun Masuk) * 2) + (Bulan >= 8 ? 1 : 0)
+            // Semester ganjil biasanya dimulai bulan Agustus/September
+            $semester = (($currentYear - $angkatan) * 2) + ($currentMonth >= 8 ? 1 : 0);
+            
+            // Jika hasil kurang dari 1, set minimal 1
+            if ($semester < 1) {
+                $semester = 1;
+            }
+        }
+
+        $programKuliah = 'Reguler';
+        $kelasAsli = 'A';
+        
+        if (isset($row['kelas'])) {
+            $k = strtoupper(trim($row['kelas']));
+            if (str_contains($k, 'KARYAWAN')) {
+                $programKuliah = 'Karyawan';
+            } elseif (str_contains($k, 'REGULER')) {
+                $programKuliah = 'Reguler';
+            }
+            
+            // Extract class letter if exists (e.g., Karyawan A)
+            if (preg_match('/(A|B|C|D)/', $k, $matches)) {
+                $kelasAsli = $matches[1];
+            }
+        }
+
         return new Mahasiswa([
             'user_id' => $user->id,
             'nim' => $row['nim'],
             'nama_lengkap' => $row['nama_lengkap'] ?? $row['nama'],
-            'id_fakultas' => $row['id_fakultas'] ?? null,
-            'id_prodi' => $row['id_prodi'] ?? null,
-            'kelas' => $row['kelas'] ?? '-',
-            'semester' => $row['semester'] ?? '1',
+            'id_fakultas' => $id_fakultas,
+            'id_prodi' => $id_prodi,
+            'program_kuliah' => $programKuliah,
+            'kelas' => $kelasAsli,
+            'semester' => $semester ?? 1,
         ]);
     }
 }

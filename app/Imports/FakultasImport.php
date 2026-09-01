@@ -8,7 +8,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class FakultasImport implements ToModel, WithHeadingRow
 {
-    public function model(array $row)
+    public function model(array $row): \Illuminate\Database\Eloquent\Model|array|null
     {
         if (!isset($row['nama_fakultas'])) {
             return null;

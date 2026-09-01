@@ -14,4 +14,9 @@ class Pengumuman extends Model
     {
         return $this->belongsTo(User::class, 'admin_id');
     }
+
+    public function laboratoriums()
+    {
+        return $this->belongsToMany(Laboratorium::class, 'laboratorium_pengumuman', 'pengumuman_id', 'laboratorium_id')->withTimestamps();
+    }
 }

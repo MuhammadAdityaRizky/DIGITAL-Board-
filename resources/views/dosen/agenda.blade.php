@@ -275,7 +275,14 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-slate-700 font-bold mb-1">Program</label>
+                            <select name="program_kuliah" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                <option value="Reguler">Reguler</option>
+                                <option value="Karyawan">Karyawan</option>
+                            </select>
+                        </div>
                         <div>
                             <label class="block text-slate-700 font-bold mb-1">Kelas</label>
                             <select name="kelas" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
@@ -289,15 +296,15 @@
                         <div>
                             <label class="block text-slate-700 font-bold mb-1">Semester</label>
                             <select name="semester" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                                <option value="" disabled selected>Pilih Semester</option>
-                                <option value="1">Semester 1</option>
-                                <option value="2">Semester 2</option>
-                                <option value="3">Semester 3</option>
-                                <option value="4">Semester 4</option>
-                                <option value="5">Semester 5</option>
-                                <option value="6">Semester 6</option>
-                                <option value="7">Semester 7</option>
-                                <option value="8">Semester 8</option>
+                                <option value="" disabled selected>Pilih</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
                             </select>
                         </div>
                     </div>

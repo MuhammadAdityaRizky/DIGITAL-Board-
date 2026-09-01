@@ -1,0 +1,1 @@
+<?php require 'vendor/autoload.php'; $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load('data excel/Format Absensi Perkuliahan_VIII Reg_Angkatan 2022.xlsx'); $worksheet = $spreadsheet->getActiveSheet(); $rows = $worksheet->toArray(); print_r(array_slice($rows, 8, 5));

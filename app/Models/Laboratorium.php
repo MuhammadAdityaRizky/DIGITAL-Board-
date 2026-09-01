@@ -14,4 +14,9 @@ class Laboratorium extends Model
     {
         return $this->hasMany(Agenda::class, 'lab_id');
     }
+
+    public function pengumumans()
+    {
+        return $this->belongsToMany(Pengumuman::class, 'laboratorium_pengumuman', 'laboratorium_id', 'pengumuman_id')->withTimestamps();
+    }
 }

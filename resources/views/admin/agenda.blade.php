@@ -169,7 +169,7 @@
                                             </td>
                                             <td class="p-4">
                                                 <span class="font-bold text-teal-900 block text-sm">{{ $ag->mata_kuliah }}</span>
-                                                <span class="text-[10px] text-slate-450 uppercase font-semibold">Status: {{ $ag->status_agenda }} | Kelas: {{ $ag->kelas ?: '-' }}</span>
+                                                <span class="text-[10px] text-slate-450 uppercase font-semibold">Status: {{ $ag->status_agenda }} | Program: {{ $ag->program_kuliah ?? 'Reguler' }} | Kelas: {{ $ag->kelas ?: '-' }}</span>
                                             </td>
                                             <td class="p-4 font-semibold text-slate-700">{{ $ag->dosen->nama }}</td>
                                             <td class="p-4 text-slate-500">

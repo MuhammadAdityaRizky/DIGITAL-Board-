@@ -179,7 +179,7 @@
                             <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
                                 <tr>
                                     <th class="p-4">Nama Lengkap</th>
-                                    <th class="p-4">Username / Identitas</th>
+                                    <th class="p-4">NIM / NIP</th>
                                     <th class="p-4">Role</th>
                                     <th class="p-4 text-center">Aksi</th>
                                 </tr>
@@ -195,13 +195,18 @@
                                                 <span class="font-bold text-slate-800 text-sm block">{{ $nama }}</span>
                                                 @if($u->role === 'mahasiswa' && $u->mahasiswa && $u->mahasiswa->kelas)
                                                     <span class="text-[10px] text-slate-455 block mt-0.5">
-                                                        <i class="fa-solid fa-graduation-cap"></i> Kelas: {{ $u->mahasiswa->kelas }}
+                                                        <i class="fa-solid fa-graduation-cap"></i> Program: {{ $u->mahasiswa->program_kuliah ?? 'Reguler' }} • Kelas: {{ $u->mahasiswa->kelas }}
                                                         @if($u->mahasiswa->semester)
                                                             • Semester: {{ $u->mahasiswa->semester }}
                                                         @endif
                                                     </span>
-                                                @elseif($u->role === 'dosen' && $u->dosen && $u->dosen->kompetensi)
+                                                @elseif($u->role === 'dosen' && $u->dosen)
+                                                    @if($u->dosen->jabatan)
+                                                    <span class="text-[10px] text-slate-500 block mt-1"><i class="fa-solid fa-briefcase text-blue-500 mr-1"></i>Jabatan: <span class="font-medium text-slate-600">{{ $u->dosen->jabatan }}</span></span>
+                                                    @endif
+                                                    @if($u->dosen->kompetensi)
                                                     <span class="text-[10px] text-slate-500 block mt-1"><i class="fa-solid fa-star text-amber-500 mr-1"></i>Kompetensi: <span class="font-medium text-slate-600">{{ $u->dosen->kompetensi }}</span></span>
+                                                    @endif
                                                 @endif
                                             </td>
                                             <td class="p-4 font-mono text-teal-850 font-semibold">
@@ -280,7 +285,7 @@
                     <input type="text" id="user-nama_lengkap" name="nama_lengkap" required placeholder="Masukkan nama..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                 </div>
                 <div>
-                    <label class="block text-slate-700 font-bold mb-1">Username / NIP / NIM</label>
+                    <label class="block text-slate-700 font-bold mb-1">NIM / NIP / Username</label>
                     <input type="text" id="user-username_or_nim_nip" name="username_or_nim_nip" required placeholder="Masukkan identitas login..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                 </div>
                 <div id="password-container">
@@ -316,7 +321,14 @@
                             </select>
                         </div>
                     </div>
-                    <div id="class-container" class="grid grid-cols-2 gap-4">
+                    <div id="class-container" class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-slate-700 font-bold mb-1">Program Kuliah</label>
+                            <select name="program_kuliah" id="user-program_kuliah" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                <option value="Reguler">Reguler</option>
+                                <option value="Karyawan">Karyawan</option>
+                            </select>
+                        </div>
                         <div>
                             <label class="block text-slate-700 font-bold mb-1">Kelas</label>
                             <select name="kelas" id="user-kelas" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
@@ -338,6 +350,10 @@
                     </div>
                 </div>
                 <div id="dosen-fields" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Jabatan (Opsional)</label>
+                        <input type="text" name="jabatan" id="user-jabatan" placeholder="Contoh: Ketua Program Studi, Dosen..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                    </div>
                     <div>
                         <label class="block text-slate-700 font-bold mb-1">Kompetensi Dosen</label>
                         <textarea name="kompetensi" id="user-kompetensi" rows="3" placeholder="Contoh: Pemrograman Web, Jaringan, Data Mining..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none"></textarea>
@@ -362,7 +378,7 @@
                 @csrf
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
-                    <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <input type="file" name="file_excel[]" accept=".xlsx, .xls, .csv" required multiple class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
                 </div>
                 <div class="flex gap-2.5 pt-3 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modal-import-dosen')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
@@ -383,7 +399,7 @@
                 @csrf
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
-                    <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <input type="file" name="file_excel[]" accept=".xlsx, .xls, .csv" required multiple class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
                 </div>
                 <div class="flex gap-2.5 pt-3 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modal-import-mahasiswa')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
@@ -496,8 +512,10 @@
             document.getElementById('user-role').value = "dosen";
             document.getElementById('user-fakultas').value = "";
             document.getElementById('user-jurusan').value = "";
+            document.getElementById('user-program_kuliah').value = "Reguler";
             document.getElementById('user-kelas').value = "";
             document.getElementById('user-semester').value = "";
+            document.getElementById('user-jabatan').value = "";
             document.getElementById('user-kompetensi').value = "";
             
             updateRequiredFields("dosen");
@@ -527,7 +545,9 @@
             let id_fakultas = "";
             let id_prodi = "";
             let kelas = "";
+            let program_kuliah = "Reguler";
             let semester = "";
+            let jabatan = "";
             let kompetensi = "";
             
             updateRequiredFields(user.role);
@@ -537,6 +557,7 @@
                     nama = user.dosen.nama;
                     id_fakultas = user.dosen.id_fakultas || "";
                     id_prodi = user.dosen.id_prodi || "";
+                    jabatan = user.dosen.jabatan || "";
                     kompetensi = user.dosen.kompetensi || "";
                 }
                 document.getElementById('mahasiswa-fields').classList.remove('hidden');
@@ -548,6 +569,7 @@
                     id_fakultas = user.mahasiswa.id_fakultas || "";
                     id_prodi = user.mahasiswa.id_prodi || "";
                     kelas = user.mahasiswa.kelas || "";
+                    program_kuliah = user.mahasiswa.program_kuliah || "Reguler";
                     semester = user.mahasiswa.semester || "";
                 }
                 document.getElementById('mahasiswa-fields').classList.remove('hidden');
@@ -562,7 +584,9 @@
             document.getElementById('user-fakultas').value = id_fakultas;
             filterProdis(id_fakultas, id_prodi);
             document.getElementById('user-kelas').value = kelas;
+            document.getElementById('user-program_kuliah').value = program_kuliah;
             document.getElementById('user-semester').value = semester;
+            document.getElementById('user-jabatan').value = jabatan;
             document.getElementById('user-kompetensi').value = kompetensi;
             
             toggleModal('modal-user');

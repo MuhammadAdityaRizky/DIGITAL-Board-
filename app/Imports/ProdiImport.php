@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class ProdiImport implements ToModel, WithHeadingRow
 {
-    public function model(array $row)
+    public function model(array $row): \Illuminate\Database\Eloquent\Model|array|null
     {
         if (!isset($row['nama_prodi'])) {
             return null;

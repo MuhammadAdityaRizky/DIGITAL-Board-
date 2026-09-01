@@ -180,7 +180,29 @@
                 </div>
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">Isi Detail Pengumuman</label>
-                    <textarea id="ann-isi_pengumuman" name="isi_pengumuman" rows="5" required placeholder="Tulis rincian penjelasan pengumuman di sini..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none"></textarea>
+                    <textarea id="ann-isi_pengumuman" name="isi_pengumuman" rows="4" required placeholder="Tulis rincian penjelasan pengumuman di sini..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Mulai Berlaku (Opsional)</label>
+                        <input type="datetime-local" id="ann-tanggal_mulai" name="tanggal_mulai" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Berakhir Pada (Opsional)</label>
+                        <input type="datetime-local" id="ann-tanggal_selesai" name="tanggal_selesai" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Tampilkan di Ruangan</label>
+                    <div class="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-slate-50">
+                        @foreach($laboratoriums as $lab)
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="laboratorium_ids[]" value="{{ $lab->id }}" class="rounded text-teal-600 focus:ring-teal-500">
+                            <span>{{ $lab->nama_lab }}</span>
+                        </label>
+                        @endforeach
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-1">* Kosongkan jika pengumuman ini tidak ditujukan ke ruang spesifik (atau tampil di semua).</p>
                 </div>
                 <div class="flex gap-2.5 pt-3 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modal-announcement')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
@@ -245,7 +267,12 @@
                 document.getElementById('ann-method').value = "POST";
                 document.getElementById('ann-judul').value = "";
                 document.getElementById('ann-isi_pengumuman').value = "";
+                document.getElementById('ann-tanggal_mulai').value = "";
+                document.getElementById('ann-tanggal_selesai').value = "";
                 document.getElementById('ann-submit-btn').innerText = "Terbitkan";
+                
+                // Clear checkboxes
+                document.querySelectorAll('input[name="laboratorium_ids[]"]').forEach(cb => cb.checked = false);
             }
         }
 
@@ -258,7 +285,15 @@
             
             document.getElementById('ann-judul').value = ann.judul;
             document.getElementById('ann-isi_pengumuman').value = ann.isi_pengumuman;
+            document.getElementById('ann-tanggal_mulai').value = ann.tanggal_mulai ? ann.tanggal_mulai.substring(0, 16) : "";
+            document.getElementById('ann-tanggal_selesai').value = ann.tanggal_selesai ? ann.tanggal_selesai.substring(0, 16) : "";
             document.getElementById('ann-submit-btn').innerText = "Simpan Perubahan";
+            
+            // Set checkboxes
+            const labIds = ann.laboratoriums ? ann.laboratoriums.map(l => l.id.toString()) : [];
+            document.querySelectorAll('input[name="laboratorium_ids[]"]').forEach(cb => {
+                cb.checked = labIds.includes(cb.value);
+            });
             
             toggleModal('modal-announcement');
         }

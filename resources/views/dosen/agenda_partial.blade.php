@@ -39,6 +39,7 @@
                     @endif
                     <p class="text-[11px] text-slate-455 mt-1">
                         <i class="fa-solid fa-location-dot mr-1"></i>{{ $ag->lab->nama_lab }}
+                        @if($ag->program_kuliah) Program: {{ $ag->program_kuliah }} @else Program: Reguler @endif
                         @if($ag->kelas) • Kelas: {{ $ag->kelas }} @endif
                         @if($ag->semester) • Semester: {{ $ag->semester }} @endif
                     </p>
@@ -184,7 +185,14 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-slate-700 font-bold mb-1">Program</label>
+                                <select name="program_kuliah" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                    <option value="Reguler" {{ $ag->program_kuliah == 'Reguler' ? 'selected' : '' }}>Reguler</option>
+                                    <option value="Karyawan" {{ $ag->program_kuliah == 'Karyawan' ? 'selected' : '' }}>Karyawan</option>
+                                </select>
+                            </div>
                             <div>
                                 <label class="block text-slate-700 font-bold mb-1">Kelas</label>
                                 <select name="kelas" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">

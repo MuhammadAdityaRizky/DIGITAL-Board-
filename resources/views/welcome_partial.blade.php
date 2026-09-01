@@ -75,7 +75,7 @@
                         <div class="text-xs text-slate-500 font-semibold space-y-1">
                             <div>{{ $activeAgenda->lab->nama_lab }} • {{ $activeAgenda->dosen->nama }}</div>
                             <div>Fakultas: {{ $activeAgenda->fakultas }} • Prodi: {{ $activeAgenda->jurusan }}</div>
-                            <div>Semester {{ $activeAgenda->semester ?? '1' }} • Kelas: {{ $activeAgenda->kelas ?? 'A' }}</div>
+                            <div>Program: {{ $activeAgenda->program_kuliah ?? 'Reguler' }} • Semester: {{ $activeAgenda->semester ?? '1' }} • Kelas: {{ $activeAgenda->kelas ?? 'A' }}</div>
                             <div class="flex items-center gap-1.5 pt-1.5">
                                 <span class="text-slate-400">Kehadiran Dosen:</span>
                                 @if($activeAgenda->dosen_waktu_masuk)
@@ -127,7 +127,7 @@
                          <div class="text-xs text-slate-500 font-semibold space-y-1">
                             <div>{{ $nextAgenda->lab->nama_lab }} • {{ $nextAgenda->dosen->nama }}</div>
                             <div>Fakultas: {{ $nextAgenda->fakultas }} • Prodi: {{ $nextAgenda->jurusan }}</div>
-                            <div>Semester {{ $nextAgenda->semester ?? '1' }} • Kelas: {{ $nextAgenda->kelas ?? 'A' }}</div>
+                            <div>Program: {{ $nextAgenda->program_kuliah ?? 'Reguler' }} • Semester: {{ $nextAgenda->semester ?? '1' }} • Kelas: {{ $nextAgenda->kelas ?? 'A' }}</div>
                             <div class="flex items-center gap-1.5 pt-1.5">
                                 <span class="text-slate-400">Kehadiran Dosen:</span>
                                 @if($nextAgenda->dosen_waktu_masuk)

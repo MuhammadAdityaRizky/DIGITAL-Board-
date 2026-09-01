@@ -73,7 +73,7 @@ class AdminController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->paginate(15)->withQueryString();
+        $users = $query->paginate(50)->withQueryString();
         $fakultas = Fakultas::all();
         $prodis = Prodi::all();
         $kelases = Kelas::all();
@@ -237,7 +237,7 @@ class AdminController extends Controller
 
     public function pengumuman(Request $request)
     {
-        $query = Pengumuman::with('admin')->orderBy('created_at', 'desc');
+        $query = Pengumuman::with(['admin', 'laboratoriums'])->orderBy('created_at', 'desc');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -246,8 +246,9 @@ class AdminController extends Controller
         }
 
         $pengumumanList = $query->paginate(10)->withQueryString();
+        $laboratoriums = Laboratorium::all();
 
-        return view('admin.pengumuman', compact('pengumumanList'));
+        return view('admin.pengumuman', compact('pengumumanList', 'laboratoriums'));
     }
 
     public function storeUser(Request $request)
@@ -261,6 +262,8 @@ class AdminController extends Controller
             'semester' => 'nullable|integer|min:1|max:8',
             'status' => 'nullable|in:Tetap,Tidak Tetap,Honorer,Cuti',
             'kompetensi' => 'nullable|string',
+            'jabatan' => 'nullable|string|max:100',
+            'program_kuliah' => 'nullable|in:Reguler,Karyawan',
         ];
 
         if ($request->role === 'dosen' || $request->role === 'mahasiswa') {
@@ -289,6 +292,7 @@ class AdminController extends Controller
                     'id_fakultas' => $request->fakultas,
                     'id_prodi' => $request->jurusan,
                     'kompetensi' => $request->kompetensi,
+                    'jabatan' => $request->jabatan,
                 ]);
             } elseif ($request->role === 'mahasiswa') {
                 Mahasiswa::create([
@@ -296,6 +300,7 @@ class AdminController extends Controller
                     'nim' => $request->username_or_nim_nip,
                     'nama_lengkap' => $request->nama_lengkap,
                     'kelas' => $request->kelas ?? '',
+                    'program_kuliah' => $request->program_kuliah ?? 'Reguler',
                     'semester' => $request->semester ?? 1,
                     'id_fakultas' => $request->fakultas,
                     'id_prodi' => $request->jurusan,
@@ -317,6 +322,8 @@ class AdminController extends Controller
             'semester' => 'nullable|integer|min:1|max:8',
             'status' => 'nullable|in:Tetap,Tidak Tetap,Honorer,Cuti',
             'kompetensi' => 'nullable|string',
+            'jabatan' => 'nullable|string|max:100',
+            'program_kuliah' => 'nullable|in:Reguler,Karyawan',
         ];
 
         if ($user->role === 'dosen' || $user->role === 'mahasiswa') {
@@ -350,6 +357,7 @@ class AdminController extends Controller
                         'id_fakultas' => $request->fakultas,
                         'id_prodi' => $request->jurusan,
                         'kompetensi' => $request->kompetensi,
+                        'jabatan' => $request->jabatan,
                     ]
                 );
             } elseif ($user->role === 'mahasiswa') {
@@ -359,6 +367,7 @@ class AdminController extends Controller
                         'nim' => $request->username_or_nim_nip,
                         'nama_lengkap' => $request->nama_lengkap,
                         'kelas' => $request->kelas ?? '',
+                        'program_kuliah' => $request->program_kuliah ?? 'Reguler',
                         'semester' => $request->semester ?? 1,
                         'id_fakultas' => $request->fakultas,
                         'id_prodi' => $request->jurusan,
@@ -390,15 +399,25 @@ class AdminController extends Controller
     public function storePengumuman(Request $request)
     {
         $request->validate([
-            'judul_pengumuman' => 'required|string|max:150',
-            'penjelasan' => 'required|string',
+            'judul' => 'required|string|max:150',
+            'isi_pengumuman' => 'required|string',
+            'tanggal_mulai' => 'nullable|date',
+            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+            'laboratorium_ids' => 'nullable|array',
+            'laboratorium_ids.*' => 'exists:laboratorium,id',
         ]);
 
-        Pengumuman::create([
+        $pengumuman = Pengumuman::create([
             'admin_id' => auth()->id(),
-            'judul' => $request->judul_pengumuman,
-            'isi_pengumuman' => $request->penjelasan,
+            'judul' => $request->judul,
+            'isi_pengumuman' => $request->isi_pengumuman,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
         ]);
+
+        if ($request->has('laboratorium_ids')) {
+            $pengumuman->laboratoriums()->sync($request->laboratorium_ids);
+        }
 
         return back()->with('success', 'Pengumuman berhasil diterbitkan.');
     }
@@ -408,13 +427,25 @@ class AdminController extends Controller
         $request->validate([
             'judul' => 'required|string|max:150',
             'isi_pengumuman' => 'required|string',
+            'tanggal_mulai' => 'nullable|date',
+            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+            'laboratorium_ids' => 'nullable|array',
+            'laboratorium_ids.*' => 'exists:laboratorium,id',
         ]);
 
         $pengumuman = Pengumuman::findOrFail($id);
         $pengumuman->update([
             'judul' => $request->judul,
             'isi_pengumuman' => $request->isi_pengumuman,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
         ]);
+
+        if ($request->has('laboratorium_ids')) {
+            $pengumuman->laboratoriums()->sync($request->laboratorium_ids);
+        } else {
+            $pengumuman->laboratoriums()->detach();
+        }
 
         return back()->with('success', 'Pengumuman berhasil diperbarui.');
     }
@@ -619,12 +650,16 @@ class AdminController extends Controller
     public function importMahasiswa(Request $request)
     {
         $request->validate([
-            'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
+            'file_excel' => 'required',
+            'file_excel.*' => 'mimes:xlsx,xls,csv|max:10240',
         ]);
 
         try {
-            Excel::import(new MahasiswaImport, $request->file('file_excel'));
-            return back()->with('success', 'Data Mahasiswa berhasil diimpor.');
+            $files = is_array($request->file('file_excel')) ? $request->file('file_excel') : [$request->file('file_excel')];
+            foreach ($files as $file) {
+                Excel::import(new MahasiswaImport, $file);
+            }
+            return back()->with('success', count($files) . ' file Mahasiswa berhasil diimpor.');
         } catch (\Exception $e) {
             return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
         }
@@ -633,12 +668,16 @@ class AdminController extends Controller
     public function importDosen(Request $request)
     {
         $request->validate([
-            'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
+            'file_excel' => 'required',
+            'file_excel.*' => 'mimes:xlsx,xls,csv|max:10240',
         ]);
 
         try {
-            Excel::import(new DosenImport, $request->file('file_excel'));
-            return back()->with('success', 'Data Dosen berhasil diimpor.');
+            $files = is_array($request->file('file_excel')) ? $request->file('file_excel') : [$request->file('file_excel')];
+            foreach ($files as $file) {
+                Excel::import(new DosenImport, $file);
+            }
+            return back()->with('success', count($files) . ' file Dosen berhasil diimpor.');
         } catch (\Exception $e) {
             return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
         }
