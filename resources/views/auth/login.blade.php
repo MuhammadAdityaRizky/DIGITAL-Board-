@@ -69,8 +69,8 @@
             <!-- Identifier Input (NIM / NIP / Username) -->
             <div class="space-y-1.5">
                 <label class="block text-[11px] font-extrabold tracking-wider text-slate-500 uppercase mono">NIM / NIP / USERNAME</label>
-                <div class="relative">
-                    <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <div class="relative flex items-center">
+                    <i class="fa-solid fa-user absolute left-4 text-slate-400 text-sm pointer-events-none z-10"></i>
                     <input type="text" 
                            id="username_or_nim_nip"
                            name="username_or_nim_nip" 
@@ -84,13 +84,21 @@
             <!-- Password Input -->
             <div class="space-y-1.5">
                 <label class="block text-[11px] font-extrabold tracking-wider text-slate-500 uppercase mono">PASSWORD</label>
-                <div class="relative">
-                    <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <div class="relative flex items-center">
+                    <i class="fa-solid fa-lock absolute left-4 text-slate-400 text-sm pointer-events-none z-10"></i>
                     <input type="password" 
+                           id="password"
                            name="password" 
                            required 
                            placeholder="Masukkan password" 
-                           class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-11 pr-4 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0c4ea6]/20 focus:border-[#0c4ea6] focus:bg-white transition duration-200">
+                           class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-11 pr-11 text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0c4ea6]/20 focus:border-[#0c4ea6] focus:bg-white transition duration-200">
+                    <button type="button" 
+                            onclick="togglePassword()" 
+                            class="absolute right-3.5 text-slate-400 hover:text-slate-600 focus:outline-none p-1 transition cursor-pointer flex items-center justify-center z-10"
+                            title="Tampilkan/Sembunyikan Password"
+                            aria-label="Toggle Password Visibility">
+                        <i class="fa-solid fa-eye text-sm" id="togglePasswordIcon"></i>
+                    </button>
                 </div>
             </div>
 
@@ -142,5 +150,23 @@
             </p>
         </div>
     </div>
+
+    <!-- Toggle Password JS Script -->
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('togglePasswordIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+    </script>
 </body>
 </html>
