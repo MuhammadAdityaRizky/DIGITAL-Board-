@@ -59,6 +59,15 @@
                 <i class="fa-solid fa-bullhorn"></i>
                 <span class="text-xs">Pengumuman Lab</span>
             </a>
+            
+            <div class="pt-2 border-t border-slate-800/80 my-2"></div>
+            <a href="{{ route('board') }}" target="_blank" class="flex items-center justify-between px-4 py-3 bg-[#0c4ea6]/40 hover:bg-[#0c4ea6] text-teal-300 hover:text-white rounded-xl w-full transition font-bold border border-teal-500/20">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-desktop text-emerald-400"></i>
+                    <span class="text-xs">Portal Display Board</span>
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
         </nav>
 
         <div class="p-6 border-t border-slate-800">
