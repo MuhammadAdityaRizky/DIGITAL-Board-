@@ -94,12 +94,6 @@
             </div>
             
             <div class="flex items-center gap-4">
-                <a href="{{ route('board') }}" target="_blank" class="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-[#0c4ea6] border border-blue-200 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm">
-                    <i class="fa-solid fa-desktop text-emerald-600"></i>
-                    <span class="hidden sm:inline">Buka Display Kiosk</span>
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                </a>
-
                 <div class="text-right hidden sm:block">
                     <p class="font-bold text-xs text-slate-800">{{ auth()->user()->username }}</p>
                     <p class="text-[9px] font-semibold tracking-wider text-slate-500">SUPER ADMIN</p>
