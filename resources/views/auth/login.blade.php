@@ -201,7 +201,27 @@
             }
         }
 
+        function resetLoginLoading() {
+            const overlay = document.getElementById('login-loading-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+            const submitBtn = document.getElementById('loginSubmitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Masuk Sekarang</span><i class="fa-solid fa-arrow-right text-[11px]"></i>';
+                submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+
+        // Reset loading overlay when user navigates back/forward in browser (BFCache)
+        window.addEventListener('pageshow', function(event) {
+            resetLoginLoading();
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
+            resetLoginLoading();
+
             const loginForm = document.getElementById('loginForm');
             if (loginForm) {
                 loginForm.addEventListener('submit', function() {

@@ -457,7 +457,18 @@
             return true;
         }
 
+        window.addEventListener('pageshow', function() {
+            const overlay = document.getElementById('global-import-loading-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.getElementById('global-import-loading-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
             document.querySelectorAll('form[enctype="multipart/form-data"]').forEach(function(form) {
                 form.addEventListener('submit', function() {
                     showImportLoading(this);
