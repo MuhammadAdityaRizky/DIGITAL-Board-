@@ -79,20 +79,13 @@
             </p>
         </div>
 
-        <!-- Filter & Search Control Bar -->
-        <div class="w-full max-w-3xl mx-auto mb-8 flex flex-col sm:flex-row items-center gap-3">
+        <!-- Search Control Bar -->
+        <div class="w-full max-w-3xl mx-auto mb-8">
             <!-- Search Bar -->
-            <div class="relative flex-grow w-full">
+            <div class="relative w-full">
                 <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                 <input type="text" id="labSearch" placeholder="Cari nama lab atau lokasi gedung..." 
                        class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0c4ea6]/20 focus:border-[#0c4ea6] shadow-sm transition">
-            </div>
-
-            <!-- Quick Filter Badges -->
-            <div class="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 shrink-0 text-xs font-bold">
-                <button type="button" onclick="filterLab('all')" class="filter-btn active-filter px-3.5 py-2.5 rounded-xl bg-[#0c4ea6] text-white transition shadow-sm" data-filter="all">Semua</button>
-                <button type="button" onclick="filterLab('lantai 1')" class="filter-btn px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition shadow-sm" data-filter="lantai 1">Lantai 1</button>
-                <button type="button" onclick="filterLab('lantai 2')" class="filter-btn px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition shadow-sm" data-filter="lantai 2">Lantai 2</button>
             </div>
         </div>
 
@@ -168,10 +161,9 @@
         <p class="text-slate-400 text-[11px]">Computer Laboratory Digital Information Board System</p>
     </footer>
 
-    <!-- Interactive Search & Filter JS -->
+    <!-- Interactive Search JS -->
     <script>
         const searchInput = document.getElementById('labSearch');
-        let currentFilter = 'all';
 
         function updateDisplay() {
             const query = searchInput.value.toLowerCase().trim();
@@ -181,10 +173,7 @@
                 const name = card.dataset.name || '';
                 const location = card.dataset.location || '';
 
-                const matchesSearch = name.includes(query) || location.includes(query);
-                const matchesFilter = (currentFilter === 'all') || location.includes(currentFilter);
-
-                if (matchesSearch && matchesFilter) {
+                if (name.includes(query) || location.includes(query)) {
                     card.style.display = 'flex';
                 } else {
                     card.style.display = 'none';
@@ -193,18 +182,6 @@
         }
 
         searchInput?.addEventListener('input', updateDisplay);
-
-        function filterLab(filter) {
-            currentFilter = filter;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                if (btn.dataset.filter === filter) {
-                    btn.className = 'filter-btn active-filter px-3.5 py-2.5 rounded-xl bg-[#0c4ea6] text-white transition shadow-sm';
-                } else {
-                    btn.className = 'filter-btn px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition shadow-sm';
-                }
-            });
-            updateDisplay();
-        }
     </script>
 </body>
 </html>
