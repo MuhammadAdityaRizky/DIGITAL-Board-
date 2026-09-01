@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #F7F9FB; }
@@ -608,6 +609,107 @@
                     showImportLoading(this);
                 });
             });
+        });
+    <!-- SweetAlert2 Automatic Alerts & Loading Handler -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: @json(session('success')),
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    customClass: {
+                        popup: 'rounded-3xl p-6',
+                        title: 'text-lg font-extrabold text-slate-800',
+                        htmlContainer: 'text-xs text-slate-600 font-medium'
+                    }
+                });
+            @endif
+
+            @if(session('error') || session('failed'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: @json(session('error') ?? session('failed')),
+                    confirmButtonColor: '#0c4ea6',
+                    customClass: {
+                        popup: 'rounded-3xl p-6',
+                        title: 'text-lg font-extrabold text-slate-800',
+                        htmlContainer: 'text-xs text-slate-600 font-medium',
+                        confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold'
+                    }
+                });
+            @endif
+
+            @if($errors->any() && !session('success') && !session('error') && !session('failed'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Memproses Data!',
+                    text: @json($errors->first()),
+                    confirmButtonColor: '#0c4ea6',
+                    customClass: {
+                        popup: 'rounded-3xl p-6',
+                        title: 'text-lg font-extrabold text-slate-800',
+                        htmlContainer: 'text-xs text-slate-600 font-medium',
+                        confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold'
+                    }
+                });
+            @endif
+
+            // CRUD & Form Submit Loading Spinner
+            document.querySelectorAll('form').forEach(function(form) {
+                if (form.method.toUpperCase() === 'GET' || form.classList.contains('no-loading')) {
+                    return;
+                }
+
+                form.addEventListener('submit', function(e) {
+                    if (form.checkValidity && !form.checkValidity()) {
+                        return;
+                    }
+
+                    const fileInput = form.querySelector('input[type="file"]');
+                    if (fileInput && fileInput.required && fileInput.files && fileInput.files.length === 0) {
+                        return;
+                    }
+
+                    const isImport = form.getAttribute('enctype') === 'multipart/form-data';
+                    const loadingTitle = isImport ? 'Mengimpor Data...' : 'Menyimpan Data...';
+                    const loadingText = isImport 
+                        ? 'Sistem sedang membaca dan memproses file Excel/CSV.' 
+                        : 'Sedang memproses dan menyimpan data ke sistem.';
+
+                    Swal.fire({
+                        title: loadingTitle,
+                        text: loadingText,
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        customClass: {
+                            popup: 'rounded-3xl p-8',
+                            title: 'text-base font-extrabold text-slate-800',
+                            htmlContainer: 'text-xs text-slate-500 font-medium'
+                        },
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                    }
+                });
+            });
+        });
+
+        window.addEventListener('pageshow', function() {
+            if (typeof Swal !== 'undefined' && Swal.isVisible() && Swal.isLoading()) {
+                Swal.close();
+            }
         });
     </script>
 
