@@ -52,7 +52,7 @@
         </div>
 
         <!-- Main Login Form -->
-        <form action="{{ route('login') }}" method="POST" class="space-y-4">
+        <form id="loginForm" action="{{ route('login') }}" method="POST" class="space-y-4">
             @csrf
             
             <!-- Error Notification Alert -->
@@ -111,7 +111,7 @@
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" class="w-full py-3.5 rounded-2xl bg-[#0c4ea6] hover:bg-[#0a3f86] text-white font-extrabold text-xs tracking-wider uppercase shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-2">
+            <button type="submit" id="loginSubmitBtn" class="w-full py-3.5 rounded-2xl bg-[#0c4ea6] hover:bg-[#0a3f86] text-white font-extrabold text-xs tracking-wider uppercase shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-2">
                 <span>Masuk Sekarang</span>
                 <i class="fa-solid fa-arrow-right text-[11px]"></i>
             </button>
@@ -127,17 +127,17 @@
         <!-- Quick Demo Accounts -->
         <div class="grid grid-cols-3 gap-2">
             <a href="{{ route('demo.login', 'admin') }}" 
-               class="py-2.5 px-2 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-2xl text-center transition duration-200 group">
+               class="demo-login-btn py-2.5 px-2 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-2xl text-center transition duration-200 group">
                 <i class="fa-solid fa-user-shield text-[#0c4ea6] group-hover:scale-110 transition transform block mb-1"></i>
                 <span class="text-[10px] font-extrabold text-slate-700 block leading-tight">Admin</span>
             </a>
             <a href="{{ route('demo.login', 'dosen') }}" 
-               class="py-2.5 px-2 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 rounded-2xl text-center transition duration-200 group">
+               class="demo-login-btn py-2.5 px-2 bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 rounded-2xl text-center transition duration-200 group">
                 <i class="fa-solid fa-chalkboard-user text-emerald-600 group-hover:scale-110 transition transform block mb-1"></i>
                 <span class="text-[10px] font-extrabold text-slate-700 block leading-tight">Dosen</span>
             </a>
             <a href="{{ route('demo.login', 'mahasiswa') }}" 
-               class="py-2.5 px-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 rounded-2xl text-center transition duration-200 group">
+               class="demo-login-btn py-2.5 px-2 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 rounded-2xl text-center transition duration-200 group">
                 <i class="fa-solid fa-user-graduate text-indigo-600 group-hover:scale-110 transition transform block mb-1"></i>
                 <span class="text-[10px] font-extrabold text-slate-700 block leading-tight">Mahasiswa</span>
             </a>
@@ -151,7 +151,27 @@
         </div>
     </div>
 
-    <!-- Toggle Password JS Script -->
+    <!-- GLOBAL LOGIN LOADING OVERLAY -->
+    <div id="login-loading-overlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex flex-col items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl space-y-5">
+            <div class="relative w-16 h-16 mx-auto flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full border-4 border-blue-500/20 border-t-[#0c4ea6] animate-spin"></div>
+                <i class="fa-solid fa-shield-halved text-2xl text-[#0c4ea6]"></i>
+            </div>
+            <div class="space-y-1.5">
+                <h3 class="text-base font-extrabold text-white tracking-tight">Memverifikasi Akun...</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Sistem sedang mengautentikasi dan menyiapkan dashboard Anda. Mohon tunggu sejenak.
+                </p>
+            </div>
+            <div class="pt-3 border-t border-slate-800 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-circle-notch animate-spin text-blue-400 text-xs"></i>
+                <span class="text-[11px] font-bold tracking-wider text-slate-300 uppercase">Proses Autentikasi</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toggle Password & Loading JS Script -->
     <script>
         function togglePassword() {
             const passwordInput = document.getElementById('password');
@@ -167,6 +187,34 @@
                 toggleIcon.classList.add('fa-eye');
             }
         }
+
+        function showLoginLoading() {
+            const overlay = document.getElementById('login-loading-overlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+            }
+            const submitBtn = document.getElementById('loginSubmitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Memproses...';
+                submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function() {
+                    showLoginLoading();
+                });
+            }
+
+            document.querySelectorAll('.demo-login-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    showLoginLoading();
+                });
+            });
+        });
     </script>
 </body>
 </html>
