@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Tailwind CSS CDN Fallback for guaranteed CSS rendering -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -193,12 +194,14 @@
             if (overlay) {
                 overlay.classList.remove('hidden');
             }
-            const submitBtn = document.getElementById('loginSubmitBtn');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Memproses...';
-                submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
-            }
+            setTimeout(() => {
+                const submitBtn = document.getElementById('loginSubmitBtn');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Memproses...';
+                    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                }
+            }, 10);
         }
 
         function resetLoginLoading() {
@@ -234,6 +237,36 @@
                     showLoginLoading();
                 });
             });
+
+            @if(session('error') || session('failed'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Login!',
+                    text: @json(session('error') ?? session('failed')),
+                    confirmButtonColor: '#0c4ea6',
+                    customClass: {
+                        popup: 'rounded-3xl p-6',
+                        title: 'text-lg font-extrabold text-slate-800',
+                        htmlContainer: 'text-xs text-slate-600 font-medium',
+                        confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold'
+                    }
+                });
+            @endif
+
+            @if($errors->any() && !session('error') && !session('failed'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Autentikasi Gagal!',
+                    text: @json($errors->first()),
+                    confirmButtonColor: '#0c4ea6',
+                    customClass: {
+                        popup: 'rounded-3xl p-6',
+                        title: 'text-lg font-extrabold text-slate-800',
+                        htmlContainer: 'text-xs text-slate-600 font-medium',
+                        confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold'
+                    }
+                });
+            @endif
         });
     </script>
 </body>
