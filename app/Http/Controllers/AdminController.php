@@ -752,4 +752,13 @@ class AdminController extends Controller
             return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
         }
     }
+
+    public function aktivitas()
+    {
+        $activities = \Spatie\Activitylog\Models\Activity::with(['causer.dosen', 'causer.mahasiswa'])
+            ->latest()
+            ->paginate(50);
+            
+        return view('admin.aktivitas', compact('activities'));
+    }
 }

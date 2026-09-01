@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Mahasiswa extends Model
 {
+    use LogsActivity;
+
     protected $table = 'mahasiswa';
     public $timestamps = false;
     protected $guarded = [];
@@ -34,4 +39,14 @@ class Mahasiswa extends Model
     {
         return $this->hasMany(Perizinan::class, 'mahasiswa_id');
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logUnguarded()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
+
 }
+

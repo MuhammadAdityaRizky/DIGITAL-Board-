@@ -46,6 +46,8 @@
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col justify-between p-4 md:p-6 space-y-6">
 
+
+
     <!-- Header Section (Royal Blue with thin border) -->
     <header class="flex flex-col md:flex-row justify-between items-center bg-[#0c4ea6] border-2 border-[#1e60b8] rounded-2xl p-4 md:px-8 gap-4 shadow-md text-white">
         <!-- Logo & Campus Name -->
@@ -126,6 +128,8 @@
         updateClock();
         setInterval(updateClock, 1000);
         
+
+
         // Dynamic AJAX live polling every 5 seconds
         setInterval(function() {
             fetch(window.location.href, {

@@ -53,11 +53,7 @@ class MahasiswaController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $pengumuman = Pengumuman::with('admin')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return view('mahasiswa.dashboard', compact('mahasiswa', 'todayAgendas', 'absensiHistory', 'perizinans', 'pengumuman', 'profileIncomplete'));
+        return view('mahasiswa.dashboard', compact('mahasiswa', 'todayAgendas', 'absensiHistory', 'perizinans', 'profileIncomplete'));
     }
 
     public function submitAttendance(Request $request)
@@ -276,6 +272,14 @@ class MahasiswaController extends Controller
         $prodis = \App\Models\Prodi::with('fakultas')->get();
 
         return view('mahasiswa.agenda', compact('mahasiswa', 'agendas', 'scope', 'fakultas', 'prodis'));
+    }
+
+    public function pengumuman()
+    {
+        $user = auth()->user();
+        $mahasiswa = Mahasiswa::where('user_id', $user->id)->firstOrFail();
+        $pengumuman = Pengumuman::with(['admin', 'laboratoriums'])->orderBy('created_at', 'desc')->get();
+        return view('mahasiswa.pengumuman', compact('mahasiswa', 'pengumuman'));
     }
 
     public function pengaturan()

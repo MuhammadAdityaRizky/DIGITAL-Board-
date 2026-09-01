@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Agenda extends Model
 {
+    use LogsActivity;
+
     protected $table = 'agenda';
     public $timestamps = false;
     protected $guarded = [];
@@ -127,4 +132,14 @@ class Agenda extends Model
             'error' => 'Kode Presensi / QR Code telah KADALUARSA (berubah setiap 5 detik). Silakan scan QR Code terbaru di layar!'
         ];
     }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logUnguarded()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
+
 }
+
