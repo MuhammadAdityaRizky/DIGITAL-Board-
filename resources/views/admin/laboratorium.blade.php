@@ -252,7 +252,53 @@
         </div>
     </div>
 
+    <!-- GLOBAL IMPORT LOADING OVERLAY -->
+    <div id="global-import-loading-overlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9999] flex flex-col items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl space-y-5">
+            <div class="relative w-16 h-16 mx-auto flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full border-4 border-teal-500/20 border-t-teal-400 animate-spin"></div>
+                <i class="fa-solid fa-cloud-arrow-up text-2xl text-teal-400"></i>
+            </div>
+            <div class="space-y-1.5">
+                <h3 class="text-base font-extrabold text-white tracking-tight">Mengimpor Data...</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Sistem sedang membaca dan memproses file Excel/CSV. Mohon tunggu sejenak dan jangan menutup halaman ini.
+                </p>
+            </div>
+            <div class="pt-3 border-t border-slate-800 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-circle-notch animate-spin text-teal-400 text-xs"></i>
+                <span class="text-[11px] font-bold tracking-wider text-teal-300 uppercase">Memproses Database</span>
+            </div>
+        </div>
+    </div>
+
     <script>
+        function showImportLoading(form) {
+            const fileInput = form.querySelector('input[type="file"]');
+            if (fileInput && fileInput.files && fileInput.files.length === 0) {
+                return true;
+            }
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Memproses...';
+                submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            }
+            const overlay = document.getElementById('global-import-loading-overlay');
+            if (overlay) {
+                overlay.classList.remove('hidden');
+            }
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('form[enctype="multipart/form-data"]').forEach(function(form) {
+                form.addEventListener('submit', function() {
+                    showImportLoading(this);
+                });
+            });
+        });
+
         function toggleModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.classList.toggle('hidden');
