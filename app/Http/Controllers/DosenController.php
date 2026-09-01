@@ -26,11 +26,52 @@ class DosenController extends Controller
             return redirect()->route('login')->withErrors(['msg' => 'Data profil Dosen tidak ditemukan.']);
         }
 
-        $agendas = Agenda::with(['lab', 'absensi.mahasiswa.user'])
+        $allAgendas = Agenda::with(['lab', 'absensi.mahasiswa.user'])
             ->where('dosen_id', $dosen->id)
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('jam_mulai', 'desc')
             ->get();
+
+        $today = date('Y-m-d');
+
+        // Prioritize agendas:
+        // 1. Status: 'Berlangsung' (1), 'Akan Datang' (2), 'Selesai' (3), 'Dibatalkan' (4)
+        // 2. Date: Today first, then future, then past
+        // 3. Time: Closest start time (jam_mulai)
+        $sortedAgendas = $allAgendas->sort(function ($a, $b) use ($today) {
+            $statusWeight = [
+                'Berlangsung' => 1,
+                'Akan Datang' => 2,
+                'Selesai' => 3,
+                'Dibatalkan' => 4,
+            ];
+
+            $weightA = $statusWeight[$a->status_agenda] ?? 5;
+            $weightB = $statusWeight[$b->status_agenda] ?? 5;
+
+            if ($weightA !== $weightB) {
+                return $weightA <=> $weightB;
+            }
+
+            // Prioritize today's date over past/future dates
+            if ($a->tanggal === $today && $b->tanggal !== $today) return -1;
+            if ($a->tanggal !== $today && $b->tanggal === $today) return 1;
+
+            // For upcoming/active, sort by closest date/time
+            if ($weightA <= 2) {
+                if ($a->tanggal !== $b->tanggal) {
+                    return strcmp($a->tanggal, $b->tanggal);
+                }
+                return strcmp($a->jam_mulai, $b->jam_mulai);
+            }
+
+            // For finished/cancelled, sort by most recent date/time
+            if ($a->tanggal !== $b->tanggal) {
+                return strcmp($b->tanggal, $a->tanggal);
+            }
+            return strcmp($b->jam_mulai, $a->jam_mulai);
+        });
+
+        // Limit to maximum 10 agendas for the dashboard view
+        $agendas = $sortedAgendas->take(10);
 
         $labs = Laboratorium::all();
         $fakultas = \App\Models\Fakultas::all();
@@ -41,11 +82,10 @@ class DosenController extends Controller
             ->get();
 
         $izinPendingCount = Perizinan::where('status_persetujuan', 'pending')
-            ->whereIn('agenda_id', $agendas->pluck('id'))
+            ->whereIn('agenda_id', $allAgendas->pluck('id'))
             ->count();
 
-        $today = date('Y-m-d');
-        $todayAgendas = $agendas->filter(function($ag) use ($today) {
+        $todayAgendas = $allAgendas->filter(function($ag) use ($today) {
             return $ag->tanggal === $today;
         });
 

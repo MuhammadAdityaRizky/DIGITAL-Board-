@@ -6,6 +6,7 @@
     <title>Dashboard Dosen - Digital Board</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #F7F9FB; }
@@ -135,7 +136,7 @@
             @endif
 
             <!-- Summary Bento Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <!-- Bento 1 -->
                 <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between">
                     <div class="flex items-center gap-2 text-slate-500">
@@ -160,8 +161,8 @@
                     </div>
                 </div>
 
-                <!-- Bento 4: Absensi Dosen via QR / Manual -->
-                <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between">
+                <!-- Bento 3: Absensi Dosen via QR / Manual (Tampil di Desktop - Sembunyi di Mobile) -->
+                <div class="hidden lg:flex bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex-col justify-between">
                     <div class="flex items-center gap-2 text-slate-500">
                         <i class="fa-solid fa-qrcode text-indigo-600 text-xs"></i>
                         <span class="text-[11px] font-bold tracking-wider uppercase">Absensi Dosen</span>
@@ -170,7 +171,7 @@
                         @if($activeOrNextAgenda)
                             @if($activeOrNextAgenda->dosen_waktu_masuk)
                                 <div class="text-xs text-emerald-750 font-bold flex items-center gap-1">
-                                    <i class="fa-solid fa-circle-check"></i> Hadir ({{ date('H:i', strtotime($activeOrNextAgenda->dosen_waktu_masuk)) }})
+                                    <i class="fa-solid fa-circle-check text-emerald-600"></i> Hadir ({{ date('H:i', strtotime($activeOrNextAgenda->dosen_waktu_masuk)) }})
                                 </div>
                                 <span class="text-[9px] text-slate-400 block mt-1 truncate">MK: {{ $activeOrNextAgenda->mata_kuliah }}</span>
                             @else
@@ -196,12 +197,16 @@
                 <!-- Today's Classes list -->
                 <div class="lg:col-span-2 space-y-6">
                     <div class="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
-                        <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+                        <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex flex-wrap justify-between items-center gap-2">
                             <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
-                                <span>Kelas Hari Ini</span>
-                                <span class="text-xs text-slate-450 font-semibold">({{ \Carbon\Carbon::today()->translatedFormat('dddd, d M Y') }})</span>
+                                <i class="fa-solid fa-calendar-check text-teal-800"></i>
+                                <span>Prioritas Agenda & Kelas</span>
+                                <span class="text-xs text-slate-450 font-semibold hidden sm:inline">({{ \Carbon\Carbon::today()->translatedFormat('dddd, d M Y') }})</span>
                             </h3>
-                            <span class="text-[10px] bg-teal-50 text-teal-800 font-bold px-2 py-0.5 rounded-full">{{ $agendas->count() }} Agenda</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] bg-teal-50 text-teal-800 font-bold px-2.5 py-1 rounded-full border border-teal-200">{{ $agendas->count() }} Prioritas (Max 10)</span>
+                                <a href="{{ route('dosen.agenda') }}" class="text-[10px] text-teal-850 hover:underline font-bold flex items-center gap-1">Lihat Semua <i class="fa-solid fa-arrow-right"></i></a>
+                            </div>
                         </div>
                         
                         <div class="p-4 md:p-6 space-y-4">
@@ -229,7 +234,10 @@
                                                 @endif
                                                 <h4 class="font-bold text-slate-800 text-lg mt-1.5">{{ $ag->mata_kuliah }}</h4>
                                                 <p class="text-xs text-slate-500 mt-1">Catatan/Materi: <span class="text-slate-650 font-medium">{{ $ag->catatan ?? 'Tidak ada catatan.' }}</span></p>
-                                                <p class="text-[11px] text-slate-450 mt-0.5"><i class="fa-solid fa-location-dot mr-1"></i>{{ $ag->lab->nama_lab }}</p>
+                                                <p class="text-[11px] text-slate-450 mt-0.5 flex flex-wrap items-center gap-2">
+                                                    <span><i class="fa-solid fa-location-dot mr-1"></i>{{ $ag->lab->nama_lab }}</span>
+                                                    <span class="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-extrabold font-mono text-teal-850 select-all" title="Kode Token Agenda">ID AGENDA: AGENDA_ID_{{ $ag->id }}</span>
+                                                </p>
                                             </div>
                                             
                                             <!-- Actions -->
@@ -607,6 +615,21 @@
             <div class="space-y-4">
                 <div id="qr-reader" class="overflow-hidden rounded-xl border border-slate-200" style="width: 100%; min-height: 250px;"></div>
                 <div id="qr-reader-results" class="text-center text-xs text-slate-500 font-mono"></div>
+
+                <!-- Fallback manual input inside modal for camera issues -->
+                <div class="pt-3 border-t border-slate-100 space-y-2 text-left">
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                        <i class="fa-solid fa-keyboard text-teal-800 mr-1"></i> Alternatif: Input Manual Token / ID Agenda
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="text" id="modal-dosen-manual-token-input" placeholder="Contoh: AGENDA_ID_1" 
+                               class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs uppercase font-bold tracking-widest text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 focus:bg-white">
+                        <button type="button" onclick="submitDosenModalManualToken()" class="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold uppercase transition shadow-sm flex items-center gap-1.5 shrink-0">
+                            <i class="fa-solid fa-paper-plane"></i> Kirim
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 italic">Gunakan ini jika kamera HP Anda bermasalah atau tidak dapat diakses.</p>
+                </div>
             </div>
             
             <div class="flex pt-3 border-t border-slate-100">
@@ -704,6 +727,17 @@
                     console.error("Gagal menghentikan scanner: ", err);
                 });
             }
+        }
+
+        function submitDosenModalManualToken() {
+            const val = document.getElementById('modal-dosen-manual-token-input').value.trim();
+            if (!val) {
+                alert('Silakan masukkan Kode Token / ID Agenda terlebih dahulu.');
+                return;
+            }
+            document.getElementById('dosen-qr-token-input').value = val;
+            document.getElementById('dosen-absensi-form').submit();
+            closeScannerModal();
         }
     </script>
 

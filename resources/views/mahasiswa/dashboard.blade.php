@@ -6,6 +6,7 @@
     <title>Dashboard Mahasiswa - Digital Board</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #F7F9FB; }
@@ -144,45 +145,16 @@
                 </div>
             @endif
 
-            <!-- Main Layout (Form & Class Lists) -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                <!-- Scan/Enter QR Column -->
-                <div class="space-y-6">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                        <h3 class="font-bold text-base text-slate-800 mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-qrcode text-teal-800"></i> Scan / Input QR Code
-                        </h3>
-                        <p class="text-xs text-slate-500 mb-5">Silakan masukkan kode token QR yang tertera pada layar Digital Board di laboratorium Anda untuk mencatat kehadiran.</p>
-                        
-                        <form action="{{ route('mahasiswa.absensi.submit') }}" method="POST" id="mahasiswa-absensi-form" class="space-y-4">
-                            @csrf
-                            <div class="mb-3">
-                                <button type="button" onclick="startMahasiswaQRScanner()" class="w-full py-3 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-camera"></i> Pindai QR Kamera
-                                </button>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">KODE QR TOKEN / ID AGENDA</label>
-                                <input type="text" 
-                                       name="qr_code_token" 
-                                       id="mahasiswa-qr-token-input"
-                                       required
-                                       placeholder="Contoh: AGENDA_ID_1" 
-                                       class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 focus:bg-white transition-all uppercase tracking-widest text-center font-bold">
-                            </div>
+            <!-- Hidden form for attendance submission -->
+            <form action="{{ route('mahasiswa.absensi.submit') }}" method="POST" id="mahasiswa-absensi-form" class="hidden">
+                @csrf
+                <input type="hidden" name="qr_code_token" id="mahasiswa-qr-token-input">
+            </form>
 
-                            <button type="submit" class="w-full py-3.5 rounded-xl bg-teal-800 hover:bg-teal-900 text-white font-bold text-xs uppercase tracking-wider shadow-md transition-all">
-                                <i class="fa-solid fa-check-circle mr-1"></i> Kirim Kehadiran
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Classes Lists Column -->
-                <div class="lg:col-span-2 space-y-6">
-                    <!-- Today's Classes -->
-                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <!-- Main Layout (Class Lists & Status) -->
+            <div class="space-y-6">
+                <!-- Today's Classes -->
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                         <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
                             <h3 class="font-bold text-sm text-slate-800">Mata Kuliah & Praktikum Hari Ini</h3>
                             <span class="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">{{ date('d M Y') }}</span>
@@ -208,6 +180,19 @@
                                             </div>
                                             <h4 class="font-bold text-slate-800 text-base">{{ $ag->mata_kuliah }}</h4>
                                             <p class="text-xs text-slate-500">Dosen: <span class="font-medium text-slate-700">{{ $ag->dosen->nama }}</span></p>
+                                            
+                                            <!-- Token / ID Agenda Info for Camera Fallback -->
+                                            <div class="flex flex-wrap items-center gap-2 pt-1">
+                                                <span class="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-[11px] font-extrabold font-mono text-teal-850 select-all" title="Kode Token Agenda">
+                                                    ID: AGENDA_ID_{{ $ag->id }}
+                                                </span>
+                                                @if(!$ag->absensi->count() && !$ag->perizinan)
+                                                    <button type="button" onclick="useAgendaToken('AGENDA_ID_{{ $ag->id }}')" 
+                                                            class="px-2 py-0.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded text-[10px] font-bold uppercase transition flex items-center gap-1">
+                                                        <i class="fa-solid fa-i-cursor"></i> Salin/Isi Kode Ini
+                                                    </button>
+                                                @endif
+                                            </div>
                                         </div>
 
                                         <div class="flex flex-wrap items-center gap-2">
@@ -361,8 +346,6 @@
                     </div>
                 </div>
 
-            </div>
-
         </main>
     </div>
 
@@ -435,6 +418,21 @@
             <div class="space-y-4">
                 <div id="qr-reader" class="overflow-hidden rounded-xl border border-slate-200" style="width: 100%; min-height: 250px;"></div>
                 <div id="qr-reader-results" class="text-center text-xs text-slate-500 font-mono"></div>
+
+                <!-- Fallback manual input inside modal for camera issues -->
+                <div class="pt-3 border-t border-slate-100 space-y-2 text-left">
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                        <i class="fa-solid fa-keyboard text-teal-800 mr-1"></i> Alternatif: Input Manual Token / ID Agenda
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="text" id="modal-manual-token-input" placeholder="Contoh: AGENDA_ID_1" 
+                               class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs uppercase font-bold tracking-widest text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 focus:bg-white">
+                        <button type="button" onclick="submitModalManualToken()" class="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold uppercase transition shadow-sm flex items-center gap-1.5 shrink-0">
+                            <i class="fa-solid fa-paper-plane"></i> Kirim
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 italic">Gunakan ini jika kamera HP Anda bermasalah atau tidak dapat diakses.</p>
+                </div>
             </div>
             
             <div class="flex pt-3 border-t border-slate-100">
@@ -531,6 +529,26 @@
                 }).catch(err => {
                     console.error("Gagal menghentikan scanner: ", err);
                 });
+            }
+        }
+
+        function submitModalManualToken() {
+            const val = document.getElementById('modal-manual-token-input').value.trim();
+            if (!val) {
+                alert('Silakan masukkan Kode Token / ID Agenda terlebih dahulu.');
+                return;
+            }
+            document.getElementById('mahasiswa-qr-token-input').value = val;
+            document.getElementById('mahasiswa-absensi-form').submit();
+            closeScannerModal();
+        }
+
+        function useAgendaToken(token) {
+            const input = document.getElementById('mahasiswa-qr-token-input');
+            if (input) {
+                input.value = token;
+                input.focus();
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
     </script>

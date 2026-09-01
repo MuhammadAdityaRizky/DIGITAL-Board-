@@ -6,6 +6,7 @@
     <title>Manajemen Laboratorium - Digital Board</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #F7F9FB; }
@@ -58,6 +59,15 @@
                 <i class="fa-solid fa-bullhorn"></i>
                 <span class="text-xs">Pengumuman Lab</span>
             </a>
+
+            <div class="pt-2 border-t border-slate-800/80 my-2"></div>
+            <a href="{{ route('board') }}" target="_blank" class="flex items-center justify-between px-4 py-3 bg-[#0c4ea6]/40 hover:bg-[#0c4ea6] text-teal-300 hover:text-white rounded-xl w-full transition font-bold border border-teal-500/20">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-desktop text-emerald-400"></i>
+                    <span class="text-xs">Portal Display Board</span>
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
         </nav>
 
         <div class="p-6 border-t border-slate-800">
@@ -84,6 +94,12 @@
             </div>
             
             <div class="flex items-center gap-4">
+                <a href="{{ route('board') }}" target="_blank" class="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-[#0c4ea6] border border-blue-200 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-desktop text-emerald-600"></i>
+                    <span class="hidden sm:inline">Buka Display Kiosk</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                </a>
+
                 <div class="text-right hidden sm:block">
                     <p class="font-bold text-xs text-slate-800">{{ auth()->user()->username }}</p>
                     <p class="text-[9px] font-semibold tracking-wider text-slate-500">SUPER ADMIN</p>

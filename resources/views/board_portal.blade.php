@@ -1,92 +1,210 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Informasi Lab - Digital Board</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Portal Display Laboratorium - UIKA Smart Lab</title>
+
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS CDN Fallback -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <style>
         body {
-            font-family: 'Outfit', sans-serif;
-            background: radial-gradient(circle at 10% 20%, rgb(12, 78, 166) 0%, rgb(4, 30, 66) 90%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f0f4f9;
+            color: #1e293b;
         }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
         }
-        .glow-button:hover {
-            box-shadow: 0 0 20px rgba(0, 184, 124, 0.4);
+        .card-shadow {
+            box-shadow: 0 4px 20px -2px rgba(12, 78, 166, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+        }
+        .card-shadow:hover {
+            box-shadow: 0 12px 28px -4px rgba(12, 78, 166, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
         }
     </style>
 </head>
-<body class="min-h-screen text-white flex flex-col justify-between p-6 sm:p-12 relative overflow-hidden">
+<body class="min-h-screen flex flex-col justify-between p-4 sm:p-6 md:p-8 antialiased selection:bg-[#0c4ea6] selection:text-white">
 
-    <!-- Subtle Background Glows -->
-    <div class="absolute w-96 h-96 rounded-full bg-[#00b87c]/10 blur-[120px] top-10 left-10 pointer-events-none"></div>
-    <div class="absolute w-[500px] h-[500px] rounded-full bg-[#0c4ea6]/30 blur-[150px] bottom-10 right-10 pointer-events-none"></div>
-
-    <!-- Header -->
-    <header class="w-full max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 z-10">
-        <div class="flex items-center gap-3">
-            <div class="w-11 h-11 bg-gradient-to-tr from-[#0c4ea6] to-[#00b87c] rounded-2xl flex items-center justify-center text-white font-extrabold shadow-lg">
-                <i class="fa-solid fa-graduation-cap text-lg"></i>
-            </div>
+    <!-- Top Navbar Header -->
+    <header class="w-full max-w-6xl mx-auto bg-white border border-slate-200 rounded-2xl p-4 sm:px-6 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+        <!-- Logo & Campus Info -->
+        <div class="flex items-center gap-3.5">
+            <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
+                 alt="Logo UIKA" 
+                 style="width: 48px; height: 48px; min-width: 48px; min-height: 48px; object-fit: contain;" 
+                 class="w-12 h-12 object-contain shrink-0">
             <div>
-                <h1 class="font-extrabold text-base tracking-wide uppercase leading-tight">UIKA SMART LABS</h1>
-                <p class="text-[10px] font-bold tracking-widest text-[#00b87c] uppercase">Digital Information Display</p>
+                <h1 class="font-extrabold text-slate-900 text-sm sm:text-base tracking-wide leading-tight uppercase">
+                    UNIVERSITAS IBN KHALDUN BOGOR
+                </h1>
+                <p class="text-xs font-bold text-[#0c4ea6] tracking-wider uppercase flex items-center gap-1.5 mt-0.5">
+                    <span class="w-2 h-2 rounded-full bg-[#00b87c] inline-block"></span>
+                    Digital Information Board Portal
+                </p>
             </div>
         </div>
-        <a href="{{ route('login') }}" class="px-5 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 font-semibold text-xs transition duration-300 flex items-center gap-2">
-            <i class="fa-solid fa-right-to-bracket text-slate-400"></i> Login Staff / Dosen
-        </a>
+
+        <!-- Action Button -->
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <a href="{{ route('login') }}" 
+               class="px-4 py-2.5 rounded-xl border border-slate-200 hover:border-[#0c4ea6]/40 bg-slate-50 hover:bg-white text-slate-700 hover:text-[#0c4ea6] font-bold text-xs transition duration-200 shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-user-shield text-[#0c4ea6]"></i>
+                <span>Login Staff / Dosen</span>
+            </a>
+        </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="w-full max-w-6xl mx-auto py-12 flex-grow flex flex-col justify-center z-10">
-        <div class="text-center max-w-2xl mx-auto mb-12 space-y-3">
-            <span class="px-3 py-1 bg-[#00b87c]/15 text-[#00b87c] border border-[#00b87c]/20 text-[10px] font-bold uppercase tracking-widest rounded-full">Select Monitor Location</span>
-            <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Portal Digital Board</h2>
-            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">Pilih laboratorium untuk membuka tampilan papan informasi digital khusus di depan laboratorium masing-masing.</p>
+    <!-- Main Container -->
+    <main class="w-full max-w-6xl mx-auto flex-grow flex flex-col justify-center py-2 sm:py-6">
+        
+        <!-- Hero Title Section -->
+        <div class="text-center max-w-2xl mx-auto mb-8 space-y-2.5">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#00b87c]/10 text-[#0b8a5a] border border-[#00b87c]/20 text-[11px] font-extrabold uppercase tracking-wider rounded-full">
+                <i class="fa-solid fa-desktop text-xs"></i> Select Kiosk Monitor
+            </span>
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+                Papan Informasi Laboratorium
+            </h2>
+            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                Pilih ruang laboratorium untuk membuka tampilan layar papan informasi perkuliahan, agenda dosen, dan pengumuman secara real-time.
+            </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Filter & Search Control Bar -->
+        <div class="w-full max-w-3xl mx-auto mb-8 flex flex-col sm:flex-row items-center gap-3">
+            <!-- Search Bar -->
+            <div class="relative flex-grow w-full">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="labSearch" placeholder="Cari nama lab atau lokasi gedung..." 
+                       class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0c4ea6]/20 focus:border-[#0c4ea6] shadow-sm transition">
+            </div>
+
+            <!-- Quick Filter Badges -->
+            <div class="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 shrink-0 text-xs font-bold">
+                <button type="button" onclick="filterLab('all')" class="filter-btn active-filter px-3.5 py-2.5 rounded-xl bg-[#0c4ea6] text-white transition shadow-sm" data-filter="all">Semua</button>
+                <button type="button" onclick="filterLab('lantai 1')" class="filter-btn px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition shadow-sm" data-filter="lantai 1">Lantai 1</button>
+                <button type="button" onclick="filterLab('lantai 2')" class="filter-btn px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition shadow-sm" data-filter="lantai 2">Lantai 2</button>
+            </div>
+        </div>
+
+        <!-- Lab Display Cards Grid -->
+        <div id="labGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($labs as $lab)
-                <div class="glass-panel p-6 rounded-3xl flex flex-col justify-between gap-5 hover:border-white/20 transition duration-300 transform hover:-translate-y-1">
-                    <div class="space-y-3">
-                        <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center text-teal-400">
-                            <i class="fa-solid fa-door-open text-base"></i>
+                <div class="lab-card bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between gap-5 card-shadow transition duration-200 relative overflow-hidden" 
+                     data-location="{{ strtolower($lab->lokasi) }}" data-name="{{ strtolower($lab->nama_lab) }}">
+                    
+                    <!-- Top Status Bar -->
+                    <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#0c4ea6] shrink-0">
+                                <i class="fa-solid fa-chalkboard-user text-base"></i>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-extrabold text-slate-400 tracking-wider uppercase block">Ruang Laboratorium</span>
+                                <h3 class="font-extrabold text-slate-900 text-base tracking-tight leading-snug lab-title-text">{{ $lab->nama_lab }}</h3>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="font-extrabold text-base tracking-wide">{{ $lab->nama_lab }}</h3>
-                            <p class="text-[10px] font-semibold text-[#00b87c] tracking-wider uppercase mt-0.5"><i class="fa-solid fa-map-pin mr-1"></i>{{ $lab->lokasi }}</p>
-                        </div>
-                        <p class="text-slate-400 text-[11px] leading-relaxed">Papan display digital cerdas untuk memantau agenda kelas aktif, realisasi perkuliahan, dan pengumuman.</p>
+
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Display Active
+                        </span>
                     </div>
 
-                    <div class="pt-4 border-t border-white/5 flex items-center justify-between text-xs">
-                        <span class="text-slate-400 text-[10px] font-semibold"><i class="fa-solid fa-users mr-1"></i> Kapasitas: {{ $lab->kapasitas ?: 30 }} Kursi</span>
-                        <a href="{{ route('board.lab', $lab->id) }}" class="glow-button px-4 py-2 bg-[#00b87c] hover:bg-[#00a36d] text-slate-900 font-bold rounded-xl transition duration-300 flex items-center gap-1.5 shadow-md">
-                            Monitor Board <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    <!-- Room Specs & Details -->
+                    <div class="space-y-3">
+                        <div class="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                            <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg flex items-center gap-1.5 lab-loc-text">
+                                <i class="fa-solid fa-location-dot text-rose-500"></i>
+                                {{ $lab->lokasi }}
+                            </span>
+                            <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg flex items-center gap-1.5">
+                                <i class="fa-solid fa-chair text-slate-500"></i>
+                                {{ $lab->kapasitas ?: 30 }} Kursi
+                            </span>
+                        </div>
+
+                        <p class="text-slate-500 text-xs leading-relaxed">
+                            Monitor papan informasi digital aktif untuk menampilkan jadwal perkuliahan, status presensi dosen, dan pengumuman.
+                        </p>
+                    </div>
+
+                    <!-- Action Launch Monitor -->
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                        <span class="text-[11px] font-bold text-slate-400">
+                            <i class="fa-solid fa-[#0c4ea6] fa-desktop text-slate-400 mr-1"></i> Live Kiosk Mode
+                        </span>
+                        
+                        <a href="{{ route('board.lab', $lab->id) }}" 
+                           class="px-4 py-2.5 bg-[#0c4ea6] hover:bg-[#0a3f86] text-white font-bold text-xs rounded-xl transition duration-200 flex items-center gap-2 shadow-sm hover:shadow-md">
+                            <span>Buka Monitor Board</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
                         </a>
                     </div>
                 </div>
             @empty
-                <div class="col-span-full py-16 text-center text-slate-500 italic text-xs">
-                    <i class="fa-solid fa-circle-exclamation text-3xl block mb-2"></i>
-                    Belum ada laboratorium terdaftar. Tambahkan laboratorium baru di Admin Panel.
+                <div class="col-span-full py-16 text-center bg-white border border-dashed border-slate-300 rounded-3xl p-8">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-sm mb-1">Belum Ada Laboratorium</h4>
+                    <p class="text-slate-500 text-xs">Silakan tambahkan data laboratorium melalui Dashboard Admin.</p>
                 </div>
             @endforelse
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="w-full max-w-6xl mx-auto border-t border-white/5 pt-6 text-center text-slate-500 text-[10px] font-semibold tracking-wider uppercase z-10 flex flex-col sm:flex-row justify-between items-center gap-3">
-        <p>&copy; {{ date('Y') }} UIKA SMART LAB MANAGEMENT. All Rights Reserved.</p>
-        <p>Powered by Laravel & Tailwind CSS</p>
+    <footer class="w-full max-w-6xl mx-auto border-t border-slate-200 pt-6 mt-8 text-slate-500 text-xs font-semibold flex flex-col sm:flex-row justify-between items-center gap-3">
+        <p>&copy; {{ date('Y') }} Universitas Ibn Khaldun Bogor. All Rights Reserved.</p>
+        <p class="text-slate-400 text-[11px]">Computer Laboratory Digital Information Board System</p>
     </footer>
 
+    <!-- Interactive Search & Filter JS -->
+    <script>
+        const searchInput = document.getElementById('labSearch');
+        let currentFilter = 'all';
+
+        function updateDisplay() {
+            const query = searchInput.value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.lab-card');
+
+            cards.forEach(card => {
+                const name = card.dataset.name || '';
+                const location = card.dataset.location || '';
+
+                const matchesSearch = name.includes(query) || location.includes(query);
+                const matchesFilter = (currentFilter === 'all') || location.includes(currentFilter);
+
+                if (matchesSearch && matchesFilter) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        searchInput?.addEventListener('input', updateDisplay);
+
+        function filterLab(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === filter) {
+                    btn.className = 'filter-btn active-filter px-3.5 py-2.5 rounded-xl bg-[#0c4ea6] text-white transition shadow-sm';
+                } else {
+                    btn.className = 'filter-btn px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition shadow-sm';
+                }
+            });
+            updateDisplay();
+        }
+    </script>
 </body>
 </html>
