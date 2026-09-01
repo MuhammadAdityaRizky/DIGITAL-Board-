@@ -188,7 +188,7 @@
                                             </td>
                                             <td class="p-4">
                                                 <div class="flex justify-center">
-                                                    <form action="{{ route('admin.agenda.delete', $ag->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus agenda praktikum ini? Semua data absensi kelas ini akan terhapus!');">
+                                                    <form action="{{ route('admin.agenda.delete', $ag->id) }}" method="POST" onsubmit="return confirmAction(event, 'Semua data absensi kelas ini akan terhapus!', 'Hapus Agenda Praktikum?');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-655 border border-rose-200 rounded-lg font-bold transition flex items-center gap-1">
@@ -325,6 +325,39 @@
 
     <!-- SweetAlert2 Automatic Alerts & Loading Handler -->
     <script>
+        function confirmAction(event, text, title = 'Apakah Anda yakin?', confirmText = 'Ya, Lanjutkan!') {
+            event.preventDefault();
+            const form = event.target.tagName === 'FORM' ? event.target : event.target.closest('form');
+            
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed && form) {
+                    form.dataset.confirmed = "true";
+                    if (typeof form.requestSubmit === 'function') {
+                        form.requestSubmit();
+                    } else {
+                        form.submit();
+                    }
+                }
+            });
+            return false;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             @if(session('success'))
                 Swal.fire({

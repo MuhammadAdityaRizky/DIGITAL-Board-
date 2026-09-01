@@ -309,8 +309,32 @@
         }
 
         function confirmDelete(deleteUrl) {
-            document.getElementById('delete-form').action = deleteUrl;
-            document.getElementById('modal-confirm-delete').classList.remove('hidden');
+            Swal.fire({
+                title: 'Hapus Pengumuman?',
+                text: 'Apakah Anda yakin ingin menghapus pengumuman ini?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('delete-form');
+                    if (form) {
+                        form.action = deleteUrl;
+                        form.dataset.confirmed = "true";
+                        form.submit();
+                    }
+                }
+            });
         }
 
         function closeDeleteModal() {

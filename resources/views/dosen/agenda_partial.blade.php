@@ -69,7 +69,7 @@
                                     Simpan
                                 </button>
                                 @if($ag->materi_realisasi)
-                                    <button type="submit" name="realisasi_pembelajaran" value="" onclick="return confirm('Apakah Anda yakin ingin menghapus realisasi pembelajaran ini?')" class="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-250 rounded-lg text-xs font-bold transition whitespace-nowrap" title="Hapus Realisasi">
+                                    <button type="submit" name="realisasi_pembelajaran" value="" onclick="return confirmAction(event, 'Apakah Anda yakin ingin menghapus realisasi pembelajaran ini?', 'Hapus Realisasi?')" class="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-250 rounded-lg text-xs font-bold transition whitespace-nowrap" title="Hapus Realisasi">
                                         <i class="fa-solid fa-trash-can"></i>
                                     </button>
                                 @endif
@@ -85,7 +85,7 @@
                         <i class="fa-solid fa-pen-to-square"></i> Edit
                     </button>
                     
-                    <form action="{{ route('dosen.agenda.delete', $ag->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus agenda ini?')" class="inline">
+                    <form action="{{ route('dosen.agenda.delete', $ag->id) }}" method="POST" onsubmit="return confirmAction(event, 'Apakah Anda yakin ingin menghapus agenda ini?', 'Hapus Agenda?')" class="inline">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-lg border border-rose-200 transition flex items-center gap-1.5">

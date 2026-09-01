@@ -181,7 +181,7 @@
                                 <td class="p-3 text-center">
                                     <div class="flex items-center justify-center gap-3">
                                         <button onclick="openEditFakultasModal({{ $fak->id }}, '{{ addslashes($fak->nama_fakultas) }}')" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-                                        <form action="{{ route('admin.akademik.fakultas.delete', $fak->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus Fakultas ini? Semua Prodi dan User terkait akan terpengaruh.')" class="inline">
+                                        <form action="{{ route('admin.akademik.fakultas.delete', $fak->id) }}" method="POST" onsubmit="return confirmAction(event, 'Semua Prodi dan User terkait akan terpengaruh.', 'Hapus Fakultas?')" class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Hapus</button>
@@ -227,7 +227,7 @@
                                 <td class="p-3 text-center">
                                     <div class="flex items-center justify-center gap-3">
                                         <button onclick="openEditProdiModal({{ $prod->id }}, '{{ addslashes($prod->nama_prodi) }}', {{ $prod->fakultas_id }})" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-                                        <form action="{{ route('admin.akademik.prodi.delete', $prod->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus Prodi ini?')" class="inline">
+                                        <form action="{{ route('admin.akademik.prodi.delete', $prod->id) }}" method="POST" onsubmit="return confirmAction(event, 'Apakah Anda yakin ingin menghapus Prodi ini?', 'Hapus Prodi?')" class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Hapus</button>
@@ -283,7 +283,11 @@
                                     <td class="p-3 text-center">
                                         <div class="flex items-center justify-center gap-3">
                                             <button type="button" onclick="openEditKelasModal({{ $k->id }}, '{{ addslashes($k->nama_kelas) }}')" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-                                            <button type="button" onclick="if(confirm('Apakah Anda yakin ingin menghapus Kelas ini?')) { document.getElementById('delete-kelas-{{ $k->id }}').submit(); }" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+                                            <form id="delete-kelas-{{ $k->id }}" action="{{ url('admin/akademik/kelas') }}/{{ $k->id }}" method="POST" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="button" onclick="confirmAction(event, 'Apakah Anda yakin ingin menghapus Kelas ini?', 'Hapus Kelas?')" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
@@ -547,9 +551,31 @@
         });
 
         function submitBulkDeleteKelas() {
-            if(confirm('Apakah Anda yakin ingin menghapus kelas yang dipilih?')) {
-                document.getElementById('bulk-delete-kelas-form').submit();
-            }
+            Swal.fire({
+                title: 'Hapus Kelas Terpilih?',
+                text: 'Apakah Anda yakin ingin menghapus kelas yang dipilih?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('bulk-delete-kelas-form');
+                    if (form) {
+                        form.dataset.confirmed = "true";
+                        form.submit();
+                    }
+                }
+            });
         }
     </script>
 
@@ -612,6 +638,39 @@
         });
     <!-- SweetAlert2 Automatic Alerts & Loading Handler -->
     <script>
+        function confirmAction(event, text, title = 'Apakah Anda yakin?', confirmText = 'Ya, Lanjutkan!') {
+            event.preventDefault();
+            const form = event.target.tagName === 'FORM' ? event.target : event.target.closest('form');
+            
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed && form) {
+                    form.dataset.confirmed = "true";
+                    if (typeof form.requestSubmit === 'function') {
+                        form.requestSubmit();
+                    } else {
+                        form.submit();
+                    }
+                }
+            });
+            return false;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             @if(session('success'))
                 Swal.fire({

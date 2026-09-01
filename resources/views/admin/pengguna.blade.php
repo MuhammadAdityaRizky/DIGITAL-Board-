@@ -108,27 +108,6 @@
         <!-- Content Area -->
         <div class="flex-grow overflow-auto p-6 space-y-6">
 
-            <!-- Alerts -->
-            @if(session('success'))
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-850 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm max-w-4xl">
-                    <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 text-lg"></i>
-                    <div>
-                        <span class="font-bold">Berhasil!</span>
-                        <p class="mt-0.5">{{ session('success') }}</p>
-                    </div>
-                </div>
-            @endif
-
-            @if($errors->any())
-                <div class="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm max-w-4xl">
-                    <i class="fa-solid fa-circle-xmark text-rose-600 mt-0.5 text-lg"></i>
-                    <div>
-                        <span class="font-bold">Gagal memproses data:</span>
-                        <p class="mt-0.5">{{ $errors->first() }}</p>
-                    </div>
-                </div>
-            @endif
-
             <!-- Search & Filter Bar -->
             <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm max-w-4xl">
                 <form action="{{ route('admin.pengguna') }}" method="GET" class="flex flex-col sm:flex-row gap-4 items-end text-xs">
@@ -149,24 +128,20 @@
                         </select>
                     </div>
                     <div class="flex gap-2 w-full sm:w-auto">
-                        <button type="submit" class="flex-grow sm:flex-grow-0 px-5 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition-all shadow-sm">
-                            Filter
-                        </button>
-                        @if(request()->anyFilled(['search', 'role']))
-                            <a href="{{ route('admin.pengguna') }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all border border-slate-200 text-center">
-                                Reset
-                            </a>
+                        <button type="submit" class="px-4 py-2.5 bg-teal-850 hover:bg-teal-900 text-white rounded-xl font-bold transition shadow-sm">Filter</button>
+                        @if(request('search') || request('role'))
+                            <a href="{{ route('admin.pengguna') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition text-center">Reset</a>
                         @endif
                     </div>
                 </form>
             </div>
 
-            <!-- Users Management Card -->
+            <!-- Main Data Table -->
             <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden max-w-4xl">
                 <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
                     <h3 class="font-bold text-sm text-slate-800">Daftar Pengguna Sistem</h3>
                     <div class="flex items-center gap-2">
-                        <form action="{{ route('admin.users.promote') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menaikkan semester seluruh mahasiswa? Semester semua mahasiswa akan naik 1 tingkat.');" class="inline">
+                        <form action="{{ route('admin.users.promote') }}" method="POST" onsubmit="return confirmAction(event, 'Semester semua mahasiswa akan naik 1 tingkat.', 'Naikkan Semester All?');" class="inline">
                             @csrf
                             <button type="submit" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                                 <i class="fa-solid fa-arrow-up-right-dots"></i> Naik Semester
@@ -251,7 +226,7 @@
                                                     <button onclick='editUser(@json($u))' class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
                                                     
                                                      @if(auth()->id() !== $u->id)
-                                                        <form action="{{ route('admin.pengguna.delete', $u->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun ini?');">
+                                                        <form action="{{ route('admin.pengguna.delete', $u->id) }}" method="POST" onsubmit="return confirmAction(event, 'Apakah Anda yakin ingin menghapus akun ini?');">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Hapus</button>
@@ -664,6 +639,39 @@
 
     <!-- SweetAlert2 Automatic Alerts & Loading Handler -->
     <script>
+        function confirmAction(event, text, title = 'Apakah Anda yakin?', confirmText = 'Ya, Lanjutkan!') {
+            event.preventDefault();
+            const form = event.target.tagName === 'FORM' ? event.target : event.target.closest('form');
+            
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed && form) {
+                    form.dataset.confirmed = "true";
+                    if (typeof form.requestSubmit === 'function') {
+                        form.requestSubmit();
+                    } else {
+                        form.submit();
+                    }
+                }
+            });
+            return false;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             @if(session('success'))
                 Swal.fire({

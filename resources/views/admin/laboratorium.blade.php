@@ -155,7 +155,7 @@
                                     <div class="flex items-center gap-2">
                                         <button onclick='editLab(@json($l))' class="w-8 h-8 rounded-lg bg-white border border-slate-250 flex items-center justify-center text-teal-750 hover:text-teal-900 transition shadow-xs" title="Edit Lab"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
                                         
-                                        <form action="{{ route('admin.laboratorium.delete', $l->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus lab ini? Semua agenda/kelas terkait akan ikut terhapus!');">
+                                        <form action="{{ route('admin.laboratorium.delete', $l->id) }}" method="POST" onsubmit="return confirmAction(event, 'Semua agenda/kelas terkait akan ikut terhapus!', 'Hapus Laboratorium?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="w-8 h-8 rounded-lg bg-white border border-rose-250 flex items-center justify-center text-rose-500 hover:text-rose-700 transition shadow-xs" title="Hapus Lab"><i class="fa-solid fa-trash-can text-xs"></i></button>
@@ -342,6 +342,39 @@
 
     <!-- SweetAlert2 Automatic Alerts & Loading Handler -->
     <script>
+        function confirmAction(event, text, title = 'Apakah Anda yakin?', confirmText = 'Ya, Lanjutkan!') {
+            event.preventDefault();
+            const form = event.target.tagName === 'FORM' ? event.target : event.target.closest('form');
+            
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed && form) {
+                    form.dataset.confirmed = "true";
+                    if (typeof form.requestSubmit === 'function') {
+                        form.requestSubmit();
+                    } else {
+                        form.submit();
+                    }
+                }
+            });
+            return false;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             @if(session('success'))
                 Swal.fire({
