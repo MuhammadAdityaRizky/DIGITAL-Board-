@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('agenda', function (Blueprint $table) {
-            $table->enum('program_kuliah', ['Reguler', 'Karyawan'])->default('Reguler')->after('mata_kuliah');
+            if (!Schema::hasColumn('agenda', 'program_kuliah')) {
+                $table->enum('program_kuliah', ['Reguler', 'Karyawan'])->default('Reguler')->after('mata_kuliah');
+            }
         });
     }
 

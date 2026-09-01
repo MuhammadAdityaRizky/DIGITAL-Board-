@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('kelas', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama_kelas', 50)->unique();
-            $table->timestamp('created_at')->useCurrent();
-        });
+        if (!Schema::hasTable('kelas')) {
+            Schema::create('kelas', function (Blueprint $table) {
+                $table->id();
+                $table->string('nama_kelas', 50)->unique();
+                $table->timestamp('created_at')->useCurrent();
+            });
+        }
     }
 
     /**

@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('agenda', function (Blueprint $table) {
-            $table->tinyInteger('auto_alpha_processed')->default(0);
+            if (!Schema::hasColumn('agenda', 'auto_alpha_processed')) {
+                $table->tinyInteger('auto_alpha_processed')->default(0);
+            }
         });
     }
 

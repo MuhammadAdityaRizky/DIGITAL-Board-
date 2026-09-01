@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('agenda', function (Blueprint $table) {
-            $table->text('materi_realisasi')->nullable()->after('catatan');
-            $table->timestamp('dosen_waktu_masuk')->nullable()->after('materi_realisasi');
+            if (!Schema::hasColumn('agenda', 'materi_realisasi')) {
+                $table->text('materi_realisasi')->nullable()->after('catatan');
+            }
+            if (!Schema::hasColumn('agenda', 'dosen_waktu_masuk')) {
+                $table->timestamp('dosen_waktu_masuk')->nullable();
+            }
         });
     }
 

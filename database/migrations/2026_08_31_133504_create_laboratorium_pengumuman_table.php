@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('laboratorium_pengumuman', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('laboratorium_id');
-            $table->unsignedBigInteger('pengumuman_id');
-            $table->timestamps();
+        if (!Schema::hasTable('laboratorium_pengumuman')) {
+            Schema::create('laboratorium_pengumuman', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedBigInteger('laboratorium_id');
+                $table->unsignedBigInteger('pengumuman_id');
+                $table->timestamps();
 
-            $table->foreign('laboratorium_id')->references('id')->on('laboratorium')->onDelete('cascade');
-            $table->foreign('pengumuman_id')->references('id')->on('pengumuman')->onDelete('cascade');
-        });
+                $table->foreign('laboratorium_id')->references('id')->on('laboratorium')->onDelete('cascade');
+                $table->foreign('pengumuman_id')->references('id')->on('pengumuman')->onDelete('cascade');
+            });
+        }
     }
 
     /**
