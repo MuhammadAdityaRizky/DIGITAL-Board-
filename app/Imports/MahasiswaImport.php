@@ -8,9 +8,46 @@ use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\Importable;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\BeforeImport;
+use Maatwebsite\Excel\Events\AfterImport;
+use Illuminate\Support\Facades\Cache;
 
-class MahasiswaImport implements ToModel, WithHeadingRow
+class MahasiswaImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading, WithEvents
 {
+    use Importable;
+
+    public $importId;
+
+    public function __construct($importId)
+    {
+        $this->importId = $importId;
+    }
+
+    public function chunkSize(): int
+    {
+        return 50; 
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            BeforeImport::class => function (BeforeImport $event) {
+                $totalRows = $event->reader->getTotalRows();
+                $total = !empty($totalRows) ? array_values($totalRows)[0] : 0;
+                Cache::put('import_total_' . $this->importId, $total, now()->addHours(1));
+                Cache::put('import_progress_' . $this->importId, 0, now()->addHours(1));
+                Cache::put('import_status_' . $this->importId, 'processing', now()->addHours(1));
+            },
+            AfterImport::class => function (AfterImport $event) {
+                Cache::put('import_status_' . $this->importId, 'completed', now()->addHours(1));
+            },
+        ];
+    }
+
     public function model(array $row): \Illuminate\Database\Eloquent\Model|array|null
     {
         // Pastikan NIM ada dan belum terdaftar di tabel mahasiswa
@@ -77,7 +114,7 @@ class MahasiswaImport implements ToModel, WithHeadingRow
             }
         }
 
-        return new Mahasiswa([
+        $model = new Mahasiswa([
             'user_id' => $user->id,
             'nim' => $row['nim'],
             'nama_lengkap' => $row['nama_lengkap'] ?? $row['nama'],
@@ -87,5 +124,9 @@ class MahasiswaImport implements ToModel, WithHeadingRow
             'kelas' => $kelasAsli,
             'semester' => $semester ?? 1,
         ]);
+
+        Cache::increment('import_progress_' . $this->importId);
+
+        return $model;
     }
 }

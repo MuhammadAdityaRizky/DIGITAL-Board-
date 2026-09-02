@@ -391,7 +391,7 @@
                 <h3 class="font-bold text-base text-slate-800">Import Data Mahasiswa</h3>
                 <button onclick="toggleModal('modal-import-mahasiswa')" class="text-slate-400 hover:text-slate-660 text-lg">&times;</button>
             </div>
-            <form action="{{ route('admin.pengguna.import-mahasiswa') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+            <form id="form-import-mahasiswa" action="{{ route('admin.pengguna.import-mahasiswa') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs no-loading">
                 @csrf
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
@@ -413,17 +413,96 @@
                 <i class="fa-solid fa-cloud-arrow-up text-2xl text-teal-400"></i>
             </div>
             <div class="space-y-1.5">
-                <h3 class="text-base font-extrabold text-white tracking-tight">Mengimpor Data...</h3>
-                <p class="text-xs text-slate-400 leading-relaxed">
-                    Sistem sedang membaca dan memproses file Excel/CSV. Mohon tunggu sejenak dan jangan menutup halaman ini.
+                <h3 id="import-title" class="text-base font-extrabold text-white tracking-tight">Mengimpor Data...</h3>
+                <p id="import-desc" class="text-xs text-slate-400 leading-relaxed">
+                    Sistem sedang membaca dan memproses file Excel/CSV.
                 </p>
             </div>
+            
+            <!-- Real-time Progress Bar -->
+            <div id="realtime-progress-container" class="hidden space-y-2 mt-4">
+                <div class="w-full bg-slate-800 rounded-full h-2.5">
+                    <div id="import-progress-bar" class="bg-teal-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-[10px] font-bold text-slate-400">
+                    <span id="import-progress-text">0%</span>
+                    <span id="import-progress-count">0 / 0 Baris</span>
+                </div>
+            </div>
+
             <div class="pt-3 border-t border-slate-800 flex items-center justify-center gap-2">
                 <i class="fa-solid fa-circle-notch animate-spin text-teal-400 text-xs"></i>
-                <span class="text-[11px] font-bold tracking-wider text-teal-300 uppercase">Memproses Database</span>
+                <span id="import-status-text" class="text-[11px] font-bold tracking-wider text-teal-300 uppercase">Memproses Database</span>
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const formMahasiswa = document.getElementById('form-import-mahasiswa');
+            if (formMahasiswa) {
+                formMahasiswa.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const overlay = document.getElementById('global-import-loading-overlay');
+                    const progressContainer = document.getElementById('realtime-progress-container');
+                    const progressBar = document.getElementById('import-progress-bar');
+                    const progressText = document.getElementById('import-progress-text');
+                    const progressCount = document.getElementById('import-progress-count');
+                    const statusText = document.getElementById('import-status-text');
+                    const importDesc = document.getElementById('import-desc');
+                    
+                    overlay.classList.remove('hidden');
+                    progressContainer.classList.remove('hidden');
+                    importDesc.innerText = 'Mohon tunggu, jangan menutup halaman ini selama proses berlangsung.';
+                    
+                    const formData = new FormData(this);
+                    
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+                        
+                        const importId = data.import_id;
+                        
+                        // Start polling
+                        const interval = setInterval(() => {
+                            fetch(`/batch-status/${importId}`)
+                                .then(res => res.json())
+                                .then(statusData => {
+                                    progressBar.style.width = statusData.percentage + '%';
+                                    progressText.innerText = statusData.percentage + '%';
+                                    progressCount.innerText = statusData.progress + ' / ' + statusData.total + ' Baris';
+                                    
+                                    if (statusData.status === 'completed' || statusData.progress >= statusData.total && statusData.total > 0) {
+                                        clearInterval(interval);
+                                        statusText.innerText = 'SELESAI!';
+                                        statusText.classList.replace('text-teal-300', 'text-green-400');
+                                        
+                                        setTimeout(() => {
+                                            window.location.reload();
+                                        }, 1000);
+                                    }
+                                });
+                        }, 1000);
+                        
+                    })
+                    .catch(error => {
+                        overlay.classList.add('hidden');
+                        Swal.fire('Error!', error.message || 'Gagal mengimpor data.', 'error');
+                    });
+                });
+            }
+        });
+    </script>
 
     <script>
         function showImportLoading(form) {

@@ -104,4 +104,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengaturan', [MahasiswaController::class, 'pengaturan'])->name('pengaturan');
         Route::put('/pengaturan', [MahasiswaController::class, 'updatePengaturan'])->name('pengaturan.update');
     });
+
+    Route::get('/batch-status/{id}', [\App\Http\Controllers\BatchController::class, 'status'])->name('batch.status');
 });

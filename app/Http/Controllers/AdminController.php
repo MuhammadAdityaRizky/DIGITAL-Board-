@@ -655,12 +655,23 @@ class AdminController extends Controller
         ]);
 
         try {
-            $files = is_array($request->file('file_excel')) ? $request->file('file_excel') : [$request->file('file_excel')];
-            foreach ($files as $file) {
-                Excel::import(new MahasiswaImport, $file);
+            $file = is_array($request->file('file_excel')) ? $request->file('file_excel')[0] : $request->file('file_excel');
+            
+            $importId = (string) \Illuminate\Support\Str::uuid();
+            $path = $file->storeAs('imports', $importId . '.' . $file->getClientOriginalExtension());
+            
+            $import = new \App\Imports\MahasiswaImport($importId);
+            $import->queue($path);
+            
+            if ($request->ajax()) {
+                return response()->json(['import_id' => $importId]);
             }
-            return back()->with('success', count($files) . ' file Mahasiswa berhasil diimpor.');
+            
+            return back()->with('success', 'Proses impor data Mahasiswa sedang berjalan di latar belakang.');
         } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json(['error' => $e->getMessage()], 500);
+            }
             return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
         }
     }
