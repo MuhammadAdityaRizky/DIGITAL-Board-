@@ -57,20 +57,23 @@ class AdminController extends Controller
         $query = User::with(['dosen.fakultas', 'dosen.prodi', 'mahasiswa.fakultas', 'mahasiswa.prodi'])->orderBy('created_at', 'desc');
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->search);
             $query->where(function($q) use ($search) {
                 $q->where('username', 'like', "%{$search}%")
                   ->orWhereHas('dosen', function($qd) use ($search) {
-                      $qd->where('nama', 'like', "%{$search}%");
+                      $qd->where('nama', 'like', "%{$search}%")
+                        ->orWhere('nip', 'like', "%{$search}%");
                   })
                   ->orWhereHas('mahasiswa', function($qm) use ($search) {
-                      $qm->where('nama_lengkap', 'like', "%{$search}%");
+                      $qm->where('nama_lengkap', 'like', "%{$search}%")
+                        ->orWhere('nim', 'like', "%{$search}%");
                   });
             });
         }
 
         if ($request->filled('role')) {
-            $query->where('role', $request->role);
+            $role = strtolower(trim($request->role));
+            $query->where('role', $role);
         }
 
         $users = $query->paginate(50)->withQueryString();

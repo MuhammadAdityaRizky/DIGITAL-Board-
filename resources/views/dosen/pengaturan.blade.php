@@ -43,20 +43,7 @@
                 <i class="fa-solid fa-file-signature"></i>
                 <span class="text-xs font-semibold tracking-wide">Verifikasi Perizinan</span>
             </a>
-            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-850 text-white rounded-xl w-full">
-                <i class="fa-solid fa-gear"></i>
-                <span class="text-xs font-semibold tracking-wide">Pengaturan</span>
-            </a>
         </nav>
-
-        <div class="p-6 border-t border-slate-800">
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="flex items-center gap-3 text-rose-400 hover:text-rose-300 text-xs font-bold w-full transition">
-                    <i class="fa-solid fa-right-from-bracket"></i> Logout
-                </button>
-            </form>
-        </div>
     </aside>
 
     <!-- Main Content -->
@@ -72,13 +59,52 @@
                 <h2 class="font-bold text-base text-slate-800 hidden lg:block">Pengaturan Akun Dosen</h2>
             </div>
 
-            <div class="flex items-center gap-4">
-                <div class="text-right hidden sm:block">
-                    <p class="font-bold text-xs text-slate-800">{{ $dosen->nama }}</p>
-                    <p class="text-[9px] font-semibold tracking-wider text-slate-500">Dosen Informatika</p>
-                </div>
-                <div class="w-9 h-9 rounded-full bg-teal-100 text-teal-850 flex items-center justify-center font-bold text-xs">
-                    {{ substr($dosen->nama, 0, 2) }}
+            <!-- Profile Avatar & Dropdown Menu -->
+            <div class="relative" id="profileDropdownWrapper">
+                <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1 rounded-xl hover:bg-slate-50 transition">
+                    <div class="text-right hidden sm:block">
+                        <p class="font-bold text-xs text-slate-800 group-hover:text-teal-700 transition">{{ $dosen->nama }}</p>
+                        <p class="text-[9px] font-semibold tracking-wider text-slate-500">NIP: {{ $dosen->nip }} • Dosen</p>
+                    </div>
+                    <div class="w-9 h-9 rounded-full bg-teal-100 group-hover:bg-teal-200 text-teal-900 border border-teal-200 flex items-center justify-center font-bold text-xs transition transform group-hover:scale-105 shadow-xs">
+                        {{ substr($dosen->nama, 0, 2) }}
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 transition hidden sm:inline-block"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 hidden transform transition-all duration-200 origin-top-right">
+                    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                        <p class="text-xs font-bold text-slate-800 truncate">{{ $dosen->nama }}</p>
+                        <p class="text-[10px] text-slate-500 font-mono mt-0.5">NIP: {{ $dosen->nip }}</p>
+                        <span class="inline-block mt-1.5 px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200/60 rounded-md text-[9px] font-bold">
+                            Dosen Pengajar
+                        </span>
+                    </div>
+
+                    <div class="py-1">
+                        <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-2.5 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-800 transition font-medium group">
+                            <div class="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-teal-100 group-hover:text-teal-700 flex items-center justify-center text-slate-500 transition">
+                                <i class="fa-solid fa-gear text-xs"></i>
+                            </div>
+                            <div>
+                                <span class="font-bold block">Pengaturan Akun</span>
+                                <span class="text-[10px] text-slate-400 block font-normal">Edit profil & ganti password</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="pt-1 border-t border-slate-100">
+                        <form action="{{ route('logout') }}" method="POST" class="logout-form">
+                            @csrf
+                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-rose-600 hover:bg-rose-50 transition font-bold text-left group">
+                                <div class="w-7 h-7 rounded-lg bg-rose-50 group-hover:bg-rose-100 text-rose-600 flex items-center justify-center transition">
+                                    <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                                </div>
+                                <span>Keluar / Logout</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </header>
@@ -160,28 +186,12 @@
                         </div>
                     </form>
                 </div>
-
-                <!-- Logout Card (Mobile & Desktop) -->
-                <div class="bg-rose-50 border border-rose-200 shadow-sm rounded-xl p-6">
-                    <h3 class="font-bold text-sm text-rose-800 mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-right-from-bracket text-rose-600"></i> Keluar dari Akun
-                    </h3>
-                    <p class="text-xs text-rose-700/80 mb-4">
-                        Tekan tombol di bawah ini untuk mengakhiri sesi login Dosen pada perangkat ini secara aman.
-                    </p>
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-right-from-bracket"></i> Logout Sekarang
-                        </button>
-                    </form>
-                </div>
             </div>
             
         </div>
     </main>
 
-    <!-- Bottom Navigation Bar (Mobile Only - Figma Design) -->
+    <!-- Bottom Navigation Bar (Mobile Only - Symmetrical Layout with Center QR) -->
     <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-lg">
         <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
             <i class="fa-solid fa-border-all text-lg"></i>
@@ -200,11 +210,30 @@
             <i class="fa-solid fa-users text-lg"></i>
             <span class="text-[9px] font-medium">Mahasiswa</span>
         </a>
-        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-bold">
-            <i class="fa-solid fa-gear text-lg"></i>
-            <span class="text-[9px] font-bold">Pengaturan</span>
+        <a href="{{ route('dosen.perizinan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
+            <i class="fa-solid fa-file-signature text-lg"></i>
+            <span class="text-[9px] font-medium">Perizinan</span>
         </a>
     </nav>
+
+    <!-- Profile Dropdown Handler -->
+    <script>
+        function toggleProfileDropdown(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('profileDropdownMenu');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            const wrapper = document.getElementById('profileDropdownWrapper');
+            const menu = document.getElementById('profileDropdownMenu');
+            if (wrapper && menu && !wrapper.contains(event.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+    </script>
 
     <!-- Hidden form for QR attendance submission -->
     <form id="dosen-absensi-form" action="{{ route('dosen.absensi.submit') }}" method="POST" class="hidden">
@@ -414,11 +443,19 @@
                         return;
                     }
 
+                    const isLogout = (form.action && form.action.includes('logout')) || form.classList.contains('logout-form');
                     const isImport = form.getAttribute('enctype') === 'multipart/form-data';
-                    const loadingTitle = isImport ? 'Mengimpor Data...' : 'Menyimpan Data...';
-                    const loadingText = isImport 
-                        ? 'Sistem sedang membaca dan memproses file Excel/CSV.' 
-                        : 'Sedang memproses dan menyimpan data ke sistem.';
+                    
+                    let loadingTitle = 'Menyimpan Data...';
+                    let loadingText = 'Sedang memproses dan menyimpan data ke sistem.';
+                    
+                    if (isLogout) {
+                        loadingTitle = 'Sedang Keluar...';
+                        loadingText = 'Menutup sesi akun Anda dengan aman.';
+                    } else if (isImport) {
+                        loadingTitle = 'Mengimpor Data...';
+                        loadingText = 'Sistem sedang membaca dan memproses file Excel/CSV.';
+                    }
 
                     Swal.fire({
                         title: loadingTitle,
@@ -427,7 +464,7 @@
                         allowEscapeKey: false,
                         showConfirmButton: false,
                         customClass: {
-                            popup: 'rounded-3xl p-8',
+                            popup: 'rounded-3xl p-8 shadow-2xl border border-slate-100',
                             title: 'text-base font-extrabold text-slate-800',
                             htmlContainer: 'text-xs text-slate-500 font-medium'
                         },

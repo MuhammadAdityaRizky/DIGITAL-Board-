@@ -81,15 +81,6 @@
                 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
             </a>
         </nav>
-
-        <div class="p-5 border-t border-slate-800 shrink-0">
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="flex items-center gap-3 text-rose-400 hover:text-rose-300 text-xs font-bold w-full transition">
-                    <i class="fa-solid fa-right-from-bracket"></i> Logout
-                </button>
-            </form>
-        </div>
     </aside>
 
     <!-- Main Workspace -->
@@ -105,13 +96,39 @@
                 <h2 class="font-bold text-base text-slate-800 hidden lg:block">Manajemen Laboratorium</h2>
             </div>
             
-            <div class="flex items-center gap-4">
-                <div class="text-right hidden sm:block">
-                    <p class="font-bold text-xs text-slate-800">{{ auth()->user()->username }}</p>
-                    <p class="text-[9px] font-semibold tracking-wider text-slate-500">SUPER ADMIN</p>
-                </div>
-                <div class="w-9 h-9 rounded-full bg-teal-100 text-teal-850 flex items-center justify-center font-bold text-xs">
-                    {{ substr(auth()->user()->username, 0, 2) }}
+            <!-- Profile Avatar & Dropdown Menu -->
+            <div class="relative" id="profileDropdownWrapper">
+                <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1 rounded-xl hover:bg-slate-50 transition">
+                    <div class="text-right hidden sm:block">
+                        <p class="font-bold text-xs text-slate-800 group-hover:text-teal-700 transition">{{ auth()->user()->username }}</p>
+                        <p class="text-[9px] font-semibold tracking-wider text-slate-500 uppercase">SUPER ADMIN</p>
+                    </div>
+                    <div class="w-9 h-9 rounded-full bg-teal-100 group-hover:bg-teal-200 text-teal-900 border border-teal-200 flex items-center justify-center font-bold text-xs transition transform group-hover:scale-105 shadow-xs">
+                        {{ strtoupper(substr(auth()->user()->username ?? 'AD', 0, 2)) }}
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 transition hidden sm:inline-block"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 hidden transform transition-all duration-200 origin-top-right">
+                    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                        <p class="text-xs font-bold text-slate-800 truncate">{{ auth()->user()->username ?? 'Administrator' }}</p>
+                        <span class="inline-block mt-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/60 rounded-md text-[9px] font-bold uppercase tracking-wider">
+                            Super Admin
+                        </span>
+                    </div>
+
+                    <div class="p-1">
+                        <form action="{{ route('logout') }}" method="POST" class="logout-form">
+                            @csrf
+                            <button type="submit" class="w-full flex items-center gap-3 px-3 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-xl transition font-bold text-left group">
+                                <div class="w-7 h-7 rounded-lg bg-rose-50 group-hover:bg-rose-100 text-rose-600 flex items-center justify-center transition">
+                                    <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                                </div>
+                                <span>Keluar / Logout</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </header>
@@ -451,11 +468,19 @@
                         return;
                     }
 
+                    const isLogout = (form.action && form.action.includes('logout')) || form.classList.contains('logout-form');
                     const isImport = form.getAttribute('enctype') === 'multipart/form-data';
-                    const loadingTitle = isImport ? 'Mengimpor Data...' : 'Menyimpan Data...';
-                    const loadingText = isImport 
-                        ? 'Sistem sedang membaca dan memproses file Excel/CSV.' 
-                        : 'Sedang memproses dan menyimpan data ke sistem.';
+                    
+                    let loadingTitle = 'Menyimpan Data...';
+                    let loadingText = 'Sedang memproses dan menyimpan data ke sistem.';
+                    
+                    if (isLogout) {
+                        loadingTitle = 'Sedang Keluar...';
+                        loadingText = 'Menutup sesi akun Anda dengan aman.';
+                    } else if (isImport) {
+                        loadingTitle = 'Mengimpor Data...';
+                        loadingText = 'Sistem sedang membaca dan memproses file Excel/CSV.';
+                    }
 
                     Swal.fire({
                         title: loadingTitle,
@@ -464,7 +489,7 @@
                         allowEscapeKey: false,
                         showConfirmButton: false,
                         customClass: {
-                            popup: 'rounded-3xl p-8',
+                            popup: 'rounded-3xl p-8 shadow-2xl border border-slate-100',
                             title: 'text-base font-extrabold text-slate-800',
                             htmlContainer: 'text-xs text-slate-500 font-medium'
                         },

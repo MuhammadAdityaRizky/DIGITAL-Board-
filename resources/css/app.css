@@ -8,3 +8,14 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+html, body {
+    height: 100%;
+    min-height: 100vh;
+}
+
+html.swal2-shown, body.swal2-shown {
+    height: 100% !important;
+    min-height: 100vh !important;
+    overflow-y: hidden !important;
+}
