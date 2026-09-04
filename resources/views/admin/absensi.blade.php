@@ -287,8 +287,12 @@
     <!-- SweetAlert2 Automatic Alerts & Loading Handler -->
     <script>
         function confirmAction(event, text, title = 'Apakah Anda yakin?', confirmText = 'Ya, Lanjutkan!') {
-            event.preventDefault();
             const form = event.target.tagName === 'FORM' ? event.target : event.target.closest('form');
+            if (form && form.dataset.confirmed === "true") {
+                return true;
+            }
+
+            event.preventDefault();
             
             Swal.fire({
                 title: title,
