@@ -86,6 +86,9 @@
 
                 <!-- Actions -->
                 <div class="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-200 w-full">
+                    <a href="{{ route('dosen.absensi.input', $ag->id) }}" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-lg border border-teal-700 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-check"></i> Input Absensi Manual
+                    </a>
                     <button onclick="toggleModal('modal-edit-agenda-{{ $ag->id }}')" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold rounded-lg border border-amber-200 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-pen-to-square"></i> Edit
                     </button>

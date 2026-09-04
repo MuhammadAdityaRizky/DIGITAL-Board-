@@ -278,9 +278,7 @@ class DosenController extends Controller
             ->where(function($q) use ($dosen) {
                 $q->where('dosen_id', $dosen->id)
                   ->orWhere('dosen_pengampu_id', $dosen->id);
-            })
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('jam_mulai', 'desc');
+            });
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -292,6 +290,12 @@ class DosenController extends Controller
 
         if ($request->filled('tanggal')) {
             $query->where('tanggal', $request->tanggal);
+        }
+
+        if ($request->get('sort') === 'terlama') {
+            $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc');
+        } else {
+            $query->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
         }
 
         $agendas = $query->paginate(10)->withQueryString();
@@ -311,6 +315,69 @@ class DosenController extends Controller
         }
 
         return view('dosen.agenda', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis'));
+    }
+
+    public function inputAbsensi($id)
+    {
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+
+        $agenda = Agenda::with(['dosen', 'lab'])->findOrFail($id);
+        
+        if ($agenda->dosen_id !== $dosen->id && $agenda->dosen_pengampu_id !== $dosen->id) {
+            abort(403, 'Anda tidak memiliki akses ke sesi ini.');
+        }
+
+        $students = \App\Models\Mahasiswa::where('kelas', $agenda->kelas)
+            ->when($agenda->fakultas, function($q) use ($agenda) {
+                $q->whereHas('fakultas', function($qF) use ($agenda) {
+                    $qF->where('nama_fakultas', $agenda->fakultas);
+                });
+            })
+            ->when($agenda->jurusan, function($q) use ($agenda) {
+                $q->whereHas('prodi', function($qP) use ($agenda) {
+                    $qP->where('nama_prodi', $agenda->jurusan);
+                });
+            })
+            ->orderBy('nama_lengkap', 'asc')->get();
+            
+        $existingAbsensi = \App\Models\Absensi::where('agenda_id', $agenda->id)->get()->keyBy('mahasiswa_id');
+
+        return view('dosen.input_absensi', compact('agenda', 'students', 'existingAbsensi', 'dosen'));
+    }
+
+    public function storeInputAbsensi(Request $request, $id)
+    {
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+
+        $agenda = Agenda::findOrFail($id);
+
+        if ($agenda->dosen_id !== $dosen->id && $agenda->dosen_pengampu_id !== $dosen->id) {
+            abort(403, 'Anda tidak memiliki akses ke sesi ini.');
+        }
+
+        $request->validate([
+            'absensi' => 'required|array',
+            'absensi.*' => 'in:Hadir,Izin,Sakit,Alpa,Terlambat'
+        ]);
+
+        $waktu_masuk = now();
+
+        foreach ($request->absensi as $mahasiswa_id => $status) {
+            $absensi = \App\Models\Absensi::firstOrNew([
+                'agenda_id' => $agenda->id,
+                'mahasiswa_id' => $mahasiswa_id
+            ]);
+            
+            $absensi->status_kehadiran = $status;
+            if (!$absensi->exists) {
+                $absensi->waktu_masuk = $waktu_masuk;
+            }
+            $absensi->save();
+        }
+
+        return redirect()->route('dosen.agenda')->with('success', 'Absensi manual berhasil disimpan untuk sesi ' . $agenda->mata_kuliah);
     }
 
     public function mahasiswa(Request $request)

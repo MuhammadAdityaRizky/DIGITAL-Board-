@@ -138,32 +138,63 @@
 
             <!-- Search & Filter Bar -->
             <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm max-w-4xl">
-                <form action="{{ route('admin.pengguna') }}" method="GET" class="flex flex-col sm:flex-row gap-4 items-end text-xs">
-                    <div class="flex-grow w-full">
-                        <label class="block text-slate-700 font-bold mb-1.5">Cari Pengguna</label>
-                        <div class="relative">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan nama lengkap, username, NIM, NIP..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                <form action="{{ route('admin.pengguna') }}" method="GET" class="flex flex-col gap-4 text-xs">
+                    <div class="flex flex-col sm:flex-row gap-4 w-full">
+                        <div class="flex-grow w-full">
+                            <label class="block text-slate-700 font-bold mb-1.5">Cari Pengguna</label>
+                            <div class="relative">
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan nama lengkap, username, NIM, NIP..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                            </div>
+                        </div>
+                        <div class="w-full sm:w-48">
+                            <label class="block text-slate-700 font-bold mb-1.5">Role Akun</label>
+                            <select name="role" onchange="this.form.submit()" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none cursor-pointer">
+                                <option value="">Semua Role</option>
+                                <option value="admin" {{ strtolower(request('role')) === 'admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="dosen" {{ strtolower(request('role')) === 'dosen' ? 'selected' : '' }}>Dosen</option>
+                                <option value="mahasiswa" {{ strtolower(request('role')) === 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="w-full sm:w-48">
-                        <label class="block text-slate-700 font-bold mb-1.5">Role Akun</label>
-                        <select name="role" onchange="this.form.submit()" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none cursor-pointer">
-                            <option value="">Semua Role</option>
-                            <option value="admin" {{ strtolower(request('role')) === 'admin' ? 'selected' : '' }}>Admin</option>
-                            <option value="dosen" {{ strtolower(request('role')) === 'dosen' ? 'selected' : '' }}>Dosen</option>
-                            <option value="mahasiswa" {{ strtolower(request('role')) === 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
-                        </select>
-                    </div>
-                    <div class="flex gap-2 w-full sm:w-auto">
-                        <button type="submit" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition shadow-sm flex items-center gap-1.5">
-                            <i class="fa-solid fa-filter"></i> Filter
-                        </button>
-                        @if(request('search') || request('role'))
-                            <a href="{{ route('admin.pengguna') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition text-center flex items-center gap-1">
-                                <i class="fa-solid fa-rotate-left"></i> Reset
-                            </a>
-                        @endif
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 w-full items-end">
+                        <div class="w-full sm:w-1/3">
+                            <label class="block text-slate-700 font-bold mb-1.5">Program Kuliah</label>
+                            <select name="program_kuliah" onchange="this.form.submit()" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none cursor-pointer">
+                                <option value="">Semua Program</option>
+                                <option value="Reguler" {{ request('program_kuliah') === 'Reguler' ? 'selected' : '' }}>Reguler</option>
+                                <option value="Karyawan" {{ request('program_kuliah') === 'Karyawan' ? 'selected' : '' }}>Karyawan</option>
+                            </select>
+                        </div>
+                        <div class="w-full sm:w-1/3">
+                            <label class="block text-slate-700 font-bold mb-1.5">Semester</label>
+                            <select name="semester" onchange="this.form.submit()" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none cursor-pointer">
+                                <option value="">Semua Semester</option>
+                                @for($i = 1; $i <= 14; $i++)
+                                    <option value="{{ $i }}" {{ request('semester') == $i ? 'selected' : '' }}>Semester {{ $i }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="w-full sm:w-1/3">
+                            <label class="block text-slate-700 font-bold mb-1.5">Kelas</label>
+                            <select name="kelas" onchange="this.form.submit()" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none cursor-pointer">
+                                <option value="">Semua Kelas</option>
+                                @foreach(range('A', 'Z') as $char)
+                                    <option value="{{ $char }}" {{ request('kelas') === $char ? 'selected' : '' }}>Kelas {{ $char }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button type="submit" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition shadow-sm flex items-center gap-1.5">
+                                <i class="fa-solid fa-filter"></i> Filter
+                            </button>
+                            @if(request('search') || request('role') || request('program_kuliah') || request('semester') || request('kelas'))
+                                <a href="{{ route('admin.pengguna') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition text-center flex items-center gap-1">
+                                    <i class="fa-solid fa-rotate-left"></i> Reset
+                                </a>
+                            @endif
+                        </div>
                     </div>
                 </form>
             </div>

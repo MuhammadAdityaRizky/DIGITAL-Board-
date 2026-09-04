@@ -56,10 +56,37 @@ class AgendaImport implements ToCollection
             }
         }
 
+<<<<<<< HEAD
         // Resolve Default Dosen & Lab IDs using core name matching
         $defaultDosenId = $this->findDosenByName($metaDosenMengajar)?->id ?? Dosen::first()?->id;
         $defaultDosenPengampuId = $this->findDosenByName($metaDosenPengampu)?->id;
         $defaultLabId = Laboratorium::first()?->id;
+=======
+        $defaultDosenId = null;
+        if ($metaDosenMengajar) {
+            $d = Dosen::where('nama', 'like', '%' . $metaDosenMengajar . '%')->first();
+            if ($d) {
+                $defaultDosenId = $d->id;
+            } else {
+                throw new \Exception("Dosen '{$metaDosenMengajar}' tidak ditemukan di database. Pastikan dosen tersebut sudah terdaftar.");
+            }
+        }
+
+        $defaultDosenPengampuId = null;
+        if ($metaDosenPengampu) {
+            $dp = Dosen::where('nama', 'like', '%' . $metaDosenPengampu . '%')->first();
+            if ($dp) $defaultDosenPengampuId = $dp->id;
+        }
+
+        $defaultLabId = null;
+        if (isset($metaLab)) {
+            $l = Laboratorium::where('nama_lab', 'like', '%' . $metaLab . '%')->first();
+            if ($l) $defaultLabId = $l->id;
+        }
+        if (!$defaultLabId) {
+            $defaultLabId = Laboratorium::first()?->id; // Still fallback for Lab, or we can leave it. Let's keep the fallback for Lab as it's less critical.
+        }
+>>>>>>> 200e45e (fix: change semester, jurusan, and fakultas to dropdowns and improve AgendaImport mapping)
 
         // 2. Identify Column Indexes or Heading Row
         $headerRowIndex = null;
@@ -69,23 +96,33 @@ class AgendaImport implements ToCollection
             $arr = array_map('strval', $r->toArray());
             foreach ($arr as $colIdx => $val) {
                 $valClean = strtolower(trim($val));
-                if (in_array($valClean, ['materi', 'materi praktikum', 'mata kuliah', 'matakuliah', 'judul', 'judul agenda', 'course', 'subject'])) {
+                if (in_array($valClean, ['materi', 'materi praktikum', 'mata kuliah', 'matakuliah', 'judul', 'judul agenda', 'course', 'subject', 'mata kuliah / judul agenda'])) {
                     $headerRowIndex = $idx;
                     $colIndexMap['materi'] = $colIdx;
-                } elseif (in_array($valClean, ['tanggal', 'hari / tanggal', 'hari/tanggal', 'tgl', 'date'])) {
+                } elseif (in_array($valClean, ['tanggal', 'hari / tanggal', 'hari/tanggal', 'tgl', 'date', 'tanggal praktikum'])) {
                     $colIndexMap['tanggal'] = $colIdx;
-                } elseif (in_array($valClean, ['waktu', 'jam', 'waktu / jam', 'jam_mulai', 'waktu_masuk', 'time'])) {
+                } elseif (in_array($valClean, ['waktu', 'jam', 'waktu / jam', 'jam_mulai', 'waktu_masuk', 'time', 'jam mulai'])) {
                     $colIndexMap['waktu'] = $colIdx;
+                } elseif (in_array($valClean, ['jam selesai', 'waktu selesai'])) {
+                    $colIndexMap['waktu_selesai'] = $colIdx;
                 } elseif (in_array($valClean, ['dosen', 'nama dosen', 'dosen mengajar', 'pengajar'])) {
                     $colIndexMap['dosen'] = $colIdx;
                 } elseif (in_array($valClean, ['dosen pengampu', 'pengampu'])) {
                     $colIndexMap['dosen_pengampu'] = $colIdx;
-                } elseif (in_array($valClean, ['lab', 'nama lab', 'laboratorium', 'ruang', 'ruangan'])) {
+                } elseif (in_array($valClean, ['lab', 'nama lab', 'laboratorium', 'ruang', 'ruangan', 'ruang laboratorium'])) {
                     $colIndexMap['lab'] = $colIdx;
                 } elseif (in_array($valClean, ['kelas'])) {
                     $colIndexMap['kelas'] = $colIdx;
                 } elseif (in_array($valClean, ['semester'])) {
                     $colIndexMap['semester'] = $colIdx;
+                } elseif (in_array($valClean, ['program kuliah', 'program'])) {
+                    $colIndexMap['program_kuliah'] = $colIdx;
+                } elseif (in_array($valClean, ['tipe pertemuan', 'jenis pertemuan'])) {
+                    $colIndexMap['jenis_pertemuan'] = $colIdx;
+                } elseif (in_array($valClean, ['jurusan', 'program studi', 'jurusan / program studi'])) {
+                    $colIndexMap['jurusan'] = $colIdx;
+                } elseif (in_array($valClean, ['fakultas'])) {
+                    $colIndexMap['fakultas'] = $colIdx;
                 }
             }
             if ($headerRowIndex !== null) {
@@ -94,7 +131,11 @@ class AgendaImport implements ToCollection
         }
 
         // 3. Process Data Rows
-        $startIdx = ($headerRowIndex !== null) ? $headerRowIndex + 1 : 0;
+        if ($headerRowIndex === null) {
+            throw new \Exception("Gagal mengenali format file. Pastikan file memiliki baris header seperti 'Mata Kuliah', 'Tanggal', 'Jam', dll. Jika ini adalah form Absensi, silakan gunakan menu Import yang sesuai.");
+        }
+
+        $startIdx = $headerRowIndex + 1;
 
         for ($i = $startIdx; $i < count($rows); $i++) {
             $rowArray = array_map('strval', $rows[$i]->toArray());
@@ -112,9 +153,16 @@ class AgendaImport implements ToCollection
             $valMateri = isset($colIndexMap['materi']) ? ($rowArray[$colIndexMap['materi']] ?? null) : null;
             $valTanggal = isset($colIndexMap['tanggal']) ? ($rowArray[$colIndexMap['tanggal']] ?? null) : null;
             $valWaktu = isset($colIndexMap['waktu']) ? ($rowArray[$colIndexMap['waktu']] ?? null) : null;
+            $valWaktuSelesai = isset($colIndexMap['waktu_selesai']) ? ($rowArray[$colIndexMap['waktu_selesai']] ?? null) : null;
             $valDosen = isset($colIndexMap['dosen']) ? ($rowArray[$colIndexMap['dosen']] ?? null) : null;
             $valPengampu = isset($colIndexMap['dosen_pengampu']) ? ($rowArray[$colIndexMap['dosen_pengampu']] ?? null) : null;
             $valLab = isset($colIndexMap['lab']) ? ($rowArray[$colIndexMap['lab']] ?? null) : null;
+            $valKelas = isset($colIndexMap['kelas']) ? ($rowArray[$colIndexMap['kelas']] ?? null) : null;
+            $valSemester = isset($colIndexMap['semester']) ? ($rowArray[$colIndexMap['semester']] ?? null) : null;
+            $valProgramKuliah = isset($colIndexMap['program_kuliah']) ? ($rowArray[$colIndexMap['program_kuliah']] ?? null) : null;
+            $valJenisPertemuan = isset($colIndexMap['jenis_pertemuan']) ? ($rowArray[$colIndexMap['jenis_pertemuan']] ?? null) : null;
+            $valJurusan = isset($colIndexMap['jurusan']) ? ($rowArray[$colIndexMap['jurusan']] ?? null) : null;
+            $valFakultas = isset($colIndexMap['fakultas']) ? ($rowArray[$colIndexMap['fakultas']] ?? null) : null;
 
             // Heuristic fallbacks if column mapping was not explicitly found
             if (!$valMateri || !$valTanggal) {
@@ -153,10 +201,32 @@ class AgendaImport implements ToCollection
             // Parse Date & Time
             $tanggal = $this->parseIndonesianDate($valTanggal);
             [$jamMulai, $jamSelesai] = $this->parseTimes($valWaktu);
+            if ($valWaktuSelesai) {
+                // Parse the separate jam selesai column
+                $parsedSelesai = $this->parseTimes($valWaktuSelesai)[0];
+                if ($parsedSelesai) {
+                    $jamSelesai = $parsedSelesai;
+                }
+            }
 
-            // Match Dosen
-            $dosenId = $valDosen ? ($this->findDosenByName($valDosen)?->id ?? $defaultDosenId) : $defaultDosenId;
-            $dosenPengampuId = $valPengampu ? ($this->findDosenByName($valPengampu)?->id ?? $defaultDosenPengampuId) : $defaultDosenPengampuId;
+            // Match Dosen & Dosen Pengampu
+            $dosenId = $defaultDosenId;
+            $dosenPengampuId = $defaultDosenPengampuId;
+
+            // Combine both columns to extract names, in case they are merged in one column separated by '/'
+            $rawDosenStr = trim($valDosen . ' / ' . $valPengampu, ' /');
+            $dosenNames = array_filter(array_map('trim', explode('/', $rawDosenStr)));
+            $dosenNames = array_values($dosenNames); // Reindex
+
+            if (isset($dosenNames[0]) && $dosenNames[0] !== '') {
+                $d = $this->findDosenByName($dosenNames[0]);
+                if ($d) $dosenId = $d->id;
+            }
+
+            if (isset($dosenNames[1]) && $dosenNames[1] !== '') {
+                $dp = $this->findDosenByName($dosenNames[1]);
+                if ($dp) $dosenPengampuId = $dp->id;
+            }
 
             // Match Lab
             $labId = $defaultLabId;
@@ -165,21 +235,38 @@ class AgendaImport implements ToCollection
                 if ($l) $labId = $l->id;
             }
 
-            if (!$dosenId || !$labId) {
-                continue;
+            if (!$dosenId) {
+                $missingVal = $rawDosenStr ?: 'Tidak ada nama dosen';
+                throw new \Exception("Baris " . ($i + 1) . ": Dosen tidak ditemukan (Nama/NIP: '{$missingVal}'). Pastikan dosen tersebut sudah terdaftar.");
             }
+
+            if (!$labId) {
+                $missingLab = $valLab ?: 'Tidak ada ruang laboratorium';
+                throw new \Exception("Baris " . ($i + 1) . ": Laboratorium tidak ditemukan ('{$missingLab}').");
+            }
+
+            // Normalize Fakultas
+            $rawFakultas = $valFakultas ?: ($metaFakultas ?: 'Fakultas Teknik');
+            $searchFak = str_replace('&', 'dan', strtolower($rawFakultas));
+            $f = \App\Models\Fakultas::where('nama_fakultas', 'like', '%' . $searchFak . '%')->first();
+            $finalFakultas = $f ? $f->nama_fakultas : $rawFakultas;
+
+            // Normalize Jurusan
+            $rawJurusan = $valJurusan ?: ($metaProdi ?: 'Sistem Informasi');
+            $p = \App\Models\Prodi::where('nama_prodi', 'like', '%' . strtolower($rawJurusan) . '%')->first();
+            $finalJurusan = $p ? $p->nama_prodi : $rawJurusan;
 
             Agenda::create([
                 'dosen_id' => $dosenId,
                 'dosen_pengampu_id' => $dosenPengampuId,
                 'lab_id' => $labId,
                 'mata_kuliah' => $finalMataKuliah,
-                'program_kuliah' => 'Reguler',
-                'jenis_pertemuan' => 'Praktikum',
-                'kelas' => $metaKelas ?: null,
-                'semester' => $metaSemester ?: '1',
-                'jurusan' => $metaProdi ?: 'Sistem Informasi',
-                'fakultas' => $metaFakultas ?: 'Fakultas Teknik',
+                'program_kuliah' => $valProgramKuliah ?: 'Reguler',
+                'jenis_pertemuan' => $valJenisPertemuan ?: 'Praktikum',
+                'kelas' => $valKelas ?: ($metaKelas ?: null),
+                'semester' => $valSemester ? str_ireplace('Semester ', '', $valSemester) : ($metaSemester ?: '1'),
+                'jurusan' => $finalJurusan,
+                'fakultas' => $finalFakultas,
                 'tanggal' => $tanggal,
                 'jam_mulai' => $jamMulai,
                 'jam_selesai' => $jamSelesai,

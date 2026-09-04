@@ -199,8 +199,13 @@
                                             • {{ $ag->lab->nama_lab }} ({{ $ag->lab->lokasi }})
                                         </p>
                                     </div>
-                                    <div class="text-right text-[10px] font-semibold text-slate-500 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-xs">
-                                        <i class="fa-solid fa-calendar-day text-teal-700 mr-1"></i>{{ date('d F Y', strtotime($ag->tanggal)) }} | {{ substr($ag->jam_mulai, 0, 5) }} - {{ substr($ag->jam_selesai, 0, 5) }} WIB
+                                    <div class="flex flex-col items-end gap-2">
+                                        <div class="text-right text-[10px] font-semibold text-slate-500 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-xs">
+                                            <i class="fa-solid fa-calendar-day text-teal-700 mr-1"></i>{{ date('d F Y', strtotime($ag->tanggal)) }} | {{ substr($ag->jam_mulai, 0, 5) }} - {{ substr($ag->jam_selesai, 0, 5) }} WIB
+                                        </div>
+                                        <a href="{{ route('admin.absensi.input', $ag->id) }}" class="text-[10px] bg-teal-600 hover:bg-teal-700 text-white font-bold py-1.5 px-3 rounded-lg transition shadow-sm flex items-center gap-1.5">
+                                            <i class="fa-solid fa-user-check"></i> Input Absensi Manual
+                                        </a>
                                     </div>
                                 </div>
                                 

@@ -76,6 +76,27 @@ class AdminController extends Controller
             $query->where('role', $role);
         }
 
+        if ($request->filled('program_kuliah')) {
+            $program = $request->program_kuliah;
+            $query->whereHas('mahasiswa', function($q) use ($program) {
+                $q->where('program_kuliah', $program);
+            });
+        }
+
+        if ($request->filled('semester')) {
+            $semester = $request->semester;
+            $query->whereHas('mahasiswa', function($q) use ($semester) {
+                $q->where('semester', $semester);
+            });
+        }
+
+        if ($request->filled('kelas')) {
+            $kelas = $request->kelas;
+            $query->whereHas('mahasiswa', function($q) use ($kelas) {
+                $q->where('kelas', $kelas);
+            });
+        }
+
         $users = $query->paginate(50)->withQueryString();
         $fakultas = Fakultas::all();
         $prodis = Prodi::all();
@@ -153,7 +174,7 @@ class AdminController extends Controller
 
     public function agenda(Request $request)
     {
-        $query = Agenda::with(['dosen', 'dosenPengampu', 'lab'])->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
+        $query = Agenda::with(['dosen', 'dosenPengampu', 'lab']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -172,6 +193,12 @@ class AdminController extends Controller
             $query->where('tanggal', $request->tanggal);
         }
 
+        if ($request->get('sort') === 'terlama') {
+            $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc');
+        } else {
+            $query->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
+        }
+
         $agendas = $query->paginate(10)->withQueryString();
 
         if ($agendas->isEmpty() && $agendas->total() > 0 && (int)$request->get('page', 1) > 1) {
@@ -181,7 +208,7 @@ class AdminController extends Controller
         $dosens = Dosen::orderBy('nama', 'asc')->get();
         $labs = Laboratorium::orderBy('nama_lab', 'asc')->get();
         $fakultas = Fakultas::orderBy('nama_fakultas', 'asc')->get();
-        $prodis = Prodi::orderBy('nama_prodi', 'asc')->get();
+        $prodis = Prodi::with('fakultas')->orderBy('nama_prodi', 'asc')->get();
         $kelases = Kelas::all();
 
         return view('admin.agenda', compact('agendas', 'dosens', 'labs', 'fakultas', 'prodis', 'kelases'));
@@ -344,6 +371,54 @@ class AdminController extends Controller
         $agendas = $query->get();
 
         return view('admin.export_absensi', compact('agendas'));
+    }
+
+    public function inputAbsensi($id)
+    {
+        $agenda = Agenda::with(['dosen', 'lab'])->findOrFail($id);
+        
+        $students = \App\Models\Mahasiswa::where('kelas', $agenda->kelas)
+            ->when($agenda->fakultas, function($q) use ($agenda) {
+                $q->whereHas('fakultas', function($qF) use ($agenda) {
+                    $qF->where('nama_fakultas', $agenda->fakultas);
+                });
+            })
+            ->when($agenda->jurusan, function($q) use ($agenda) {
+                $q->whereHas('prodi', function($qP) use ($agenda) {
+                    $qP->where('nama_prodi', $agenda->jurusan);
+                });
+            })
+            ->orderBy('nama_lengkap', 'asc')->get();
+            
+        $existingAbsensi = \App\Models\Absensi::where('agenda_id', $agenda->id)->get()->keyBy('mahasiswa_id');
+
+        return view('admin.input_absensi', compact('agenda', 'students', 'existingAbsensi'));
+    }
+
+    public function storeInputAbsensi(Request $request, $id)
+    {
+        $request->validate([
+            'absensi' => 'required|array',
+            'absensi.*' => 'in:Hadir,Izin,Sakit,Alpa,Terlambat'
+        ]);
+
+        $agenda = Agenda::findOrFail($id);
+        $waktu_masuk = now();
+
+        foreach ($request->absensi as $mahasiswa_id => $status) {
+            $absensi = \App\Models\Absensi::firstOrNew([
+                'agenda_id' => $agenda->id,
+                'mahasiswa_id' => $mahasiswa_id
+            ]);
+            
+            $absensi->status_kehadiran = $status;
+            if (!$absensi->exists) {
+                $absensi->waktu_masuk = $waktu_masuk;
+            }
+            $absensi->save();
+        }
+
+        return redirect()->route('admin.absensi')->with('success', 'Absensi manual berhasil disimpan untuk sesi ' . $agenda->mata_kuliah);
     }
 
     public function pengumuman(Request $request)

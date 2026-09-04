@@ -51,6 +51,8 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/absensi', [AdminController::class, 'absensi'])->name('absensi');
         Route::get('/absensi/export', [AdminController::class, 'exportAbsensi'])->name('absensi.export');
+        Route::get('/absensi/{id}/input', [AdminController::class, 'inputAbsensi'])->name('absensi.input');
+        Route::post('/absensi/{id}/input', [AdminController::class, 'storeInputAbsensi'])->name('absensi.store-input');
         Route::get('/pengumuman', [AdminController::class, 'pengumuman'])->name('pengumuman');
         Route::get('/aktivitas', [AdminController::class, 'aktivitas'])->name('aktivitas');
         
@@ -84,6 +86,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/agenda/{id}/realisasi', [DosenController::class, 'updateRealisasi'])->name('agenda.realisasi');
         Route::post('/agenda/{id}/qr-new', [DosenController::class, 'generateNewQrToken'])->name('agenda.qr');
         Route::post('/absensi', [DosenController::class, 'submitAttendance'])->name('absensi.submit');
+        Route::get('/absensi/{id}/input', [DosenController::class, 'inputAbsensi'])->name('absensi.input');
+        Route::post('/absensi/{id}/input', [DosenController::class, 'storeInputAbsensi'])->name('absensi.store-input');
         
         Route::get('/agenda', [DosenController::class, 'agenda'])->name('agenda');
         Route::get('/mahasiswa', [DosenController::class, 'mahasiswa'])->name('mahasiswa');

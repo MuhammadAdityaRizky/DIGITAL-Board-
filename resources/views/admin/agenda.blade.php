@@ -161,11 +161,18 @@
                         <label class="block text-slate-650 font-bold mb-1.5">Tanggal</label>
                         <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                     </div>
+                    <div class="w-full sm:w-48">
+                        <label class="block text-slate-650 font-bold mb-1.5">Urutkan Tanggal</label>
+                        <select name="sort" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                            <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama</option>
+                        </select>
+                    </div>
                     <div class="flex gap-2 w-full sm:w-auto">
                         <button type="submit" class="flex-grow sm:flex-grow-0 px-5 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition-all shadow-sm">
                             Filter
                         </button>
-                        @if(request()->anyFilled(['search', 'tanggal']))
+                        @if(request()->anyFilled(['search', 'tanggal', 'sort']))
                             <a href="{{ route('admin.agenda') }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all border border-slate-200 text-center">
                                 Reset
                             </a>
@@ -190,13 +197,9 @@
                 </div>
                 <div class="p-6">
                     @if($agendas->count() > 0)
-                        <form id="bulk-delete-form" action="{{ route('admin.agenda.bulk-delete') }}" method="POST" onsubmit="return confirmAction(event, 'Semua data agenda terpilih akan terhapus!', 'Hapus Agenda Terpilih?');">
-                            @csrf
-                            @method('DELETE')
-
                             <div id="btn-bulk-delete" class="hidden mb-3 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between">
                                 <span class="text-xs font-bold text-rose-800"><span id="bulk-count">0</span> agenda terpilih</span>
-                                <button type="submit" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                <button type="button" onclick="submitBulkDeleteForm()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                                     <i class="fa-solid fa-trash-can"></i> Hapus Terpilih
                                 </button>
                             </div>
@@ -262,7 +265,6 @@
                                     </tbody>
                                 </table>
                             </div>
-                        </form>
                         <div class="pt-4">
                             {{ $agendas->links() }}
                         </div>
@@ -384,7 +386,17 @@
                     <!-- Semester -->
                     <div>
                         <label class="block text-slate-700 font-bold mb-1">Semester <span class="text-rose-500">*</span></label>
-                        <input type="text" id="form_semester" name="semester" placeholder="Contoh: Semester 3" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                        <select id="form_semester" name="semester" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <option value="">Pilih Semester</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
                     </div>
 
                     <!-- Status Agenda -->
@@ -398,26 +410,26 @@
                         </select>
                     </div>
 
-                    <!-- Jurusan / Prodi -->
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Jurusan / Program Studi <span class="text-rose-500">*</span></label>
-                        <input type="text" id="form_jurusan" name="jurusan" placeholder="Contoh: Teknik Informatika" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none" list="prodi_list">
-                        <datalist id="prodi_list">
-                            @foreach($prodis as $p)
-                                <option value="{{ $p->nama_prodi }}">
-                            @endforeach
-                        </datalist>
-                    </div>
-
                     <!-- Fakultas -->
                     <div>
                         <label class="block text-slate-700 font-bold mb-1">Fakultas <span class="text-rose-500">*</span></label>
-                        <input type="text" id="form_fakultas" name="fakultas" placeholder="Contoh: Fakultas Teknik & Sains" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none" list="fakultas_list">
-                        <datalist id="fakultas_list">
+                        <select id="form_fakultas" name="fakultas" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none" onchange="filterJurusan()">
+                            <option value="">Pilih Fakultas</option>
                             @foreach($fakultas as $f)
-                                <option value="{{ $f->nama_fakultas }}">
+                                <option value="{{ $f->nama_fakultas }}">{{ $f->nama_fakultas }}</option>
                             @endforeach
-                        </datalist>
+                        </select>
+                    </div>
+
+                    <!-- Jurusan / Prodi -->
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Jurusan / Program Studi <span class="text-rose-500">*</span></label>
+                        <select id="form_jurusan" name="jurusan" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <option value="">Pilih Jurusan</option>
+                            @foreach($prodis as $p)
+                                <option value="{{ $p->nama_prodi }}" data-fakultas="{{ $p->fakultas->nama_fakultas ?? '' }}" class="jurusan-option">{{ $p->nama_prodi }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     <!-- Tanggal -->
@@ -494,7 +506,45 @@
         </div>
     </div>
 
+    <form id="actual-bulk-delete-form" action="{{ route('admin.agenda.bulk-delete') }}" method="POST" class="hidden">
+        @csrf
+        @method('DELETE')
+    </form>
+
     <script>
+        function submitBulkDeleteForm() {
+            Swal.fire({
+                title: 'Hapus Agenda Terpilih?',
+                text: 'Semua data agenda terpilih akan terhapus!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('actual-bulk-delete-form');
+                    form.innerHTML = '@csrf @method("DELETE")';
+                    document.querySelectorAll('.agenda-checkbox:checked').forEach(cb => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids[]';
+                        input.value = cb.value;
+                        form.appendChild(input);
+                    });
+                    form.submit();
+                }
+            });
+        }
+
         function toggleSelectAll(master) {
             const checkboxes = document.querySelectorAll('.agenda-checkbox');
             checkboxes.forEach(cb => cb.checked = master.checked);
@@ -569,8 +619,9 @@
             document.getElementById('form_jenis_pertemuan').value = 'Praktikum';
             document.getElementById('form_kelas').value = '';
             document.getElementById('form_semester').value = '';
-            document.getElementById('form_jurusan').value = '';
             document.getElementById('form_fakultas').value = '';
+            document.getElementById('form_jurusan').value = '';
+            filterJurusan();
             document.getElementById('form_tanggal').value = '';
             document.getElementById('form_waktu_masuk').value = '';
             document.getElementById('form_waktu_keluar').value = '';
@@ -595,8 +646,9 @@
             document.getElementById('form_jenis_pertemuan').value = ag.jenis_pertemuan || 'Praktikum';
             document.getElementById('form_kelas').value = ag.kelas || '';
             document.getElementById('form_semester').value = ag.semester || '';
-            document.getElementById('form_jurusan').value = ag.jurusan || '';
             document.getElementById('form_fakultas').value = ag.fakultas || '';
+            filterJurusan();
+            document.getElementById('form_jurusan').value = ag.jurusan || '';
             document.getElementById('form_tanggal').value = ag.tanggal;
             document.getElementById('form_waktu_masuk').value = ag.jam_mulai ? ag.jam_mulai.substring(0,5) : '';
             document.getElementById('form_waktu_keluar').value = ag.jam_selesai ? ag.jam_selesai.substring(0,5) : '';
@@ -647,6 +699,28 @@
         function toggleModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.classList.toggle('hidden');
+        }
+
+        function filterJurusan() {
+            const fakultasVal = document.getElementById('form_fakultas').value;
+            const jurusanSelect = document.getElementById('form_jurusan');
+            const options = document.querySelectorAll('.jurusan-option');
+            
+            let foundMatch = false;
+            
+            options.forEach(opt => {
+                if (fakultasVal === '' || opt.dataset.fakultas === fakultasVal) {
+                    opt.style.display = '';
+                    if (opt.value === jurusanSelect.value) foundMatch = true;
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
+            
+            // if current value is hidden, reset selection
+            if (!foundMatch && fakultasVal !== '') {
+                jurusanSelect.value = '';
+            }
         }
     </script>
 
