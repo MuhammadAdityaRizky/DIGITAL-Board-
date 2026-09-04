@@ -135,8 +135,11 @@ class AgendaImport implements ToCollection
                 continue; // Skip blank rows
             }
 
-            // SKIP metadata header rows if scanned
-            if (preg_match('/(realisasi|fakultas|program studi|semester \/ kelas|tabel realisasi|nama dosen|nama mata kuliah|paraf prodi|paraf dosen)/i', $rowStrFull)) {
+            // SKIP repeated header rows or signature/footer rows
+            if (preg_match('/(paraf prodi|paraf dosen|ttd|tanda tangan|mengetahui|ketua prodi|tabel realisasi)/i', $rowStrFull)) {
+                continue;
+            }
+            if (isset($colIndexMap['materi']) && strtolower(trim($rowArray[$colIndexMap['materi']] ?? '')) === 'mata kuliah') {
                 continue;
             }
 
