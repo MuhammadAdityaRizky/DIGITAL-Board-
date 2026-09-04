@@ -39,7 +39,8 @@
                     @endif
                     <p class="text-[11px] text-slate-455 mt-1">
                         <i class="fa-solid fa-location-dot mr-1"></i>{{ $ag->lab->nama_lab }}
-                        @if($ag->program_kuliah) Program: {{ $ag->program_kuliah }} @else Program: Reguler @endif
+                        @if($ag->jenis_pertemuan) • Tipe: {{ $ag->jenis_pertemuan }} @endif
+                        @if($ag->program_kuliah) • Program: {{ $ag->program_kuliah }} @else • Program: Reguler @endif
                         @if($ag->kelas) • Kelas: {{ $ag->kelas }} @endif
                         @if($ag->semester) • Semester: {{ $ag->semester }} @endif
                     </p>
@@ -185,7 +186,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-3">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div>
                                 <label class="block text-slate-700 font-bold mb-1">Program</label>
                                 <select name="program_kuliah" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
@@ -194,9 +195,16 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-slate-700 font-bold mb-1">Kelas</label>
-                                <select name="kelas" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                                    <option value="" disabled>Pilih Kelas</option>
+                                <label class="block text-slate-700 font-bold mb-1">Tipe Pertemuan</label>
+                                <select name="jenis_pertemuan" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                    <option value="Praktikum" {{ ($ag->jenis_pertemuan ?? 'Praktikum') == 'Praktikum' ? 'selected' : '' }}>Praktikum</option>
+                                    <option value="Teori" {{ ($ag->jenis_pertemuan ?? '') == 'Teori' ? 'selected' : '' }}>Teori</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-bold mb-1">Kelas <span class="text-slate-400 font-normal text-[10px]">(Opsional)</span></label>
+                                <select name="kelas" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                    <option value="" {{ empty($ag->kelas) ? 'selected' : '' }}>Pilih Kelas (Opsional)</option>
                                     @foreach(['A', 'B', 'C', 'D'] as $kelasOpt)
                                         <option value="{{ $kelasOpt }}" {{ $ag->kelas == $kelasOpt ? 'selected' : '' }}>Kelas {{ $kelasOpt }}</option>
                                     @endforeach

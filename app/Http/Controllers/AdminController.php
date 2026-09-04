@@ -170,14 +170,110 @@ class AdminController extends Controller
         }
 
         $agendas = $query->paginate(10)->withQueryString();
+        $dosens = Dosen::orderBy('nama', 'asc')->get();
+        $labs = Laboratorium::orderBy('nama_lab', 'asc')->get();
+        $fakultas = Fakultas::orderBy('nama_fakultas', 'asc')->get();
+        $prodis = Prodi::orderBy('nama_prodi', 'asc')->get();
+        $kelases = Kelas::all();
 
-        return view('admin.agenda', compact('agendas'));
+        return view('admin.agenda', compact('agendas', 'dosens', 'labs', 'fakultas', 'prodis', 'kelases'));
+    }
+
+    public function storeAgenda(Request $request)
+    {
+        $request->validate([
+            'dosen_id' => 'required|exists:dosen,id',
+            'lab_id' => 'required|exists:laboratorium,id',
+            'judul_agenda' => 'required|string|max:150',
+            'kelas' => 'nullable|string|max:50',
+            'program_kuliah' => 'required|in:Reguler,Karyawan',
+            'jenis_pertemuan' => 'required|in:Teori,Praktikum',
+            'semester' => 'required|string|max:20',
+            'jurusan' => 'required|string|max:100',
+            'fakultas' => 'required|string|max:100',
+            'tanggal' => 'required|date',
+            'waktu_masuk' => 'required',
+            'waktu_keluar' => 'required',
+            'status_agenda' => 'required|in:Akan Datang,Berlangsung,Selesai,Dibatalkan',
+            'rencana_pembelajaran' => 'nullable|string',
+        ]);
+
+        Agenda::create([
+            'dosen_id' => $request->dosen_id,
+            'lab_id' => $request->lab_id,
+            'mata_kuliah' => $request->judul_agenda,
+            'program_kuliah' => $request->program_kuliah,
+            'jenis_pertemuan' => $request->jenis_pertemuan ?? 'Praktikum',
+            'kelas' => $request->kelas ?? '',
+            'semester' => $request->semester,
+            'jurusan' => $request->jurusan,
+            'fakultas' => $request->fakultas,
+            'tanggal' => $request->tanggal,
+            'jam_mulai' => $request->waktu_masuk,
+            'jam_selesai' => $request->waktu_keluar,
+            'status_agenda' => $request->status_agenda,
+            'catatan' => $request->rencana_pembelajaran ?? '',
+        ]);
+
+        return back()->with('success', 'Agenda berhasil ditambahkan.');
+    }
+
+    public function updateAgenda(Request $request, $id)
+    {
+        $request->validate([
+            'dosen_id' => 'required|exists:dosen,id',
+            'lab_id' => 'required|exists:laboratorium,id',
+            'judul_agenda' => 'required|string|max:150',
+            'kelas' => 'nullable|string|max:50',
+            'program_kuliah' => 'required|in:Reguler,Karyawan',
+            'jenis_pertemuan' => 'required|in:Teori,Praktikum',
+            'semester' => 'required|string|max:20',
+            'jurusan' => 'required|string|max:100',
+            'fakultas' => 'required|string|max:100',
+            'tanggal' => 'required|date',
+            'waktu_masuk' => 'required',
+            'waktu_keluar' => 'required',
+            'status_agenda' => 'required|in:Akan Datang,Berlangsung,Selesai,Dibatalkan',
+            'rencana_pembelajaran' => 'nullable|string',
+        ]);
+
+        $agenda = Agenda::findOrFail($id);
+        $agenda->update([
+            'dosen_id' => $request->dosen_id,
+            'lab_id' => $request->lab_id,
+            'mata_kuliah' => $request->judul_agenda,
+            'program_kuliah' => $request->program_kuliah,
+            'jenis_pertemuan' => $request->jenis_pertemuan ?? 'Praktikum',
+            'kelas' => $request->kelas ?? '',
+            'semester' => $request->semester,
+            'jurusan' => $request->jurusan,
+            'fakultas' => $request->fakultas,
+            'tanggal' => $request->tanggal,
+            'jam_mulai' => $request->waktu_masuk,
+            'jam_selesai' => $request->waktu_keluar,
+            'status_agenda' => $request->status_agenda,
+            'catatan' => $request->rencana_pembelajaran ?? '',
+        ]);
+
+        return back()->with('success', 'Agenda berhasil diperbarui.');
     }
 
     public function deleteAgenda($id)
     {
         Agenda::destroy($id);
         return back()->with('success', 'Agenda praktikum berhasil dihapus.');
+    }
+
+    public function bulkDeleteAgendas(Request $request)
+    {
+        $ids = $request->ids;
+        if (!$ids || empty($ids)) {
+            return back()->withErrors(['msg' => 'Tidak ada agenda yang dipilih untuk dihapus.']);
+        }
+
+        Agenda::whereIn('id', $ids)->delete();
+
+        return back()->with('success', count($ids) . ' agenda praktikum berhasil dihapus.');
     }
 
     public function absensi(Request $request)

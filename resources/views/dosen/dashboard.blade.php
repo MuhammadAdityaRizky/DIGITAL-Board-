@@ -450,19 +450,28 @@
                                 </div>
                             </div>
 
-                            <div>
-                                <label class="block text-slate-700 font-bold mb-1">Program</label>
-                                <select name="program_kuliah" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-750/30 focus:border-teal-700 outline-none">
-                                    <option value="Reguler">Reguler</option>
-                                    <option value="Karyawan">Karyawan</option>
-                                </select>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-slate-700 font-bold mb-1">Program</label>
+                                    <select name="program_kuliah" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-750/30 focus:border-teal-700 outline-none">
+                                        <option value="Reguler">Reguler</option>
+                                        <option value="Karyawan">Karyawan</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-slate-700 font-bold mb-1">Tipe Pertemuan</label>
+                                    <select name="jenis_pertemuan" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-750/30 focus:border-teal-700 outline-none">
+                                        <option value="Praktikum">Praktikum</option>
+                                        <option value="Teori">Teori</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                     <label class="block text-slate-700 font-bold mb-1">Kelas</label>
-                                     <select name="kelas" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-750/30 focus:border-teal-700 outline-none">
-                                         <option value="" disabled selected>Pilih Kelas</option>
+                                     <label class="block text-slate-700 font-bold mb-1">Kelas <span class="text-slate-400 font-normal text-[10px]">(Opsional)</span></label>
+                                     <select name="kelas" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-750/30 focus:border-teal-700 outline-none">
+                                         <option value="" selected>Pilih Kelas (Opsional)</option>
                                          <option value="A">Kelas A</option>
                                          <option value="B">Kelas B</option>
                                          <option value="C">Kelas C</option>

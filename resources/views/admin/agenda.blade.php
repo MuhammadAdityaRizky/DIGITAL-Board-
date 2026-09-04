@@ -180,6 +180,9 @@
                     <h3 class="font-bold text-sm text-slate-800">Daftar Agenda Mengajar Seluruh Dosen</h3>
                     <div class="flex items-center gap-3">
                         <span class="text-[10px] bg-teal-50 text-teal-800 font-bold px-2.5 py-1 rounded-full hidden sm:inline-block">{{ $agendas->total() }} Sesi Mengajar</span>
+                        <button onclick="openAddModal()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Tambah Agenda
+                        </button>
                         <button onclick="toggleModal('modal-import-agenda')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-file-import"></i> Import Agenda
                         </button>
@@ -187,49 +190,70 @@
                 </div>
                 <div class="p-6">
                     @if($agendas->count() > 0)
-                        <div class="overflow-x-auto border border-slate-100 rounded-xl">
-                            <table class="w-full text-xs text-left text-slate-650">
-                                <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
-                                    <tr>
-                                        <th class="p-4">Tanggal / Waktu</th>
-                                        <th class="p-4">Mata Kuliah / Detail</th>
-                                        <th class="p-4">Dosen Pengampu</th>
-                                        <th class="p-4">Ruang Lab</th>
-                                        <th class="p-4 text-center">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    @foreach($agendas as $ag)
-                                        <tr class="hover:bg-slate-50/50 transition">
-                                            <td class="p-4">
-                                                <span class="font-bold text-slate-800 block">{{ date('d M Y', strtotime($ag->tanggal)) }}</span>
-                                                <span class="text-[10px] font-mono text-slate-450">{{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB</span>
-                                            </td>
-                                            <td class="p-4">
-                                                <span class="font-bold text-teal-900 block text-sm">{{ $ag->mata_kuliah }}</span>
-                                                <span class="text-[10px] text-slate-450 uppercase font-semibold">Status: {{ $ag->status_agenda }} | Program: {{ $ag->program_kuliah ?? 'Reguler' }} | Kelas: {{ $ag->kelas ?: '-' }}</span>
-                                            </td>
-                                            <td class="p-4 font-semibold text-slate-700">{{ $ag->dosen->nama }}</td>
-                                            <td class="p-4 text-slate-500">
-                                                <span class="block font-semibold">{{ $ag->lab->nama_lab }}</span>
-                                                <span class="text-[10px] text-slate-450">{{ $ag->lab->lokasi }}</span>
-                                            </td>
-                                            <td class="p-4">
-                                                <div class="flex justify-center">
-                                                    <form action="{{ route('admin.agenda.delete', $ag->id) }}" method="POST" onsubmit="return confirmAction(event, 'Semua data absensi kelas ini akan terhapus!', 'Hapus Agenda Praktikum?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-655 border border-rose-200 rounded-lg font-bold transition flex items-center gap-1">
+                        <form id="bulk-delete-form" action="{{ route('admin.agenda.bulk-delete') }}" method="POST" onsubmit="return confirmAction(event, 'Semua data agenda terpilih akan terhapus!', 'Hapus Agenda Terpilih?');">
+                            @csrf
+                            @method('DELETE')
+
+                            <div id="btn-bulk-delete" class="hidden mb-3 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between">
+                                <span class="text-xs font-bold text-rose-800"><span id="bulk-count">0</span> agenda terpilih</span>
+                                <button type="submit" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                    <i class="fa-solid fa-trash-can"></i> Hapus Terpilih
+                                </button>
+                            </div>
+
+                            <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                                <table class="w-full text-xs text-left text-slate-650">
+                                    <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
+                                        <tr>
+                                            <th class="p-4 w-10 text-center">
+                                                <input type="checkbox" id="select-all" onclick="toggleSelectAll(this)" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer">
+                                            </th>
+                                            <th class="p-4">Tanggal / Waktu</th>
+                                            <th class="p-4">Mata Kuliah / Detail</th>
+                                            <th class="p-4">Dosen Pengampu</th>
+                                            <th class="p-4">Ruang Lab</th>
+                                            <th class="p-4 text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        @foreach($agendas as $ag)
+                                            <tr class="hover:bg-slate-50/50 transition">
+                                                <td class="p-4 text-center">
+                                                    <input type="checkbox" name="ids[]" value="{{ $ag->id }}" class="agenda-checkbox rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer" onclick="updateBulkDeleteBtn()">
+                                                </td>
+                                                <td class="p-4">
+                                                    <span class="font-bold text-slate-800 block">{{ date('d M Y', strtotime($ag->tanggal)) }}</span>
+                                                    <span class="text-[10px] font-mono text-slate-450">{{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB</span>
+                                                </td>
+                                                <td class="p-4">
+                                                    <span class="font-bold text-teal-900 block text-sm">{{ $ag->mata_kuliah }}</span>
+                                                    <span class="text-[10px] text-slate-450 uppercase font-semibold">
+                                                        Status: <span class="px-1.5 py-0.5 rounded text-[9px] font-bold @if($ag->status_agenda == 'Berlangsung') bg-amber-100 text-amber-800 @elseif($ag->status_agenda == 'Selesai') bg-emerald-100 text-emerald-800 @elseif($ag->status_agenda == 'Dibatalkan') bg-rose-100 text-rose-800 @else bg-slate-100 text-slate-700 @endif">{{ $ag->status_agenda }}</span> 
+                                                        | Program: {{ $ag->program_kuliah ?? 'Reguler' }} 
+                                                        | Kelas: {{ $ag->kelas ?: '-' }}
+                                                    </span>
+                                                </td>
+                                                <td class="p-4 font-semibold text-slate-700">{{ $ag->dosen->nama ?? '-' }}</td>
+                                                <td class="p-4 text-slate-500">
+                                                    <span class="block font-semibold">{{ $ag->lab->nama_lab ?? '-' }}</span>
+                                                    <span class="text-[10px] text-slate-450">{{ $ag->lab->lokasi ?? '-' }}</span>
+                                                </td>
+                                                <td class="p-4">
+                                                    <div class="flex justify-center items-center gap-1.5">
+                                                        <button type="button" onclick='openEditModal(@json($ag))' class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg font-bold transition flex items-center gap-1 text-xs">
+                                                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                                                        </button>
+                                                        <button type="button" onclick="confirmDeleteAgenda('{{ route('admin.agenda.delete', $ag->id) }}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 border border-rose-200 rounded-lg font-bold transition flex items-center gap-1 text-xs">
                                                             <i class="fa-solid fa-trash-can"></i> Hapus
                                                         </button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </form>
                         <div class="pt-4">
                             {{ $agendas->links() }}
                         </div>
@@ -265,6 +289,149 @@
             <span>Absen</span>
         </a>
     </nav>
+
+    <!-- MODAL TAMBAH / EDIT AGENDA -->
+    <div id="modal-agenda" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-2xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                <h3 id="modal-agenda-title" class="font-bold text-base text-slate-800">Tambah Agenda Praktikum</h3>
+                <button type="button" onclick="toggleModal('modal-agenda')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+            
+            <form id="agenda-form" action="{{ route('admin.agenda.store') }}" method="POST" class="space-y-4 text-xs">
+                @csrf
+                <input type="hidden" id="agenda-method" name="_method" value="POST">
+                <input type="hidden" id="agenda_id" name="agenda_id" value="">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Dosen Pengampu -->
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Dosen Pengampu <span class="text-rose-500">*</span></label>
+                        <select id="form_dosen_id" name="dosen_id" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <option value="">-- Pilih Dosen --</option>
+                            @foreach($dosens as $d)
+                                <option value="{{ $d->id }}">{{ $d->nama }} (NIP: {{ $d->nip }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Ruang Laboratorium -->
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Ruang Laboratorium <span class="text-rose-500">*</span></label>
+                        <select id="form_lab_id" name="lab_id" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <option value="">-- Pilih Laboratorium --</option>
+                            @foreach($labs as $l)
+                                <option value="{{ $l->id }}">{{ $l->nama_lab }} ({{ $l->lokasi }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Mata Kuliah / Judul Agenda -->
+                    <div class="md:col-span-2">
+                        <label class="block text-slate-700 font-bold mb-1">Mata Kuliah / Judul Agenda <span class="text-rose-500">*</span></label>
+                        <input type="text" id="form_judul_agenda" name="judul_agenda" placeholder="Contoh: Pemrograman Web Lanjut" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                    </div>
+
+                    <!-- Program Kuliah & Tipe Pertemuan -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-700 font-bold mb-1">Program Kuliah <span class="text-rose-500">*</span></label>
+                            <select id="form_program_kuliah" name="program_kuliah" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                <option value="Reguler">Reguler</option>
+                                <option value="Karyawan">Karyawan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-700 font-bold mb-1">Tipe Pertemuan <span class="text-rose-500">*</span></label>
+                            <select id="form_jenis_pertemuan" name="jenis_pertemuan" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                <option value="Praktikum">Praktikum</option>
+                                <option value="Teori">Teori</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Kelas -->
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Kelas <span class="text-slate-400 font-normal text-[10px]">(Opsional)</span></label>
+                        <input type="text" id="form_kelas" name="kelas" placeholder="Contoh: TI-3A (Kosongkan jika tidak ada)" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none" list="kelas_list">
+                        <datalist id="kelas_list">
+                            @foreach($kelases as $k)
+                                <option value="{{ $k->nama_kelas }}">
+                            @endforeach
+                        </datalist>
+                    </div>
+
+                    <!-- Semester -->
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Semester <span class="text-rose-500">*</span></label>
+                        <input type="text" id="form_semester" name="semester" placeholder="Contoh: Semester 3" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                    </div>
+
+                    <!-- Status Agenda -->
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Status Agenda <span class="text-rose-500">*</span></label>
+                        <select id="form_status_agenda" name="status_agenda" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <option value="Akan Datang">Akan Datang</option>
+                            <option value="Berlangsung">Berlangsung</option>
+                            <option value="Selesai">Selesai</option>
+                            <option value="Dibatalkan">Dibatalkan</option>
+                        </select>
+                    </div>
+
+                    <!-- Jurusan / Prodi -->
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Jurusan / Program Studi <span class="text-rose-500">*</span></label>
+                        <input type="text" id="form_jurusan" name="jurusan" placeholder="Contoh: Teknik Informatika" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none" list="prodi_list">
+                        <datalist id="prodi_list">
+                            @foreach($prodis as $p)
+                                <option value="{{ $p->nama_prodi }}">
+                            @endforeach
+                        </datalist>
+                    </div>
+
+                    <!-- Fakultas -->
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Fakultas <span class="text-rose-500">*</span></label>
+                        <input type="text" id="form_fakultas" name="fakultas" placeholder="Contoh: Fakultas Teknik & Sains" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none" list="fakultas_list">
+                        <datalist id="fakultas_list">
+                            @foreach($fakultas as $f)
+                                <option value="{{ $f->nama_fakultas }}">
+                            @endforeach
+                        </datalist>
+                    </div>
+
+                    <!-- Tanggal -->
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Tanggal Praktikum <span class="text-rose-500">*</span></label>
+                        <input type="date" id="form_tanggal" name="tanggal" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                    </div>
+
+                    <!-- Jam Mulai & Jam Selesai -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-700 font-bold mb-1">Jam Mulai <span class="text-rose-500">*</span></label>
+                            <input type="time" id="form_waktu_masuk" name="waktu_masuk" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-slate-700 font-bold mb-1">Jam Selesai <span class="text-rose-500">*</span></label>
+                            <input type="time" id="form_waktu_keluar" name="waktu_keluar" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Catatan / Rencana Pembelajaran -->
+                    <div class="md:col-span-2">
+                        <label class="block text-slate-700 font-bold mb-1">Catatan / Rencana Pembelajaran</label>
+                        <textarea id="form_rencana_pembelajaran" name="rencana_pembelajaran" rows="3" placeholder="Rencana materi pembelajaran atau catatan praktikum..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex gap-2.5 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="toggleModal('modal-agenda')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg font-bold shadow-sm">Simpan Agenda</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- MODAL IMPORT AGENDA -->
     <div id="modal-import-agenda" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
@@ -308,6 +475,114 @@
     </div>
 
     <script>
+        function toggleSelectAll(master) {
+            const checkboxes = document.querySelectorAll('.agenda-checkbox');
+            checkboxes.forEach(cb => cb.checked = master.checked);
+            updateBulkDeleteBtn();
+        }
+
+        function updateBulkDeleteBtn() {
+            const checked = document.querySelectorAll('.agenda-checkbox:checked');
+            const bulkBtn = document.getElementById('btn-bulk-delete');
+            const bulkCount = document.getElementById('bulk-count');
+            if (checked.length > 0) {
+                bulkBtn.classList.remove('hidden');
+                if (bulkCount) bulkCount.innerText = checked.length;
+            } else {
+                bulkBtn.classList.add('hidden');
+            }
+        }
+
+        function confirmDeleteAgenda(actionUrl) {
+            Swal.fire({
+                title: 'Hapus Agenda Praktikum?',
+                text: 'Semua data absensi kelas ini akan terhapus!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = actionUrl;
+                    
+                    const csrf = document.createElement('input');
+                    csrf.type = 'hidden';
+                    csrf.name = '_token';
+                    csrf.value = '{{ csrf_token() }}';
+                    form.appendChild(csrf);
+                    
+                    const method = document.createElement('input');
+                    method.type = 'hidden';
+                    method.name = '_method';
+                    method.value = 'DELETE';
+                    form.appendChild(method);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
+        function openAddModal() {
+            document.getElementById('modal-agenda-title').innerText = 'Tambah Agenda Praktikum';
+            const form = document.getElementById('agenda-form');
+            form.action = "{{ route('admin.agenda.store') }}";
+            document.getElementById('agenda-method').value = 'POST';
+            
+            document.getElementById('agenda_id').value = '';
+            document.getElementById('form_dosen_id').value = '';
+            document.getElementById('form_lab_id').value = '';
+            document.getElementById('form_judul_agenda').value = '';
+            document.getElementById('form_program_kuliah').value = 'Reguler';
+            document.getElementById('form_jenis_pertemuan').value = 'Praktikum';
+            document.getElementById('form_kelas').value = '';
+            document.getElementById('form_semester').value = '';
+            document.getElementById('form_jurusan').value = '';
+            document.getElementById('form_fakultas').value = '';
+            document.getElementById('form_tanggal').value = '';
+            document.getElementById('form_waktu_masuk').value = '';
+            document.getElementById('form_waktu_keluar').value = '';
+            document.getElementById('form_status_agenda').value = 'Akan Datang';
+            document.getElementById('form_rencana_pembelajaran').value = '';
+            
+            toggleModal('modal-agenda');
+        }
+
+        function openEditModal(ag) {
+            document.getElementById('modal-agenda-title').innerText = 'Edit Agenda Praktikum';
+            const form = document.getElementById('agenda-form');
+            form.action = "{{ url('/admin/agenda') }}/" + ag.id;
+            document.getElementById('agenda-method').value = 'PUT';
+            
+            document.getElementById('agenda_id').value = ag.id;
+            document.getElementById('form_dosen_id').value = ag.dosen_id;
+            document.getElementById('form_lab_id').value = ag.lab_id;
+            document.getElementById('form_judul_agenda').value = ag.mata_kuliah;
+            document.getElementById('form_program_kuliah').value = ag.program_kuliah || 'Reguler';
+            document.getElementById('form_jenis_pertemuan').value = ag.jenis_pertemuan || 'Praktikum';
+            document.getElementById('form_kelas').value = ag.kelas || '';
+            document.getElementById('form_semester').value = ag.semester || '';
+            document.getElementById('form_jurusan').value = ag.jurusan || '';
+            document.getElementById('form_fakultas').value = ag.fakultas || '';
+            document.getElementById('form_tanggal').value = ag.tanggal;
+            document.getElementById('form_waktu_masuk').value = ag.jam_mulai ? ag.jam_mulai.substring(0,5) : '';
+            document.getElementById('form_waktu_keluar').value = ag.jam_selesai ? ag.jam_selesai.substring(0,5) : '';
+            document.getElementById('form_status_agenda').value = ag.status_agenda || 'Akan Datang';
+            document.getElementById('form_rencana_pembelajaran').value = ag.catatan || '';
+            
+            toggleModal('modal-agenda');
+        }
         function showImportLoading(form) {
             const fileInput = form.querySelector('input[type="file"]');
             if (fileInput && fileInput.files && fileInput.files.length === 0) {

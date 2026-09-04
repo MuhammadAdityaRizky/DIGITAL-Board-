@@ -104,8 +104,9 @@ class DosenController extends Controller
         $request->validate([
             'lab_id' => 'required|exists:laboratorium,id',
             'judul_agenda' => 'required|string|max:150',
-            'kelas' => 'required|string|max:50',
+            'kelas' => 'nullable|string|max:50',
             'program_kuliah' => 'required|in:Reguler,Karyawan',
+            'jenis_pertemuan' => 'nullable|in:Teori,Praktikum',
             'semester' => 'required|string|max:20',
             'jurusan' => 'required|string|max:100',
             'fakultas' => 'required|string|max:100',
@@ -135,7 +136,8 @@ class DosenController extends Controller
             'lab_id' => $request->lab_id,
             'mata_kuliah' => $request->judul_agenda,
             'program_kuliah' => $request->program_kuliah,
-            'kelas' => $request->kelas,
+            'jenis_pertemuan' => $request->jenis_pertemuan ?? 'Praktikum',
+            'kelas' => $request->kelas ?? '',
             'semester' => $request->semester,
             'jurusan' => $request->jurusan,
             'fakultas' => $request->fakultas,
@@ -154,8 +156,9 @@ class DosenController extends Controller
         $request->validate([
             'lab_id' => 'required|exists:laboratorium,id',
             'judul_agenda' => 'required|string|max:150',
-            'kelas' => 'required|string|max:50',
+            'kelas' => 'nullable|string|max:50',
             'program_kuliah' => 'required|in:Reguler,Karyawan',
+            'jenis_pertemuan' => 'nullable|in:Teori,Praktikum',
             'semester' => 'required|string|max:20',
             'jurusan' => 'required|string|max:100',
             'fakultas' => 'required|string|max:100',
@@ -185,7 +188,8 @@ class DosenController extends Controller
             'lab_id' => $request->lab_id,
             'mata_kuliah' => $request->judul_agenda,
             'program_kuliah' => $request->program_kuliah,
-            'kelas' => $request->kelas,
+            'jenis_pertemuan' => $request->jenis_pertemuan ?? 'Praktikum',
+            'kelas' => $request->kelas ?? '',
             'semester' => $request->semester,
             'jurusan' => $request->jurusan,
             'fakultas' => $request->fakultas,
@@ -413,6 +417,54 @@ class DosenController extends Controller
         }
 
         return back()->with('success', 'Status pengajuan izin mahasiswa berhasil diperbarui menjadi: ' . strtoupper($request->status));
+    }
+
+    public function bulkVerifikasiIzin(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:perizinan,id',
+            'status' => 'required|in:disetujui,ditolak',
+        ]);
+
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+        $agendaIds = Agenda::where('dosen_id', $dosen->id)->pluck('id');
+
+        $perizinans = Perizinan::whereIn('id', $request->ids)
+            ->whereIn('agenda_id', $agendaIds)
+            ->get();
+
+        $count = 0;
+        foreach ($perizinans as $perizinan) {
+            $perizinan->update([
+                'status_persetujuan' => $request->status,
+            ]);
+
+            if ($request->status === 'disetujui') {
+                Absensi::updateOrCreate(
+                    [
+                        'agenda_id' => $perizinan->agenda_id,
+                        'mahasiswa_id' => $perizinan->mahasiswa_id,
+                    ],
+                    [
+                        'waktu_masuk' => now(),
+                        'status_kehadiran' => $perizinan->kategori === 'Sakit' ? 'Sakit' : 'Izin',
+                    ]
+                );
+            } else {
+                $absensi = Absensi::where('agenda_id', $perizinan->agenda_id)
+                    ->where('mahasiswa_id', $perizinan->mahasiswa_id)
+                    ->first();
+                if ($absensi) {
+                    $absensi->update(['status_kehadiran' => 'Alpa']);
+                }
+            }
+            $count++;
+        }
+
+        $statusText = $request->status === 'disetujui' ? 'DISETUJUI' : 'DITOLAK';
+        return back()->with('success', "Sebanyak {$count} pengajuan izin mahasiswa berhasil {$statusText}.");
     }
 
     public function pengaturan()

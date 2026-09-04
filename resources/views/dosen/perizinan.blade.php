@@ -123,8 +123,71 @@
                 </div>
             @endif
 
+            @php
+                $pendingIzin = $perizinans->filter(fn($p) => strtolower($p->status_persetujuan) === 'pending');
+                $historyIzin = $perizinans->filter(fn($p) => strtolower($p->status_persetujuan) !== 'pending');
+            @endphp
+
             <!-- Tabs Layout -->
-            <div class="space-y-4" x-data="{ activeTab: 'pending' }">
+            <div class="space-y-4" x-data="{ 
+                activeTab: 'pending',
+                selectedIds: [],
+                allPendingIds: {{ json_encode($pendingIzin->pluck('id')->values()) }},
+                toggleAll() {
+                    if (this.selectedIds.length === this.allPendingIds.length) {
+                        this.selectedIds = [];
+                    } else {
+                        this.selectedIds = [...this.allPendingIds];
+                    }
+                },
+                isSelected(id) {
+                    return this.selectedIds.includes(id);
+                },
+                confirmBulkAction(status) {
+                    if (this.selectedIds.length === 0) return;
+                    const count = this.selectedIds.length;
+                    const isApprove = status === 'disetujui';
+                    const title = isApprove ? `Setujui ${count} Pengajuan Izin?` : `Tolak ${count} Pengajuan Izin?`;
+                    const text = isApprove 
+                        ? `Apakah Anda yakin ingin menyetujui ${count} pengajuan izin mahasiswa yang dipilih secara massal? Status kehadiran akan otomatis diperbarui.` 
+                        : `Apakah Anda yakin ingin menolak ${count} pengajuan izin mahasiswa yang dipilih secara massal?`;
+                    const confirmBtnText = isApprove ? 'Ya, Setujui Semua' : 'Ya, Tolak Semua';
+                    const confirmBtnColor = isApprove ? '#059669' : '#e11d48';
+
+                    Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: isApprove ? 'question' : 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: confirmBtnColor,
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: confirmBtnText,
+                        cancelButtonText: 'Batal',
+                        customClass: {
+                            popup: 'rounded-3xl p-6',
+                            title: 'text-base font-extrabold text-slate-800',
+                            htmlContainer: 'text-xs text-slate-600 font-medium',
+                            confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                            cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-bold'
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            document.getElementById('bulk-status-input').value = status;
+                            
+                            const form = document.getElementById('bulk-form');
+                            form.querySelectorAll('input[name=\'ids[]\']').forEach(el => el.remove());
+                            this.selectedIds.forEach(id => {
+                                const input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = 'ids[]';
+                                input.value = id;
+                                form.appendChild(input);
+                            });
+                            form.submit();
+                        }
+                    });
+                }
+            }">
                 <!-- Tab Buttons -->
                 <div class="flex border-b border-slate-200 text-xs font-bold uppercase tracking-wider">
                     <button @click="activeTab = 'pending'" 
@@ -133,7 +196,7 @@
                         <i class="fa-solid fa-clock-rotate-left"></i>
                         Menunggu Persetujuan
                         <span class="bg-rose-100 text-rose-700 rounded-full px-2 py-0.5 text-[10px] font-bold">
-                            {{ $perizinans->filter(fn($p) => strtolower($p->status_persetujuan) === 'pending')->count() }}
+                            {{ $pendingIzin->count() }}
                         </span>
                     </button>
                     <button @click="activeTab = 'history'" 
@@ -142,25 +205,73 @@
                         <i class="fa-solid fa-history"></i>
                         Riwayat Perizinan
                         <span class="bg-slate-100 text-slate-650 rounded-full px-2 py-0.5 text-[10px]">
-                            {{ $perizinans->filter(fn($p) => strtolower($p->status_persetujuan) !== 'pending')->count() }}
+                            {{ $historyIzin->count() }}
                         </span>
                     </button>
                 </div>
 
                 <!-- Tab Pending -->
                 <div x-show="activeTab === 'pending'" class="space-y-4">
-                    @php
-                        $pendingIzin = $perizinans->filter(fn($p) => strtolower($p->status_persetujuan) === 'pending');
-                    @endphp
                     @if($pendingIzin->count() > 0)
+                        <!-- Bulk Selection Control Bar -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                                    <input type="checkbox" 
+                                           @change="toggleAll()" 
+                                           :checked="selectedIds.length === allPendingIds.length && allPendingIds.length > 0"
+                                           class="w-4 h-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500 cursor-pointer">
+                                    <span class="text-xs font-bold text-slate-700">Pilih Semua</span>
+                                </label>
+                                <span class="text-xs text-slate-400 font-medium">
+                                    (<span x-text="selectedIds.length" class="font-bold text-teal-700">0</span> dari {{ $pendingIzin->count() }} dipilih)
+                                </span>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <button type="button" 
+                                        @click="confirmBulkAction('disetujui')"
+                                        :disabled="selectedIds.length === 0"
+                                        :class="selectedIds.length > 0 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm cursor-pointer' : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'"
+                                        class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+                                    <i class="fa-solid fa-check-double"></i>
+                                    <span>Setujui Terpilih</span>
+                                    <span x-show="selectedIds.length > 0" x-text="'(' + selectedIds.length + ')'" class="bg-white/20 px-1.5 py-0.5 rounded-full text-[10px]"></span>
+                                </button>
+
+                                <button type="button" 
+                                        @click="confirmBulkAction('ditolak')"
+                                        :disabled="selectedIds.length === 0"
+                                        :class="selectedIds.length > 0 ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 cursor-pointer' : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'"
+                                        class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+                                    <i class="fa-solid fa-xmark"></i>
+                                    <span>Tolak Terpilih</span>
+                                    <span x-show="selectedIds.length > 0" x-text="'(' + selectedIds.length + ')'" class="bg-rose-200/50 px-1.5 py-0.5 rounded-full text-[10px]"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Hidden Bulk Verification Form -->
+                        <form id="bulk-form" action="{{ route('dosen.perizinan.bulk-verifikasi') }}" method="POST" class="hidden">
+                            @csrf
+                            <input type="hidden" name="status" id="bulk-status-input" value="disetujui">
+                        </form>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             @foreach($pendingIzin as $p)
-                                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4 flex flex-col justify-between">
+                                <div class="bg-white border rounded-2xl p-5 shadow-sm space-y-4 flex flex-col justify-between transition-all duration-200"
+                                     :class="isSelected({{ $p->id }}) ? 'border-teal-500 ring-2 ring-teal-500/20 bg-teal-50/10' : 'border-slate-200 hover:border-slate-300'">
                                     <div class="space-y-3">
                                         <div class="flex justify-between items-start gap-2">
-                                            <div>
-                                                <h4 class="font-bold text-slate-800 text-sm leading-tight">{{ $p->mahasiswa->nama_lengkap }}</h4>
-                                                <span class="text-[10px] font-mono text-teal-800 font-bold tracking-wide">NIM: {{ $p->mahasiswa->nim }}</span>
+                                            <div class="flex items-start gap-3">
+                                                <input type="checkbox" 
+                                                       :value="{{ $p->id }}" 
+                                                       x-model.number="selectedIds"
+                                                       class="w-4 h-4 mt-0.5 rounded border-slate-300 text-teal-700 focus:ring-teal-500 cursor-pointer">
+                                                <div>
+                                                    <h4 class="font-bold text-slate-800 text-sm leading-tight">{{ $p->mahasiswa->nama_lengkap }}</h4>
+                                                    <span class="text-[10px] font-mono text-teal-800 font-bold tracking-wide">NIM: {{ $p->mahasiswa->nim }}</span>
+                                                </div>
                                             </div>
                                             <span class="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-100 font-bold rounded text-[9px] uppercase tracking-wider">Pending</span>
                                         </div>

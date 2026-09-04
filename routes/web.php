@@ -43,6 +43,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/laboratorium/import', [AdminController::class, 'importLaboratorium'])->name('laboratorium.import');
         
         Route::get('/agenda', [AdminController::class, 'agenda'])->name('agenda');
+        Route::post('/agenda', [AdminController::class, 'storeAgenda'])->name('agenda.store');
+        Route::put('/agenda/{id}', [AdminController::class, 'updateAgenda'])->name('agenda.update');
+        Route::delete('/agenda/bulk-delete', [AdminController::class, 'bulkDeleteAgendas'])->name('agenda.bulk-delete');
         Route::delete('/agenda/{id}', [AdminController::class, 'deleteAgenda'])->name('agenda.delete');
         Route::post('/agenda/import', [AdminController::class, 'importAgenda'])->name('agenda.import');
         
@@ -87,6 +90,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/mahasiswa/export', [DosenController::class, 'exportMahasiswa'])->name('mahasiswa.export');
         Route::get('/agenda/{id}/export-kehadiran', [DosenController::class, 'exportKehadiran'])->name('agenda.export-kehadiran');
         Route::get('/perizinan', [DosenController::class, 'perizinan'])->name('perizinan');
+        Route::post('/perizinan/bulk-verifikasi', [DosenController::class, 'bulkVerifikasiIzin'])->name('perizinan.bulk-verifikasi');
         Route::post('/perizinan/{id}/verifikasi', [DosenController::class, 'verifikasiIzin'])->name('perizinan.verifikasi');
         Route::get('/pengaturan', [DosenController::class, 'pengaturan'])->name('pengaturan');
         Route::put('/pengaturan', [DosenController::class, 'updatePengaturan'])->name('pengaturan.update');
