@@ -233,11 +233,15 @@
                                                         | Kelas: {{ $ag->kelas ?: '-' }}
                                                     </span>
                                                 </td>
-                                                <td class="p-4">
-                                                    <span class="font-semibold text-slate-800 block">{{ $ag->dosen->nama ?? '-' }}</span>
-                                                    @if($ag->dosenPengampu)
-                                                        <span class="text-[10px] text-teal-700 block font-semibold">Pengampu: {{ $ag->dosenPengampu->nama }}</span>
-                                                    @endif
+                                                <td class="p-4 space-y-1">
+                                                    <div>
+                                                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Mengajar</span>
+                                                        <span class="font-semibold text-slate-800 block text-xs">{{ $ag->dosen->nama ?? '-' }}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="text-[9px] font-bold text-teal-600 uppercase tracking-wider block">Pengampu</span>
+                                                        <span class="font-semibold text-teal-900 block text-xs">{{ $ag->dosenPengampu->nama ?? $ag->dosen->nama ?? '-' }}</span>
+                                                    </div>
                                                 </td>
                                                 <td class="p-4 text-slate-500">
                                                     <span class="block font-semibold">{{ $ag->lab->nama_lab ?? '-' }}</span>

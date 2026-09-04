@@ -46,9 +46,7 @@
                     </p>
                     <p class="text-[11px] text-slate-600 mt-1">
                         <i class="fa-solid fa-user-tie mr-1 text-teal-700"></i><strong>Dosen Mengajar:</strong> {{ $ag->dosen->nama ?? '-' }}
-                        @if($ag->dosenPengampu)
-                            • <strong class="text-teal-800">Dosen Pengampu:</strong> {{ $ag->dosenPengampu->nama }}
-                        @endif
+                        • <strong class="text-teal-800">Dosen Pengampu:</strong> {{ $ag->dosenPengampu->nama ?? $ag->dosen->nama ?? '-' }}
                     </p>
                 </div>
                 

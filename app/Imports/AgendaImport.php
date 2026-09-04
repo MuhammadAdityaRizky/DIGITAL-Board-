@@ -56,22 +56,9 @@ class AgendaImport implements ToCollection
             }
         }
 
-        // Resolve Default Dosen & Lab IDs
-        $defaultDosenId = null;
-        if ($metaDosenMengajar) {
-            $d = Dosen::where('nama', 'like', '%' . $metaDosenMengajar . '%')->first();
-            if ($d) $defaultDosenId = $d->id;
-        }
-        if (!$defaultDosenId) {
-            $defaultDosenId = Dosen::first()?->id;
-        }
-
-        $defaultDosenPengampuId = null;
-        if ($metaDosenPengampu) {
-            $dp = Dosen::where('nama', 'like', '%' . $metaDosenPengampu . '%')->first();
-            if ($dp) $defaultDosenPengampuId = $dp->id;
-        }
-
+        // Resolve Default Dosen & Lab IDs using core name matching
+        $defaultDosenId = $this->findDosenByName($metaDosenMengajar)?->id ?? Dosen::first()?->id;
+        $defaultDosenPengampuId = $this->findDosenByName($metaDosenPengampu)?->id;
         $defaultLabId = Laboratorium::first()?->id;
 
         // 2. Identify Column Indexes or Heading Row
@@ -111,8 +98,14 @@ class AgendaImport implements ToCollection
 
         for ($i = $startIdx; $i < count($rows); $i++) {
             $rowArray = array_map('strval', $rows[$i]->toArray());
+            $rowStrFull = implode(' ', array_filter($rowArray));
             if (empty(array_filter($rowArray))) {
                 continue; // Skip blank rows
+            }
+
+            // SKIP metadata header rows if scanned
+            if (preg_match('/(realisasi|fakultas|program studi|semester \/ kelas|tabel realisasi|nama dosen|nama mata kuliah|paraf prodi|paraf dosen)/i', $rowStrFull)) {
+                continue;
             }
 
             // Extract values using mapped columns or heuristic fallback
@@ -132,7 +125,9 @@ class AgendaImport implements ToCollection
                     } elseif (!$valWaktu && preg_match('/\d{1,2}[\.:]\d{2}/', $cellValTrim)) {
                         $valWaktu = $cellValTrim;
                     } elseif (!$valMateri && strlen($cellValTrim) > 3 && !is_numeric($cellValTrim) && !in_array(strtolower($cellValTrim), ['ada', 'tidak', 'ya', 'tidak ada', 'paraf'])) {
-                        $valMateri = $cellValTrim;
+                        if (!$this->findDosenByName($cellValTrim) && !preg_match('/dosen|fakultas|prodi|semester/i', $cellValTrim)) {
+                            $valMateri = $cellValTrim;
+                        }
                     }
                 }
             }
@@ -146,13 +141,13 @@ class AgendaImport implements ToCollection
             if ($valMateri) {
                 if ($metaMataKuliah && stripos($valMateri, $metaMataKuliah) === false) {
                     $finalMataKuliah = $metaMataKuliah . ' (' . $valMateri . ')';
-                } else {
+                } elseif (!$metaMataKuliah) {
                     $finalMataKuliah = $valMateri;
                 }
             }
 
-            if (!$finalMataKuliah) {
-                $finalMataKuliah = 'Agenda Mengajar Praktikum';
+            if (!$finalMataKuliah || $this->findDosenByName($finalMataKuliah)) {
+                continue; // Skip if mata kuliah is empty or erroneously matched a dosen name
             }
 
             // Parse Date & Time
@@ -160,18 +155,8 @@ class AgendaImport implements ToCollection
             [$jamMulai, $jamSelesai] = $this->parseTimes($valWaktu);
 
             // Match Dosen
-            $dosenId = $defaultDosenId;
-            if ($valDosen) {
-                $d = Dosen::where('nama', 'like', '%' . trim($valDosen) . '%')->orWhere('nip', trim($valDosen))->first();
-                if ($d) $dosenId = $d->id;
-            }
-
-            // Match Dosen Pengampu
-            $dosenPengampuId = $defaultDosenPengampuId;
-            if ($valPengampu) {
-                $dp = Dosen::where('nama', 'like', '%' . trim($valPengampu) . '%')->orWhere('nip', trim($valPengampu))->first();
-                if ($dp) $dosenPengampuId = $dp->id;
-            }
+            $dosenId = $valDosen ? ($this->findDosenByName($valDosen)?->id ?? $defaultDosenId) : $defaultDosenId;
+            $dosenPengampuId = $valPengampu ? ($this->findDosenByName($valPengampu)?->id ?? $defaultDosenPengampuId) : $defaultDosenPengampuId;
 
             // Match Lab
             $labId = $defaultLabId;
@@ -204,6 +189,32 @@ class AgendaImport implements ToCollection
 
             $this->importedCount++;
         }
+    }
+
+    private function findDosenByName(?string $name): ?Dosen
+    {
+        if (!$name) return null;
+
+        $cleanName = trim($name);
+        $dosen = Dosen::where('nama', 'like', '%' . $cleanName . '%')->first();
+        if ($dosen) return $dosen;
+
+        $coreName = preg_replace('/,?\s*(S\.Kom|M\.Kom|S\.T|M\.T|S\.Pd|M\.Pd|S\.Si|M\.Si|Dr|Prof|Ph\.D)\.?/i', '', $cleanName);
+        $coreName = trim(preg_replace('/[^\w\s]/', '', $coreName));
+
+        if (strlen($coreName) >= 3) {
+            $dosen = Dosen::where('nama', 'like', '%' . $coreName . '%')->first();
+            if ($dosen) return $dosen;
+
+            $words = explode(' ', $coreName);
+            if (count($words) >= 2) {
+                $shortName = $words[0] . ' ' . $words[1];
+                $dosen = Dosen::where('nama', 'like', '%' . $shortName . '%')->first();
+                if ($dosen) return $dosen;
+            }
+        }
+
+        return null;
     }
 
     private function parseIndonesianDate($dateStr): string
