@@ -808,14 +808,20 @@ class AdminController extends Controller
     public function importAgenda(Request $request)
     {
         $request->validate([
-            'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
+            'file_excel' => 'required|max:10240',
         ]);
 
         try {
-            Excel::import(new AgendaImport, $request->file('file_excel'));
-            return redirect()->route('admin.agenda')->with('success', 'Data Agenda berhasil diimpor.');
+            $import = new AgendaImport();
+            Excel::import($import, $request->file('file_excel'));
+            
+            if ($import->importedCount === 0) {
+                return redirect()->route('admin.agenda')->withErrors(['msg' => 'Tidak ada data agenda yang berhasil diimpor dari file tersebut. Pastikan file memuat data tanggal, waktu, dan mata kuliah.']);
+            }
+
+            return redirect()->route('admin.agenda')->with('success', 'Berhasil mengimpor ' . $import->importedCount . ' sesi agenda praktikum.');
         } catch (\Exception $e) {
-            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+            return redirect()->route('admin.agenda')->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
         }
     }
 
