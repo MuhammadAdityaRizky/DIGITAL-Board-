@@ -56,26 +56,18 @@ class AgendaImport implements ToCollection
             }
         }
 
-<<<<<<< HEAD
-        // Resolve Default Dosen & Lab IDs using core name matching
-        $defaultDosenId = $this->findDosenByName($metaDosenMengajar)?->id ?? Dosen::first()?->id;
-        $defaultDosenPengampuId = $this->findDosenByName($metaDosenPengampu)?->id;
-        $defaultLabId = Laboratorium::first()?->id;
-=======
-        $defaultDosenId = null;
-        if ($metaDosenMengajar) {
-            $d = Dosen::where('nama', 'like', '%' . $metaDosenMengajar . '%')->first();
-            if ($d) {
-                $defaultDosenId = $d->id;
-            } else {
-                throw new \Exception("Dosen '{$metaDosenMengajar}' tidak ditemukan di database. Pastikan dosen tersebut sudah terdaftar.");
-            }
+        // Resolve Default Dosen & Lab IDs using core name matching with fallback
+        $defaultDosenId = $this->findDosenByName($metaDosenMengajar)?->id;
+        if (!$defaultDosenId && $metaDosenMengajar) {
+            $defaultDosenId = Dosen::where('nama', 'like', '%' . $metaDosenMengajar . '%')->first()?->id;
+        }
+        if (!$defaultDosenId) {
+            $defaultDosenId = Dosen::first()?->id;
         }
 
-        $defaultDosenPengampuId = null;
-        if ($metaDosenPengampu) {
-            $dp = Dosen::where('nama', 'like', '%' . $metaDosenPengampu . '%')->first();
-            if ($dp) $defaultDosenPengampuId = $dp->id;
+        $defaultDosenPengampuId = $this->findDosenByName($metaDosenPengampu)?->id;
+        if (!$defaultDosenPengampuId && $metaDosenPengampu) {
+            $defaultDosenPengampuId = Dosen::where('nama', 'like', '%' . $metaDosenPengampu . '%')->first()?->id;
         }
 
         $defaultLabId = null;
@@ -84,9 +76,8 @@ class AgendaImport implements ToCollection
             if ($l) $defaultLabId = $l->id;
         }
         if (!$defaultLabId) {
-            $defaultLabId = Laboratorium::first()?->id; // Still fallback for Lab, or we can leave it. Let's keep the fallback for Lab as it's less critical.
+            $defaultLabId = Laboratorium::first()?->id;
         }
->>>>>>> 200e45e (fix: change semester, jurusan, and fakultas to dropdowns and improve AgendaImport mapping)
 
         // 2. Identify Column Indexes or Heading Row
         $headerRowIndex = null;
