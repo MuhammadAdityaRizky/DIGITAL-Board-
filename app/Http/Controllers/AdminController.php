@@ -173,6 +173,11 @@ class AdminController extends Controller
         }
 
         $agendas = $query->paginate(10)->withQueryString();
+
+        if ($agendas->isEmpty() && $agendas->total() > 0 && (int)$request->get('page', 1) > 1) {
+            return redirect()->route('admin.agenda', $request->except('page'));
+        }
+
         $dosens = Dosen::orderBy('nama', 'asc')->get();
         $labs = Laboratorium::orderBy('nama_lab', 'asc')->get();
         $fakultas = Fakultas::orderBy('nama_fakultas', 'asc')->get();
@@ -808,7 +813,7 @@ class AdminController extends Controller
 
         try {
             Excel::import(new AgendaImport, $request->file('file_excel'));
-            return back()->with('success', 'Data Agenda berhasil diimpor.');
+            return redirect()->route('admin.agenda')->with('success', 'Data Agenda berhasil diimpor.');
         } catch (\Exception $e) {
             return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
         }

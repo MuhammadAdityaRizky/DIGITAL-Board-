@@ -295,6 +295,11 @@ class DosenController extends Controller
         }
 
         $agendas = $query->paginate(10)->withQueryString();
+
+        if ($agendas->isEmpty() && $agendas->total() > 0 && (int)$request->get('page', 1) > 1) {
+            return redirect()->route('dosen.agenda', $request->except('page'));
+        }
+
         $dosens = Dosen::orderBy('nama', 'asc')->get();
         $labs = Laboratorium::all();
         $fakultas = \App\Models\Fakultas::all();
