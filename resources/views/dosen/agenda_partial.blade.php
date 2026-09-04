@@ -44,6 +44,12 @@
                         @if($ag->kelas) • Kelas: {{ $ag->kelas }} @endif
                         @if($ag->semester) • Semester: {{ $ag->semester }} @endif
                     </p>
+                    <p class="text-[11px] text-slate-600 mt-1">
+                        <i class="fa-solid fa-user-tie mr-1 text-teal-700"></i><strong>Dosen Mengajar:</strong> {{ $ag->dosen->nama ?? '-' }}
+                        @if($ag->dosenPengampu)
+                            • <strong class="text-teal-800">Dosen Pengampu:</strong> {{ $ag->dosenPengampu->nama }}
+                        @endif
+                    </p>
                 </div>
                 
                 <!-- Collapsible Section: Realisasi (Collapsible details) -->
@@ -135,6 +141,16 @@
                             <select name="lab_id" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                                 @foreach($labs as $lab)
                                     <option value="{{ $lab->id }}" {{ $ag->lab_id == $lab->id ? 'selected' : '' }}>{{ $lab->nama_lab }} ({{ $lab->lokasi }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-slate-700 font-bold mb-1">Dosen Pengampu <span class="text-slate-400 font-normal text-[10px]">(Opsional)</span></label>
+                            <select name="dosen_pengampu_id" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                <option value="">-- Pilih Dosen Pengampu --</option>
+                                @foreach($dosens as $d)
+                                    <option value="{{ $d->id }}" {{ $ag->dosen_pengampu_id == $d->id ? 'selected' : '' }}>{{ $d->nama }} (NIP: {{ $d->nip }})</option>
                                 @endforeach
                             </select>
                         </div>

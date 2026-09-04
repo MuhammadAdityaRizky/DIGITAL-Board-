@@ -102,6 +102,7 @@ class DosenController extends Controller
     public function storeAgenda(Request $request)
     {
         $request->validate([
+            'dosen_pengampu_id' => 'nullable|exists:dosen,id',
             'lab_id' => 'required|exists:laboratorium,id',
             'judul_agenda' => 'required|string|max:150',
             'kelas' => 'nullable|string|max:50',
@@ -133,6 +134,7 @@ class DosenController extends Controller
 
         Agenda::create([
             'dosen_id' => $dosen->id,
+            'dosen_pengampu_id' => $request->dosen_pengampu_id,
             'lab_id' => $request->lab_id,
             'mata_kuliah' => $request->judul_agenda,
             'program_kuliah' => $request->program_kuliah,
@@ -154,6 +156,7 @@ class DosenController extends Controller
     public function updateAgenda(Request $request, $id)
     {
         $request->validate([
+            'dosen_pengampu_id' => 'nullable|exists:dosen,id',
             'lab_id' => 'required|exists:laboratorium,id',
             'judul_agenda' => 'required|string|max:150',
             'kelas' => 'nullable|string|max:50',
@@ -185,6 +188,7 @@ class DosenController extends Controller
         }
 
         $agenda->update([
+            'dosen_pengampu_id' => $request->dosen_pengampu_id,
             'lab_id' => $request->lab_id,
             'mata_kuliah' => $request->judul_agenda,
             'program_kuliah' => $request->program_kuliah,
@@ -270,8 +274,11 @@ class DosenController extends Controller
         $user = auth()->user();
         $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
 
-        $query = Agenda::with(['lab', 'absensi.mahasiswa.user'])
-            ->where('dosen_id', $dosen->id)
+        $query = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'absensi.mahasiswa.user'])
+            ->where(function($q) use ($dosen) {
+                $q->where('dosen_id', $dosen->id)
+                  ->orWhere('dosen_pengampu_id', $dosen->id);
+            })
             ->orderBy('tanggal', 'desc')
             ->orderBy('jam_mulai', 'desc');
 
@@ -288,16 +295,17 @@ class DosenController extends Controller
         }
 
         $agendas = $query->paginate(10)->withQueryString();
+        $dosens = Dosen::orderBy('nama', 'asc')->get();
         $labs = Laboratorium::all();
         $fakultas = \App\Models\Fakultas::all();
         $prodis = \App\Models\Prodi::with('fakultas')->get();
 
         if ($request->ajax()) {
-            $html = view('dosen.agenda_partial', compact('dosen', 'agendas', 'labs', 'fakultas', 'prodis'))->render();
+            $html = view('dosen.agenda_partial', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis'))->render();
             return response()->json(['html' => $html]);
         }
 
-        return view('dosen.agenda', compact('dosen', 'agendas', 'labs', 'fakultas', 'prodis'));
+        return view('dosen.agenda', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis'));
     }
 
     public function mahasiswa(Request $request)

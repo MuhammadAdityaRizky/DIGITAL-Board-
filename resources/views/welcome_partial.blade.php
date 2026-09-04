@@ -73,7 +73,7 @@
                             {{ $activeAgenda->mata_kuliah }}
                         </h2>
                         <div class="text-xs text-slate-500 font-semibold space-y-1">
-                            <div>{{ $activeAgenda->lab->nama_lab }} • {{ $activeAgenda->dosen->nama }}</div>
+                            <div>{{ $activeAgenda->lab->nama_lab }} • Dosen Mengajar: {{ $activeAgenda->dosen->nama ?? '-' }}{{ $activeAgenda->dosenPengampu ? ' • Dosen Pengampu: ' . $activeAgenda->dosenPengampu->nama : '' }}</div>
                             <div>Fakultas: {{ $activeAgenda->fakultas }} • Prodi: {{ $activeAgenda->jurusan }}</div>
                             <div>Program: {{ $activeAgenda->program_kuliah ?? 'Reguler' }} • Tipe: {{ $activeAgenda->jenis_pertemuan ?? 'Praktikum' }} • Semester: {{ $activeAgenda->semester ?? '1' }} • Kelas: {{ $activeAgenda->kelas ?? 'A' }}</div>
                             <div class="flex items-center gap-1.5 pt-1.5">
@@ -125,7 +125,7 @@
                             {{ $nextAgenda->mata_kuliah }}
                         </h2>
                          <div class="text-xs text-slate-500 font-semibold space-y-1">
-                            <div>{{ $nextAgenda->lab->nama_lab }} • {{ $nextAgenda->dosen->nama }}</div>
+                            <div>{{ $nextAgenda->lab->nama_lab }} • Dosen Mengajar: {{ $nextAgenda->dosen->nama ?? '-' }}{{ $nextAgenda->dosenPengampu ? ' • Dosen Pengampu: ' . $nextAgenda->dosenPengampu->nama : '' }}</div>
                             <div>Fakultas: {{ $nextAgenda->fakultas }} • Prodi: {{ $nextAgenda->jurusan }}</div>
                             <div>Program: {{ $nextAgenda->program_kuliah ?? 'Reguler' }} • Semester: {{ $nextAgenda->semester ?? '1' }} • Kelas: {{ $nextAgenda->kelas ?? 'A' }}</div>
                             <div class="flex items-center gap-1.5 pt-1.5">

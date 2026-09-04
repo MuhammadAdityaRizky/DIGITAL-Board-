@@ -210,7 +210,7 @@
                                             </th>
                                             <th class="p-4">Tanggal / Waktu</th>
                                             <th class="p-4">Mata Kuliah / Detail</th>
-                                            <th class="p-4">Dosen Pengampu</th>
+                                            <th class="p-4">Dosen Mengajar & Pengampu</th>
                                             <th class="p-4">Ruang Lab</th>
                                             <th class="p-4 text-center">Aksi</th>
                                         </tr>
@@ -233,7 +233,12 @@
                                                         | Kelas: {{ $ag->kelas ?: '-' }}
                                                     </span>
                                                 </td>
-                                                <td class="p-4 font-semibold text-slate-700">{{ $ag->dosen->nama ?? '-' }}</td>
+                                                <td class="p-4">
+                                                    <span class="font-semibold text-slate-800 block">{{ $ag->dosen->nama ?? '-' }}</span>
+                                                    @if($ag->dosenPengampu)
+                                                        <span class="text-[10px] text-teal-700 block font-semibold">Pengampu: {{ $ag->dosenPengampu->nama }}</span>
+                                                    @endif
+                                                </td>
                                                 <td class="p-4 text-slate-500">
                                                     <span class="block font-semibold">{{ $ag->lab->nama_lab ?? '-' }}</span>
                                                     <span class="text-[10px] text-slate-450">{{ $ag->lab->lokasi ?? '-' }}</span>
@@ -304,11 +309,22 @@
                 <input type="hidden" id="agenda_id" name="agenda_id" value="">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Dosen Mengajar -->
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Dosen Mengajar / Praktikum <span class="text-rose-500">*</span></label>
+                        <select id="form_dosen_id" name="dosen_id" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <option value="">-- Pilih Dosen Mengajar --</option>
+                            @foreach($dosens as $d)
+                                <option value="{{ $d->id }}">{{ $d->nama }} (NIP: {{ $d->nip }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <!-- Dosen Pengampu -->
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Dosen Pengampu <span class="text-rose-500">*</span></label>
-                        <select id="form_dosen_id" name="dosen_id" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <option value="">-- Pilih Dosen --</option>
+                        <label class="block text-slate-700 font-bold mb-1">Dosen Pengampu <span class="text-slate-400 font-normal text-[10px]">(Opsional)</span></label>
+                        <select id="form_dosen_pengampu_id" name="dosen_pengampu_id" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <option value="">-- Pilih Dosen Pengampu --</option>
                             @foreach($dosens as $d)
                                 <option value="{{ $d->id }}">{{ $d->nama }} (NIP: {{ $d->nip }})</option>
                             @endforeach
@@ -542,6 +558,7 @@
             
             document.getElementById('agenda_id').value = '';
             document.getElementById('form_dosen_id').value = '';
+            document.getElementById('form_dosen_pengampu_id').value = '';
             document.getElementById('form_lab_id').value = '';
             document.getElementById('form_judul_agenda').value = '';
             document.getElementById('form_program_kuliah').value = 'Reguler';
@@ -567,6 +584,7 @@
             
             document.getElementById('agenda_id').value = ag.id;
             document.getElementById('form_dosen_id').value = ag.dosen_id;
+            document.getElementById('form_dosen_pengampu_id').value = ag.dosen_pengampu_id || '';
             document.getElementById('form_lab_id').value = ag.lab_id;
             document.getElementById('form_judul_agenda').value = ag.mata_kuliah;
             document.getElementById('form_program_kuliah').value = ag.program_kuliah || 'Reguler';

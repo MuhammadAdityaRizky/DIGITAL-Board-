@@ -153,13 +153,16 @@ class AdminController extends Controller
 
     public function agenda(Request $request)
     {
-        $query = Agenda::with(['dosen', 'lab'])->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
+        $query = Agenda::with(['dosen', 'dosenPengampu', 'lab'])->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('mata_kuliah', 'like', "%{$search}%")
                   ->orWhereHas('dosen', function($qd) use ($search) {
+                      $qd->where('nama', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('dosenPengampu', function($qd) use ($search) {
                       $qd->where('nama', 'like', "%{$search}%");
                   });
             });
@@ -183,6 +186,7 @@ class AdminController extends Controller
     {
         $request->validate([
             'dosen_id' => 'required|exists:dosen,id',
+            'dosen_pengampu_id' => 'nullable|exists:dosen,id',
             'lab_id' => 'required|exists:laboratorium,id',
             'judul_agenda' => 'required|string|max:150',
             'kelas' => 'nullable|string|max:50',
@@ -200,6 +204,7 @@ class AdminController extends Controller
 
         Agenda::create([
             'dosen_id' => $request->dosen_id,
+            'dosen_pengampu_id' => $request->dosen_pengampu_id,
             'lab_id' => $request->lab_id,
             'mata_kuliah' => $request->judul_agenda,
             'program_kuliah' => $request->program_kuliah,
@@ -222,6 +227,7 @@ class AdminController extends Controller
     {
         $request->validate([
             'dosen_id' => 'required|exists:dosen,id',
+            'dosen_pengampu_id' => 'nullable|exists:dosen,id',
             'lab_id' => 'required|exists:laboratorium,id',
             'judul_agenda' => 'required|string|max:150',
             'kelas' => 'nullable|string|max:50',
@@ -240,6 +246,7 @@ class AdminController extends Controller
         $agenda = Agenda::findOrFail($id);
         $agenda->update([
             'dosen_id' => $request->dosen_id,
+            'dosen_pengampu_id' => $request->dosen_pengampu_id,
             'lab_id' => $request->lab_id,
             'mata_kuliah' => $request->judul_agenda,
             'program_kuliah' => $request->program_kuliah,

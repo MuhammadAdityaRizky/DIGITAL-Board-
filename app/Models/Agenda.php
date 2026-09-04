@@ -17,7 +17,12 @@ class Agenda extends Model
 
     public function dosen()
     {
-        return $this->belongsTo(Dosen::class);
+        return $this->belongsTo(Dosen::class, 'dosen_id');
+    }
+
+    public function dosenPengampu()
+    {
+        return $this->belongsTo(Dosen::class, 'dosen_pengampu_id');
     }
 
     public function lab()
