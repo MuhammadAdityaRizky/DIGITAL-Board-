@@ -115,6 +115,7 @@
                         <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
                             {{ $agenda->mata_kuliah }}
                             <span class="px-2 py-0.5 bg-teal-50 text-teal-800 border border-teal-100 rounded text-[10px] font-bold uppercase">Kelas {{ $agenda->kelas ?: '-' }}</span>
+                            <span class="px-2 py-0.5 bg-slate-50 text-slate-600 border border-slate-200 rounded text-[10px] font-bold uppercase">Semester {{ $agenda->semester ?: '-' }}</span>
                         </h3>
                         <p class="text-xs text-slate-500 mt-1.5 font-medium">
                             <i class="fa-solid fa-user-tie text-slate-400 mr-1.5"></i> Dosen: <span class="text-slate-700 font-bold">{{ $agenda->dosen->nama }}</span>

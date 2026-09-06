@@ -272,6 +272,9 @@
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
                     <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <div class="mt-2 text-right">
+                        <a href="{{ route('template.download', 'laboratorium') }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline"><i class="fa-solid fa-download mr-1"></i> Unduh Template Excel</a>
+                    </div>
                 </div>
                 <div class="flex gap-2.5 pt-3 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modal-import-lab')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
@@ -463,6 +466,7 @@
                 }
 
                 form.addEventListener('submit', function(e) {
+                    if (e.defaultPrevented) return;
                     if (form.checkValidity && !form.checkValidity()) {
                         return;
                     }

@@ -51,8 +51,9 @@ class AutoAlphaMiddleware
                 ->get();
 
             foreach ($unprocessed as $agenda) {
-                // Get all students matching this class's Fakultas, Prodi/Jurusan, and Kelas
-                $students = Mahasiswa::where('kelas', $agenda->kelas)
+                // Get all active students matching this class's Fakultas, Prodi/Jurusan, and Kelas
+                $students = Mahasiswa::where('status', 'aktif')
+                    ->where('kelas', $agenda->kelas)
                     ->whereHas('fakultas', function($q) use ($agenda) {
                         $q->where('nama_fakultas', $agenda->fakultas);
                     })

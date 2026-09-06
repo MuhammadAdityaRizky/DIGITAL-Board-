@@ -23,6 +23,7 @@ use App\Imports\LaboratoriumImport;
 use App\Imports\FakultasImport;
 use App\Imports\ProdiImport;
 use App\Imports\KelasImport;
+use App\Imports\KehadiranImport;
 
 class AdminController extends Controller
 {
@@ -94,6 +95,13 @@ class AdminController extends Controller
             $kelas = $request->kelas;
             $query->whereHas('mahasiswa', function($q) use ($kelas) {
                 $q->where('kelas', $kelas);
+            });
+        }
+
+        if ($request->filled('status_mahasiswa')) {
+            $statusMhs = strtolower($request->status_mahasiswa);
+            $query->whereHas('mahasiswa', function($q) use ($statusMhs) {
+                $q->where('status', $statusMhs);
             });
         }
 
@@ -199,7 +207,7 @@ class AdminController extends Controller
             $query->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
         }
 
-        $agendas = $query->paginate(10)->withQueryString();
+        $agendas = $query->paginate(16)->withQueryString();
 
         if ($agendas->isEmpty() && $agendas->total() > 0 && (int)$request->get('page', 1) > 1) {
             return redirect()->route('admin.agenda', $request->except('page'));
@@ -341,7 +349,14 @@ class AdminController extends Controller
 
         $agendas = $query->paginate(10)->withQueryString();
 
-        return view('admin.absensi', compact('agendas'));
+        $uniqueClasses = Agenda::with('dosen')
+            ->orderBy('mata_kuliah')
+            ->get()
+            ->unique(function ($item) {
+                return $item->mata_kuliah . '-' . $item->kelas . '-' . $item->dosen_id;
+            });
+
+        return view('admin.absensi', compact('agendas', 'uniqueClasses'));
     }
 
     public function exportAbsensi(Request $request)
@@ -377,8 +392,7 @@ class AdminController extends Controller
     {
         $agenda = Agenda::with(['dosen', 'lab'])->findOrFail($id);
         
-        $students = \App\Models\Mahasiswa::where('kelas', $agenda->kelas)
-            ->when($agenda->fakultas, function($q) use ($agenda) {
+        $studentsQuery = \App\Models\Mahasiswa::when($agenda->fakultas, function($q) use ($agenda) {
                 $q->whereHas('fakultas', function($qF) use ($agenda) {
                     $qF->where('nama_fakultas', $agenda->fakultas);
                 });
@@ -388,11 +402,74 @@ class AdminController extends Controller
                     $qP->where('nama_prodi', $agenda->jurusan);
                 });
             })
-            ->orderBy('nama_lengkap', 'asc')->get();
+            ->when($agenda->program_kuliah, function($q) use ($agenda) {
+                $q->where('program_kuliah', $agenda->program_kuliah);
+            });
+            
+        if ($agenda->semester) {
+            $semNum = preg_replace('/[^0-9]/', '', $agenda->semester);
+            if ($semNum) {
+                $studentsQuery->where('semester', $semNum);
+            }
+        }
+
+        if ($agenda->kelas) {
+            $studentsQuery->where('kelas', $agenda->kelas);
+        }
+        
+        $students = $studentsQuery->orderBy('nama_lengkap', 'asc')->get();
             
         $existingAbsensi = \App\Models\Absensi::where('agenda_id', $agenda->id)->get()->keyBy('mahasiswa_id');
 
         return view('admin.input_absensi', compact('agenda', 'students', 'existingAbsensi'));
+    }
+
+    public function importAbsensi(Request $request, $id)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls'
+        ], [
+            'file_excel.required' => 'Pilih file Excel terlebih dahulu.',
+            'file_excel.mimes' => 'Format file harus .xlsx atau .xls'
+        ]);
+
+        $agenda = Agenda::findOrFail($id);
+
+        try {
+            Excel::import(new KehadiranImport($agenda), $request->file('file_excel'));
+            return redirect()->back()->with('success', 'Data absensi berhasil diimpor dari Excel.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal mengimpor data: ' . $e->getMessage());
+        }
+    }
+
+    public function importAbsensiGlobal(Request $request)
+    {
+        $request->validate([
+            'mata_kuliah_kelas' => 'required|string',
+            'file_excel' => 'required|mimes:xlsx,xls'
+        ]);
+
+        $parts = explode('|', $request->mata_kuliah_kelas);
+        $mata_kuliah = $parts[0] ?? '';
+        $kelas = $parts[1] ?? '';
+        $dosen_id = $parts[2] ?? '';
+
+        $baseAgenda = Agenda::where('mata_kuliah', $mata_kuliah)
+            ->where('kelas', $kelas)
+            ->where('dosen_id', $dosen_id)
+            ->first();
+
+        if (!$baseAgenda) {
+            return redirect()->back()->with('error', 'Data mata kuliah/kelas tidak ditemukan.');
+        }
+
+        try {
+            Excel::import(new KehadiranImport($baseAgenda), $request->file('file_excel'));
+            return redirect()->back()->with('success', 'Data absensi berhasil diimpor ke seluruh pertemuan untuk kelas tersebut.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal mengimpor data: ' . $e->getMessage());
+        }
     }
 
     public function storeInputAbsensi(Request $request, $id)
@@ -488,6 +565,7 @@ class AdminController extends Controller
                     'kelas' => $request->kelas ?? '',
                     'program_kuliah' => $request->program_kuliah ?? 'Reguler',
                     'semester' => $request->semester ?? 1,
+                    'status' => $request->status_mahasiswa ?? 'aktif',
                     'id_fakultas' => $request->fakultas,
                     'id_prodi' => $request->jurusan,
                 ]);
@@ -505,8 +583,9 @@ class AdminController extends Controller
             'nama_lengkap' => 'required|string|max:100',
             'username_or_nim_nip' => 'required|string|max:50|unique:users,username,' . $id,
             'kelas' => 'nullable|string|max:50',
-            'semester' => 'nullable|integer|min:1|max:8',
+            'semester' => 'nullable|integer|min:1|max:14',
             'status' => 'nullable|in:Tetap,Tidak Tetap,Honorer,Cuti',
+            'status_mahasiswa' => 'nullable|in:aktif,cuti,lulus,do',
             'kompetensi' => 'nullable|string',
             'jabatan' => 'nullable|string|max:100',
             'program_kuliah' => 'nullable|in:Reguler,Karyawan',
@@ -555,6 +634,7 @@ class AdminController extends Controller
                         'kelas' => $request->kelas ?? '',
                         'program_kuliah' => $request->program_kuliah ?? 'Reguler',
                         'semester' => $request->semester ?? 1,
+                        'status' => $request->status_mahasiswa ?? 'aktif',
                         'id_fakultas' => $request->fakultas,
                         'id_prodi' => $request->jurusan,
                     ]
@@ -644,11 +724,68 @@ class AdminController extends Controller
 
     public function promoteSemesters(Request $request)
     {
-        DB::transaction(function() {
-            Mahasiswa::where('semester', '<', 8)->increment('semester');
+        $action = $request->input('action_type', 'promote'); // 'promote' (+1) or 'revert' (-1)
+        $targetFakultas = $request->input('target_fakultas');
+        $targetProdi = $request->input('target_prodi');
+        $targetAngkatan = $request->input('target_angkatan');
+        $autoGraduate = $request->boolean('auto_graduate'); // If semester >= 8 or 14, mark as 'lulus'
+
+        $countUpdated = 0;
+        $countGraduated = 0;
+
+        DB::transaction(function() use ($action, $targetFakultas, $targetProdi, $targetAngkatan, $autoGraduate, &$countUpdated, &$countGraduated) {
+            $query = Mahasiswa::query();
+
+            // By default, only touch active students for promotions
+            if ($action === 'promote') {
+                $query->where('status', 'aktif');
+            } else {
+                // For rollback, allow active or students recently touched
+                $query->whereIn('status', ['aktif', 'lulus']);
+            }
+
+            if ($targetFakultas) {
+                $query->where('id_fakultas', $targetFakultas);
+            }
+            if ($targetProdi) {
+                $query->where('id_prodi', $targetProdi);
+            }
+            if ($targetAngkatan) {
+                $query->where('nim', 'like', $targetAngkatan . '%');
+            }
+
+            $students = $query->get();
+
+            foreach ($students as $mhs) {
+                if ($action === 'promote') {
+                    if ($mhs->semester < 14) {
+                        $newSem = $mhs->semester + 1;
+                        if ($autoGraduate && $newSem > 8) {
+                            $mhs->update(['semester' => 8, 'status' => 'lulus']);
+                            $countGraduated++;
+                        } else {
+                            $mhs->update(['semester' => $newSem]);
+                            $countUpdated++;
+                        }
+                    }
+                } elseif ($action === 'revert') {
+                    if ($mhs->semester > 1) {
+                        $updates = ['semester' => $mhs->semester - 1];
+                        if ($mhs->status === 'lulus') {
+                            $updates['status'] = 'aktif';
+                        }
+                        $mhs->update($updates);
+                        $countUpdated++;
+                    }
+                }
+            }
         });
 
-        return back()->with('success', 'Seluruh mahasiswa berhasil naik semester (semester dinaikkan 1 tingkat).');
+        $msg = $action === 'promote' 
+            ? "Berhasil menaikkan semester untuk {$countUpdated} mahasiswa aktif" . ($countGraduated > 0 ? " ({$countGraduated} ditandai lulus)." : ".")
+            : "Berhasil mengembalikan/menurunkan semester untuk {$countUpdated} mahasiswa.";
+
+        return back()->with('success', $msg);
     }
 
     public function statistik(Request $request)
@@ -678,20 +815,52 @@ class AdminController extends Controller
 
             $studentsData = [];
             foreach ($agendas as $agenda) {
-                $students = Mahasiswa::where('kelas', $agenda->kelas)
-                    ->whereHas('fakultas', function($q) use ($agenda) {
-                        $q->where('nama_fakultas', $agenda->fakultas);
-                    })
-                    ->whereHas('prodi', function($q) use ($agenda) {
-                        $q->where('nama_prodi', $agenda->jurusan);
-                    })
-                    ->get();
-
-                $summary['total_expected'] += $students->count();
-
                 $absensiByStudent = $agenda->absensi->keyBy('mahasiswa_id');
 
-                foreach ($students as $mhs) {
+                $studentsQuery = \App\Models\Mahasiswa::when($agenda->fakultas, function($q) use ($agenda) {
+                        $q->whereHas('fakultas', function($qF) use ($agenda) {
+                            $qF->where('nama_fakultas', $agenda->fakultas);
+                        });
+                    })
+                    ->when($agenda->jurusan, function($q) use ($agenda) {
+                        $q->whereHas('prodi', function($qP) use ($agenda) {
+                            $qP->where('nama_prodi', $agenda->jurusan);
+                        });
+                    })
+                    ->when($agenda->program_kuliah, function($q) use ($agenda) {
+                        $q->where('program_kuliah', $agenda->program_kuliah);
+                    });
+                    
+                if ($agenda->semester) {
+                    $semNum = preg_replace('/[^0-9]/', '', $agenda->semester);
+                    if ($semNum) {
+                        $studentsQuery->where('semester', $semNum);
+                    }
+                }
+
+                if ($agenda->kelas) {
+                    $cleanKelas = trim($agenda->kelas);
+                    if (preg_match('/(?:reg|kar|kelas)[_ \-\/]*([a-z0-9]+)/i', $cleanKelas, $mK)) {
+                        $cleanKelas = strtoupper($mK[1]);
+                    } elseif (str_contains($cleanKelas, '/')) {
+                        $partsK = explode('/', $cleanKelas);
+                        if (preg_match('/([a-z0-9]+)$/i', trim(end($partsK)), $mK)) {
+                            $cleanKelas = strtoupper($mK[1]);
+                        }
+                    }
+                    $studentsQuery->where('kelas', $cleanKelas);
+                }
+                
+                $matchedStudents = $studentsQuery->get();
+
+                // If no students matched by strict semester/kelas filter (e.g. students were promoted or differing semester tag),
+                // fallback to students who actually have attendance records for this agenda
+                $actualStudentsFromAbsensi = $agenda->absensi->map->mahasiswa->filter();
+                $allSessionStudents = $matchedStudents->merge($actualStudentsFromAbsensi)->unique('id');
+
+                $summary['total_expected'] += $allSessionStudents->count();
+
+                foreach ($allSessionStudents as $mhs) {
                     if (!isset($studentsData[$mhs->id])) {
                         $studentsData[$mhs->id] = [
                             'mahasiswa' => $mhs,

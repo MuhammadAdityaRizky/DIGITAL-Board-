@@ -375,12 +375,12 @@
                     <!-- Kelas -->
                     <div>
                         <label class="block text-slate-700 font-bold mb-1">Kelas <span class="text-slate-400 font-normal text-[10px]">(Opsional)</span></label>
-                        <input type="text" id="form_kelas" name="kelas" placeholder="Contoh: TI-3A (Kosongkan jika tidak ada)" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none" list="kelas_list">
-                        <datalist id="kelas_list">
+                        <select id="form_kelas" name="kelas" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <option value="">Pilih Kelas (Kosongkan jika tidak ada)</option>
                             @foreach($kelases as $k)
-                                <option value="{{ $k->nama_kelas }}">
+                                <option value="{{ $k->nama_kelas }}">{{ $k->nama_kelas }}</option>
                             @endforeach
-                        </datalist>
+                        </select>
                     </div>
 
                     <!-- Semester -->
@@ -396,6 +396,10 @@
                             <option value="6">Semester 6</option>
                             <option value="7">Semester 7</option>
                             <option value="8">Semester 8</option>
+                            <option value="9">Semester 9</option>
+                            <option value="10">Semester 10</option>
+                            <option value="11">Semester 11</option>
+                            <option value="12">Semester 12</option>
                         </select>
                     </div>
 
@@ -477,6 +481,9 @@
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
                     <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <div class="mt-2 text-right">
+                        <a href="{{ route('template.download', 'agenda') }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline"><i class="fa-solid fa-download mr-1"></i> Unduh Template Excel</a>
+                    </div>
                 </div>
                 <div class="flex gap-2.5 pt-3 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modal-import-agenda')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
@@ -644,7 +651,31 @@
             document.getElementById('form_judul_agenda').value = ag.mata_kuliah;
             document.getElementById('form_program_kuliah').value = ag.program_kuliah || 'Reguler';
             document.getElementById('form_jenis_pertemuan').value = ag.jenis_pertemuan || 'Praktikum';
-            document.getElementById('form_kelas').value = ag.kelas || '';
+            const kelasSelect = document.getElementById('form_kelas');
+            if (ag.kelas) {
+                // Remove any previously dynamically added custom option
+                const prevCustom = kelasSelect.querySelector('.custom-dynamic-opt');
+                if (prevCustom) prevCustom.remove();
+
+                // Check if ag.kelas already exists in options
+                let exists = false;
+                for (let i = 0; i < kelasSelect.options.length; i++) {
+                    if (kelasSelect.options[i].value === ag.kelas) {
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists) {
+                    const opt = document.createElement('option');
+                    opt.value = ag.kelas;
+                    opt.text = ag.kelas;
+                    opt.classList.add('custom-dynamic-opt');
+                    kelasSelect.appendChild(opt);
+                }
+                kelasSelect.value = ag.kelas;
+            } else {
+                kelasSelect.value = '';
+            }
             document.getElementById('form_semester').value = ag.semester || '';
             document.getElementById('form_fakultas').value = ag.fakultas || '';
             filterJurusan();
@@ -817,6 +848,7 @@
                 }
 
                 form.addEventListener('submit', function(e) {
+                    if (e.defaultPrevented) return;
                     if (form.checkValidity && !form.checkValidity()) {
                         return;
                     }

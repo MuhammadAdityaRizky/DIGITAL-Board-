@@ -136,7 +136,7 @@
         <div class="flex-grow overflow-auto p-6 space-y-6">
 
             <!-- Welcome Banner -->
-            <div class="bg-gray-900 text-white rounded-2xl p-6 shadow-md relative overflow-hidden flex flex-col justify-between gap-4">
+            <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-md relative overflow-hidden flex flex-col justify-between gap-4">
                 <div class="space-y-1 z-10">
                     <p class="text-xs font-medium text-teal-400 uppercase tracking-widest">CONTROL PANEL</p>
                     <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Selamat Datang, {{ auth()->user()->username }}</h2>
@@ -404,6 +404,7 @@
                 }
 
                 form.addEventListener('submit', function(e) {
+                    if (e.defaultPrevented) return;
                     if (form.checkValidity && !form.checkValidity()) {
                         return;
                     }
@@ -457,6 +458,23 @@
         window.addEventListener('pageshow', function() {
             if (typeof Swal !== 'undefined' && Swal.isVisible() && Swal.isLoading()) {
                 Swal.close();
+            }
+        });
+
+        // Profile Dropdown Handler
+        function toggleProfileDropdown(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('profileDropdownMenu');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('profileDropdownMenu');
+            const button = event.target.closest('button[onclick="toggleProfileDropdown(event)"]');
+            if (menu && !menu.classList.contains('hidden') && !button && !menu.contains(event.target)) {
+                menu.classList.add('hidden');
             }
         });
     </script>

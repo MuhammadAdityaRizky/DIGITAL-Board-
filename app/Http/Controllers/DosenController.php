@@ -14,6 +14,8 @@ use App\Models\Prodi;
 use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\KehadiranImport;
 
 class DosenController extends Controller
 {
@@ -309,12 +311,23 @@ class DosenController extends Controller
         $fakultas = \App\Models\Fakultas::all();
         $prodis = \App\Models\Prodi::with('fakultas')->get();
 
+        $uniqueClasses = Agenda::where(function($q) use ($dosen) {
+                $q->where('dosen_id', $dosen->id)
+                  ->orWhere('dosen_pengampu_id', $dosen->id);
+            })
+            ->with('dosen')
+            ->orderBy('mata_kuliah')
+            ->get()
+            ->unique(function ($item) {
+                return $item->mata_kuliah . '-' . $item->kelas . '-' . $item->dosen_id;
+            });
+
         if ($request->ajax()) {
-            $html = view('dosen.agenda_partial', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis'))->render();
+            $html = view('dosen.agenda_partial', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses'))->render();
             return response()->json(['html' => $html]);
         }
 
-        return view('dosen.agenda', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis'));
+        return view('dosen.agenda', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses'));
     }
 
     public function inputAbsensi($id)
@@ -328,8 +341,7 @@ class DosenController extends Controller
             abort(403, 'Anda tidak memiliki akses ke sesi ini.');
         }
 
-        $students = \App\Models\Mahasiswa::where('kelas', $agenda->kelas)
-            ->when($agenda->fakultas, function($q) use ($agenda) {
+        $studentsQuery = \App\Models\Mahasiswa::when($agenda->fakultas, function($q) use ($agenda) {
                 $q->whereHas('fakultas', function($qF) use ($agenda) {
                     $qF->where('nama_fakultas', $agenda->fakultas);
                 });
@@ -339,11 +351,83 @@ class DosenController extends Controller
                     $qP->where('nama_prodi', $agenda->jurusan);
                 });
             })
-            ->orderBy('nama_lengkap', 'asc')->get();
+            ->when($agenda->program_kuliah, function($q) use ($agenda) {
+                $q->where('program_kuliah', $agenda->program_kuliah);
+            });
+            
+        if ($agenda->semester) {
+            $semNum = preg_replace('/[^0-9]/', '', $agenda->semester);
+            if ($semNum) {
+                $studentsQuery->where('semester', $semNum);
+            }
+        }
+
+        if ($agenda->kelas) {
+            $studentsQuery->where('kelas', $agenda->kelas);
+        }
+        
+        $students = $studentsQuery->orderBy('nama_lengkap', 'asc')->get();
             
         $existingAbsensi = \App\Models\Absensi::where('agenda_id', $agenda->id)->get()->keyBy('mahasiswa_id');
 
         return view('dosen.input_absensi', compact('agenda', 'students', 'existingAbsensi', 'dosen'));
+    }
+
+    public function importAbsensi(Request $request, $id)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls'
+        ], [
+            'file_excel.required' => 'Pilih file Excel terlebih dahulu.',
+            'file_excel.mimes' => 'Format file harus .xlsx atau .xls'
+        ]);
+
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+        $agenda = Agenda::findOrFail($id);
+
+        if ($agenda->dosen_id !== $dosen->id && $agenda->dosen_pengampu_id !== $dosen->id) {
+            abort(403, 'Anda tidak memiliki akses ke sesi ini.');
+        }
+
+        try {
+            Excel::import(new KehadiranImport($agenda), $request->file('file_excel'));
+            return redirect()->back()->with('success', 'Data absensi berhasil diimpor dari Excel.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal mengimpor data: ' . $e->getMessage());
+        }
+    }
+
+    public function importAbsensiGlobal(Request $request)
+    {
+        $request->validate([
+            'mata_kuliah_kelas' => 'required|string',
+            'file_excel' => 'required|mimes:xlsx,xls'
+        ]);
+
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+
+        $parts = explode('|', $request->mata_kuliah_kelas);
+        $mata_kuliah = $parts[0] ?? '';
+        $kelas = $parts[1] ?? '';
+        $dosen_id = $parts[2] ?? '';
+
+        $baseAgenda = Agenda::where('mata_kuliah', $mata_kuliah)
+            ->where('kelas', $kelas)
+            ->where('dosen_id', $dosen_id)
+            ->first();
+
+        if (!$baseAgenda || ($baseAgenda->dosen_id !== $dosen->id && $baseAgenda->dosen_pengampu_id !== $dosen->id)) {
+            return redirect()->back()->with('error', 'Data mata kuliah/kelas tidak ditemukan atau Anda tidak memiliki akses.');
+        }
+
+        try {
+            Excel::import(new KehadiranImport($baseAgenda), $request->file('file_excel'));
+            return redirect()->back()->with('success', 'Data absensi berhasil diimpor ke seluruh pertemuan untuk kelas tersebut.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal mengimpor data: ' . $e->getMessage());
+        }
     }
 
     public function storeInputAbsensi(Request $request, $id)

@@ -168,11 +168,59 @@
 
             <!-- Attendance Logs Grouped Per Agenda -->
             <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden max-w-5xl">
-                <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+                <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex justify-between items-center flex-wrap gap-3">
                     <h3 class="font-bold text-sm text-slate-800">Laporan Kehadiran Per Sesi Praktikum</h3>
-                    <a href="{{ route('admin.absensi.export', request()->all()) }}" target="_blank" class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                        <i class="fa-solid fa-print"></i> Cetak/Ekspor Range Laporan
-                    </a>
+                    <div class="flex gap-2">
+                        <button onclick="document.getElementById('modal-import-global').classList.remove('hidden')" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white border border-blue-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-excel"></i> Import Excel Global
+                        </button>
+                        <a href="{{ route('admin.absensi.export', request()->all()) }}" target="_blank" class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-print"></i> Cetak/Ekspor Range Laporan
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Modal Import Global -->
+                <div id="modal-import-global" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 backdrop-blur-sm">
+                    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative">
+                        <button onclick="document.getElementById('modal-import-global').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition">
+                            <i class="fa-solid fa-xmark fa-xl"></i>
+                        </button>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">Import Absensi Excel (Semua Agenda)</h3>
+                        <p class="text-xs text-slate-500 mb-6">Pilih kelas dan unggah file Excel. Sistem akan memproses seluruh jadwal pertemuan untuk kelas yang Anda pilih.</p>
+                        
+                        <form action="{{ route('admin.absensi.import-global') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="mb-4">
+                                <label class="block text-xs font-bold text-slate-700 mb-2">Pilih Mata Kuliah & Kelas</label>
+                                <select name="mata_kuliah_kelas" required class="w-full text-sm p-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                    <option value="" disabled selected>-- Pilih Kelas --</option>
+                                    @foreach($uniqueClasses as $uc)
+                                        <option value="{{ $uc->mata_kuliah }}|{{ $uc->kelas }}|{{ $uc->dosen_id }}">
+                                            {{ $uc->mata_kuliah }} {{ $uc->kelas ? '('.$uc->kelas.')' : '' }} - Dosen: {{ $uc->dosen->nama ?? '-' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-xs font-bold text-slate-700 mb-2">Upload File Excel (.xlsx, .xls)</label>
+                                <input type="file" name="file_excel" accept=".xlsx, .xls" required class="block w-full text-sm text-slate-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-full file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-blue-50 file:text-blue-700
+                                hover:file:bg-blue-100 transition
+                                "/>
+                                <div class="mt-2 text-right">
+                                    <a href="{{ route('template.download', 'absensi') }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline"><i class="fa-solid fa-download mr-1"></i> Unduh Template Excel</a>
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2 mt-6">
+                                <button type="button" onclick="document.getElementById('modal-import-global').classList.add('hidden')" class="px-4 py-2 text-sm font-bold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition">Batal</button>
+                                <button type="submit" class="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"><i class="fa-solid fa-cloud-arrow-up mr-2"></i> Import Data</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
                 <div class="p-6 space-y-8">
                     @if($agendas->count() > 0)
@@ -382,6 +430,7 @@
                 }
 
                 form.addEventListener('submit', function(e) {
+                    if (e.defaultPrevented) return;
                     if (form.checkValidity && !form.checkValidity()) {
                         return;
                     }
@@ -435,6 +484,23 @@
         window.addEventListener('pageshow', function() {
             if (typeof Swal !== 'undefined' && Swal.isVisible() && Swal.isLoading()) {
                 Swal.close();
+            }
+        });
+
+        // Profile Dropdown Handler
+        function toggleProfileDropdown(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('profileDropdownMenu');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        }
+
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('profileDropdownMenu');
+            const button = event.target.closest('button[onclick="toggleProfileDropdown(event)"]');
+            if (menu && !menu.classList.contains('hidden') && !button && !menu.contains(event.target)) {
+                menu.classList.add('hidden');
             }
         });
     </script>

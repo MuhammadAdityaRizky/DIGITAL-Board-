@@ -159,7 +159,7 @@
                     </div>
                     
                     <div class="flex flex-col sm:flex-row gap-4 w-full items-end">
-                        <div class="w-full sm:w-1/3">
+                        <div class="w-full sm:w-1/4">
                             <label class="block text-slate-700 font-bold mb-1.5">Program Kuliah</label>
                             <select name="program_kuliah" onchange="this.form.submit()" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none cursor-pointer">
                                 <option value="">Semua Program</option>
@@ -167,7 +167,7 @@
                                 <option value="Karyawan" {{ request('program_kuliah') === 'Karyawan' ? 'selected' : '' }}>Karyawan</option>
                             </select>
                         </div>
-                        <div class="w-full sm:w-1/3">
+                        <div class="w-full sm:w-1/4">
                             <label class="block text-slate-700 font-bold mb-1.5">Semester</label>
                             <select name="semester" onchange="this.form.submit()" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none cursor-pointer">
                                 <option value="">Semua Semester</option>
@@ -176,20 +176,32 @@
                                 @endfor
                             </select>
                         </div>
-                        <div class="w-full sm:w-1/3">
+                        <div class="w-full sm:w-1/4">
                             <label class="block text-slate-700 font-bold mb-1.5">Kelas</label>
                             <select name="kelas" onchange="this.form.submit()" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none cursor-pointer">
                                 <option value="">Semua Kelas</option>
-                                @foreach(range('A', 'Z') as $char)
-                                    <option value="{{ $char }}" {{ request('kelas') === $char ? 'selected' : '' }}>Kelas {{ $char }}</option>
+                                @foreach($kelases as $kls)
+                                    <option value="{{ $kls->nama_kelas }}" {{ request('kelas') === $kls->nama_kelas ? 'selected' : '' }}>Kelas {{ $kls->nama_kelas }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="flex gap-2 w-full sm:w-auto">
-                            <button type="submit" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition shadow-sm flex items-center gap-1.5">
+                        <div class="w-full sm:w-1/4">
+                            <label class="block text-slate-700 font-bold mb-1.5">Status Mhs</label>
+                            <select name="status_mahasiswa" onchange="this.form.submit()" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none cursor-pointer">
+                                <option value="">Semua Status</option>
+                                <option value="aktif" {{ request('status_mahasiswa') === 'aktif' ? 'selected' : '' }}>🟢 Aktif</option>
+                                <option value="cuti" {{ request('status_mahasiswa') === 'cuti' ? 'selected' : '' }}>🟡 Cuti</option>
+                                <option value="lulus" {{ request('status_mahasiswa') === 'lulus' ? 'selected' : '' }}>🔵 Lulus</option>
+                                <option value="do" {{ request('status_mahasiswa') === 'do' ? 'selected' : '' }}>🔴 Drop Out (DO)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end pt-2 border-t border-slate-100">
+                        <div class="flex gap-2">
+                            <button type="submit" class="px-5 py-2.5 bg-teal-850 hover:bg-teal-900 text-white rounded-xl font-bold transition shadow-sm flex items-center gap-1.5">
                                 <i class="fa-solid fa-filter"></i> Filter
                             </button>
-                            @if(request('search') || request('role') || request('program_kuliah') || request('semester') || request('kelas'))
+                            @if(request('search') || request('role') || request('program_kuliah') || request('semester') || request('kelas') || request('status_mahasiswa'))
                                 <a href="{{ route('admin.pengguna') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition text-center flex items-center gap-1">
                                     <i class="fa-solid fa-rotate-left"></i> Reset
                                 </a>
@@ -204,12 +216,9 @@
                 <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
                     <h3 class="font-bold text-sm text-slate-800">Daftar Pengguna Sistem</h3>
                     <div class="flex items-center gap-2">
-                        <form action="{{ route('admin.users.promote') }}" method="POST" onsubmit="return confirmAction(event, 'Semester semua mahasiswa akan naik 1 tingkat.', 'Naikkan Semester All?');" class="inline">
-                            @csrf
-                            <button type="submit" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                                <i class="fa-solid fa-arrow-up-right-dots"></i> Naik Semester
-                            </button>
-                        </form>
+                        <button type="button" onclick="toggleModal('modal-promote-semester')" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-arrow-up-right-dots"></i> Naik Semester
+                        </button>
                         <button onclick="toggleModal('modal-import-dosen')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm hidden sm:flex">
                             <i class="fa-solid fa-file-import"></i> Import Dosen
                         </button>
@@ -226,6 +235,7 @@
                         <table class="w-full text-xs text-left text-slate-650">
                             <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
                                 <tr>
+                                    <th class="p-4 w-12 text-center">No</th>
                                     <th class="p-4">Nama Lengkap</th>
                                     <th class="p-4">NIM / NIP</th>
                                     <th class="p-4">Role</th>
@@ -234,20 +244,37 @@
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 @if($users->count() > 0)
-                                    @foreach($users as $u)
+                                    @foreach($users as $index => $u)
                                         @php
                                             $nama = $u->role === 'dosen' ? ($u->dosen->nama ?? '-') : ($u->role === 'mahasiswa' ? ($u->mahasiswa->nama_lengkap ?? '-') : $u->username);
                                         @endphp
                                         <tr class="hover:bg-slate-50/50 transition">
+                                            <td class="p-4 text-center text-slate-400 font-mono text-xs">{{ $users->firstItem() + $index }}</td>
                                             <td class="p-4">
                                                 <span class="font-bold text-slate-800 text-sm block">{{ $nama }}</span>
-                                                @if($u->role === 'mahasiswa' && $u->mahasiswa && $u->mahasiswa->kelas)
-                                                    <span class="text-[10px] text-slate-455 block mt-0.5">
-                                                        <i class="fa-solid fa-graduation-cap"></i> Program: {{ $u->mahasiswa->program_kuliah ?? 'Reguler' }} • Kelas: {{ $u->mahasiswa->kelas }}
-                                                        @if($u->mahasiswa->semester)
-                                                            • Semester: {{ $u->mahasiswa->semester }}
+                                                @if($u->role === 'mahasiswa' && $u->mahasiswa)
+                                                    <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                                                        @if($u->mahasiswa->kelas)
+                                                            <span class="text-[10px] text-slate-500">
+                                                                <i class="fa-solid fa-graduation-cap text-teal-600"></i> {{ $u->mahasiswa->program_kuliah ?? 'Reguler' }} • Kelas {{ $u->mahasiswa->kelas }}
+                                                                @if($u->mahasiswa->semester)
+                                                                    • Sem {{ $u->mahasiswa->semester }}
+                                                                @endif
+                                                            </span>
                                                         @endif
-                                                    </span>
+                                                        @php
+                                                            $st = $u->mahasiswa->status ?? 'aktif';
+                                                        @endphp
+                                                        @if($st === 'aktif')
+                                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase">Aktif</span>
+                                                        @elseif($st === 'cuti')
+                                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200 uppercase">Cuti</span>
+                                                        @elseif($st === 'lulus')
+                                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200 uppercase">Lulus</span>
+                                                        @elseif($st === 'do')
+                                                            <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-rose-100 text-rose-800 border border-rose-200 uppercase">Drop Out</span>
+                                                        @endif
+                                                    </div>
                                                 @elseif($u->role === 'dosen' && $u->dosen)
                                                     @if($u->dosen->jabatan)
                                                     <span class="text-[10px] text-slate-500 block mt-1"><i class="fa-solid fa-briefcase text-blue-500 mr-1"></i>Jabatan: <span class="font-medium text-slate-600">{{ $u->dosen->jabatan }}</span></span>
@@ -301,7 +328,7 @@
                                     @endforeach
                                 @else
                                     <tr>
-                                        <td colspan="4" class="text-center py-8 text-slate-400 italic">Pengguna tidak ditemukan.</td>
+                                        <td colspan="5" class="text-center py-8 text-slate-400 italic">Pengguna tidak ditemukan.</td>
                                     </tr>
                                 @endif
                             </tbody>
@@ -318,7 +345,7 @@
 
     <!-- USER MODAL (ADD & EDIT) -->
     <div id="modal-user" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 space-y-5">
             <div class="flex justify-between items-center pb-3 border-b border-slate-100">
                 <h3 id="modal-user-title" class="font-bold text-base text-slate-800">Tambah Pengguna Baru</h3>
                 <button onclick="toggleModal('modal-user')" class="text-slate-400 hover:text-slate-660 text-lg">&times;</button>
@@ -369,7 +396,7 @@
                             </select>
                         </div>
                     </div>
-                    <div id="class-container" class="grid grid-cols-3 gap-4">
+                    <div id="class-container" class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-slate-700 font-bold mb-1">Program Kuliah</label>
                             <select name="program_kuliah" id="user-program_kuliah" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
@@ -389,10 +416,19 @@
                         <div>
                             <label class="block text-slate-700 font-bold mb-1">Semester</label>
                             <select name="semester" id="user-semester" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                                <option value="">-- Pilih --</option>
-                                @for($i = 1; $i <= 8; $i++)
+                                <option value="">-- Pilih Semester --</option>
+                                @for($i = 1; $i <= 14; $i++)
                                     <option value="{{ $i }}">Semester {{ $i }}</option>
                                 @endfor
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-700 font-bold mb-1">Status Mahasiswa</label>
+                            <select name="status_mahasiswa" id="user-status_mahasiswa" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-bold">
+                                <option value="aktif">🟢 Aktif</option>
+                                <option value="cuti">🟡 Cuti</option>
+                                <option value="lulus">🔵 Lulus</option>
+                                <option value="do">🔴 Drop Out</option>
                             </select>
                         </div>
                     </div>
@@ -415,6 +451,115 @@
         </div>
     </div>
 
+    <!-- MODAL NAIK / KELOLA SEMESTER -->
+    <div id="modal-promote-semester" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <i class="fa-solid fa-arrow-up-right-dots"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-800">Kelola / Naik Semester</h3>
+                        <p class="text-[10px] text-slate-400">Naikkan semester mahasiswa aktif atau kembalikan semester sebelumnya.</p>
+                    </div>
+                </div>
+                <button onclick="toggleModal('modal-promote-semester')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+
+            <form action="{{ route('admin.users.promote') }}" method="POST" class="space-y-4 text-xs">
+                @csrf
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1.5">Tindakan</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center gap-2 p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/50 cursor-pointer">
+                            <input type="radio" name="action_type" value="promote" checked class="text-indigo-600 focus:ring-indigo-500">
+                            <div>
+                                <span class="font-bold text-indigo-900 block text-xs">Naik Semester (+1)</span>
+                                <span class="text-[9px] text-indigo-700">Khusus mahasiswa aktif</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="action_type" value="revert" class="text-indigo-600 focus:ring-indigo-500">
+                            <div>
+                                <span class="font-bold text-slate-800 block text-xs">Turunkan (-1)</span>
+                                <span class="text-[9px] text-slate-500">Rollback / batalkan</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-3 space-y-3">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Target Filter (Opsional - Kosongkan jika untuk semua)</span>
+
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Target Fakultas</label>
+                        <select name="target_fakultas" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none">
+                            <option value="">Semua Fakultas</option>
+                            @foreach($fakultas as $f)
+                                <option value="{{ $f->id }}">{{ $f->nama_fakultas }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Target Jurusan / Prodi</label>
+                        <select name="target_prodi" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none">
+                            <option value="">Semua Program Studi</option>
+                            @foreach($prodis as $p)
+                                <option value="{{ $p->id }}">{{ $p->nama_prodi }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Target Angkatan (2 Digit Pertama NIM)</label>
+                        <input type="text" name="target_angkatan" placeholder="Contoh: 24 untuk Angkatan 2024 (NIM 24xxx)" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono">
+                    </div>
+
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                        <label class="flex items-start gap-2 cursor-pointer">
+                            <input type="checkbox" name="auto_graduate" value="1" checked class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500">
+                            <div class="text-[11px] text-amber-900 leading-tight">
+                                <span class="font-bold block">Tandai Otomatis Mahasiswa Lulus</span>
+                                <span>Mahasiswa yang naik melebihi Semester 8 akan otomatis diubah statusnya menjadi <b>Lulus</b> (tidak naik lagi).</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-[10px] text-slate-600">
+                        <div class="flex items-center gap-1.5 font-bold text-slate-800 text-[11px]">
+                            <i class="fa-regular fa-calendar-check text-indigo-600"></i>
+                            <span>Panduan Periode Kalender Akademik:</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/60">
+                            <div class="p-2 bg-white rounded-lg border border-slate-100">
+                                <span class="font-bold text-indigo-900 block">Semester Ganjil</span>
+                                <span class="text-slate-500 block">Mulai <b>1 September</b></span>
+                                <span class="text-[9px] text-slate-400">Naik ke S1, S3, S5, S7</span>
+                            </div>
+                            <div class="p-2 bg-white rounded-lg border border-slate-100">
+                                <span class="font-bold text-indigo-900 block">Semester Genap</span>
+                                <span class="text-slate-500 block">Mulai <b>1 Februari</b></span>
+                                <span class="text-[9px] text-slate-400">Naik ke S2, S4, S6, S8</span>
+                            </div>
+                        </div>
+                        <p class="text-[9px] text-slate-400 italic pt-0.5">
+                            *Mahasiswa berstatus <b>Cuti</b> dan <b>Drop Out (DO)</b> otomatis <b>dikecualikan</b> (tidak akan ikut naik semester).
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex gap-2.5 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="toggleModal('modal-promote-semester')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-sm flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-check"></i> Proses Sekarang
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL IMPORT DOSEN -->
     <div id="modal-import-dosen" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-sm w-full p-6 space-y-5">
@@ -427,6 +572,9 @@
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
                     <input type="file" name="file_excel[]" accept=".xlsx, .xls, .csv" required multiple class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <div class="mt-2 text-right">
+                        <a href="{{ route('template.download', 'mahasiswa') }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline"><i class="fa-solid fa-download mr-1"></i> Unduh Template Excel</a>
+                    </div>
                 </div>
                 <div class="flex gap-2.5 pt-3 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modal-import-dosen')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
@@ -448,6 +596,9 @@
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
                     <input type="file" name="file_excel[]" accept=".xlsx, .xls, .csv" required multiple class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <div class="mt-2 text-right">
+                        <a href="{{ route('template.download', 'dosen') }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline"><i class="fa-solid fa-download mr-1"></i> Unduh Template Excel</a>
+                    </div>
                 </div>
                 <div class="flex gap-2.5 pt-3 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modal-import-mahasiswa')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
@@ -701,6 +852,7 @@
             document.getElementById('user-program_kuliah').value = "Reguler";
             document.getElementById('user-kelas').value = "";
             document.getElementById('user-semester').value = "";
+            document.getElementById('user-status_mahasiswa').value = "aktif";
             document.getElementById('user-jabatan').value = "";
             document.getElementById('user-kompetensi').value = "";
             
@@ -733,6 +885,7 @@
             let kelas = "";
             let program_kuliah = "Reguler";
             let semester = "";
+            let status_mahasiswa = "aktif";
             let jabatan = "";
             let kompetensi = "";
             
@@ -757,6 +910,7 @@
                     kelas = user.mahasiswa.kelas || "";
                     program_kuliah = user.mahasiswa.program_kuliah || "Reguler";
                     semester = user.mahasiswa.semester || "";
+                    status_mahasiswa = user.mahasiswa.status || "aktif";
                 }
                 document.getElementById('mahasiswa-fields').classList.remove('hidden');
                 document.getElementById('class-container').classList.remove('hidden');
@@ -772,6 +926,7 @@
             document.getElementById('user-kelas').value = kelas;
             document.getElementById('user-program_kuliah').value = program_kuliah;
             document.getElementById('user-semester').value = semester;
+            document.getElementById('user-status_mahasiswa').value = status_mahasiswa;
             document.getElementById('user-jabatan').value = jabatan;
             document.getElementById('user-kompetensi').value = kompetensi;
             
@@ -872,6 +1027,7 @@
                 }
 
                 form.addEventListener('submit', function(e) {
+                    if (e.defaultPrevented) return;
                     if (form.checkValidity && !form.checkValidity()) {
                         return;
                     }

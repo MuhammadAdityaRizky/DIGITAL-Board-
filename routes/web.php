@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DigitalBoardController;
 use App\Http\Controllers\DosenController;
 use App\Http\Controllers\MahasiswaController;
+use App\Http\Controllers\TemplateController;
 use Illuminate\Support\Facades\Route;
 
 // Public Digital Display Board (Home Route & Specific Lab Board)
@@ -19,6 +20,8 @@ Route::get('/demo-login/{role}', [AuthController::class, 'demoLogin'])->name('de
 // Authenticated Routes
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    Route::get('/template/download/{type}', [TemplateController::class, 'download'])->name('template.download');
 
     // Admin Routes
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -50,8 +53,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/agenda/import', [AdminController::class, 'importAgenda'])->name('agenda.import');
         
         Route::get('/absensi', [AdminController::class, 'absensi'])->name('absensi');
+        Route::post('/absensi/import-global', [AdminController::class, 'importAbsensiGlobal'])->name('absensi.import-global');
         Route::get('/absensi/export', [AdminController::class, 'exportAbsensi'])->name('absensi.export');
         Route::get('/absensi/{id}/input', [AdminController::class, 'inputAbsensi'])->name('absensi.input');
+        Route::post('/absensi/{id}/import', [AdminController::class, 'importAbsensi'])->name('absensi.import');
         Route::post('/absensi/{id}/input', [AdminController::class, 'storeInputAbsensi'])->name('absensi.store-input');
         Route::get('/pengumuman', [AdminController::class, 'pengumuman'])->name('pengumuman');
         Route::get('/aktivitas', [AdminController::class, 'aktivitas'])->name('aktivitas');
@@ -86,7 +91,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/agenda/{id}/realisasi', [DosenController::class, 'updateRealisasi'])->name('agenda.realisasi');
         Route::post('/agenda/{id}/qr-new', [DosenController::class, 'generateNewQrToken'])->name('agenda.qr');
         Route::post('/absensi', [DosenController::class, 'submitAttendance'])->name('absensi.submit');
+        Route::post('/absensi/import-global', [DosenController::class, 'importAbsensiGlobal'])->name('absensi.import-global');
         Route::get('/absensi/{id}/input', [DosenController::class, 'inputAbsensi'])->name('absensi.input');
+        Route::post('/absensi/{id}/import', [DosenController::class, 'importAbsensi'])->name('absensi.import');
         Route::post('/absensi/{id}/input', [DosenController::class, 'storeInputAbsensi'])->name('absensi.store-input');
         
         Route::get('/agenda', [DosenController::class, 'agenda'])->name('agenda');

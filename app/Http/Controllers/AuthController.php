@@ -35,6 +35,15 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
+            if ($user->role === 'mahasiswa' && $user->mahasiswa && $user->mahasiswa->status === 'do') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors([
+                    'username_or_nim_nip' => 'Akun Anda tidak aktif (Status: Drop Out / Non-Aktif). Silakan hubungi bagian Akademik.',
+                ])->withInput();
+            }
+
             return match ($user->role) {
                 'admin' => redirect()->route('admin.dashboard'),
                 'dosen' => redirect()->route('dosen.dashboard'),

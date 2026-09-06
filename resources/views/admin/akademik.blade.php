@@ -476,6 +476,9 @@
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
                     <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <div class="mt-2 text-right">
+                        <a href="{{ route('template.download', 'fakultas') }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline"><i class="fa-solid fa-download mr-1"></i> Unduh Template Excel</a>
+                    </div>
                 </div>
                 <button type="submit" class="w-full py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold transition shadow-sm">Import Data</button>
             </form>
@@ -494,6 +497,9 @@
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
                     <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <div class="mt-2 text-right">
+                        <a href="{{ route('template.download', 'prodi') }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline"><i class="fa-solid fa-download mr-1"></i> Unduh Template Excel</a>
+                    </div>
                 </div>
                 <button type="submit" class="w-full py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold transition shadow-sm">Import Data</button>
             </form>
@@ -512,6 +518,9 @@
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
                     <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <div class="mt-2 text-right">
+                        <a href="{{ route('template.download', 'kelas') }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline"><i class="fa-solid fa-download mr-1"></i> Unduh Template Excel</a>
+                    </div>
                 </div>
                 <button type="submit" class="w-full py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold transition shadow-sm">Import Data</button>
             </form>
@@ -757,6 +766,7 @@
                 }
 
                 form.addEventListener('submit', function(e) {
+                    if (e.defaultPrevented) return;
                     if (form.checkValidity && !form.checkValidity()) {
                         return;
                     }

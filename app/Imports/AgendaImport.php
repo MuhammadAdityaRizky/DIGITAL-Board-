@@ -51,18 +51,27 @@ class AgendaImport implements ToCollection
             // Check Semester / Kelas
             if (preg_match('/Semester\s*\/\s*Kelas\s*:\s*([^:\n\r]+)/i', $rowStr, $m)) {
                 $parts = explode('/', $m[1]);
-                if (isset($parts[0])) $metaSemester = trim($parts[0]);
-                if (isset($parts[1])) $metaKelas = trim($parts[1]);
+                if (count($parts) >= 2) {
+                    $metaSemester = trim($parts[0]);
+                    // If second part has Reg_A or similar, extract
+                    $metaKelas = trim(end($parts));
+                } else {
+                    $metaKelas = trim($m[1]);
+                }
             }
         }
 
-        // Resolve Default Dosen & Lab IDs using core name matching with fallback
-        $defaultDosenId = $this->findDosenByName($metaDosenMengajar)?->id;
-        if (!$defaultDosenId && $metaDosenMengajar) {
-            $defaultDosenId = Dosen::where('nama', 'like', '%' . $metaDosenMengajar . '%')->first()?->id;
-        }
-        if (!$defaultDosenId) {
-            $defaultDosenId = Dosen::first()?->id;
+        $defaultDosenId = null;
+        if ($metaDosenMengajar) {
+            $d = $this->findDosenByName($metaDosenMengajar);
+            if (!$d) {
+                $d = Dosen::where('nama', 'like', '%' . $metaDosenMengajar . '%')->first();
+            }
+            if ($d) {
+                $defaultDosenId = $d->id;
+            } else {
+                throw new \Exception("Dosen '{$metaDosenMengajar}' tidak ditemukan di database. Pastikan dosen tersebut sudah terdaftar.");
+            }
         }
 
         $defaultDosenPengampuId = $this->findDosenByName($metaDosenPengampu)?->id;
@@ -250,6 +259,9 @@ class AgendaImport implements ToCollection
             $p = \App\Models\Prodi::where('nama_prodi', 'like', '%' . strtolower($rawJurusan) . '%')->first();
             $finalJurusan = $p ? $p->nama_prodi : $rawJurusan;
 
+            $rawKelas = $valKelas ?: ($metaKelas ?: null);
+            $rawSem = $valSemester ?: ($metaSemester ?: null);
+
             Agenda::create([
                 'dosen_id' => $dosenId,
                 'dosen_pengampu_id' => $dosenPengampuId,
@@ -257,8 +269,8 @@ class AgendaImport implements ToCollection
                 'mata_kuliah' => $finalMataKuliah,
                 'program_kuliah' => $valProgramKuliah ?: 'Reguler',
                 'jenis_pertemuan' => $valJenisPertemuan ?: 'Praktikum',
-                'kelas' => $valKelas ?: ($metaKelas ?: null),
-                'semester' => $valSemester ? str_ireplace('Semester ', '', $valSemester) : ($metaSemester ?: '1'),
+                'kelas' => $this->normalizeKelas($rawKelas),
+                'semester' => $this->normalizeSemester($rawSem),
                 'jurusan' => $finalJurusan,
                 'fakultas' => $finalFakultas,
                 'tanggal' => $tanggal,
@@ -376,5 +388,51 @@ class AgendaImport implements ToCollection
         }
 
         return [$jamMulai, $jamSelesai];
+    }
+
+    private function normalizeKelas(?string $kelas): ?string
+    {
+        if (!$kelas) return null;
+        $clean = trim($kelas);
+
+        // If format like "IV / Reg_A" or "Reg_A" or "Kelas A" or "Reg A"
+        if (preg_match('/(?:reg|kar|kelas)[_ \-\/]*([a-z0-9]+)/i', $clean, $m)) {
+            return strtoupper($m[1]);
+        }
+
+        // If format has slash like "IV / A"
+        if (str_contains($clean, '/')) {
+            $parts = explode('/', $clean);
+            $last = trim(end($parts));
+            if (preg_match('/([a-z0-9]+)$/i', $last, $m)) {
+                return strtoupper($m[1]);
+            }
+        }
+
+        return $clean;
+    }
+
+    private function normalizeSemester(?string $semester): string
+    {
+        if (!$semester) return '1';
+        $clean = trim(str_ireplace('Semester', '', $semester));
+        
+        // Roman numeral conversions
+        $romans = [
+            'XII' => '12', 'XI' => '11', 'X' => '10', 'IX' => '9',
+            'VIII' => '8', 'VII' => '7', 'VI' => '6', 'V' => '5',
+            'IV' => '4', 'III' => '3', 'II' => '2', 'I' => '1'
+        ];
+        $upper = strtoupper($clean);
+        if (isset($romans[$upper])) {
+            return $romans[$upper];
+        }
+
+        // Extract numbers
+        if (preg_match('/(\d+)/', $clean, $m)) {
+            return $m[1];
+        }
+
+        return $clean ?: '1';
     }
 }
