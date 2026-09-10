@@ -144,7 +144,17 @@
                         <p class="text-[10px] text-slate-450 mt-0.5">Centang satu atau lebih kelas untuk membandingkan statistik kehadiran secara real-time.</p>
                     </div>
 
-                    <form action="{{ route('admin.statistik') }}" method="GET" class="space-y-4">
+                    <form action="{{ route('admin.statistik') }}" method="GET" class="space-y-3">
+                        @if($allAgendas->count() > 0)
+                            <div class="flex items-center justify-between px-2.5 py-1.5 bg-slate-100/80 rounded-xl border border-slate-200/80 text-xs">
+                                <label class="flex items-center gap-2 cursor-pointer font-bold text-slate-700 hover:text-teal-800 transition select-none">
+                                    <input type="checkbox" id="select-all-agendas" class="rounded text-teal-800 border-slate-300 focus:ring-teal-700/30">
+                                    <span>Pilih Semua Agenda</span>
+                                </label>
+                                <span id="selected-agenda-count" class="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200/60">0 terpilih</span>
+                            </div>
+                        @endif
+
                         <div class="max-h-[350px] overflow-y-auto space-y-2.5 border border-slate-100 p-3 rounded-xl bg-slate-50/50">
                             @if($allAgendas->count() > 0)
                                 @foreach($allAgendas as $ag)
@@ -433,6 +443,36 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Select All Agendas Handler
+            const selectAllCb = document.getElementById('select-all-agendas');
+            const agendaCbs = document.querySelectorAll('input[name="agenda_ids[]"]');
+            const selectedCount = document.getElementById('selected-agenda-count');
+
+            function updateSelectedCount() {
+                if (!agendaCbs.length) return;
+                const checkedCount = Array.from(agendaCbs).filter(cb => cb.checked).length;
+                if (selectedCount) {
+                    selectedCount.innerText = `${checkedCount} / ${agendaCbs.length} terpilih`;
+                }
+                if (selectAllCb) {
+                    selectAllCb.checked = checkedCount === agendaCbs.length && agendaCbs.length > 0;
+                    selectAllCb.indeterminate = checkedCount > 0 && checkedCount < agendaCbs.length;
+                }
+            }
+
+            if (selectAllCb) {
+                selectAllCb.addEventListener('change', function() {
+                    agendaCbs.forEach(cb => cb.checked = selectAllCb.checked);
+                    updateSelectedCount();
+                });
+            }
+
+            agendaCbs.forEach(cb => {
+                cb.addEventListener('change', updateSelectedCount);
+            });
+
+            updateSelectedCount();
+
             @if(session('success'))
                 Swal.fire({
                     icon: 'success',

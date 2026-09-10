@@ -160,16 +160,22 @@
             </div>
 
             <!-- Info Box -->
-            <div class="border border-slate-200 rounded-2xl p-4 flex gap-4 items-start md:items-center bg-white shadow-sm">
-                <!-- UIKA Logo box on the left -->
-                <div class="w-16 h-16 md:w-20 md:h-20 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center p-2 shrink-0">
-                    <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
-                         alt="UIKA Logo Box" 
-                         class="w-full h-full object-contain">
+            <div class="border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-white shadow-sm">
+                <!-- Photo box or UIKA Logo box on the left -->
+                <div class="w-20 h-20 md:w-28 md:h-28 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-xs">
+                    @if($latestAnnouncement && $latestAnnouncement->foto_url)
+                        <img src="{{ asset('storage/' . $latestAnnouncement->foto_url) }}" 
+                             alt="Foto Pengumuman" 
+                             class="w-full h-full object-cover rounded-lg">
+                    @else
+                        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
+                             alt="UIKA Logo Box" 
+                             class="w-full h-full object-contain p-1">
+                    @endif
                 </div>
                 
                 <!-- Content on the right -->
-                <div class="flex-grow">
+                <div class="flex-grow min-w-0">
                     @if($latestAnnouncement)
                         <h3 class="font-extrabold text-sm md:text-base text-slate-850">
                             {{ $latestAnnouncement->judul }}

@@ -167,8 +167,8 @@
                 <div class="p-6 divide-y divide-slate-100">
                     @if(isset($pengumuman) && count($pengumuman) > 0)
                         @foreach($pengumuman as $p)
-                            <div class="py-5 first:pt-0 last:pb-0">
-                                <div class="flex items-center gap-3 mb-2">
+                            <div class="py-5 first:pt-0 last:pb-0 space-y-2">
+                                <div class="flex items-center gap-3">
                                     <span class="px-2.5 py-1 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-lg tracking-wide">
                                         {{ date('d M Y', strtotime($p->created_at)) }}
                                     </span>
@@ -176,8 +176,19 @@
                                         <span class="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-bold rounded animate-pulse">Baru</span>
                                     @endif
                                 </div>
-                                <h4 class="font-bold text-slate-800 text-base mb-1">{{ $p->judul }}</h4>
-                                <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{{ $p->isi_pengumuman }}</p>
+                                <div class="flex flex-col sm:flex-row gap-4 items-start">
+                                    @if($p->foto_url)
+                                        <div class="shrink-0">
+                                            <a href="{{ asset('storage/' . $p->foto_url) }}" target="_blank" title="Klik untuk memperbesar" class="block group/img">
+                                                <img src="{{ asset('storage/' . $p->foto_url) }}" alt="Foto Pengumuman" class="w-28 h-28 sm:w-36 sm:h-36 rounded-xl border border-slate-200 object-cover shadow-xs group-hover/img:opacity-90 transition">
+                                            </a>
+                                        </div>
+                                    @endif
+                                    <div class="flex-grow min-w-0 space-y-1">
+                                        <h4 class="font-bold text-slate-800 text-base">{{ $p->judul }}</h4>
+                                        <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{{ $p->isi_pengumuman }}</p>
+                                    </div>
+                                </div>
                                 <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3">
                                     <p class="text-[10px] text-slate-400 italic">Diterbitkan oleh: {{ $p->admin->name ?? 'Admin' }}</p>
                                     @if($p->laboratoriums && count($p->laboratoriums) > 0)

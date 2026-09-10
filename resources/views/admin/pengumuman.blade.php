@@ -170,17 +170,27 @@
                     @if($pengumumanList->count() > 0)
                         <div class="space-y-4">
                             @foreach($pengumumanList as $p)
-                                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3 relative group shadow-xs">
-                                    <div class="flex justify-between items-start">
-                                        <h4 class="font-bold text-sm text-slate-800 pr-20">{{ $p->judul }}</h4>
-                                        
+                                <div class="bg-slate-50 p-4.5 rounded-xl border border-slate-200 relative group shadow-xs space-y-3">
+                                    <div class="flex flex-col sm:flex-row gap-4 items-start">
+                                        @if($p->foto_url)
+                                            <div class="shrink-0">
+                                                <a href="{{ asset('storage/' . $p->foto_url) }}" target="_blank" title="Klik untuk memperbesar" class="block group/img">
+                                                    <img src="{{ asset('storage/' . $p->foto_url) }}" alt="Foto Pengumuman" class="w-28 h-28 sm:w-36 sm:h-36 rounded-xl border border-slate-200 object-cover shadow-xs group-hover/img:opacity-90 transition">
+                                                </a>
+                                            </div>
+                                        @endif
+
+                                        <div class="flex-grow min-w-0 pr-16 sm:pr-20 space-y-1.5">
+                                            <h4 class="font-bold text-sm text-slate-800 leading-snug">{{ $p->judul }}</h4>
+                                            <p class="text-xs text-slate-650 leading-relaxed whitespace-pre-line">{{ $p->isi_pengumuman }}</p>
+                                        </div>
+
                                         <div class="flex items-center gap-2 absolute right-4 top-4">
-                                            <button onclick='editAnnouncement(@json($p))' class="text-teal-700 hover:text-teal-900 text-sm transition" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
-                                            <button onclick="confirmDelete('{{ route('admin.pengumuman.delete', $p->id) }}')" class="text-rose-500 hover:text-rose-700 text-sm transition" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>
+                                            <button onclick='editAnnouncement(@json($p))' class="text-teal-700 hover:text-teal-900 text-sm transition p-1" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                                            <button onclick="confirmDelete('{{ route('admin.pengumuman.delete', $p->id) }}')" class="text-rose-500 hover:text-rose-700 text-sm transition p-1" title="Hapus"><i class="fa-solid fa-trash-can"></i></button>
                                         </div>
                                     </div>
-                                    <p class="text-xs text-slate-650 leading-relaxed">{{ $p->isi_pengumuman }}</p>
-                                    
+
                                     <div class="flex justify-between text-[10px] text-slate-450 pt-2 border-t border-slate-200/60">
                                         <span>Diterbitkan Oleh: <strong class="text-slate-600">{{ $p->admin->username }}</strong></span>
                                         <span><i class="fa-solid fa-calendar mr-1"></i> {{ date('d F Y', strtotime($p->created_at)) }}</span>
@@ -208,7 +218,7 @@
                 <button onclick="toggleModal('modal-announcement')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
             </div>
             
-            <form id="ann-form" action="{{ route('admin.pengumuman.store') }}" method="POST" class="space-y-4 text-xs">
+            <form id="ann-form" action="{{ route('admin.pengumuman.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
                 @csrf
                 <input type="hidden" id="ann-method" name="_method" value="POST">
                 
@@ -219,6 +229,22 @@
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">Isi Detail Pengumuman</label>
                     <textarea id="ann-isi_pengumuman" name="isi_pengumuman" rows="4" required placeholder="Tulis rincian penjelasan pengumuman di sini..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Foto / Gambar Pengumuman (Opsional)</label>
+                    <input type="file" id="ann-foto" name="foto" accept="image/*" class="w-full p-2 text-xs rounded-lg bg-slate-50 border border-slate-200 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-teal-100 file:text-teal-800 hover:file:bg-teal-200 cursor-pointer">
+                    <p class="text-[10px] text-slate-400 mt-1">* Format: JPG, PNG, WEBP, GIF, SVG (Maks. 5MB)</p>
+                    
+                    <div id="ann-foto-preview-container" class="mt-2.5 hidden p-2 bg-slate-100/80 rounded-xl border border-slate-200 flex items-center gap-3">
+                        <img id="ann-foto-preview" src="" alt="Pratinjau Foto" class="w-14 h-14 object-cover rounded-lg border border-slate-300 shadow-xs">
+                        <div class="space-y-1">
+                            <span class="text-[11px] font-bold text-slate-700 block">Foto Pengumuman Saat Ini</span>
+                            <label class="inline-flex items-center gap-1.5 text-[10px] text-rose-600 font-bold cursor-pointer hover:text-rose-700">
+                                <input type="checkbox" id="ann-hapus-foto" name="hapus_foto" value="1" class="rounded text-rose-600 focus:ring-rose-500">
+                                <span>Hapus foto saat ini</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -231,11 +257,17 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-slate-700 font-bold mb-1">Tampilkan di Ruangan</label>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-slate-700 font-bold">Tampilkan di Ruangan</label>
+                        <label class="inline-flex items-center gap-1.5 text-[10px] font-bold text-teal-800 cursor-pointer select-none hover:text-teal-900">
+                            <input type="checkbox" id="select-all-labs" class="rounded text-teal-600 focus:ring-teal-500">
+                            <span>Pilih Semua</span>
+                        </label>
+                    </div>
                     <div class="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 border border-slate-200 rounded-lg bg-slate-50">
                         @foreach($laboratoriums as $lab)
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="laboratorium_ids[]" value="{{ $lab->id }}" class="rounded text-teal-600 focus:ring-teal-500">
+                            <input type="checkbox" name="laboratorium_ids[]" value="{{ $lab->id }}" class="rounded text-teal-600 focus:ring-teal-500 lab-checkbox">
                             <span>{{ $lab->nama_lab }}</span>
                         </label>
                         @endforeach
@@ -308,6 +340,13 @@
                 document.getElementById('ann-tanggal_mulai').value = "";
                 document.getElementById('ann-tanggal_selesai').value = "";
                 document.getElementById('ann-submit-btn').innerText = "Terbitkan";
+                document.getElementById('ann-foto').value = "";
+                document.getElementById('ann-hapus-foto').checked = false;
+                document.getElementById('ann-foto-preview-container').classList.add('hidden');
+                document.getElementById('ann-foto-preview').src = "";
+                if (document.getElementById('select-all-labs')) {
+                    document.getElementById('select-all-labs').checked = false;
+                }
                 
                 // Clear checkboxes
                 document.querySelectorAll('input[name="laboratorium_ids[]"]').forEach(cb => cb.checked = false);
@@ -327,6 +366,19 @@
             document.getElementById('ann-tanggal_selesai').value = ann.tanggal_selesai ? ann.tanggal_selesai.substring(0, 16) : "";
             document.getElementById('ann-submit-btn').innerText = "Simpan Perubahan";
             
+            document.getElementById('ann-foto').value = "";
+            document.getElementById('ann-hapus-foto').checked = false;
+            
+            const previewContainer = document.getElementById('ann-foto-preview-container');
+            const previewImg = document.getElementById('ann-foto-preview');
+            if (ann.foto_url) {
+                previewImg.src = `/storage/${ann.foto_url}`;
+                previewContainer.classList.remove('hidden');
+            } else {
+                previewImg.src = "";
+                previewContainer.classList.add('hidden');
+            }
+            
             // Set checkboxes
             const labIds = ann.laboratoriums ? ann.laboratoriums.map(l => l.id.toString()) : [];
             document.querySelectorAll('input[name="laboratorium_ids[]"]').forEach(cb => {
@@ -334,6 +386,14 @@
             });
             
             toggleModal('modal-announcement');
+        }
+
+        const selectAllLabs = document.getElementById('select-all-labs');
+        const labCbs = document.querySelectorAll('.lab-checkbox');
+        if (selectAllLabs) {
+            selectAllLabs.addEventListener('change', function() {
+                labCbs.forEach(cb => cb.checked = selectAllLabs.checked);
+            });
         }
 
         function confirmDelete(deleteUrl) {

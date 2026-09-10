@@ -14,6 +14,7 @@ use App\Models\Prodi;
 use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\MahasiswaImport;
@@ -671,7 +672,13 @@ class AdminController extends Controller
             'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
             'laboratorium_ids' => 'nullable|array',
             'laboratorium_ids.*' => 'exists:laboratorium,id',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
         ]);
+
+        $fotoUrl = null;
+        if ($request->hasFile('foto')) {
+            $fotoUrl = $request->file('foto')->store('pengumuman', 'public');
+        }
 
         $pengumuman = Pengumuman::create([
             'admin_id' => auth()->id(),
@@ -679,6 +686,7 @@ class AdminController extends Controller
             'isi_pengumuman' => $request->isi_pengumuman,
             'tanggal_mulai' => $request->tanggal_mulai,
             'tanggal_selesai' => $request->tanggal_selesai,
+            'foto_url' => $fotoUrl,
         ]);
 
         if ($request->has('laboratorium_ids')) {
@@ -697,14 +705,33 @@ class AdminController extends Controller
             'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
             'laboratorium_ids' => 'nullable|array',
             'laboratorium_ids.*' => 'exists:laboratorium,id',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
         ]);
 
         $pengumuman = Pengumuman::findOrFail($id);
+
+        $fotoUrl = $pengumuman->foto_url;
+
+        if ($request->boolean('hapus_foto')) {
+            if ($pengumuman->foto_url && Storage::disk('public')->exists($pengumuman->foto_url)) {
+                Storage::disk('public')->delete($pengumuman->foto_url);
+            }
+            $fotoUrl = null;
+        }
+
+        if ($request->hasFile('foto')) {
+            if ($pengumuman->foto_url && Storage::disk('public')->exists($pengumuman->foto_url)) {
+                Storage::disk('public')->delete($pengumuman->foto_url);
+            }
+            $fotoUrl = $request->file('foto')->store('pengumuman', 'public');
+        }
+
         $pengumuman->update([
             'judul' => $request->judul,
             'isi_pengumuman' => $request->isi_pengumuman,
             'tanggal_mulai' => $request->tanggal_mulai,
             'tanggal_selesai' => $request->tanggal_selesai,
+            'foto_url' => $fotoUrl,
         ]);
 
         if ($request->has('laboratorium_ids')) {
@@ -718,7 +745,13 @@ class AdminController extends Controller
 
     public function deletePengumuman($id)
     {
-        Pengumuman::destroy($id);
+        $pengumuman = Pengumuman::find($id);
+        if ($pengumuman) {
+            if ($pengumuman->foto_url && Storage::disk('public')->exists($pengumuman->foto_url)) {
+                Storage::disk('public')->delete($pengumuman->foto_url);
+            }
+            $pengumuman->delete();
+        }
         return back()->with('success', 'Pengumuman berhasil dihapus.');
     }
 
