@@ -20,7 +20,7 @@ class MahasiswaController extends Controller
             return redirect()->route('login')->withErrors(['msg' => 'Data profil Mahasiswa tidak ditemukan.']);
         }
 
-        $profileIncomplete = !$mahasiswa->kelas || !$mahasiswa->id_fakultas || !$mahasiswa->id_prodi;
+        $profileIncomplete = !$mahasiswa->id_fakultas || !$mahasiswa->id_prodi;
 
         $today = date('Y-m-d');
         if ($profileIncomplete) {
@@ -32,7 +32,9 @@ class MahasiswaController extends Controller
             ->where('tanggal', $today)
             ->where('fakultas', $mahasiswa->fakultas->nama_fakultas)
             ->where('jurusan', $mahasiswa->prodi->nama_prodi)
-            ->where('kelas', $mahasiswa->kelas)
+            ->when($mahasiswa->kelas, function ($query) use ($mahasiswa) {
+                return $query->where('kelas', $mahasiswa->kelas);
+            })
             ->orderBy('jam_mulai', 'asc')
             ->get()
             ->map(function($ag) use ($mahasiswa) {
@@ -69,8 +71,8 @@ class MahasiswaController extends Controller
             return back()->withErrors(['qr_code_token' => 'Data profil Mahasiswa tidak ditemukan.']);
         }
 
-        if (!$mahasiswa->id_fakultas || !$mahasiswa->id_prodi || !$mahasiswa->kelas || !$mahasiswa->fakultas || !$mahasiswa->prodi) {
-            return back()->withErrors(['qr_code_token' => 'Profil Anda belum lengkap (Fakultas, Prodi, atau Kelas). Silakan lengkapi profil di Pengaturan terlebih dahulu.']);
+        if (!$mahasiswa->id_fakultas || !$mahasiswa->id_prodi || !$mahasiswa->fakultas || !$mahasiswa->prodi) {
+            return back()->withErrors(['qr_code_token' => 'Profil Anda belum lengkap (Fakultas atau Prodi). Silakan lengkapi profil di Pengaturan terlebih dahulu.']);
         }
 
         $tokenValidation = Agenda::validateDynamicQrToken($request->qr_code_token);
@@ -94,8 +96,8 @@ class MahasiswaController extends Controller
             ]);
         }
 
-        // 3. Validasi Kelas (Kelas harus sama)
-        if ($agenda->kelas && $agenda->kelas !== $mahasiswa->kelas) {
+        // 3. Validasi Kelas (Kelas harus sama, jika mahasiswa sudah mengatur kelas)
+        if ($agenda->kelas && $mahasiswa->kelas && $agenda->kelas !== $mahasiswa->kelas) {
             return back()->withErrors([
                 'qr_code_token' => 'Absensi ditolak! Agenda ini ditujukan untuk Kelas ' . $agenda->kelas . ', bukan Kelas Anda (' . $mahasiswa->kelas . ').'
             ]);
@@ -133,11 +135,11 @@ class MahasiswaController extends Controller
         $mahasiswa = Mahasiswa::with(['prodi', 'fakultas'])->where('user_id', $user->id)->firstOrFail();
 
         $agenda = Agenda::findOrFail($request->agenda_id);
-        if (!$mahasiswa->id_fakultas || !$mahasiswa->id_prodi || !$mahasiswa->kelas ||
+        if (!$mahasiswa->id_fakultas || !$mahasiswa->id_prodi ||
             $agenda->fakultas !== $mahasiswa->fakultas->nama_fakultas ||
             $agenda->jurusan !== $mahasiswa->prodi->nama_prodi ||
-            $agenda->kelas !== $mahasiswa->kelas) {
-            return back()->withErrors(['msg' => 'Anda hanya dapat mengajukan izin untuk kelas dari Fakultas, Prodi, dan Kelas Anda sendiri.']);
+            ($agenda->kelas && $mahasiswa->kelas && $agenda->kelas !== $mahasiswa->kelas)) {
+            return back()->withErrors(['msg' => 'Anda hanya dapat mengajukan izin untuk kelas dari Fakultas dan Prodi Anda.']);
         }
 
         // Check if already attended

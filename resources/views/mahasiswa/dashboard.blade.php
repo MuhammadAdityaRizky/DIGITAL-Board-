@@ -179,7 +179,7 @@
                                 <div class="text-center py-8 px-4 bg-amber-50 rounded-xl border border-amber-200">
                                     <i class="fa-solid fa-triangle-exclamation text-3xl mb-3 text-amber-500 block"></i>
                                     <span class="font-bold text-sm text-amber-900 block">Profil Kelas Belum Lengkap!</span>
-                                    <p class="text-xs text-amber-700 mt-1.5 leading-relaxed max-w-md mx-auto">Silakan lengkapi data **Kelas, Fakultas, dan Jurusan** Anda di halaman **Pengaturan** terlebih dahulu agar kelas praktikum Anda dapat muncul di sini.</p>
+                                    <p class="text-xs text-amber-700 mt-1.5 leading-relaxed max-w-md mx-auto">Silakan lengkapi data **Fakultas dan Jurusan** Anda di halaman **Pengaturan** terlebih dahulu agar kelas praktikum Anda dapat muncul di sini.</p>
                                     <a href="{{ route('mahasiswa.pengaturan') }}" class="inline-block mt-4 px-4 py-2 bg-amber-800 hover:bg-amber-900 text-white rounded-lg font-bold text-xs transition shadow-sm">Lengkapi Profil Sekarang</a>
                                 </div>
                             @elseif(count($todayAgendas) > 0)
