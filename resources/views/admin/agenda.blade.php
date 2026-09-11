@@ -44,10 +44,6 @@
                 <i class="fa-solid fa-door-open"></i>
                 <span class="text-xs">Manajemen Lab</span>
             </a>
-            <a href="{{ route('admin.jadwal-lab') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-table-cells"></i>
-                <span class="text-xs">Jadwal Penggunaan Lab</span>
-            </a>
             <a href="{{ route('admin.agenda') }}" class="flex items-center gap-3 px-4 py-2.5 bg-teal-800 text-white rounded-xl w-full font-bold">
                 <i class="fa-solid fa-calendar-days"></i>
                 <span class="text-xs">Jadwal & Agenda</span>
