@@ -692,12 +692,15 @@
                 
                 <!-- Right column: Plotting Lab & Panduan Dosen -->
                 <div class="space-y-6">
-                    <!-- Widget 1: Plotting Jadwal Mengajar Lab Dosen -->
+                    <!-- Widget 1: Jadwal Mengajar Lab Dosen -->
                     <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                            <h3 class="font-bold text-xs text-slate-800 flex items-center gap-2">
-                                <i class="fa-solid fa-book-bookmark text-teal-800"></i> Plotting Jadwal Lab Anda
-                            </h3>
+                            <div>
+                                <h3 class="font-bold text-xs text-slate-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-calendar-check text-teal-800"></i> Jadwal Mengajar Lab Anda
+                                </h3>
+                                <p class="text-[10px] text-slate-400 font-medium mt-0.5">Jadwal rutin mingguan dari Admin</p>
+                            </div>
                             <span class="px-2 py-0.5 bg-teal-50 text-teal-800 border border-teal-200 rounded text-[10px] font-bold">
                                 {{ isset($jadwalPenggunaanLab) ? $jadwalPenggunaanLab->count() : 0 }} Jadwal
                             </span>
@@ -706,6 +709,9 @@
                         @if(isset($jadwalPenggunaanLab) && $jadwalPenggunaanLab->count() > 0)
                             <div class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
                                 @foreach($jadwalPenggunaanLab as $j)
+                                    @php
+                                        $createdSessions = \App\Models\Agenda::where('jadwal_penggunaan_lab_id', $j->id)->count();
+                                    @endphp
                                     <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2 hover:border-teal-300 transition">
                                         <div class="flex items-center justify-between">
                                             <span class="font-bold text-xs text-slate-800 truncate max-w-[180px]">{{ $j->mata_kuliah }}</span>
@@ -715,14 +721,21 @@
                                             <span><i class="fa-regular fa-clock mr-1 text-slate-400"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }}-{{ substr($j->jam_selesai,0,5) }}</span>
                                             <span class="text-teal-700 font-semibold"><i class="fa-solid fa-door-open mr-1"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
                                         </div>
-                                        <div class="pt-1.5 border-t border-slate-200/60 flex items-center justify-between">
-                                            <form action="{{ route('dosen.agenda.generate-16', $j->id) }}" method="POST" class="w-full" onsubmit="return confirm('Otomatis generate 16 sesi praktikum 1 semester untuk {{ $j->mata_kuliah }} (setiap hari {{ $j->hari }})?')">
-                                                @csrf
-                                                <button type="submit" class="w-full py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[10px] font-bold rounded-lg transition flex items-center justify-center gap-1 shadow-2xs">
-                                                    <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
-                                                    <span>Generate 16 Sesi 1 Semester</span>
-                                                </button>
-                                            </form>
+                                        <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                                            <span class="text-slate-500 font-medium">Status Pertemuan:</span>
+                                            @if($createdSessions >= 16)
+                                                <span class="font-bold text-emerald-700 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                                    <i class="fa-solid fa-circle-check text-emerald-600"></i> 16 Sesi Siap
+                                                </span>
+                                            @elseif($createdSessions > 0)
+                                                <span class="font-bold text-teal-700 flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                                                    <i class="fa-solid fa-calendar-days text-teal-600"></i> {{ $createdSessions }} dari 16 Sesi
+                                                </span>
+                                            @else
+                                                <span class="text-slate-400 italic bg-slate-100 px-2 py-0.5 rounded">
+                                                    Disiapkan Admin
+                                                </span>
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach

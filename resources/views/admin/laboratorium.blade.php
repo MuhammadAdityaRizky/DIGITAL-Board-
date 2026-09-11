@@ -52,11 +52,7 @@
                 <i class="fa-solid fa-file-invoice"></i>
                 <span class="text-xs">Laporan Absensi</span>
             </a>
-            <a href="{{ route('admin.statistik') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-chart-pie"></i>
-                <span class="text-xs">Statistik Kehadiran</span>
-            </a>
-            <a href="{{ route('admin.akademik') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+<a href="{{ route('admin.akademik') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
                 <i class="fa-solid fa-graduation-cap"></i>
                 <span class="text-xs">Data Akademik</span>
             </a>
@@ -381,7 +377,10 @@
                 return true;
             }
 
-            event.preventDefault();
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             
             Swal.fire({
                 title: title,
@@ -402,11 +401,24 @@
             }).then((result) => {
                 if (result.isConfirmed && form) {
                     form.dataset.confirmed = "true";
-                    if (typeof form.requestSubmit === 'function') {
-                        form.requestSubmit();
-                    } else {
-                        form.submit();
-                    }
+
+                    Swal.fire({
+                        title: 'Menghapus Data...',
+                        text: 'Sedang memproses penghapusan data dari sistem.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        customClass: {
+                            popup: 'rounded-3xl p-8 shadow-2xl border border-slate-100',
+                            title: 'text-base font-extrabold text-slate-800',
+                            htmlContainer: 'text-xs text-slate-500 font-medium'
+                        },
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    form.submit();
                 }
             });
             return false;

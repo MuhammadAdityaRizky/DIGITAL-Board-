@@ -55,11 +55,7 @@
                 <i class="fa-solid fa-file-invoice"></i>
                 <span class="text-xs">Laporan Absensi</span>
             </a>
-            <a href="{{ route('admin.statistik') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-chart-pie"></i>
-                <span class="text-xs">Statistik Kehadiran</span>
-            </a>
-            <a href="{{ route('admin.akademik') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+<a href="{{ route('admin.akademik') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
                 <i class="fa-solid fa-graduation-cap"></i>
                 <span class="text-xs">Data Akademik</span>
             </a>
@@ -154,6 +150,15 @@
                 </form>
 
                 <div class="flex items-center gap-2.5">
+                    @if($jadwals->count() > 0)
+                        <form action="{{ route('admin.jadwal-lab.bulk-generate-16') }}" method="POST" onsubmit="return confirm('Otomatis buat 16 sesi agenda pertemuan perkuliahan 1 semester untuk SEMUA jadwal di lab ini?');" class="inline">
+                            @csrf
+                            <input type="hidden" name="lab_id" value="{{ $selectedLabId }}">
+                            <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Otomatis buat 16 pertemuan untuk seluruh mata kuliah di lab ini">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Generate 16 Sesi Lab Ini
+                            </button>
+                        </form>
+                    @endif
                     <button type="button" onclick="openAddModal()" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                         <i class="fa-solid fa-plus"></i> Tambah Slot Jadwal
                     </button>

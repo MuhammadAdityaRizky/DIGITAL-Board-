@@ -67,8 +67,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/jadwal-lab/{id}', [AdminController::class, 'updateJadwalPenggunaanLab'])->name('jadwal-lab.update');
         Route::delete('/jadwal-lab/{id}', [AdminController::class, 'deleteJadwalPenggunaanLab'])->name('jadwal-lab.delete');
         Route::post('/jadwal-lab/{id}/generate-16', [AdminController::class, 'generate16Pertemuan'])->name('jadwal-lab.generate-16');
+        Route::post('/jadwal-lab/bulk-generate-16', [AdminController::class, 'bulkGenerate16Pertemuan'])->name('jadwal-lab.bulk-generate-16');
 
-        // Statistik & Akademik
         Route::get('/statistik', [AdminController::class, 'statistik'])->name('statistik');
         Route::get('/akademik', [AdminController::class, 'akademik'])->name('akademik');
         Route::post('/akademik/fakultas', [AdminController::class, 'storeFakultas'])->name('akademik.fakultas.store');

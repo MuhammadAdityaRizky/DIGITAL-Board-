@@ -924,126 +924,6 @@ class AdminController extends Controller
         return back()->with('success', $msg);
     }
 
-    public function statistik(Request $request)
-    {
-        $allAgendas = Agenda::with('lab')->orderBy('tanggal', 'desc')->get();
-        
-        $selectedAgendaIds = $request->input('agenda_ids', []);
-        if (!is_array($selectedAgendaIds)) {
-            $selectedAgendaIds = [$selectedAgendaIds];
-        }
-
-        $agendas = collect();
-        $studentStats = collect();
-        $summary = [
-            'total_expected' => 0,
-            'hadir' => 0,
-            'izin' => 0,
-            'sakit' => 0,
-            'alpa' => 0,
-            'rate' => 100
-        ];
-
-        if (!empty($selectedAgendaIds)) {
-            $agendas = Agenda::with(['dosen', 'lab', 'absensi.mahasiswa'])
-                ->whereIn('id', $selectedAgendaIds)
-                ->get();
-
-            $studentsData = [];
-            foreach ($agendas as $agenda) {
-                $absensiByStudent = $agenda->absensi->keyBy('mahasiswa_id');
-
-                $studentsQuery = \App\Models\Mahasiswa::when($agenda->fakultas, function($q) use ($agenda) {
-                        $q->whereHas('fakultas', function($qF) use ($agenda) {
-                            $qF->where('nama_fakultas', $agenda->fakultas);
-                        });
-                    })
-                    ->when($agenda->jurusan, function($q) use ($agenda) {
-                        $q->whereHas('prodi', function($qP) use ($agenda) {
-                            $qP->where('nama_prodi', $agenda->jurusan);
-                        });
-                    })
-                    ->when($agenda->program_kuliah, function($q) use ($agenda) {
-                        $q->where('program_kuliah', $agenda->program_kuliah);
-                    });
-                    
-                if ($agenda->semester) {
-                    $semNum = preg_replace('/[^0-9]/', '', $agenda->semester);
-                    if ($semNum) {
-                        $studentsQuery->where('semester', $semNum);
-                    }
-                }
-
-                if ($agenda->kelas) {
-                    $cleanKelas = trim($agenda->kelas);
-                    if (preg_match('/(?:reg|kar|kelas)[_ \-\/]*([a-z0-9]+)/i', $cleanKelas, $mK)) {
-                        $cleanKelas = strtoupper($mK[1]);
-                    } elseif (str_contains($cleanKelas, '/')) {
-                        $partsK = explode('/', $cleanKelas);
-                        if (preg_match('/([a-z0-9]+)$/i', trim(end($partsK)), $mK)) {
-                            $cleanKelas = strtoupper($mK[1]);
-                        }
-                    }
-                    $studentsQuery->where('kelas', $cleanKelas);
-                }
-                
-                $matchedStudents = $studentsQuery->get();
-
-                // If no students matched by strict semester/kelas filter (e.g. students were promoted or differing semester tag),
-                // fallback to students who actually have attendance records for this agenda
-                $actualStudentsFromAbsensi = $agenda->absensi->map->mahasiswa->filter();
-                $allSessionStudents = $matchedStudents->merge($actualStudentsFromAbsensi)->unique('id');
-
-                $summary['total_expected'] += $allSessionStudents->count();
-
-                foreach ($allSessionStudents as $mhs) {
-                    if (!isset($studentsData[$mhs->id])) {
-                        $studentsData[$mhs->id] = [
-                            'mahasiswa' => $mhs,
-                            'hadir' => 0,
-                            'izin' => 0,
-                            'sakit' => 0,
-                            'alpa' => 0,
-                            'total' => 0
-                        ];
-                    }
-
-                    $studentsData[$mhs->id]['total']++;
-                    
-                    $abs = $absensiByStudent->get($mhs->id);
-                    if ($abs) {
-                        $status = strtolower($abs->status_kehadiran);
-                        if ($status === 'hadir' || $status === 'terlambat') {
-                            $studentsData[$mhs->id]['hadir']++;
-                            $summary['hadir']++;
-                        } elseif ($status === 'izin') {
-                            $studentsData[$mhs->id]['izin']++;
-                            $summary['izin']++;
-                        } elseif ($status === 'sakit') {
-                            $studentsData[$mhs->id]['sakit']++;
-                            $summary['sakit']++;
-                        } else {
-                            $studentsData[$mhs->id]['alpa']++;
-                            $summary['alpa']++;
-                        }
-                    } else {
-                        $studentsData[$mhs->id]['alpa']++;
-                        $summary['alpa']++;
-                    }
-                }
-            }
-
-            $studentStats = collect($studentsData);
-            
-            $totalReal = $summary['hadir'] + $summary['izin'] + $summary['sakit'] + $summary['alpa'];
-            if ($totalReal > 0) {
-                $summary['rate'] = round(($summary['hadir'] / $totalReal) * 100, 1);
-            }
-        }
-
-        return view('admin.statistik', compact('allAgendas', 'selectedAgendaIds', 'agendas', 'studentStats', 'summary'));
-    }
-
     public function akademik(Request $request)
     {
         $fakultas = Fakultas::orderBy('nama_fakultas')->get();
@@ -1438,4 +1318,198 @@ class AdminController extends Controller
         JadwalPenggunaanLab::destroy($id);
         return back()->with('success', 'Jadwal Penggunaan Lab berhasil dihapus.');
     }
+
+    public function generate16Pertemuan($id)
+    {
+        $jadwal = JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu', 'dosen'])->findOrFail($id);
+
+        $dayMap = [
+            'Senin' => 1, 'Selasa' => 2, 'Rabu' => 3, 'Kamis' => 4, 'Jumat' => 5, 'Sabtu' => 6, 'Minggu' => 0
+        ];
+        
+        $targetDayIndex = $dayMap[$jadwal->hari] ?? 1;
+        $startDate = \Carbon\Carbon::today();
+
+        while ($startDate->dayOfWeek !== $targetDayIndex) {
+            $startDate->addDay();
+        }
+
+        $createdCount = 0;
+        for ($i = 0; $i < 16; $i++) {
+            $date = $startDate->copy()->addWeeks($i)->format('Y-m-d');
+
+            $exists = Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
+                ->where('tanggal', $date)
+                ->exists();
+
+            if (!$exists) {
+                Agenda::create([
+                    'jadwal_penggunaan_lab_id' => $jadwal->id,
+                    'dosen_id' => $jadwal->dosen_id,
+                    'dosen_pengampu_id' => $jadwal->dosen_pengampu_id,
+                    'lab_id' => $jadwal->lab_id,
+                    'mata_kuliah' => $jadwal->mata_kuliah,
+                    'fakultas' => $jadwal->prodi->fakultas->nama_fakultas ?? 'Teknik',
+                    'jurusan' => $jadwal->prodi->nama_prodi ?? $jadwal->jurusan ?? 'Sistem Informasi',
+                    'program_kuliah' => $jadwal->program_kuliah ?? 'Reguler',
+                    'jenis_pertemuan' => $jadwal->jenis_pertemuan ?? 'Praktikum',
+                    'kelas' => $jadwal->kelas,
+                    'semester' => $jadwal->semester ?? '1',
+                    'tanggal' => $date,
+                    'jam_mulai' => $jadwal->jam_mulai,
+                    'jam_selesai' => $jadwal->jam_selesai,
+                    'status_agenda' => $date < date('Y-m-d') ? 'Selesai' : ($date === date('Y-m-d') ? 'Berlangsung' : 'Akan Datang'),
+                    'catatan' => 'Pertemuan ke-' . ($i + 1) . ': ' . $jadwal->mata_kuliah,
+                ]);
+                $createdCount++;
+            }
+        }
+
+        return back()->with('success', "Berhasil membuat {$createdCount} sesi pertemuan perkuliahan 1 semester (Pertemuan 1 s/d 16) secara otomatis!");
+    }
+
+    public function bulkGenerate16Pertemuan(Request $request)
+    {
+        $labId = $request->input('lab_id');
+        $query = JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu', 'dosen'])->where('is_aktif', true);
+        if ($labId) {
+            $query->where('lab_id', $labId);
+        }
+        $jadwals = $query->get();
+
+        $dayMap = [
+            'Senin' => 1, 'Selasa' => 2, 'Rabu' => 3, 'Kamis' => 4, 'Jumat' => 5, 'Sabtu' => 6, 'Minggu' => 0
+        ];
+
+        $totalCreated = 0;
+        foreach ($jadwals as $jadwal) {
+            $targetDayIndex = $dayMap[$jadwal->hari] ?? 1;
+            $startDate = \Carbon\Carbon::today();
+
+            while ($startDate->dayOfWeek !== $targetDayIndex) {
+                $startDate->addDay();
+            }
+
+            for ($i = 0; $i < 16; $i++) {
+                $date = $startDate->copy()->addWeeks($i)->format('Y-m-d');
+
+                $exists = Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
+                    ->where('tanggal', $date)
+                    ->exists();
+
+                if (!$exists) {
+                    Agenda::create([
+                        'jadwal_penggunaan_lab_id' => $jadwal->id,
+                        'dosen_id' => $jadwal->dosen_id,
+                        'dosen_pengampu_id' => $jadwal->dosen_pengampu_id,
+                        'lab_id' => $jadwal->lab_id,
+                        'mata_kuliah' => $jadwal->mata_kuliah,
+                        'fakultas' => $jadwal->prodi->fakultas->nama_fakultas ?? 'Teknik',
+                        'jurusan' => $jadwal->prodi->nama_prodi ?? $jadwal->jurusan ?? 'Sistem Informasi',
+                        'program_kuliah' => $jadwal->program_kuliah ?? 'Reguler',
+                        'jenis_pertemuan' => $jadwal->jenis_pertemuan ?? 'Praktikum',
+                        'kelas' => $jadwal->kelas,
+                        'semester' => $jadwal->semester ?? '1',
+                        'tanggal' => $date,
+                        'jam_mulai' => $jadwal->jam_mulai,
+                        'jam_selesai' => $jadwal->jam_selesai,
+                        'status_agenda' => $date < date('Y-m-d') ? 'Selesai' : ($date === date('Y-m-d') ? 'Berlangsung' : 'Akan Datang'),
+                        'catatan' => 'Pertemuan ke-' . ($i + 1) . ': ' . $jadwal->mata_kuliah,
+                    ]);
+                    $totalCreated++;
+                }
+            }
+        }
+
+        return back()->with('success', "Berhasil membuat {$totalCreated} sesi pertemuan perkuliahan 1 semester secara otomatis untuk seluruh jadwal lab!");
+    }
+
+    public function statistik(Request $request)
+    {
+        $allAgendas = Agenda::with('lab')->orderBy('tanggal', 'desc')->get();
+        
+        $selectedAgendaIds = $request->input('agenda_ids', []);
+        if (!is_array($selectedAgendaIds)) {
+            $selectedAgendaIds = [$selectedAgendaIds];
+        }
+
+        $agendas = collect();
+        $studentStats = collect();
+        $summary = [
+            'total_expected' => 0,
+            'hadir' => 0,
+            'izin' => 0,
+            'sakit' => 0,
+            'alpa' => 0,
+            'rate' => 100
+        ];
+
+        if (!empty($selectedAgendaIds)) {
+            $agendas = Agenda::with(['dosen', 'lab', 'absensi.mahasiswa'])
+                ->whereIn('id', $selectedAgendaIds)
+                ->get();
+
+            $studentsData = [];
+            foreach ($agendas as $agenda) {
+                $students = Mahasiswa::where('kelas', $agenda->kelas)
+                    ->whereHas('fakultas', function($q) use ($agenda) {
+                        $q->where('nama_fakultas', $agenda->fakultas);
+                    })
+                    ->whereHas('prodi', function($q) use ($agenda) {
+                        $q->where('nama_prodi', $agenda->jurusan);
+                    })
+                    ->get();
+
+                $summary['total_expected'] += $students->count();
+
+                $absensiByStudent = $agenda->absensi->keyBy('mahasiswa_id');
+
+                foreach ($students as $mhs) {
+                    if (!isset($studentsData[$mhs->id])) {
+                        $studentsData[$mhs->id] = [
+                            'mahasiswa' => $mhs,
+                            'hadir' => 0,
+                            'izin' => 0,
+                            'sakit' => 0,
+                            'alpa' => 0,
+                            'total' => 0
+                        ];
+                    }
+
+                    $studentsData[$mhs->id]['total']++;
+                    
+                    $abs = $absensiByStudent->get($mhs->id);
+                    if ($abs) {
+                        $status = strtolower($abs->status_kehadiran);
+                        if ($status === 'hadir' || $status === 'terlambat') {
+                            $studentsData[$mhs->id]['hadir']++;
+                            $summary['hadir']++;
+                        } elseif ($status === 'izin') {
+                            $studentsData[$mhs->id]['izin']++;
+                            $summary['izin']++;
+                        } elseif ($status === 'sakit') {
+                            $studentsData[$mhs->id]['sakit']++;
+                            $summary['sakit']++;
+                        } else {
+                            $studentsData[$mhs->id]['alpa']++;
+                            $summary['alpa']++;
+                        }
+                    } else {
+                        $studentsData[$mhs->id]['alpa']++;
+                        $summary['alpa']++;
+                    }
+                }
+            }
+
+            $studentStats = collect($studentsData);
+            
+            $totalReal = $summary['hadir'] + $summary['izin'] + $summary['sakit'] + $summary['alpa'];
+            if ($totalReal > 0) {
+                $summary['rate'] = round(($summary['hadir'] / $totalReal) * 100, 1);
+            }
+        }
+
+        return view('admin.statistik', compact('allAgendas', 'selectedAgendaIds', 'agendas', 'studentStats', 'summary'));
+    }
 }
+
