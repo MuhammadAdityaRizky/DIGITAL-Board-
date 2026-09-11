@@ -1319,55 +1319,6 @@ class AdminController extends Controller
         return back()->with('success', 'Jadwal Penggunaan Lab berhasil dihapus.');
     }
 
-    public function generate16Pertemuan($id)
-    {
-        $jadwal = JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu', 'dosen'])->findOrFail($id);
-
-        $dayMap = [
-            'Senin' => 1, 'Selasa' => 2, 'Rabu' => 3, 'Kamis' => 4, 'Jumat' => 5, 'Sabtu' => 6, 'Minggu' => 0
-        ];
-        
-        $targetDayIndex = $dayMap[$jadwal->hari] ?? 1;
-        $startDate = \Carbon\Carbon::today();
-
-        while ($startDate->dayOfWeek !== $targetDayIndex) {
-            $startDate->addDay();
-        }
-
-        $createdCount = 0;
-        for ($i = 0; $i < 16; $i++) {
-            $date = $startDate->copy()->addWeeks($i)->format('Y-m-d');
-
-            $exists = Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
-                ->where('tanggal', $date)
-                ->exists();
-
-            if (!$exists) {
-                Agenda::create([
-                    'jadwal_penggunaan_lab_id' => $jadwal->id,
-                    'dosen_id' => $jadwal->dosen_id,
-                    'dosen_pengampu_id' => $jadwal->dosen_pengampu_id,
-                    'lab_id' => $jadwal->lab_id,
-                    'mata_kuliah' => $jadwal->mata_kuliah,
-                    'fakultas' => $jadwal->prodi->fakultas->nama_fakultas ?? 'Teknik',
-                    'jurusan' => $jadwal->prodi->nama_prodi ?? $jadwal->jurusan ?? 'Sistem Informasi',
-                    'program_kuliah' => $jadwal->program_kuliah ?? 'Reguler',
-                    'jenis_pertemuan' => $jadwal->jenis_pertemuan ?? 'Praktikum',
-                    'kelas' => $jadwal->kelas,
-                    'semester' => $jadwal->semester ?? '1',
-                    'tanggal' => $date,
-                    'jam_mulai' => $jadwal->jam_mulai,
-                    'jam_selesai' => $jadwal->jam_selesai,
-                    'status_agenda' => $date < date('Y-m-d') ? 'Selesai' : ($date === date('Y-m-d') ? 'Berlangsung' : 'Akan Datang'),
-                    'catatan' => 'Pertemuan ke-' . ($i + 1) . ': ' . $jadwal->mata_kuliah,
-                ]);
-                $createdCount++;
-            }
-        }
-
-        return back()->with('success', "Berhasil membuat {$createdCount} sesi pertemuan perkuliahan 1 semester (Pertemuan 1 s/d 16) secara otomatis!");
-    }
-
     public function bulkGenerate16Pertemuan(Request $request)
     {
         $labId = $request->input('lab_id');
