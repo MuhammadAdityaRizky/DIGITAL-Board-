@@ -92,12 +92,20 @@
         
         <!-- Header -->
         <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-teal-800 text-white rounded-lg flex lg:hidden items-center justify-center font-bold">
                     <i class="fa-solid fa-user-shield text-sm"></i>
                 </div>
-                <h2 class="font-bold text-base text-slate-800 lg:hidden">DIGITAL Board</h2>
-                <h2 class="font-bold text-base text-slate-800 hidden lg:block">Monitoring Jadwal & Agenda Praktikum</h2>
+                <h2 class="font-bold text-base text-slate-800 hidden lg:block">Pusat Jadwal & Perkuliahan</h2>
+                <!-- Tab Switching Navigation (Analyst Recommendation #4) -->
+                <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+                    <a href="{{ route('admin.jadwal-lab') }}" class="px-3 py-1 text-slate-500 hover:text-slate-800 font-semibold rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-table-cells"></i> Matriks Jadwal Lab
+                    </a>
+                    <a href="{{ route('admin.agenda') }}" class="px-3 py-1 bg-white text-teal-900 font-bold rounded-lg shadow-2xs flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-days text-teal-700"></i> Agenda & Realisasi
+                    </a>
+                </div>
             </div>
             
             <!-- Profile Avatar & Dropdown Menu -->
@@ -413,18 +421,81 @@
                     </div>
 
                     <!-- Mata Kuliah / Judul Agenda -->
-                    <div class="md:col-span-2 space-y-1.5">
+                    <div class="md:col-span-2 space-y-1.5 relative" id="matkul_combobox_wrapper">
                         <label class="block text-slate-700 font-bold">Mata Kuliah / Judul Agenda <span class="text-rose-500">*</span></label>
-                        @if(isset($mataKuliahs) && count($mataKuliahs) > 0)
-                            <select id="form_matkul_select" onchange="syncMatkulInput(this.value)" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
-                                <option value="">-- Pilih Mata Kuliah Terdaftar --</option>
-                                @foreach($mataKuliahs as $mk)
-                                    <option value="{{ $mk->nama_mk }}">{{ $mk->nama_mk }} @if($mk->kode_mk)({{ $mk->kode_mk }})@endif</option>
-                                @endforeach
-                                <option value="__custom__">+ Input Mata Kuliah Lain (Kustom)</option>
-                            </select>
-                        @endif
-                        <input type="text" id="form_judul_agenda" name="judul_agenda" placeholder="Ketik nama mata kuliah..." required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                        
+                        <div class="relative">
+                            <!-- Trigger & Input Display -->
+                            <div class="relative flex items-center">
+                                <input type="text" 
+                                       id="form_judul_agenda" 
+                                       name="judul_agenda" 
+                                       placeholder="Pilih atau cari mata kuliah..." 
+                                       required 
+                                       autocomplete="off"
+                                       onclick="openMatkulDropdown()"
+                                       onfocus="openMatkulDropdown()"
+                                       oninput="handleMatkulDirectInput(this.value)"
+                                       class="w-full p-2.5 pr-10 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium text-slate-800 transition-all">
+                                <button type="button" 
+                                        onclick="toggleMatkulDropdown(event)" 
+                                        tabindex="-1"
+                                        class="absolute right-2 p-1.5 text-slate-400 hover:text-slate-600 transition-colors">
+                                    <i id="matkul_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                                </button>
+                            </div>
+
+                            <!-- Dropdown Menu Box -->
+                            <div id="matkul_dropdown_menu" 
+                                 class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl p-2.5 max-h-72 flex flex-col space-y-2">
+                                
+                                <!-- Search Input Bar -->
+                                <div class="relative shrink-0">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                    <input type="text" 
+                                           id="matkul_search_input" 
+                                           oninput="filterMatkulList(this.value)" 
+                                           placeholder="Cari nama atau kode mata kuliah..." 
+                                           autocomplete="off"
+                                           class="w-full pl-8 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700">
+                                </div>
+
+                                <!-- Custom Item Option -->
+                                <div class="border-b border-slate-100 pb-1.5 shrink-0">
+                                    <button type="button" 
+                                            onclick="selectCustomMatkulMode()" 
+                                            class="w-full text-left px-3 py-1.5 text-xs font-semibold text-teal-700 hover:bg-teal-50 rounded-lg flex items-center justify-between transition-colors">
+                                        <span class="flex items-center gap-1.5">
+                                            <i class="fa-solid fa-pen-to-square text-teal-600"></i> Ketik Judul Agenda / MK Manual
+                                        </span>
+                                        <span class="text-[10px] bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded font-medium">Kustom</span>
+                                    </button>
+                                </div>
+
+                                <!-- Options List -->
+                                <div id="matkul_options_container" class="overflow-y-auto flex-1 space-y-0.5 max-h-48 pr-1 custom-scrollbar">
+                                    @if(isset($mataKuliahs) && count($mataKuliahs) > 0)
+                                        @foreach($mataKuliahs as $mk)
+                                            <div class="matkul-item-option px-3 py-2 text-sm text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition-colors flex items-center justify-between group"
+                                                 data-name="{{ $mk->nama_mk }}"
+                                                 data-code="{{ $mk->kode_mk ?? '' }}"
+                                                 onclick="selectMatkulItem('{{ addslashes($mk->nama_mk) }}')">
+                                                <div class="flex items-center gap-2 overflow-hidden">
+                                                    <i class="fa-solid fa-book-bookmark text-slate-300 group-hover:text-teal-600 text-xs shrink-0"></i>
+                                                    <span class="font-medium truncate text-xs sm:text-sm">{{ $mk->nama_mk }}</span>
+                                                </div>
+                                                @if($mk->kode_mk)
+                                                    <span class="text-[10px] text-slate-400 bg-slate-100 group-hover:bg-teal-100 group-hover:text-teal-800 px-1.5 py-0.5 rounded font-mono ml-2 shrink-0">{{ $mk->kode_mk }}</span>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <div id="matkul_empty_msg" class="px-3 py-3 text-xs text-slate-400 italic text-center">Belum ada mata kuliah terdaftar. Silakan ketik manual.</div>
+                                    @endif
+                                    <div id="matkul_no_results" class="hidden px-3 py-3 text-xs text-slate-400 italic text-center">Mata kuliah tidak ditemukan. Anda dapat langsung mengetikkan nama agenda.</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Program Kuliah & Tipe Pertemuan -->
@@ -684,6 +755,86 @@
             });
         }
 
+        // Combobox Dropdown Logic for Mata Kuliah
+        function openMatkulDropdown() {
+            const menu = document.getElementById('matkul_dropdown_menu');
+            const icon = document.getElementById('matkul_chevron_icon');
+            if (menu) menu.classList.remove('hidden');
+            if (icon) icon.classList.add('rotate-180');
+        }
+
+        function closeMatkulDropdown() {
+            const menu = document.getElementById('matkul_dropdown_menu');
+            const icon = document.getElementById('matkul_chevron_icon');
+            if (menu) menu.classList.add('hidden');
+            if (icon) icon.classList.remove('rotate-180');
+        }
+
+        function toggleMatkulDropdown(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('matkul_dropdown_menu');
+            if (menu && menu.classList.contains('hidden')) {
+                openMatkulDropdown();
+                const searchInput = document.getElementById('matkul_search_input');
+                if (searchInput) searchInput.focus();
+            } else {
+                closeMatkulDropdown();
+            }
+        }
+
+        function filterMatkulList(query) {
+            const q = (query || '').toLowerCase().trim();
+            const items = document.querySelectorAll('.matkul-item-option');
+            const noResults = document.getElementById('matkul_no_results');
+            let visibleCount = 0;
+
+            items.forEach(item => {
+                const name = (item.getAttribute('data-name') || '').toLowerCase();
+                const code = (item.getAttribute('data-code') || '').toLowerCase();
+                if (name.includes(q) || code.includes(q)) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            if (noResults) {
+                noResults.style.display = (visibleCount === 0 && items.length > 0) ? 'block' : 'none';
+            }
+        }
+
+        function selectMatkulItem(name) {
+            const mainInput = document.getElementById('form_judul_agenda');
+            if (mainInput) mainInput.value = name;
+            closeMatkulDropdown();
+        }
+
+        function selectCustomMatkulMode() {
+            closeMatkulDropdown();
+            const mainInput = document.getElementById('form_judul_agenda');
+            if (mainInput) {
+                mainInput.focus();
+                mainInput.select();
+            }
+        }
+
+        function handleMatkulDirectInput(val) {
+            openMatkulDropdown();
+            const searchInput = document.getElementById('matkul_search_input');
+            if (searchInput) {
+                searchInput.value = val;
+                filterMatkulList(val);
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('matkul_combobox_wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                closeMatkulDropdown();
+            }
+        });
+
         function openAddModal() {
             document.getElementById('modal-agenda-title').innerText = 'Tambah Agenda Praktikum';
             const form = document.getElementById('agenda-form');
@@ -695,6 +846,11 @@
             document.getElementById('form_dosen_pengampu_id').value = '';
             document.getElementById('form_lab_id').value = '';
             document.getElementById('form_judul_agenda').value = '';
+            const searchInputAdd = document.getElementById('matkul_search_input');
+            if (searchInputAdd) searchInputAdd.value = '';
+            filterMatkulList('');
+            closeMatkulDropdown();
+
             document.getElementById('form_program_kuliah').value = 'Reguler';
             document.getElementById('form_jenis_pertemuan').value = 'Praktikum';
             document.getElementById('form_kelas').value = '';
@@ -722,6 +878,11 @@
             document.getElementById('form_dosen_pengampu_id').value = ag.dosen_pengampu_id || '';
             document.getElementById('form_lab_id').value = ag.lab_id;
             document.getElementById('form_judul_agenda').value = ag.mata_kuliah;
+            const searchInputEdit = document.getElementById('matkul_search_input');
+            if (searchInputEdit) searchInputEdit.value = '';
+            filterMatkulList('');
+            closeMatkulDropdown();
+
             document.getElementById('form_program_kuliah').value = ag.program_kuliah || 'Reguler';
             document.getElementById('form_jenis_pertemuan').value = ag.jenis_pertemuan || 'Praktikum';
             const kelasSelect = document.getElementById('form_kelas');

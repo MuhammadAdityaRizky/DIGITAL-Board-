@@ -88,9 +88,17 @@
         
         <!-- Header -->
         <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 shrink-0">
-            <div class="flex items-center gap-2">
-                <h2 class="font-bold text-base text-slate-800">Master Jadwal Penggunaan Lab</h2>
-                <span class="text-xs px-2.5 py-0.5 bg-teal-50 text-teal-800 border border-teal-200 rounded-full font-bold">Matriks Mingguan</span>
+            <div class="flex items-center gap-3">
+                <h2 class="font-bold text-base text-slate-800">Pusat Jadwal & Perkuliahan</h2>
+                <!-- Tab Switching Navigation (Analyst Recommendation #4) -->
+                <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+                    <a href="{{ route('admin.jadwal-lab') }}" class="px-3 py-1 bg-white text-teal-900 font-bold rounded-lg shadow-2xs flex items-center gap-1.5">
+                        <i class="fa-solid fa-table-cells text-teal-700"></i> Matriks Jadwal Lab
+                    </a>
+                    <a href="{{ route('admin.agenda') }}" class="px-3 py-1 text-slate-500 hover:text-slate-800 font-semibold rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-days"></i> Agenda & Realisasi
+                    </a>
+                </div>
             </div>
             
             <!-- User Info & Logout -->
@@ -232,6 +240,12 @@
 
                                                         <!-- Action buttons on hover -->
                                                         <div class="absolute right-1.5 top-1.5 hidden group-hover:flex items-center gap-1">
+                                                            <form action="{{ route('admin.jadwal-lab.generate-16', $m->id) }}" method="POST" onsubmit="return confirm('Otomatis generate 16 sesi agenda praktikum 1 semester untuk {{ $m->mata_kuliah }}?');" class="inline">
+                                                                @csrf
+                                                                <button type="submit" class="w-5 h-5 rounded bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center text-[9px] shadow-2xs" title="Generate 16 Sesi Agenda 1 Semester">
+                                                                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                                                </button>
+                                                            </form>
                                                             <button onclick="openEditModal({{ json_encode($m) }})" class="w-5 h-5 rounded bg-white/20 hover:bg-white/40 text-white flex items-center justify-center text-[9px]" title="Edit">
                                                                 <i class="fa-solid fa-pen"></i>
                                                             </button>

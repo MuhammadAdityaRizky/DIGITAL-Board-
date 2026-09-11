@@ -61,11 +61,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengumuman', [AdminController::class, 'pengumuman'])->name('pengumuman');
         Route::get('/aktivitas', [AdminController::class, 'aktivitas'])->name('aktivitas');
         
-        // Master Jadwal Penggunaan Lab
+        // Master Jadwal Penggunaan Lab & Bulk Generate 16 Pertemuan
         Route::get('/jadwal-lab', [AdminController::class, 'jadwalPenggunaanLab'])->name('jadwal-lab');
         Route::post('/jadwal-lab', [AdminController::class, 'storeJadwalPenggunaanLab'])->name('jadwal-lab.store');
         Route::put('/jadwal-lab/{id}', [AdminController::class, 'updateJadwalPenggunaanLab'])->name('jadwal-lab.update');
         Route::delete('/jadwal-lab/{id}', [AdminController::class, 'deleteJadwalPenggunaanLab'])->name('jadwal-lab.delete');
+        Route::post('/jadwal-lab/{id}/generate-16', [AdminController::class, 'generate16Pertemuan'])->name('jadwal-lab.generate-16');
 
         // Statistik & Akademik
         Route::get('/statistik', [AdminController::class, 'statistik'])->name('statistik');
@@ -96,6 +97,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('dosen')->name('dosen.')->group(function () {
         Route::get('/dashboard', [DosenController::class, 'dashboard'])->name('dashboard');
         Route::post('/agenda', [DosenController::class, 'storeAgenda'])->name('agenda.store');
+        Route::post('/agenda/generate-16/{jadwal_id}', [DosenController::class, 'generate16Pertemuan'])->name('agenda.generate-16');
         Route::put('/agenda/{id}', [DosenController::class, 'updateAgenda'])->name('agenda.update');
         Route::delete('/agenda/bulk-delete', [DosenController::class, 'bulkDeleteAgendas'])->name('agenda.bulk-delete');
         Route::delete('/agenda/{id}', [DosenController::class, 'deleteAgenda'])->name('agenda.delete');

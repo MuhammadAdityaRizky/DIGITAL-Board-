@@ -140,40 +140,60 @@
                                     </div>
                                 </div>
 
-                                <!-- Right Column: 3 KEY ACTIONS + Secondary Tools -->
-                                <div class="flex flex-wrap lg:flex-nowrap items-center gap-2 flex-shrink-0">
-                                    
-                                    <!-- 1. Tombol Absensi Mahasiswa (Input/Check Status Hadir, Izin, Sakit, Alpa) -->
-                                    <a href="{{ route('dosen.absensi.input', $ag->id) }}" 
-                                       class="px-3 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
-                                       title="Buka Input Absensi Mahasiswa (Hadir, Izin WhatsApp, Sakit, Alpa)">
-                                        <i class="fa-solid fa-users-viewfinder"></i>
-                                        <span>Absensi Mahasiswa</span>
-                                    </a>
+                                 <!-- Right Column: 3 KEY ACTIONS + Secondary Tools -->
+                                 <div class="flex flex-wrap lg:flex-nowrap items-center gap-2 flex-shrink-0">
+                                     @php
+                                         $isPastOrSelesai = ($ag->tanggal < date('Y-m-d')) || ($ag->status_agenda === 'Selesai');
+                                         $canAccessFeatures = !empty($ag->dosen_waktu_masuk) || $isPastOrSelesai;
+                                     @endphp
 
-                                    <!-- 2. Tombol Realisasi Pembelajaran -->
-                                    <button type="button" 
-                                            onclick="toggleModal('modal-realisasi-{{ $ag->id }}')" 
-                                            class="px-3 py-2 {{ $ag->materi_realisasi ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200' }} rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
-                                            title="Isi atau perbarui realisasi materi yang diajarkan">
-                                        <i class="fa-solid fa-book-open"></i>
-                                        <span>Realisasi</span>
-                                        @if($ag->materi_realisasi)
-                                            <i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i>
-                                        @endif
-                                    </button>
+                                     @if($canAccessFeatures)
+                                         <!-- 1. Tombol Absensi Mahasiswa (Input/Check Status Hadir, Izin, Sakit, Alpa) -->
+                                         <a href="{{ route('dosen.absensi.input', $ag->id) }}" 
+                                            class="px-3 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                                            title="Buka Input Absensi Mahasiswa (Hadir, Izin WhatsApp, Sakit, Alpa)">
+                                             <i class="fa-solid fa-users-viewfinder"></i>
+                                             <span>Absensi Mahasiswa</span>
+                                         </a>
 
-                                    <!-- 3. Tombol Berita Acara -->
-                                    <button type="button" 
-                                            onclick="toggleModal('modal-berita-acara-{{ $ag->id }}')" 
-                                            class="px-3 py-2 {{ $ag->berita_acara ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200' }} rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
-                                            title="Tuliskan berita acara resmi sesi perkuliahan">
-                                        <i class="fa-solid fa-file-signature"></i>
-                                        <span>Berita Acara</span>
-                                        @if($ag->berita_acara)
-                                            <i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i>
-                                        @endif
-                                    </button>
+                                         <!-- 2. Tombol Realisasi Pembelajaran -->
+                                         <button type="button" 
+                                                 onclick="toggleModal('modal-realisasi-{{ $ag->id }}')" 
+                                                 class="px-3 py-2 {{ $ag->materi_realisasi ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200' }} rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                                                 title="Isi atau perbarui realisasi materi yang diajarkan">
+                                             <i class="fa-solid fa-book-open"></i>
+                                             <span>Realisasi</span>
+                                             @if($ag->materi_realisasi)
+                                                 <i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i>
+                                             @endif
+                                         </button>
+
+                                         <!-- 3. Tombol Berita Acara -->
+                                         <button type="button" 
+                                                 onclick="toggleModal('modal-berita-acara-{{ $ag->id }}')" 
+                                                 class="px-3 py-2 {{ $ag->berita_acara ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200' }} rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                                                 title="Tuliskan berita acara resmi sesi perkuliahan">
+                                             <i class="fa-solid fa-file-signature"></i>
+                                             <span>Berita Acara</span>
+                                             @if($ag->berita_acara)
+                                                 <i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i>
+                                             @endif
+                                         </button>
+                                     @else
+                                          <div class="flex items-center gap-1.5">
+                                              <button type="button" onclick="startDosenQRScanner()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-2" title="Lakukan Absensi QR Dosen di Board Kelas terlebih dahulu">
+                                                  <i class="fa-solid fa-camera"></i> Absen QR Board
+                                              </button>
+
+                                              <form action="{{ route('dosen.absensi.submit') }}" method="POST" class="inline" onsubmit="return confirm('Emergency Check-in: Gunakan fitur ini jika QR Board / Scanner TV bermasalah?')">
+                                                  @csrf
+                                                  <input type="hidden" name="agenda_id" value="{{ $ag->id }}">
+                                                  <button type="submit" class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5" title="Emergency Check-in Manual tanpa scan QR Board">
+                                                      <i class="fa-solid fa-hand-pointer"></i> Emergency Check-in
+                                                  </button>
+                                              </form>
+                                          </div>
+                                     @endif
 
                                     <!-- Secondary Actions: Print, Edit, Delete -->
                                     <div class="flex items-center gap-1 border-l border-slate-200 pl-2">

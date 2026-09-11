@@ -315,22 +315,60 @@
                     <div>
                         <label class="block text-slate-700 font-bold mb-1">Mata Kuliah & Kelas <span class="text-rose-500">*</span></label>
                         @if(isset($jadwalPenggunaanLab) && $jadwalPenggunaanLab->count() > 0)
-                            <select name="jadwal_penggunaan_lab_id" id="modal_jadwal_select" required onchange="onSelectJadwalKuliahModal(this)" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                                <option value="" disabled selected>-- Pilih Mata Kuliah Terjadwal --</option>
-                                @foreach($jadwalPenggunaanLab as $j)
-                                    <option value="{{ $j->id }}"
-                                            data-lab="{{ strtoupper($j->lab->nama_lab ?? 'Lab') }}"
-                                            data-kelas="{{ $j->kelas ?? 'Reg A' }}"
-                                            data-semester="{{ $j->semester ?? '1' }}"
-                                            data-prodi="{{ $j->prodi->nama_prodi ?? 'Sistem Informasi' }}"
-                                            data-hari="{{ $j->hari }}"
-                                            data-jam-mulai="{{ substr($j->jam_mulai, 0, 5) }}"
-                                            data-jam-selesai="{{ substr($j->jam_selesai, 0, 5) }}">
-                                        {{ $j->mata_kuliah }} - {{ $j->kelas }} ({{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }}-{{ substr($j->jam_selesai,0,5) }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            
+                            <!-- Hidden input for form submission -->
+                            <input type="hidden" name="jadwal_penggunaan_lab_id" id="modal_jadwal_id" required>
+
+                            <!-- Custom Searchable Combobox Component -->
+                            <div class="relative" id="combobox_container_modal">
+                                <div class="relative flex items-center">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-400 text-xs pointer-events-none"></i>
+                                    <input type="text" 
+                                           id="combobox_search_modal" 
+                                           placeholder="-- Cari / Pilih Mata Kuliah Terjadwal --" 
+                                           autocomplete="off"
+                                           onclick="toggleComboboxModal(true)"
+                                           onfocus="toggleComboboxModal(true)"
+                                           oninput="filterComboboxModal(this.value)"
+                                           class="w-full pl-8 pr-8 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-bold text-xs focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition placeholder:font-normal placeholder:text-slate-400 cursor-pointer" />
+                                    <button type="button" 
+                                            onclick="toggleComboboxModal()" 
+                                            class="absolute right-2 text-slate-400 hover:text-slate-600 p-1 focus:outline-none">
+                                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200" id="combobox_arrow_modal"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Dropdown Options Menu -->
+                                <div id="combobox_menu_modal" 
+                                     class="hidden absolute z-30 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl divide-y divide-slate-100">
+                                    @foreach($jadwalPenggunaanLab as $j)
+                                        <div class="combobox-item p-3 hover:bg-teal-50/80 cursor-pointer transition flex flex-col gap-0.5"
+                                             data-id="{{ $j->id }}"
+                                             data-title="{{ $j->mata_kuliah }} - {{ $j->kelas }} ({{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }}-{{ substr($j->jam_selesai,0,5) }})"
+                                             data-search="{{ strtolower($j->mata_kuliah . ' ' . $j->kelas . ' ' . $j->hari . ' ' . ($j->lab->nama_lab ?? '') . ' ' . ($j->prodi->nama_prodi ?? '')) }}"
+                                             data-lab="{{ strtoupper($j->lab->nama_lab ?? 'Lab') }}"
+                                             data-kelas="{{ $j->kelas ?? 'Reg A' }}"
+                                             data-semester="{{ $j->semester ?? '1' }}"
+                                             data-prodi="{{ $j->prodi->nama_prodi ?? 'Sistem Informasi' }}"
+                                             data-hari="{{ $j->hari }}"
+                                             data-jam-mulai="{{ substr($j->jam_mulai, 0, 5) }}"
+                                             data-jam-selesai="{{ substr($j->jam_selesai, 0, 5) }}"
+                                             onclick="selectComboboxModal(this)">
+                                            <div class="flex items-center justify-between font-bold text-slate-800 text-xs">
+                                                <span class="text-teal-900 font-extrabold">{{ $j->mata_kuliah }}</span>
+                                                <span class="px-2 py-0.5 bg-teal-100 text-teal-800 rounded-full text-[10px] font-bold">Kelas {{ $j->kelas }}</span>
+                                            </div>
+                                            <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium mt-0.5">
+                                                <span><i class="fa-regular fa-clock mr-1 text-slate-400"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }} - {{ substr($j->jam_selesai,0,5) }} WIB</span>
+                                                <span class="text-teal-700 font-semibold"><i class="fa-solid fa-door-open mr-1"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                    <div id="combobox_empty_modal" class="hidden p-4 text-center text-slate-400 text-xs italic">
+                                        Tidak ada mata kuliah yang cocok dengan kata kunci pencarian.
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Detail Box of Selected Matkul -->
                             <div id="modal-jadwal-info-box" class="hidden mt-2.5 p-3 bg-teal-50/80 border border-teal-200 rounded-xl space-y-1 text-[11px]">
                                 <div class="flex justify-between items-center font-bold text-teal-900">
@@ -837,6 +875,94 @@
                 });
             }
         }
+
+        // Combobox Modal Handlers
+        function toggleComboboxModal(forceOpen = null) {
+            const menu = document.getElementById('combobox_menu_modal');
+            const arrow = document.getElementById('combobox_arrow_modal');
+            if (!menu) return;
+
+            const isOpen = forceOpen !== null ? forceOpen : menu.classList.contains('hidden');
+            if (isOpen) {
+                menu.classList.remove('hidden');
+                if (arrow) arrow.classList.add('rotate-180');
+            } else {
+                menu.classList.add('hidden');
+                if (arrow) arrow.classList.remove('rotate-180');
+            }
+        }
+
+        function filterComboboxModal(query) {
+            toggleComboboxModal(true);
+            const q = query.toLowerCase().trim();
+            const items = document.querySelectorAll('#combobox_menu_modal .combobox-item');
+            let hasMatch = false;
+
+            items.forEach(item => {
+                const searchText = item.dataset.search || '';
+                if (!q || searchText.includes(q)) {
+                    item.classList.remove('hidden');
+                    hasMatch = true;
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+
+            const emptyMsg = document.getElementById('combobox_empty_modal');
+            if (emptyMsg) {
+                if (hasMatch) emptyMsg.classList.add('hidden');
+                else emptyMsg.classList.remove('hidden');
+            }
+        }
+
+        function selectComboboxModal(itemEl) {
+            const hiddenInput = document.getElementById('modal_jadwal_id');
+            const searchInput = document.getElementById('combobox_search_modal');
+            
+            if (hiddenInput) hiddenInput.value = itemEl.dataset.id;
+            if (searchInput) searchInput.value = itemEl.dataset.title;
+
+            document.querySelectorAll('#combobox_menu_modal .combobox-item').forEach(el => {
+                el.classList.remove('bg-teal-100/80', 'border-l-4', 'border-teal-700');
+            });
+            itemEl.classList.add('bg-teal-100/80', 'border-l-4', 'border-teal-700');
+
+            const lab = itemEl.dataset.lab || '';
+            const kelas = itemEl.dataset.kelas || '';
+            const semester = itemEl.dataset.semester || '';
+            const prodi = itemEl.dataset.prodi || '';
+            const hari = itemEl.dataset.hari || '';
+            const jamMulai = itemEl.dataset.jamMulai || '';
+            const jamSelesai = itemEl.dataset.jamSelesai || '';
+
+            const box = document.getElementById('modal-jadwal-info-box');
+            if (box) {
+                box.classList.remove('hidden');
+                const labEl = document.getElementById('modal-info-lab');
+                const kelasEl = document.getElementById('modal-info-kelas');
+                const rutinEl = document.getElementById('modal-info-rutin');
+                const prodiEl = document.getElementById('modal-info-prodi');
+
+                if (labEl) labEl.innerHTML = `<i class="fa-solid fa-door-open mr-1 text-teal-600"></i> ${lab}`;
+                if (kelasEl) kelasEl.innerText = `Kelas ${kelas} • Smt ${semester}`;
+                if (rutinEl) rutinEl.innerText = `${hari}, ${jamMulai} - ${jamSelesai} WIB`;
+                if (prodiEl) prodiEl.innerText = prodi;
+            }
+
+            const inMasuk = document.getElementById('modal_input_waktu_masuk');
+            const inKeluar = document.getElementById('modal_input_waktu_keluar');
+            if (inMasuk && jamMulai) inMasuk.value = jamMulai;
+            if (inKeluar && jamSelesai) inKeluar.value = jamSelesai;
+
+            toggleComboboxModal(false);
+        }
+
+        document.addEventListener('click', function(e) {
+            const containerModal = document.getElementById('combobox_container_modal');
+            if (containerModal && !containerModal.contains(e.target)) {
+                toggleComboboxModal(false);
+            }
+        });
     </script>
 
     <!-- SweetAlert2 Automatic Alerts & Loading Handler -->
