@@ -83,10 +83,6 @@ class DosenController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $izinPendingCount = Perizinan::where('status_persetujuan', 'pending')
-            ->whereIn('agenda_id', $allAgendas->pluck('id'))
-            ->count();
-
         $todayAgendas = $allAgendas->filter(function($ag) use ($today) {
             return $ag->tanggal === $today;
         });
@@ -97,7 +93,7 @@ class DosenController extends Controller
 
         return view('dosen.dashboard', compact(
             'dosen', 'agendas', 'labs', 'fakultas', 'prodis', 'pengumuman', 
-            'izinPendingCount', 'todayAgendas', 'activeOrNextAgenda'
+            'todayAgendas', 'activeOrNextAgenda'
         ));
     }
 
@@ -499,172 +495,7 @@ class DosenController extends Controller
         return redirect()->route('dosen.agenda')->with('success', 'Absensi manual berhasil disimpan untuk sesi ' . $agenda->mata_kuliah);
     }
 
-    public function mahasiswa(Request $request)
-    {
-        $user = auth()->user();
-        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
 
-        $query = Mahasiswa::with(['user', 'fakultas', 'prodi', 'perizinan.agenda.lab']);
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('nim', 'like', "%{$search}%")
-                  ->orWhere('nama_lengkap', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('fakultas_id')) {
-            $query->where('id_fakultas', $request->fakultas_id);
-        }
-
-        if ($request->filled('prodi_id')) {
-            $query->where('id_prodi', $request->prodi_id);
-        }
-
-        if ($request->filled('kelas')) {
-            $query->where('kelas', $request->kelas);
-        }
-
-        if ($request->filled('semester')) {
-            $query->where('semester', $request->semester);
-        }
-
-        $mahasiswas = $query->get()->map(function($mhs) use ($dosen) {
-            $hadirCount = Absensi::where('mahasiswa_id', $mhs->id)
-                ->whereHas('agenda', function($q) use ($dosen) {
-                    $q->where('dosen_id', $dosen->id);
-                })
-                ->where('status_kehadiran', 'Hadir')
-                ->count();
-
-            $izinCount = Absensi::where('mahasiswa_id', $mhs->id)
-                ->whereHas('agenda', function($q) use ($dosen) {
-                    $q->where('dosen_id', $dosen->id);
-                })
-                ->where('status_kehadiran', 'Izin')
-                ->count();
-
-            $alpaCount = Absensi::where('mahasiswa_id', $mhs->id)
-                ->whereHas('agenda', function($q) use ($dosen) {
-                    $q->where('dosen_id', $dosen->id);
-                })
-                ->where('status_kehadiran', 'Alpa')
-                ->count();
-
-            $mhs->hadir_count = $hadirCount;
-            $mhs->izin_count = $izinCount;
-            $mhs->alpa_count = $alpaCount;
-            $mhs->total_agenda = $hadirCount + $izinCount + $alpaCount;
-            $mhs->kehadiran_percentage = $mhs->total_agenda > 0 ? round(($mhs->hadir_count / $mhs->total_agenda) * 100, 1) : 100;
-
-            return $mhs;
-        });
-
-        $fakultas = Fakultas::all();
-        $prodis = Prodi::with('fakultas')->get();
-        $kelases = Kelas::all();
-        $semesters = [1, 2, 3, 4, 5, 6, 7, 8];
-
-        return view('dosen.mahasiswa', compact('dosen', 'mahasiswas', 'fakultas', 'prodis', 'kelases', 'semesters'));
-    }
-
-    public function perizinan(Request $request)
-    {
-        $user = auth()->user();
-        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
-
-        $agendaIds = Agenda::where('dosen_id', $dosen->id)->pluck('id');
-
-        $perizinans = Perizinan::with(['mahasiswa.user', 'agenda.lab'])
-            ->whereIn('agenda_id', $agendaIds)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return view('dosen.perizinan', compact('dosen', 'perizinans'));
-    }
-
-    public function verifikasiIzin(Request $request, $id)
-    {
-        $request->validate([
-            'status' => 'required|in:disetujui,ditolak',
-        ]);
-
-        $perizinan = Perizinan::findOrFail($id);
-        $perizinan->update([
-            'status_persetujuan' => $request->status,
-        ]);
-
-        if ($request->status === 'disetujui') {
-            Absensi::updateOrCreate(
-                [
-                    'agenda_id' => $perizinan->agenda_id,
-                    'mahasiswa_id' => $perizinan->mahasiswa_id,
-                ],
-                [
-                    'waktu_masuk' => now(),
-                    'status_kehadiran' => $perizinan->kategori === 'Sakit' ? 'Sakit' : 'Izin',
-                ]
-            );
-        } else {
-            $absensi = Absensi::where('agenda_id', $perizinan->agenda_id)
-                ->where('mahasiswa_id', $perizinan->mahasiswa_id)
-                ->first();
-            if ($absensi) {
-                $absensi->update(['status_kehadiran' => 'Alpa']);
-            }
-        }
-
-        return back()->with('success', 'Status pengajuan izin mahasiswa berhasil diperbarui menjadi: ' . strtoupper($request->status));
-    }
-
-    public function bulkVerifikasiIzin(Request $request)
-    {
-        $request->validate([
-            'ids' => 'required|array',
-            'ids.*' => 'exists:perizinan,id',
-            'status' => 'required|in:disetujui,ditolak',
-        ]);
-
-        $user = auth()->user();
-        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
-        $agendaIds = Agenda::where('dosen_id', $dosen->id)->pluck('id');
-
-        $perizinans = Perizinan::whereIn('id', $request->ids)
-            ->whereIn('agenda_id', $agendaIds)
-            ->get();
-
-        $count = 0;
-        foreach ($perizinans as $perizinan) {
-            $perizinan->update([
-                'status_persetujuan' => $request->status,
-            ]);
-
-            if ($request->status === 'disetujui') {
-                Absensi::updateOrCreate(
-                    [
-                        'agenda_id' => $perizinan->agenda_id,
-                        'mahasiswa_id' => $perizinan->mahasiswa_id,
-                    ],
-                    [
-                        'waktu_masuk' => now(),
-                        'status_kehadiran' => $perizinan->kategori === 'Sakit' ? 'Sakit' : 'Izin',
-                    ]
-                );
-            } else {
-                $absensi = Absensi::where('agenda_id', $perizinan->agenda_id)
-                    ->where('mahasiswa_id', $perizinan->mahasiswa_id)
-                    ->first();
-                if ($absensi) {
-                    $absensi->update(['status_kehadiran' => 'Alpa']);
-                }
-            }
-            $count++;
-        }
-
-        $statusText = $request->status === 'disetujui' ? 'DISETUJUI' : 'DITOLAK';
-        return back()->with('success', "Sebanyak {$count} pengajuan izin mahasiswa berhasil {$statusText}.");
-    }
 
     public function pengaturan()
     {
@@ -702,69 +533,7 @@ class DosenController extends Controller
         return view('dosen.export_agenda_kehadiran', compact('agenda'));
     }
 
-    public function exportMahasiswa(Request $request)
-    {
-        $user = auth()->user();
-        $dosen = Dosen::with(['fakultas', 'prodi'])->where('user_id', $user->id)->firstOrFail();
 
-        $query = Mahasiswa::with(['user', 'fakultas', 'prodi']);
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('nim', 'like', "%{$search}%")
-                  ->orWhere('nama_lengkap', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('fakultas_id')) {
-            $query->where('id_fakultas', $request->fakultas_id);
-        }
-
-        if ($request->filled('prodi_id')) {
-            $query->where('id_prodi', $request->prodi_id);
-        }
-
-        if ($request->filled('kelas')) {
-            $query->where('kelas', $request->kelas);
-        }
-
-        if ($request->filled('semester')) {
-            $query->where('semester', $request->semester);
-        }
-
-        $mahasiswas = $query->get()->map(function($mhs) use ($dosen) {
-            $hadirCount = Absensi::where('mahasiswa_id', $mhs->id)
-                ->whereHas('agenda', function($q) use ($dosen) {
-                    $q->where('dosen_id', $dosen->id);
-                })
-                ->where('status_kehadiran', 'Hadir')
-                ->count();
-
-            $izinCount = Absensi::where('mahasiswa_id', $mhs->id)
-                ->whereHas('agenda', function($q) use ($dosen) {
-                    $q->where('dosen_id', $dosen->id);
-                })
-                ->where('status_kehadiran', 'Izin')
-                ->count();
-
-            $alpaCount = Absensi::where('mahasiswa_id', $mhs->id)
-                ->whereHas('agenda', function($q) use ($dosen) {
-                    $q->where('dosen_id', $dosen->id);
-                })
-                ->where('status_kehadiran', 'Alpa')
-                ->count();
-
-            $mhs->hadir_count = $hadirCount;
-            $mhs->izin_count = $izinCount;
-            $mhs->alpa_count = $alpaCount;
-            $mhs->total_agenda = $hadirCount + $izinCount + $alpaCount;
-            
-            return $mhs;
-        });
-
-        return view('dosen.export_rekap_mahasiswa', compact('dosen', 'mahasiswas'));
-    }
 
     public function bulkDeleteAgendas(Request $request)
     {

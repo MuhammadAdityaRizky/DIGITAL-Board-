@@ -36,13 +36,9 @@
                 <i class="fa-solid fa-calendar-alt"></i>
                 <span class="text-xs font-semibold tracking-wide">Agenda</span>
             </a>
-            <a href="{{ route('dosen.mahasiswa') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-users"></i>
-                <span class="text-xs font-semibold tracking-wide">Daftar Mahasiswa</span>
-            </a>
-            <a href="{{ route('dosen.perizinan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-file-signature"></i>
-                <span class="text-xs font-semibold tracking-wide">Verifikasi Perizinan</span>
+            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-gear"></i>
+                <span class="text-xs font-semibold tracking-wide">Pengaturan Akun</span>
             </a>
         </nav>
     </aside>
@@ -163,7 +159,7 @@
             @endif
 
             <!-- Summary Bento Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <!-- Bento 1 -->
                 <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between">
                     <div class="flex items-center gap-2 text-slate-500">
@@ -176,20 +172,8 @@
                     </div>
                 </div>
 
-                <!-- Bento 2 -->
+                <!-- Bento 2: Absensi Dosen via QR / Manual -->
                 <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between">
-                    <div class="flex items-center gap-2 text-slate-500">
-                        <i class="fa-solid fa-user-clock text-rose-600 text-xs"></i>
-                        <span class="text-[11px] font-bold tracking-wider uppercase">Izin Pending</span>
-                    </div>
-                    <div class="mt-4">
-                        <h4 class="text-2xl font-bold text-rose-650">{{ $izinPendingCount }} Mhs</h4>
-                        <p class="text-[10px] font-semibold text-rose-600 tracking-wide mt-0.5"><i class="fa-solid fa-circle-exclamation mr-0.5"></i> Butuh review</p>
-                    </div>
-                </div>
-
-                <!-- Bento 3: Absensi Dosen via QR / Manual (Tampil di Desktop - Sembunyi di Mobile) -->
-                <div class="hidden lg:flex bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex-col justify-between">
                     <div class="flex items-center gap-2 text-slate-500">
                         <i class="fa-solid fa-qrcode text-indigo-600 text-xs"></i>
                         <span class="text-[11px] font-bold tracking-wider uppercase">Absensi Dosen</span>
@@ -528,31 +512,7 @@
         </div>
     </main>
 
-    <!-- Bottom Navigation Bar (Mobile Only - Symmetrical Layout) -->
-    <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-lg">
-        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-850 font-bold">
-            <i class="fa-solid fa-border-all text-lg"></i>
-            <span class="text-[9px] font-bold">Dashboard</span>
-        </a>
-        <a href="{{ route('dosen.agenda') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
-            <i class="fa-solid fa-calendar-alt text-lg"></i>
-            <span class="text-[9px] font-medium">Agenda</span>
-        </a>
-        <!-- Floating FAB button style -->
-        <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-850 text-white rounded-2xl shadow-md border-4 border-slate-50">
-            <a href="{{ route('dosen.perizinan') }}" class="flex items-center justify-center w-full h-full text-white" title="Verifikasi Izin">
-                <i class="fa-solid fa-file-signature text-lg"></i>
-            </a>
-        </div>
-        <a href="{{ route('dosen.mahasiswa') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
-            <i class="fa-solid fa-users text-lg"></i>
-            <span class="text-[9px] font-medium">Mahasiswa</span>
-        </a>
-        <a href="{{ route('dosen.perizinan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
-            <i class="fa-solid fa-clipboard-check text-lg"></i>
-            <span class="text-[9px] font-medium">Perizinan</span>
-        </a>
-    </nav>
+
 
     <!-- Profile Dropdown Handler -->
     <script>
@@ -821,13 +781,9 @@
                 <i class="fa-solid fa-qrcode text-2xl text-white"></i>
             </button>
         </div>
-        <a href="{{ route('dosen.mahasiswa') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
-            <i class="fa-solid fa-users text-lg"></i>
-            <span class="text-[9px] font-medium">Mahasiswa</span>
-        </a>
-        <a href="{{ route('dosen.perizinan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
-            <i class="fa-solid fa-file-signature text-lg"></i>
-            <span class="text-[9px] font-medium">Perizinan</span>
+        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
+            <i class="fa-solid fa-gear text-lg"></i>
+            <span class="text-[9px] font-medium">Pengaturan</span>
         </a>
     </nav>
 

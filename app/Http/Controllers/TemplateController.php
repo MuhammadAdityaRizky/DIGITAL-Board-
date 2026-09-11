@@ -13,6 +13,8 @@ use App\Exports\Templates\KelasTemplateExport;
 use App\Exports\Templates\AgendaTemplateExport;
 use App\Exports\Templates\AbsensiGlobalTemplateExport;
 
+use App\Exports\Templates\MataKuliahTemplateExport;
+
 class TemplateController extends Controller
 {
     public function download($type)
@@ -30,6 +32,9 @@ class TemplateController extends Controller
                 return Excel::download(new ProdiTemplateExport, 'Template_Import_Prodi.xlsx');
             case 'kelas':
                 return Excel::download(new KelasTemplateExport, 'Template_Import_Kelas.xlsx');
+            case 'matkul':
+            case 'mata_kuliah':
+                return Excel::download(new MataKuliahTemplateExport, 'Template_Import_MataKuliah.xlsx');
             case 'agenda':
                 return Excel::download(new AgendaTemplateExport, 'Template_Import_Agenda.xlsx');
             case 'absensi':

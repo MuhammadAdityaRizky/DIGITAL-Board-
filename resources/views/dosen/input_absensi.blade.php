@@ -35,13 +35,9 @@
                 <i class="fa-solid fa-calendar-alt"></i>
                 <span class="text-xs font-semibold tracking-wide">Agenda</span>
             </a>
-            <a href="{{ route('dosen.mahasiswa') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-users"></i>
-                <span class="text-xs font-semibold tracking-wide">Daftar Mahasiswa</span>
-            </a>
-            <a href="{{ route('dosen.perizinan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-file-signature"></i>
-                <span class="text-xs font-semibold tracking-wide">Verifikasi Perizinan</span>
+            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-gear"></i>
+                <span class="text-xs font-semibold tracking-wide">Pengaturan Akun</span>
             </a>
         </nav>
     </aside>

@@ -36,13 +36,9 @@
                 <i class="fa-solid fa-calendar-alt"></i>
                 <span class="text-xs font-semibold tracking-wide">Agenda</span>
             </a>
-            <a href="{{ route('dosen.mahasiswa') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-users"></i>
-                <span class="text-xs font-semibold tracking-wide">Daftar Mahasiswa</span>
-            </a>
-            <a href="{{ route('dosen.perizinan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-file-signature"></i>
-                <span class="text-xs font-semibold tracking-wide">Verifikasi Perizinan</span>
+            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-gear"></i>
+                <span class="text-xs font-semibold tracking-wide">Pengaturan Akun</span>
             </a>
         </nav>
     </aside>
@@ -268,13 +264,9 @@
                 <i class="fa-solid fa-qrcode text-2xl text-white"></i>
             </button>
         </div>
-        <a href="{{ route('dosen.mahasiswa') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
-            <i class="fa-solid fa-users text-lg"></i>
-            <span class="text-[9px] font-medium">Mahasiswa</span>
-        </a>
-        <a href="{{ route('dosen.perizinan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
-            <i class="fa-solid fa-file-signature text-lg"></i>
-            <span class="text-[9px] font-medium">Perizinan</span>
+        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
+            <i class="fa-solid fa-gear text-lg"></i>
+            <span class="text-[9px] font-medium">Pengaturan</span>
         </a>
     </nav>
 

@@ -181,62 +181,121 @@
                 </form>
             </div>
 
-            <!-- Agendas List -->
-            <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden max-w-5xl">
-                <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-                    <h3 class="font-bold text-sm text-slate-800">Daftar Agenda Mengajar Seluruh Dosen</h3>
-                    <div class="flex items-center gap-3">
-                        <span class="text-[10px] bg-teal-50 text-teal-800 font-bold px-2.5 py-1 rounded-full hidden sm:inline-block">{{ $agendas->total() }} Sesi Mengajar</span>
-                        <button onclick="openAddModal()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+            <!-- Agendas List Grouped by Mata Kuliah -->
+            @php
+                $groupedAgendas = $allAgendas->groupBy('mata_kuliah');
+            @endphp
+
+            <div class="space-y-6 max-w-5xl">
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-wrap justify-between items-center gap-3">
+                    <div>
+                        <h3 class="font-bold text-base text-slate-800">Daftar Agenda Mengajar Seluruh Dosen</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Dikelompokkan berdasarkan Mata Kuliah beserta jumlah seluruh sesi/pertemuan.</p>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-xs bg-teal-50 text-teal-850 font-bold px-3 py-1.5 rounded-xl border border-teal-200 shadow-xs">
+                            <i class="fa-solid fa-layer-group mr-1.5"></i> {{ $groupedAgendas->count() }} Mata Kuliah ({{ $allAgendas->count() }} Total Sesi)
+                        </span>
+                        <button onclick="openAddModal()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-plus"></i> Tambah Agenda
                         </button>
-                        <button onclick="toggleModal('modal-import-agenda')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <button onclick="toggleModal('modal-import-agenda')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-file-import"></i> Import Agenda
                         </button>
                     </div>
                 </div>
-                <div class="p-6">
-                    @if($agendas->count() > 0)
-                            <div id="btn-bulk-delete" class="hidden mb-3 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between">
-                                <span class="text-xs font-bold text-rose-800"><span id="bulk-count">0</span> agenda terpilih</span>
-                                <button type="button" onclick="submitBulkDeleteForm()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                                    <i class="fa-solid fa-trash-can"></i> Hapus Terpilih
-                                </button>
+
+                @if($groupedAgendas->count() > 0)
+                    <div id="btn-bulk-delete" class="hidden p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between shadow-sm">
+                        <span class="text-xs font-bold text-rose-800"><span id="bulk-count">0</span> agenda terpilih</span>
+                        <button type="button" onclick="submitBulkDeleteForm()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-trash-can"></i> Hapus Terpilih
+                        </button>
+                    </div>
+
+                    @foreach($groupedAgendas as $namaMatkul => $agendasGroup)
+                        @php
+                            $totalPertemuan = $agendasGroup->count();
+                            $selesaiCount = $agendasGroup->where('status_agenda', 'Selesai')->count();
+                            $berlangsungCount = $agendasGroup->where('status_agenda', 'Berlangsung')->count();
+                            $akanDatangCount = $agendasGroup->where('status_agenda', 'Akan Datang')->count();
+                            $dibatalkanCount = $agendasGroup->where('status_agenda', 'Dibatalkan')->count();
+                            $groupSlug = Str::slug($namaMatkul ?: 'umum');
+                            $matchedMk = isset($mataKuliahs) ? $mataKuliahs->firstWhere('nama_mk', $namaMatkul) : null;
+                        @endphp
+                        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden space-y-0">
+                            <!-- Card Header for Mata Kuliah Group -->
+                            <div class="bg-slate-850 text-white px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <i class="fa-solid fa-book-bookmark text-teal-400 text-base"></i>
+                                        <h4 class="font-extrabold text-base tracking-wide">{{ $namaMatkul }}</h4>
+                                        @if($matchedMk && $matchedMk->kode_mk)
+                                            <span class="px-2 py-0.5 bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-mono font-bold rounded">
+                                                {{ $matchedMk->kode_mk }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <p class="text-[11px] text-slate-300 font-medium">
+                                        Total {{ $totalPertemuan }} Pertemuan Praktikum / Kuliah
+                                    </p>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="px-2.5 py-1 bg-teal-600/90 text-white text-[10px] font-bold rounded-lg uppercase tracking-wider shadow-xs">
+                                        <i class="fa-solid fa-calendar-check mr-1"></i> {{ $totalPertemuan }} Pertemuan
+                                    </span>
+                                    @if($selesaiCount > 0)
+                                        <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold rounded">
+                                            {{ $selesaiCount }} Selesai
+                                        </span>
+                                    @endif
+                                    @if($berlangsungCount > 0)
+                                        <span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold rounded animate-pulse">
+                                            {{ $berlangsungCount }} Berlangsung
+                                        </span>
+                                    @endif
+                                    @if($akanDatangCount > 0)
+                                        <span class="px-2 py-0.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-bold rounded">
+                                            {{ $akanDatangCount }} Akan Datang
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
 
-                            <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                            <!-- List Table for Sessions in this Mata Kuliah -->
+                            <div class="overflow-x-auto">
                                 <table class="w-full text-xs text-left text-slate-650">
-                                    <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
+                                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                                         <tr>
-                                            <th class="p-4 w-10 text-center">
-                                                <input type="checkbox" id="select-all" onclick="toggleSelectAll(this)" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer">
+                                            <th class="p-3.5 w-10 text-center">
+                                                <input type="checkbox" onclick="toggleSelectGroup(this, '{{ $groupSlug }}')" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer">
                                             </th>
-                                            <th class="p-4">Tanggal / Waktu</th>
-                                            <th class="p-4">Mata Kuliah / Detail</th>
-                                            <th class="p-4">Dosen Mengajar & Pengampu</th>
-                                            <th class="p-4">Ruang Lab</th>
-                                            <th class="p-4 text-center">Aksi</th>
+                                            <th class="p-3.5">Pertemuan & Tanggal</th>
+                                            <th class="p-3.5">Detail & Kelas</th>
+                                            <th class="p-3.5">Dosen Mengajar & Pengampu</th>
+                                            <th class="p-3.5">Ruang Lab</th>
+                                            <th class="p-3.5 text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100">
-                                        @foreach($agendas as $ag)
-                                            <tr class="hover:bg-slate-50/50 transition">
-                                                <td class="p-4 text-center">
+                                        @foreach($agendasGroup as $index => $ag)
+                                            <tr class="hover:bg-slate-50/70 transition item-{{ $groupSlug }}">
+                                                <td class="p-3.5 text-center">
                                                     <input type="checkbox" name="ids[]" value="{{ $ag->id }}" class="agenda-checkbox rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer" onclick="updateBulkDeleteBtn()">
                                                 </td>
-                                                <td class="p-4">
+                                                <td class="p-3.5">
+                                                    <span class="inline-block px-2 py-0.5 bg-slate-100 text-slate-700 font-bold rounded text-[10px] mb-1">Pertemuan {{ $index + 1 }}</span>
                                                     <span class="font-bold text-slate-800 block">{{ date('d M Y', strtotime($ag->tanggal)) }}</span>
                                                     <span class="text-[10px] font-mono text-slate-450">{{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB</span>
                                                 </td>
-                                                <td class="p-4">
-                                                    <span class="font-bold text-teal-900 block text-sm">{{ $ag->mata_kuliah }}</span>
-                                                    <span class="text-[10px] text-slate-450 uppercase font-semibold">
-                                                        Status: <span class="px-1.5 py-0.5 rounded text-[9px] font-bold @if($ag->status_agenda == 'Berlangsung') bg-amber-100 text-amber-800 @elseif($ag->status_agenda == 'Selesai') bg-emerald-100 text-emerald-800 @elseif($ag->status_agenda == 'Dibatalkan') bg-rose-100 text-rose-800 @else bg-slate-100 text-slate-700 @endif">{{ $ag->status_agenda }}</span> 
-                                                        | Program: {{ $ag->program_kuliah ?? 'Reguler' }} 
-                                                        | Kelas: {{ $ag->kelas ?: '-' }}
-                                                    </span>
+                                                <td class="p-3.5 space-y-1">
+                                                    <div>
+                                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase @if($ag->status_agenda == 'Berlangsung') bg-amber-100 text-amber-800 @elseif($ag->status_agenda == 'Selesai') bg-emerald-100 text-emerald-800 @elseif($ag->status_agenda == 'Dibatalkan') bg-rose-100 text-rose-800 @else bg-slate-100 text-slate-700 @endif">{{ $ag->status_agenda }}</span>
+                                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[9px] font-semibold uppercase ml-1">{{ $ag->program_kuliah ?? 'Reguler' }}</span>
+                                                    </div>
+                                                    <p class="text-[10px] text-slate-500 font-medium">Kelas: <strong>{{ $ag->kelas ?: '-' }}</strong> • Semester: <strong>{{ $ag->semester ?: '1' }}</strong></p>
                                                 </td>
-                                                <td class="p-4 space-y-1">
+                                                <td class="p-3.5 space-y-1">
                                                     <div>
                                                         <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Mengajar</span>
                                                         <span class="font-semibold text-slate-800 block text-xs">{{ $ag->dosen->nama ?? '-' }}</span>
@@ -246,11 +305,11 @@
                                                         <span class="font-semibold text-teal-900 block text-xs">{{ $ag->dosenPengampu->nama ?? $ag->dosen->nama ?? '-' }}</span>
                                                     </div>
                                                 </td>
-                                                <td class="p-4 text-slate-500">
-                                                    <span class="block font-semibold">{{ $ag->lab->nama_lab ?? '-' }}</span>
+                                                <td class="p-3.5 text-slate-500">
+                                                    <span class="block font-semibold text-slate-800">{{ $ag->lab->nama_lab ?? '-' }}</span>
                                                     <span class="text-[10px] text-slate-450">{{ $ag->lab->lokasi ?? '-' }}</span>
                                                 </td>
-                                                <td class="p-4">
+                                                <td class="p-3.5">
                                                     <div class="flex justify-center items-center gap-1.5">
                                                         <button type="button" onclick='openEditModal(@json($ag))' class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg font-bold transition flex items-center gap-1 text-xs">
                                                             <i class="fa-solid fa-pen-to-square"></i> Edit
@@ -265,13 +324,14 @@
                                     </tbody>
                                 </table>
                             </div>
-                        <div class="pt-4">
-                            {{ $agendas->links() }}
                         </div>
-                    @else
-                        <p class="text-center py-10 text-slate-400 italic">Jadwal agenda praktikum tidak ditemukan.</p>
-                    @endif
-                </div>
+                    @endforeach
+                @else
+                    <div class="bg-white border border-slate-200 rounded-2xl p-10 text-center">
+                        <i class="fa-solid fa-calendar-xmark text-3xl text-slate-300 block mb-3"></i>
+                        <p class="text-sm font-bold text-slate-500">Jadwal agenda praktikum tidak ditemukan.</p>
+                    </div>
+                @endif
             </div>
 
         </div>
@@ -349,9 +409,18 @@
                     </div>
 
                     <!-- Mata Kuliah / Judul Agenda -->
-                    <div class="md:col-span-2">
-                        <label class="block text-slate-700 font-bold mb-1">Mata Kuliah / Judul Agenda <span class="text-rose-500">*</span></label>
-                        <input type="text" id="form_judul_agenda" name="judul_agenda" placeholder="Contoh: Pemrograman Web Lanjut" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                    <div class="md:col-span-2 space-y-1.5">
+                        <label class="block text-slate-700 font-bold">Mata Kuliah / Judul Agenda <span class="text-rose-500">*</span></label>
+                        @if(isset($mataKuliahs) && count($mataKuliahs) > 0)
+                            <select id="form_matkul_select" onchange="syncMatkulInput(this.value)" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
+                                <option value="">-- Pilih Mata Kuliah Terdaftar --</option>
+                                @foreach($mataKuliahs as $mk)
+                                    <option value="{{ $mk->nama_mk }}">{{ $mk->nama_mk }} @if($mk->kode_mk)({{ $mk->kode_mk }})@endif</option>
+                                @endforeach
+                                <option value="__custom__">+ Input Mata Kuliah Lain (Kustom)</option>
+                            </select>
+                        @endif
+                        <input type="text" id="form_judul_agenda" name="judul_agenda" placeholder="Ketik nama mata kuliah..." required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                     </div>
 
                     <!-- Program Kuliah & Tipe Pertemuan -->

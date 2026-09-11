@@ -79,6 +79,11 @@ Route::middleware('auth')->group(function () {
         Route::delete('/akademik/kelas/bulk-delete', [AdminController::class, 'bulkDeleteKelas'])->name('akademik.kelas.bulk-delete');
         Route::delete('/akademik/kelas/{id}', [AdminController::class, 'deleteKelas'])->name('akademik.kelas.delete');
         Route::post('/akademik/kelas/import', [AdminController::class, 'importKelas'])->name('akademik.kelas.import');
+
+        Route::post('/akademik/matkul', [AdminController::class, 'storeMataKuliah'])->name('akademik.matkul.store');
+        Route::put('/akademik/matkul/{id}', [AdminController::class, 'updateMataKuliah'])->name('akademik.matkul.update');
+        Route::delete('/akademik/matkul/{id}', [AdminController::class, 'deleteMataKuliah'])->name('akademik.matkul.delete');
+        Route::post('/akademik/matkul/import', [AdminController::class, 'importMataKuliah'])->name('akademik.matkul.import');
     });
 
     // Dosen Routes
@@ -97,12 +102,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/absensi/{id}/input', [DosenController::class, 'storeInputAbsensi'])->name('absensi.store-input');
         
         Route::get('/agenda', [DosenController::class, 'agenda'])->name('agenda');
-        Route::get('/mahasiswa', [DosenController::class, 'mahasiswa'])->name('mahasiswa');
-        Route::get('/mahasiswa/export', [DosenController::class, 'exportMahasiswa'])->name('mahasiswa.export');
         Route::get('/agenda/{id}/export-kehadiran', [DosenController::class, 'exportKehadiran'])->name('agenda.export-kehadiran');
-        Route::get('/perizinan', [DosenController::class, 'perizinan'])->name('perizinan');
-        Route::post('/perizinan/bulk-verifikasi', [DosenController::class, 'bulkVerifikasiIzin'])->name('perizinan.bulk-verifikasi');
-        Route::post('/perizinan/{id}/verifikasi', [DosenController::class, 'verifikasiIzin'])->name('perizinan.verifikasi');
         Route::get('/pengaturan', [DosenController::class, 'pengaturan'])->name('pengaturan');
         Route::put('/pengaturan', [DosenController::class, 'updatePengaturan'])->name('pengaturan.update');
     });

@@ -177,6 +177,12 @@
                     <i class="fa-solid fa-chalkboard-user"></i>
                     Kelas
                 </button>
+                <button @click="activeTab = 'matkul'" 
+                        :class="activeTab === 'matkul' ? 'border-teal-700 text-teal-850 border-b-2' : 'text-slate-400 hover:text-slate-700'"
+                        class="px-5 py-3 transition focus:outline-none flex items-center gap-2">
+                    <i class="fa-solid fa-book"></i>
+                    Mata Kuliah
+                </button>
             </div>
 
             <!-- Tab Content: FAKULTAS -->
@@ -330,6 +336,60 @@
                     @method('DELETE')
                 </form>
                 @endforeach
+            </div>
+
+            <!-- Tab Content: MATA KULIAH -->
+            <div x-show="activeTab === 'matkul'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-6 max-w-4xl">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-sm text-slate-800">Daftar Mata Kuliah</h3>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openModal('modal-import-matkul')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-file-import"></i> Import Mata Kuliah
+                        </button>
+                        <button onclick="openModal('modal-add-matkul')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Tambah Mata Kuliah
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-slate-100 text-xs">
+                    <table class="w-full text-left text-slate-650">
+                        <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                            <tr>
+                                <th class="p-3">Kode MK</th>
+                                <th class="p-3">Nama Mata Kuliah</th>
+                                <th class="p-3">SKS</th>
+                                <th class="p-3">Program Studi</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @if(isset($mataKuliahs) && count($mataKuliahs) > 0)
+                                @foreach($mataKuliahs as $mk)
+                                <tr class="hover:bg-slate-50/50 transition">
+                                    <td class="p-3 font-mono text-slate-500 font-bold">{{ $mk->kode_mk ?: '-' }}</td>
+                                    <td class="p-3 font-bold text-slate-800 text-sm">{{ $mk->nama_mk }}</td>
+                                    <td class="p-3 font-semibold text-slate-600">{{ $mk->sks }} SKS</td>
+                                    <td class="p-3 text-slate-500">{{ $mk->prodi->nama_prodi ?? 'Umum / Semua Prodi' }}</td>
+                                    <td class="p-3 text-center">
+                                        <div class="flex items-center justify-center gap-3">
+                                            <button onclick="openEditMatkulModal({{ $mk->id }}, '{{ addslashes($mk->nama_mk) }}', '{{ addslashes($mk->kode_mk ?? '') }}', {{ $mk->sks ?? 3 }}, '{{ $mk->id_prodi ?? '' }}')" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                                            <form action="{{ route('admin.akademik.matkul.delete', $mk->id) }}" method="POST" onsubmit="return confirmAction(event, 'Mata kuliah ini akan dihapus.', 'Hapus Mata Kuliah?')" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="5" class="p-8 text-center text-slate-400 italic">Belum ada data mata kuliah.</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </div>
@@ -506,7 +566,7 @@
         </div>
     </div>
 
-    <!-- KELAS -->
+    <!-- KELAS IMPORT -->
     <div id="modal-import-kelas" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden text-xs">
         <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl border border-slate-100">
             <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center text-slate-850">
@@ -523,6 +583,102 @@
                     </div>
                 </div>
                 <button type="submit" class="w-full py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold transition shadow-sm">Import Data</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MATA KULIAH IMPORT -->
+    <div id="modal-import-matkul" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden text-xs">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl border border-slate-100">
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center text-slate-850">
+                <h4 class="font-bold text-sm">Import Mata Kuliah</h4>
+                <button type="button" onclick="closeModal('modal-import-matkul')" class="text-slate-400 hover:text-slate-650 text-base"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form action="{{ route('admin.akademik.matkul.import') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">File Excel/CSV</label>
+                    <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <div class="mt-2 text-right">
+                        <a href="{{ route('template.download', 'matkul') }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline"><i class="fa-solid fa-download mr-1"></i> Unduh Template Excel</a>
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold transition shadow-sm">Import Data</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MATKUL MODAL (ADD) -->
+    <div id="modal-add-matkul" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden text-xs">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl border border-slate-100">
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center text-slate-850">
+                <h4 class="font-bold text-sm">Tambah Mata Kuliah Baru</h4>
+                <button type="button" onclick="closeModal('modal-add-matkul')" class="text-slate-400 hover:text-slate-650 text-base"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form action="{{ route('admin.akademik.matkul.store') }}" method="POST" class="p-6 space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Kode MK (Opsional)</label>
+                    <input type="text" name="kode_mk" placeholder="Contoh: IF201" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Nama Mata Kuliah</label>
+                    <input type="text" name="nama_mk" required placeholder="Contoh: Pemrograman Web" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">SKS</label>
+                        <input type="number" name="sks" value="3" min="1" max="6" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Program Studi</label>
+                        <select name="id_prodi" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <option value="">Semua / Umum</option>
+                            @foreach($prodis as $prd)
+                                <option value="{{ $prd->id }}">{{ $prd->nama_prodi }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition shadow-sm">Simpan Mata Kuliah</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MATKUL MODAL (EDIT) -->
+    <div id="modal-edit-matkul" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden text-xs">
+        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl border border-slate-100">
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center text-slate-850">
+                <h4 class="font-bold text-sm">Edit Mata Kuliah</h4>
+                <button type="button" onclick="closeModal('modal-edit-matkul')" class="text-slate-400 hover:text-slate-650 text-base"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="edit-matkul-form" method="POST" class="p-6 space-y-4">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Kode MK (Opsional)</label>
+                    <input type="text" id="edit-matkul-kode" name="kode_mk" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Nama Mata Kuliah</label>
+                    <input type="text" id="edit-matkul-nama" name="nama_mk" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">SKS</label>
+                        <input type="number" id="edit-matkul-sks" name="sks" min="1" max="6" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Program Studi</label>
+                        <select id="edit-matkul-prodi" name="id_prodi" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <option value="">Semua / Umum</option>
+                            @foreach($prodis as $prd)
+                                <option value="{{ $prd->id }}">{{ $prd->nama_prodi }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition shadow-sm">Simpan Perubahan</button>
             </form>
         </div>
     </div>
@@ -552,6 +708,15 @@
             document.getElementById('edit-kelas-form').action = `/admin/akademik/kelas/${id}`;
             document.getElementById('edit-kelas-nama').value = nama;
             openModal('modal-edit-kelas');
+        }
+
+        function openEditMatkulModal(id, nama, kode, sks, prodiId) {
+            document.getElementById('edit-matkul-form').action = `/admin/akademik/matkul/${id}`;
+            document.getElementById('edit-matkul-nama').value = nama;
+            document.getElementById('edit-matkul-kode').value = kode;
+            document.getElementById('edit-matkul-sks').value = sks;
+            document.getElementById('edit-matkul-prodi').value = prodiId;
+            openModal('modal-edit-matkul');
         }
 
         // Bulk Delete Logic for Kelas

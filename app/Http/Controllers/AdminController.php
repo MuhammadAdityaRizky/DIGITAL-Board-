@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Fakultas;
 use App\Models\Prodi;
 use App\Models\Kelas;
+use App\Models\MataKuliah;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -208,19 +209,16 @@ class AdminController extends Controller
             $query->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
         }
 
-        $agendas = $query->paginate(16)->withQueryString();
-
-        if ($agendas->isEmpty() && $agendas->total() > 0 && (int)$request->get('page', 1) > 1) {
-            return redirect()->route('admin.agenda', $request->except('page'));
-        }
+        $allAgendas = $query->get();
 
         $dosens = Dosen::orderBy('nama', 'asc')->get();
         $labs = Laboratorium::orderBy('nama_lab', 'asc')->get();
         $fakultas = Fakultas::orderBy('nama_fakultas', 'asc')->get();
         $prodis = Prodi::with('fakultas')->orderBy('nama_prodi', 'asc')->get();
         $kelases = Kelas::all();
+        $mataKuliahs = MataKuliah::orderBy('nama_mk', 'asc')->get();
 
-        return view('admin.agenda', compact('agendas', 'dosens', 'labs', 'fakultas', 'prodis', 'kelases'));
+        return view('admin.agenda', compact('allAgendas', 'dosens', 'labs', 'fakultas', 'prodis', 'kelases', 'mataKuliahs'));
     }
 
     public function storeAgenda(Request $request)
@@ -981,8 +979,9 @@ class AdminController extends Controller
         $fakultas = Fakultas::orderBy('nama_fakultas')->get();
         $prodis = Prodi::with('fakultas')->orderBy('nama_prodi')->get();
         $kelas = Kelas::orderBy('nama_kelas')->get();
+        $mataKuliahs = MataKuliah::with('prodi')->orderBy('nama_mk')->get();
 
-        return view('admin.akademik', compact('fakultas', 'prodis', 'kelas'));
+        return view('admin.akademik', compact('fakultas', 'prodis', 'kelas', 'mataKuliahs'));
     }
 
     // Fakultas CRUD
@@ -1058,6 +1057,47 @@ class AdminController extends Controller
     {
         Kelas::destroy($id);
         return back()->with('success', 'Kelas berhasil dihapus.');
+    }
+
+    // Mata Kuliah CRUD
+    public function storeMataKuliah(Request $request)
+    {
+        $request->validate([
+            'nama_mk' => 'required|string|max:150',
+            'kode_mk' => 'nullable|string|max:30',
+            'sks' => 'nullable|integer',
+            'id_prodi' => 'nullable|exists:prodi,id',
+        ]);
+        MataKuliah::create([
+            'kode_mk' => $request->kode_mk,
+            'nama_mk' => $request->nama_mk,
+            'sks' => $request->sks ?? 3,
+            'id_prodi' => $request->id_prodi,
+        ]);
+        return back()->with('success', 'Mata Kuliah berhasil ditambahkan.');
+    }
+
+    public function updateMataKuliah(Request $request, $id)
+    {
+        $request->validate([
+            'nama_mk' => 'required|string|max:150',
+            'kode_mk' => 'nullable|string|max:30',
+            'sks' => 'nullable|integer',
+            'id_prodi' => 'nullable|exists:prodi,id',
+        ]);
+        MataKuliah::findOrFail($id)->update([
+            'kode_mk' => $request->kode_mk,
+            'nama_mk' => $request->nama_mk,
+            'sks' => $request->sks ?? 3,
+            'id_prodi' => $request->id_prodi,
+        ]);
+        return back()->with('success', 'Mata Kuliah berhasil diperbarui.');
+    }
+
+    public function deleteMataKuliah($id)
+    {
+        MataKuliah::destroy($id);
+        return back()->with('success', 'Mata Kuliah berhasil dihapus.');
     }
 
     public function bulkDeleteKelas(Request $request)
@@ -1188,6 +1228,20 @@ class AdminController extends Controller
         try {
             Excel::import(new KelasImport, $request->file('file_excel'));
             return back()->with('success', 'Data Kelas berhasil diimpor.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+        }
+    }
+
+    public function importMataKuliah(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            Excel::import(new \App\Imports\MataKuliahImport, $request->file('file_excel'));
+            return back()->with('success', 'Data Mata Kuliah berhasil diimpor.');
         } catch (\Exception $e) {
             return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
         }
