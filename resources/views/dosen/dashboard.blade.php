@@ -481,16 +481,8 @@
                                                                           <i class="fa-solid fa-camera"></i> Absen QR Board
                                                                       </button>
 
-                                                                      <form action="{{ route('dosen.absensi.submit') }}" method="POST" class="inline" onsubmit="return confirm('Emergency Check-in: Gunakan fitur ini jika QR Board / Scanner TV bermasalah?')">
-                                                                          @csrf
-                                                                          <input type="hidden" name="agenda_id" value="{{ $ag->id }}">
-                                                                          <button type="submit" class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5" title="Emergency Check-in Manual tanpa scan QR Board">
-                                                                              <i class="fa-solid fa-hand-pointer"></i> Emergency Check-in
-                                                                          </button>
-                                                                      </form>
-
                                                                       <span class="text-[11px] text-amber-800 font-medium bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
-                                                                          <i class="fa-solid fa-circle-info text-amber-600"></i> Absen QR / Emergency Check-in untuk membuka fitur perkuliahan.
+                                                                          <i class="fa-solid fa-circle-info text-amber-600"></i> Lakukan Absen QR Board untuk membuka fitur perkuliahan.
                                                                       </span>
                                                                   </div>
                                                              @endif

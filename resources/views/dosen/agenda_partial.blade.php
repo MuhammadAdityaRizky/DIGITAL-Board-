@@ -184,14 +184,6 @@
                                               <button type="button" onclick="startDosenQRScanner()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-2" title="Lakukan Absensi QR Dosen di Board Kelas terlebih dahulu">
                                                   <i class="fa-solid fa-camera"></i> Absen QR Board
                                               </button>
-
-                                              <form action="{{ route('dosen.absensi.submit') }}" method="POST" class="inline" onsubmit="return confirm('Emergency Check-in: Gunakan fitur ini jika QR Board / Scanner TV bermasalah?')">
-                                                  @csrf
-                                                  <input type="hidden" name="agenda_id" value="{{ $ag->id }}">
-                                                  <button type="submit" class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1.5" title="Emergency Check-in Manual tanpa scan QR Board">
-                                                      <i class="fa-solid fa-hand-pointer"></i> Emergency Check-in
-                                                  </button>
-                                              </form>
                                           </div>
                                      @endif
 
