@@ -61,6 +61,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengumuman', [AdminController::class, 'pengumuman'])->name('pengumuman');
         Route::get('/aktivitas', [AdminController::class, 'aktivitas'])->name('aktivitas');
         
+        // Master Jadwal Penggunaan Lab
+        Route::get('/jadwal-lab', [AdminController::class, 'jadwalPenggunaanLab'])->name('jadwal-lab');
+        Route::post('/jadwal-lab', [AdminController::class, 'storeJadwalPenggunaanLab'])->name('jadwal-lab.store');
+        Route::put('/jadwal-lab/{id}', [AdminController::class, 'updateJadwalPenggunaanLab'])->name('jadwal-lab.update');
+        Route::delete('/jadwal-lab/{id}', [AdminController::class, 'deleteJadwalPenggunaanLab'])->name('jadwal-lab.delete');
+
         // Statistik & Akademik
         Route::get('/statistik', [AdminController::class, 'statistik'])->name('statistik');
         Route::get('/akademik', [AdminController::class, 'akademik'])->name('akademik');
@@ -94,6 +100,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/agenda/bulk-delete', [DosenController::class, 'bulkDeleteAgendas'])->name('agenda.bulk-delete');
         Route::delete('/agenda/{id}', [DosenController::class, 'deleteAgenda'])->name('agenda.delete');
         Route::put('/agenda/{id}/realisasi', [DosenController::class, 'updateRealisasi'])->name('agenda.realisasi');
+        Route::put('/agenda/{id}/berita-acara', [DosenController::class, 'updateBeritaAcara'])->name('agenda.berita-acara');
         Route::post('/agenda/{id}/qr-new', [DosenController::class, 'generateNewQrToken'])->name('agenda.qr');
         Route::post('/absensi', [DosenController::class, 'submitAttendance'])->name('absensi.submit');
         Route::post('/absensi/import-global', [DosenController::class, 'importAbsensiGlobal'])->name('absensi.import-global');

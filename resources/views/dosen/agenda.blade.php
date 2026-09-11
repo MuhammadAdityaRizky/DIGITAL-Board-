@@ -32,7 +32,7 @@
                 <i class="fa-solid fa-border-all"></i>
                 <span class="text-xs font-semibold tracking-wide">Dashboard</span>
             </a>
-            <a href="{{ route('dosen.agenda') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-850 text-white rounded-xl w-full">
+            <a href="{{ route('dosen.agenda') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white rounded-xl w-full shadow-xs">
                 <i class="fa-solid fa-calendar-alt"></i>
                 <span class="text-xs font-semibold tracking-wide">Agenda</span>
             </a>
@@ -168,8 +168,8 @@
             <div class="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
                 <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex flex-wrap justify-between items-center gap-3">
                     <div>
-                        <h3 class="font-bold text-sm text-slate-800">Daftar Seluruh Agenda Kelas</h3>
-                        <span class="text-[10px] bg-teal-50 text-teal-850 font-bold px-2 py-0.5 rounded-full mt-1 inline-block">{{ $agendas->total() }} Kelas Ditemukan</span>
+                        <h3 class="font-bold text-sm text-slate-800">Daftar Agenda Perkuliahan & Pertemuan</h3>
+                        <span class="text-[10px] bg-teal-50 text-teal-800 border border-teal-200 font-bold px-2.5 py-0.5 rounded-full mt-1 inline-block">{{ $groupedAgendas->count() }} Mata Kuliah ({{ $agendas->total() }} Sesi Pertemuan)</span>
                     </div>
                     
                     <div class="flex items-center gap-3 ml-auto">
@@ -192,7 +192,7 @@
                             <i class="fa-solid fa-qrcode"></i> Scan QR
                         </button>
                         <button type="button" onclick="toggleModal('modal-add-agenda')" class="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-lg shadow-md transition-all flex items-center gap-1.5">
-                            <i class="fa-solid fa-calendar-plus"></i> Tambah Agenda
+                            <i class="fa-solid fa-calendar-plus"></i> Buat Agenda Mata Kuliah
                         </button>
                     </div>
                 </div>
@@ -289,7 +289,7 @@
         });
     </script>
 
-    <!-- Modal Add Agenda -->
+    <!-- Modal Add Agenda (Buat Agenda Mata Kuliah) -->
     <div id="modal-add-agenda" class="fixed inset-0 z-50 overflow-y-auto hidden text-xs">
         <!-- Backdrop -->
         <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="toggleModal('modal-add-agenda')"></div>
@@ -300,9 +300,9 @@
                 <!-- Header -->
                 <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center text-slate-800">
                     <h3 class="font-bold text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-plus text-teal-705"></i> Buat Agenda Baru
+                        <i class="fa-solid fa-calendar-plus text-teal-800"></i> Buat Agenda Mata Kuliah
                     </h3>
-                    <button type="button" onclick="toggleModal('modal-add-agenda')" class="text-slate-400 hover:text-slate-650 text-base">
+                    <button type="button" onclick="toggleModal('modal-add-agenda')" class="text-slate-400 hover:text-slate-600 text-base">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -310,137 +310,102 @@
                 <!-- Body -->
                 <form action="{{ route('dosen.agenda.store') }}" method="POST" class="p-6 space-y-4">
                     @csrf
+                    
+                    <!-- 1. Combobox Mata Kuliah Berdasarkan Jadwal Lab -->
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Ruangan Laboratorium</label>
-                        <select name="lab_id" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            @foreach($labs as $lab)
-                                <option value="{{ $lab->id }}">{{ $lab->nama_lab }} ({{ $lab->lokasi }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Dosen Pengampu <span class="text-slate-400 font-normal text-[10px]">(Opsional)</span></label>
-                        <select name="dosen_pengampu_id" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <option value="">-- Pilih Dosen Pengampu --</option>
-                            @foreach($dosens as $d)
-                                <option value="{{ $d->id }}">{{ $d->nama }} (NIP: {{ $d->nip }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Mata Kuliah</label>
-                        <input type="text" name="judul_agenda" required placeholder="Contoh: Pemrograman Web" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                    </div>
-
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Fakultas</label>
-                        <select name="fakultas" required onchange="handleFakultasChange(this.value, 'input-jurusan-hidden-add', 'label-jurusan-add', 'select-jurusan-dropdown-add')" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <option value="" disabled selected>Pilih Fakultas</option>
-                            @foreach($fakultas as $fak)
-                                <option value="{{ $fak->nama_fakultas }}">{{ $fak->nama_fakultas }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="custom-search-select relative">
-                        <label class="block text-slate-700 font-bold mb-1">Jurusan / Program Studi</label>
-                        <!-- Hidden input to submit the form value -->
-                        <input type="hidden" name="jurusan" id="input-jurusan-hidden-add" required>
-                        
-                        <!-- Trigger Button -->
-                        <button type="button" onclick="toggleSearchSelect('select-jurusan-dropdown-add')" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-left text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none flex justify-between items-center">
-                            <span id="label-jurusan-add" class="text-slate-400">Pilih Program Studi</span>
-                            <i class="fa-solid fa-chevron-down text-slate-400 text-[10px]"></i>
-                        </button>
-                        
-                        <!-- Dropdown Menu -->
-                        <div id="select-jurusan-dropdown-add" class="absolute left-0 right-0 mt-1 bg-white border border-slate-250 rounded-xl shadow-xl z-50 hidden flex flex-col max-h-60 overflow-hidden">
-                            <!-- Search Input -->
-                            <div class="p-2 border-b border-slate-100 sticky top-0 bg-white">
-                                <div class="relative">
-                                    <input type="text" onkeyup="filterSearchSelect('select-jurusan-dropdown-add', this.value)" placeholder="Cari Program Studi..." class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs">
-                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-[10px]"></i>
-                                </div>
-                            </div>
-                            
-                            <!-- Options List -->
-                            <div class="overflow-y-auto flex-grow py-1 max-h-44 scrollbar-thin animate-fadeIn">
-                                @foreach($prodis as $prod)
-                                    <button type="button" data-fakultas="{{ $prod->fakultas->nama_fakultas }}" onclick="selectSearchOption('input-jurusan-hidden-add', 'label-jurusan-add', 'select-jurusan-dropdown-add', '{{ $prod->nama_prodi }}')" class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-750 transition text-xs select-option-item">
-                                        {{ $prod->nama_prodi }}
-                                    </button>
+                        <label class="block text-slate-700 font-bold mb-1">Mata Kuliah & Kelas <span class="text-rose-500">*</span></label>
+                        @if(isset($jadwalPenggunaanLab) && $jadwalPenggunaanLab->count() > 0)
+                            <select name="jadwal_penggunaan_lab_id" id="modal_jadwal_select" required onchange="onSelectJadwalKuliahModal(this)" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                <option value="" disabled selected>-- Pilih Mata Kuliah Terjadwal --</option>
+                                @foreach($jadwalPenggunaanLab as $j)
+                                    <option value="{{ $j->id }}"
+                                            data-lab="{{ strtoupper($j->lab->nama_lab ?? 'Lab') }}"
+                                            data-kelas="{{ $j->kelas ?? 'Reg A' }}"
+                                            data-semester="{{ $j->semester ?? '1' }}"
+                                            data-prodi="{{ $j->prodi->nama_prodi ?? 'Sistem Informasi' }}"
+                                            data-hari="{{ $j->hari }}"
+                                            data-jam-mulai="{{ substr($j->jam_mulai, 0, 5) }}"
+                                            data-jam-selesai="{{ substr($j->jam_selesai, 0, 5) }}">
+                                        {{ $j->mata_kuliah }} - {{ $j->kelas }} ({{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }}-{{ substr($j->jam_selesai,0,5) }})
+                                    </option>
                                 @endforeach
+                            </select>
+                            
+                            <!-- Detail Box of Selected Matkul -->
+                            <div id="modal-jadwal-info-box" class="hidden mt-2.5 p-3 bg-teal-50/80 border border-teal-200 rounded-xl space-y-1 text-[11px]">
+                                <div class="flex justify-between items-center font-bold text-teal-900">
+                                    <span id="modal-info-lab"><i class="fa-solid fa-door-open mr-1 text-teal-600"></i> Lab</span>
+                                    <span id="modal-info-kelas" class="px-2 py-0.5 bg-teal-200/60 rounded text-[10px]">Kelas</span>
+                                </div>
+                                <div class="text-slate-600">
+                                    <span>Jadwal Rutin: <strong id="modal-info-rutin" class="text-slate-800">-</strong></span>
+                                </div>
+                                <div class="text-[10px] text-slate-500" id="modal-info-prodi">-</div>
                             </div>
-                        </div>
+                        @else
+                            <div class="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs">
+                                Belum ada jadwal mata kuliah yang di-plotting untuk Anda.
+                            </div>
+                        @endif
                     </div>
 
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div>
-                            <label class="block text-slate-700 font-bold mb-1">Program</label>
-                            <select name="program_kuliah" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                                <option value="Reguler">Reguler</option>
-                                <option value="Karyawan">Karyawan</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-slate-700 font-bold mb-1">Tipe Pertemuan</label>
-                            <select name="jenis_pertemuan" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                                <option value="Praktikum">Praktikum</option>
-                                <option value="Teori">Teori</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-slate-700 font-bold mb-1">Kelas <span class="text-slate-400 font-normal text-[10px]">(Opsional)</span></label>
-                            <select name="kelas" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                                <option value="" selected>Pilih Kelas (Opsional)</option>
-                                <option value="A">Kelas A</option>
-                                <option value="B">Kelas B</option>
-                                <option value="C">Kelas C</option>
-                                <option value="D">Kelas D</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-slate-700 font-bold mb-1">Semester</label>
-                            <select name="semester" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                                <option value="" disabled selected>Pilih</option>
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                            </select>
-                        </div>
-                    </div>
-
+                    <!-- 2. Tanggal Pelaksanaan -->
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Tanggal</label>
-                        <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                        <label class="block text-slate-700 font-bold mb-1">Tanggal Pertemuan <span class="text-rose-500">*</span></label>
+                        <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-semibold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                     </div>
 
+                    <!-- 3. Jam Mulai & Jam Selesai -->
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-slate-700 font-bold mb-1">Jam Masuk</label>
-                            <input type="time" name="waktu_masuk" required value="08:00" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <label class="block text-slate-700 font-bold mb-1">Jam Mulai <span class="text-rose-500">*</span></label>
+                            <input type="time" name="waktu_masuk" id="modal_input_waktu_masuk" required value="08:00" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                         </div>
                         <div>
-                            <label class="block text-slate-700 font-bold mb-1">Jam Keluar</label>
-                            <input type="time" name="waktu_keluar" required value="10:30" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <label class="block text-slate-700 font-bold mb-1">Jam Selesai <span class="text-rose-500">*</span></label>
+                            <input type="time" name="waktu_keluar" id="modal_input_waktu_keluar" required value="10:30" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                         </div>
                     </div>
 
+                    <!-- 4. Rencana Pembelajaran -->
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Rencana Pembelajaran</label>
-                        <textarea name="rencana_pembelajaran" rows="3" required placeholder="Tuliskan materi..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none"></textarea>
+                        <label class="block text-slate-700 font-bold mb-1">Rencana Pembelajaran / Materi <span class="text-rose-500">*</span></label>
+                        <textarea name="rencana_pembelajaran" rows="3" required placeholder="Tuliskan materi pembelajaran pada pertemuan ini..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none"></textarea>
                     </div>
 
-                    <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 bg-white">
+                    <!-- Fallback Collapsible: Pengaturan Ruangan Lain -->
+                    <details class="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden group">
+                        <summary class="px-3 py-2 text-[11px] font-bold text-slate-500 hover:text-slate-700 cursor-pointer flex items-center justify-between select-none">
+                            <span><i class="fa-solid fa-sliders mr-1"></i> Pengaturan Tambahan / Ganti Ruang Lab</span>
+                            <i class="fa-solid fa-chevron-down group-open:rotate-180 transition-transform"></i>
+                        </summary>
+                        <div class="p-3 border-t border-slate-200 space-y-3 bg-white">
+                            <div>
+                                <label class="block text-slate-700 font-bold mb-1">Ganti Laboratorium (Opsional)</label>
+                                <select name="lab_id" class="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-xs">
+                                    <option value="">Gunakan Lab Bawaan Jadwal</option>
+                                    @foreach($labs as $lab)
+                                        <option value="{{ $lab->id }}">{{ $lab->nama_lab }} ({{ $lab->lokasi }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-700 font-bold mb-1">Dosen Pengampu (Opsional)</label>
+                                <select name="dosen_pengampu_id" class="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-xs">
+                                    <option value="">Gunakan Pengampu Bawaan Jadwal</option>
+                                    @foreach($dosens as $d)
+                                        <option value="{{ $d->id }}">{{ $d->nama }} (NIP: {{ $d->nip }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </details>
+
+                    <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 bg-white">
                         <button type="button" onclick="toggleModal('modal-add-agenda')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white font-bold rounded-lg transition">Buat Agenda</button>
+                        <button type="submit" class="px-5 py-2 bg-teal-800 hover:bg-teal-900 text-white font-bold rounded-lg transition shadow-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-calendar-check"></i> Buat Agenda
+                        </button>
                     </div>
                 </form>
             </div>
@@ -454,6 +419,38 @@
             if (modal) {
                 modal.classList.toggle('hidden');
             }
+        }
+
+        function onSelectJadwalKuliahModal(selectEl) {
+            const selected = selectEl.options[selectEl.selectedIndex];
+            if (!selected || !selected.value) return;
+
+            const lab = selected.dataset.lab || '';
+            const kelas = selected.dataset.kelas || '';
+            const semester = selected.dataset.semester || '';
+            const prodi = selected.dataset.prodi || '';
+            const hari = selected.dataset.hari || '';
+            const jamMulai = selected.dataset.jamMulai || '';
+            const jamSelesai = selected.dataset.jamSelesai || '';
+
+            const box = document.getElementById('modal-jadwal-info-box');
+            if (box) {
+                box.classList.remove('hidden');
+                const labEl = document.getElementById('modal-info-lab');
+                const kelasEl = document.getElementById('modal-info-kelas');
+                const rutinEl = document.getElementById('modal-info-rutin');
+                const prodiEl = document.getElementById('modal-info-prodi');
+
+                if (labEl) labEl.innerHTML = `<i class="fa-solid fa-door-open mr-1 text-teal-600"></i> ${lab}`;
+                if (kelasEl) kelasEl.innerText = `Kelas ${kelas} • Smt ${semester}`;
+                if (rutinEl) rutinEl.innerText = `${hari}, ${jamMulai} - ${jamSelesai} WIB`;
+                if (prodiEl) prodiEl.innerText = prodi;
+            }
+
+            const inMasuk = document.getElementById('modal_input_waktu_masuk');
+            const inKeluar = document.getElementById('modal_input_waktu_keluar');
+            if (inMasuk && jamMulai) inMasuk.value = jamMulai;
+            if (inKeluar && jamSelesai) inKeluar.value = jamSelesai;
         }
 
         function toggleSearchSelect(dropdownId) {

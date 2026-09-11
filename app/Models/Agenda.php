@@ -15,6 +15,11 @@ class Agenda extends Model
     public $timestamps = false;
     protected $guarded = [];
 
+    public function jadwalPenggunaanLab()
+    {
+        return $this->belongsTo(JadwalPenggunaanLab::class, 'jadwal_penggunaan_lab_id');
+    }
+
     public function dosen()
     {
         return $this->belongsTo(Dosen::class, 'dosen_id');

@@ -65,7 +65,12 @@ class AuthController extends Controller
             session()->regenerateToken();
         }
 
-        $user = User::where('role', $role)->first();
+        if ($role === 'dosen') {
+            $anggra = User::where('username', '0431088705')->first();
+            $user = $anggra ?? User::where('role', 'dosen')->first();
+        } else {
+            $user = User::where('role', $role)->first();
+        }
 
         if ($user) {
             Auth::login($user);

@@ -132,9 +132,21 @@
             </div>
 
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                <div class="bg-slate-50/80 border-b border-slate-200 px-6 py-4">
-                    <h4 class="font-bold text-slate-800 text-sm">Daftar Mahasiswa ({{ $students->count() }})</h4>
-                    <p class="text-xs text-slate-500 mt-1">Silakan pilih status kehadiran untuk setiap mahasiswa.</p>
+                <div class="bg-slate-50/80 border-b border-slate-200 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-sm">Daftar Mahasiswa ({{ $students->count() }})</h4>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Pilih status kehadiran. Mahasiswa izin via WhatsApp dapat ditandai <strong>Izin</strong> secara manual di sini.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="setAllStatus('Hadir')" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs">
+                            <i class="fa-solid fa-check-double"></i> Semua Hadir
+                        </button>
+                        <button type="button" onclick="setAllStatus('Alpa')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs">
+                            <i class="fa-solid fa-xmark"></i> Semua Alpa
+                        </button>
+                    </div>
                 </div>
                 
                 <form action="{{ route('dosen.absensi.store-input', $agenda->id) }}" method="POST">
@@ -205,6 +217,11 @@
     </main>
 
     <script>
+        function setAllStatus(status) {
+            const radios = document.querySelectorAll(`input[type="radio"][value="${status}"]`);
+            radios.forEach(r => r.checked = true);
+        }
+
         function toggleProfileDropdown(e) {
             e.stopPropagation();
             const menu = document.getElementById('profileDropdownMenu');

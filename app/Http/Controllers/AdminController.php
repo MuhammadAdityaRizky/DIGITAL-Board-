@@ -13,6 +13,7 @@ use App\Models\Fakultas;
 use App\Models\Prodi;
 use App\Models\Kelas;
 use App\Models\MataKuliah;
+use App\Models\JadwalPenggunaanLab;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -1254,5 +1255,118 @@ class AdminController extends Controller
             ->paginate(50);
             
         return view('admin.aktivitas', compact('activities'));
+    }
+
+    public function jadwalPenggunaanLab(Request $request)
+    {
+        $labs = Laboratorium::all();
+        $selectedLabId = $request->get('lab_id', $labs->first()->id ?? null);
+        $tahunAkademik = $request->get('tahun_akademik', '2026/2027 Ganjil');
+
+        $query = JadwalPenggunaanLab::with(['lab', 'dosen', 'dosenPengampu', 'prodi'])
+            ->when($selectedLabId, function($q) use ($selectedLabId) {
+                $q->where('lab_id', $selectedLabId);
+            })
+            ->when($tahunAkademik, function($q) use ($tahunAkademik) {
+                $q->where('tahun_akademik', $tahunAkademik);
+            });
+
+        $jadwals = $query->orderBy('jam_mulai', 'asc')->get();
+
+        $dosens = Dosen::orderBy('nama', 'asc')->get();
+        $prodis = Prodi::orderBy('nama_prodi', 'asc')->get();
+        $mataKuliahs = MataKuliah::orderBy('nama_mk', 'asc')->get();
+        $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
+
+        $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        $timeSlots = [
+            '08.00-09.00', '09.00-10.00', '10.00-11.00', '11.00-12.00',
+            '12.00-13.00', '13.00-14.00', '14.00-15.00', '15.00-16.00',
+            '16.00-17.00', '17.00-18.00', '18.00-19.00', '19.00-20.00',
+            '20.00-21.00', '21.00-22.00'
+        ];
+
+        return view('admin.jadwal_penggunaan_lab', compact(
+            'labs', 'selectedLabId', 'tahunAkademik', 'jadwals',
+            'dosens', 'prodis', 'mataKuliahs', 'kelas', 'hariList', 'timeSlots'
+        ));
+    }
+
+    public function storeJadwalPenggunaanLab(Request $request)
+    {
+        $request->validate([
+            'lab_id' => 'required|exists:laboratorium,id',
+            'mata_kuliah' => 'required|string|max:150',
+            'dosen_id' => 'required|exists:dosen,id',
+            'dosen_pengampu_id' => 'nullable|exists:dosen,id',
+            'id_prodi' => 'nullable|exists:prodi,id',
+            'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
+            'jam_mulai' => 'required',
+            'jam_selesai' => 'required',
+            'kelas' => 'nullable|string|max:50',
+            'semester' => 'nullable|string|max:20',
+            'program_kuliah' => 'nullable|in:Reguler,Karyawan',
+            'tahun_akademik' => 'nullable|string|max:50',
+        ]);
+
+        JadwalPenggunaanLab::create([
+            'lab_id' => $request->lab_id,
+            'mata_kuliah' => $request->mata_kuliah,
+            'dosen_id' => $request->dosen_id,
+            'dosen_pengampu_id' => $request->dosen_pengampu_id,
+            'id_prodi' => $request->id_prodi,
+            'hari' => $request->hari,
+            'jam_mulai' => $request->jam_mulai,
+            'jam_selesai' => $request->jam_selesai,
+            'kelas' => $request->kelas ?? 'Reg A',
+            'semester' => $request->semester ?? '1',
+            'program_kuliah' => $request->program_kuliah ?? 'Reguler',
+            'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
+            'is_aktif' => true,
+        ]);
+
+        return back()->with('success', 'Jadwal Penggunaan Lab berhasil ditambahkan.');
+    }
+
+    public function updateJadwalPenggunaanLab(Request $request, $id)
+    {
+        $request->validate([
+            'lab_id' => 'required|exists:laboratorium,id',
+            'mata_kuliah' => 'required|string|max:150',
+            'dosen_id' => 'required|exists:dosen,id',
+            'dosen_pengampu_id' => 'nullable|exists:dosen,id',
+            'id_prodi' => 'nullable|exists:prodi,id',
+            'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
+            'jam_mulai' => 'required',
+            'jam_selesai' => 'required',
+            'kelas' => 'nullable|string|max:50',
+            'semester' => 'nullable|string|max:20',
+            'program_kuliah' => 'nullable|in:Reguler,Karyawan',
+            'tahun_akademik' => 'nullable|string|max:50',
+        ]);
+
+        $jadwal = JadwalPenggunaanLab::findOrFail($id);
+        $jadwal->update([
+            'lab_id' => $request->lab_id,
+            'mata_kuliah' => $request->mata_kuliah,
+            'dosen_id' => $request->dosen_id,
+            'dosen_pengampu_id' => $request->dosen_pengampu_id,
+            'id_prodi' => $request->id_prodi,
+            'hari' => $request->hari,
+            'jam_mulai' => $request->jam_mulai,
+            'jam_selesai' => $request->jam_selesai,
+            'kelas' => $request->kelas ?? 'Reg A',
+            'semester' => $request->semester ?? '1',
+            'program_kuliah' => $request->program_kuliah ?? 'Reguler',
+            'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
+        ]);
+
+        return back()->with('success', 'Jadwal Penggunaan Lab berhasil diperbarui.');
+    }
+
+    public function deleteJadwalPenggunaanLab($id)
+    {
+        JadwalPenggunaanLab::destroy($id);
+        return back()->with('success', 'Jadwal Penggunaan Lab berhasil dihapus.');
     }
 }

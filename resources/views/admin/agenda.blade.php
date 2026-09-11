@@ -44,7 +44,11 @@
                 <i class="fa-solid fa-door-open"></i>
                 <span class="text-xs">Manajemen Lab</span>
             </a>
-            <a href="{{ route('admin.agenda') }}" class="flex items-center gap-3 px-4 py-2.5 bg-teal-850 text-white rounded-xl w-full font-bold">
+            <a href="{{ route('admin.jadwal-lab') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-table-cells"></i>
+                <span class="text-xs">Jadwal Penggunaan Lab</span>
+            </a>
+            <a href="{{ route('admin.agenda') }}" class="flex items-center gap-3 px-4 py-2.5 bg-teal-800 text-white rounded-xl w-full font-bold">
                 <i class="fa-solid fa-calendar-days"></i>
                 <span class="text-xs">Jadwal & Agenda</span>
             </a>
@@ -138,7 +142,7 @@
 
             <!-- Alerts -->
             @if(session('success'))
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-850 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm max-w-5xl">
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm max-w-5xl">
                     <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 text-lg"></i>
                     <div>
                         <span class="font-bold">Berhasil!</span>
@@ -151,18 +155,18 @@
             <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm max-w-5xl">
                 <form action="{{ route('admin.agenda') }}" method="GET" class="flex flex-col sm:flex-row gap-4 items-end text-xs">
                     <div class="flex-grow w-full">
-                        <label class="block text-slate-655 font-bold mb-1.5">Cari Agenda / Dosen</label>
+                        <label class="block text-slate-600 font-bold mb-1.5">Cari Agenda / Dosen</label>
                         <div class="relative">
                             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan nama mata kuliah, nama dosen..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
                         </div>
                     </div>
                     <div class="w-full sm:w-48">
-                        <label class="block text-slate-650 font-bold mb-1.5">Tanggal</label>
+                        <label class="block text-slate-600 font-bold mb-1.5">Tanggal</label>
                         <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                     </div>
                     <div class="w-full sm:w-48">
-                        <label class="block text-slate-650 font-bold mb-1.5">Urutkan Tanggal</label>
+                        <label class="block text-slate-600 font-bold mb-1.5">Urutkan Tanggal</label>
                         <select name="sort" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                             <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
                             <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama</option>
@@ -193,7 +197,7 @@
                         <p class="text-xs text-slate-500 mt-0.5">Dikelompokkan berdasarkan Mata Kuliah beserta jumlah seluruh sesi/pertemuan.</p>
                     </div>
                     <div class="flex items-center gap-2.5">
-                        <span class="text-xs bg-teal-50 text-teal-850 font-bold px-3 py-1.5 rounded-xl border border-teal-200 shadow-xs">
+                        <span class="text-xs bg-teal-50 text-teal-800 font-bold px-3 py-1.5 rounded-xl border border-teal-200 shadow-xs">
                             <i class="fa-solid fa-layer-group mr-1.5"></i> {{ $groupedAgendas->count() }} Mata Kuliah ({{ $allAgendas->count() }} Total Sesi)
                         </span>
                         <button onclick="openAddModal()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
@@ -225,7 +229,7 @@
                         @endphp
                         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden space-y-0">
                             <!-- Card Header for Mata Kuliah Group -->
-                            <div class="bg-slate-850 text-white px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                            <div class="bg-slate-800 text-white px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                                 <div class="space-y-1">
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <i class="fa-solid fa-book-bookmark text-teal-400 text-base"></i>
@@ -264,7 +268,7 @@
 
                             <!-- List Table for Sessions in this Mata Kuliah -->
                             <div class="overflow-x-auto">
-                                <table class="w-full text-xs text-left text-slate-650">
+                                <table class="w-full text-xs text-left text-slate-600">
                                     <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                                         <tr>
                                             <th class="p-3.5 w-10 text-center">
@@ -286,7 +290,7 @@
                                                 <td class="p-3.5">
                                                     <span class="inline-block px-2 py-0.5 bg-slate-100 text-slate-700 font-bold rounded text-[10px] mb-1">Pertemuan {{ $index + 1 }}</span>
                                                     <span class="font-bold text-slate-800 block">{{ date('d M Y', strtotime($ag->tanggal)) }}</span>
-                                                    <span class="text-[10px] font-mono text-slate-450">{{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB</span>
+                                                    <span class="text-[10px] font-mono text-slate-400">{{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB</span>
                                                 </td>
                                                 <td class="p-3.5 space-y-1">
                                                     <div>
@@ -307,7 +311,7 @@
                                                 </td>
                                                 <td class="p-3.5 text-slate-500">
                                                     <span class="block font-semibold text-slate-800">{{ $ag->lab->nama_lab ?? '-' }}</span>
-                                                    <span class="text-[10px] text-slate-450">{{ $ag->lab->lokasi ?? '-' }}</span>
+                                                    <span class="text-[10px] text-slate-400">{{ $ag->lab->lokasi ?? '-' }}</span>
                                                 </td>
                                                 <td class="p-3.5">
                                                     <div class="flex justify-center items-center gap-1.5">

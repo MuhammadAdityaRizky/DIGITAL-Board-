@@ -91,14 +91,72 @@ class DosenController extends Controller
             return $ag->status_agenda === 'Berlangsung' || $ag->status_agenda === 'Akan Datang';
         });
 
+        $jadwalPenggunaanLab = \App\Models\JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu'])
+            ->where(function($q) use ($dosen) {
+                $q->where('dosen_id', $dosen->id)
+                  ->orWhere('dosen_pengampu_id', $dosen->id);
+            })
+            ->where('is_aktif', true)
+            ->orderBy('hari')
+            ->orderBy('jam_mulai')
+            ->get();
+
         return view('dosen.dashboard', compact(
             'dosen', 'agendas', 'labs', 'fakultas', 'prodis', 'pengumuman', 
-            'todayAgendas', 'activeOrNextAgenda'
+            'todayAgendas', 'activeOrNextAgenda', 'jadwalPenggunaanLab'
         ));
     }
 
     public function storeAgenda(Request $request)
     {
+        $dosen = Dosen::where('user_id', auth()->id())->first();
+
+        if ($request->filled('jadwal_penggunaan_lab_id')) {
+            $request->validate([
+                'jadwal_penggunaan_lab_id' => 'required|exists:jadwal_penggunaan_lab,id',
+                'tanggal' => 'required|date',
+                'waktu_masuk' => 'required',
+                'waktu_keluar' => 'required',
+                'rencana_pembelajaran' => 'required|string',
+            ]);
+
+            $jadwal = \App\Models\JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu'])->findOrFail($request->jadwal_penggunaan_lab_id);
+
+            // Check for time overlap
+            $overlap = Agenda::where('dosen_id', $dosen->id)
+                ->where('tanggal', $request->tanggal)
+                ->where(function ($query) use ($request) {
+                    $query->where('jam_mulai', '<', $request->waktu_keluar)
+                          ->where('jam_selesai', '>', $request->waktu_masuk);
+                })
+                ->exists();
+
+            if ($overlap) {
+                return back()->withErrors(['waktu_masuk' => 'Jadwal berbenturan dengan agenda Anda yang lain pada hari dan jam tersebut.'])->withInput();
+            }
+
+            Agenda::create([
+                'jadwal_penggunaan_lab_id' => $jadwal->id,
+                'dosen_id' => $jadwal->dosen_id ?? $dosen->id,
+                'dosen_pengampu_id' => $jadwal->dosen_pengampu_id,
+                'lab_id' => $jadwal->lab_id ?? 5,
+                'mata_kuliah' => $jadwal->mata_kuliah,
+                'program_kuliah' => $jadwal->program_kuliah ?? 'Reguler',
+                'jenis_pertemuan' => 'Praktikum',
+                'kelas' => $jadwal->kelas ?? 'Reg A',
+                'semester' => $jadwal->semester ?? '1',
+                'jurusan' => $jadwal->prodi->nama_prodi ?? 'Sistem Informasi',
+                'fakultas' => $jadwal->prodi->fakultas->nama_fakultas ?? 'Fakultas Teknik & Sains',
+                'tanggal' => $request->tanggal,
+                'jam_mulai' => $request->waktu_masuk,
+                'jam_selesai' => $request->waktu_keluar,
+                'status_agenda' => 'Akan Datang',
+                'catatan' => $request->rencana_pembelajaran,
+            ]);
+
+            return back()->with('success', 'Agenda pembelajaran untuk ' . $jadwal->mata_kuliah . ' (' . $jadwal->kelas . ') berhasil dibuat.');
+        }
+
         $request->validate([
             'dosen_pengampu_id' => 'nullable|exists:dosen,id',
             'lab_id' => 'required|exists:laboratorium,id',
@@ -114,8 +172,6 @@ class DosenController extends Controller
             'waktu_keluar' => 'required',
             'rencana_pembelajaran' => 'required|string',
         ]);
-
-        $dosen = Dosen::where('user_id', auth()->id())->first();
 
         // Check for time overlap
         $overlap = Agenda::where('dosen_id', $dosen->id)
@@ -227,6 +283,20 @@ class DosenController extends Controller
         return back()->with('success', 'Realisasi pembelajaran berhasil diperbarui.');
     }
 
+    public function updateBeritaAcara(Request $request, $id)
+    {
+        $request->validate([
+            'berita_acara' => 'required|string',
+        ]);
+
+        $agenda = Agenda::findOrFail($id);
+        $agenda->update([
+            'berita_acara' => $request->berita_acara,
+        ]);
+
+        return back()->with('success', 'Berita Acara berhasil disimpan.');
+    }
+
     public function submitAttendance(Request $request)
     {
         $request->validate([
@@ -272,7 +342,7 @@ class DosenController extends Controller
         $user = auth()->user();
         $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
 
-        $query = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'absensi.mahasiswa.user'])
+        $query = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'absensi.mahasiswa.user', 'jadwalPenggunaanLab'])
             ->where(function($q) use ($dosen) {
                 $q->where('dosen_id', $dosen->id)
                   ->orWhere('dosen_pengampu_id', $dosen->id);
@@ -296,16 +366,32 @@ class DosenController extends Controller
             $query->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
         }
 
-        $agendas = $query->paginate(10)->withQueryString();
+        $allDosenAgendas = (clone $query)->get();
+        $groupedAgendas = $allDosenAgendas->groupBy(function($item) {
+            $kelasSuffix = $item->kelas ? ' - Kelas ' . $item->kelas : '';
+            return $item->mata_kuliah . $kelasSuffix;
+        })->map(function($group) {
+            return $group->sortBy(function($agenda) {
+                return $agenda->tanggal . ' ' . $agenda->jam_mulai;
+            })->values();
+        });
 
-        if ($agendas->isEmpty() && $agendas->total() > 0 && (int)$request->get('page', 1) > 1) {
-            return redirect()->route('dosen.agenda', $request->except('page'));
-        }
+        $agendas = $query->paginate(15)->withQueryString();
 
         $dosens = Dosen::orderBy('nama', 'asc')->get();
         $labs = Laboratorium::all();
         $fakultas = \App\Models\Fakultas::all();
         $prodis = \App\Models\Prodi::with('fakultas')->get();
+
+        $jadwalPenggunaanLab = \App\Models\JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu'])
+            ->where(function($q) use ($dosen) {
+                $q->where('dosen_id', $dosen->id)
+                  ->orWhere('dosen_pengampu_id', $dosen->id);
+            })
+            ->where('is_aktif', true)
+            ->orderBy('hari')
+            ->orderBy('jam_mulai')
+            ->get();
 
         $uniqueClasses = Agenda::where(function($q) use ($dosen) {
                 $q->where('dosen_id', $dosen->id)
@@ -319,11 +405,11 @@ class DosenController extends Controller
             });
 
         if ($request->ajax()) {
-            $html = view('dosen.agenda_partial', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses'))->render();
+            $html = view('dosen.agenda_partial', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses', 'groupedAgendas', 'jadwalPenggunaanLab'))->render();
             return response()->json(['html' => $html]);
         }
 
-        return view('dosen.agenda', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses'));
+        return view('dosen.agenda', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses', 'groupedAgendas', 'jadwalPenggunaanLab'));
     }
 
     public function inputAbsensi($id)
