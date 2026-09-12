@@ -15,8 +15,8 @@ class MataKuliahTemplateExport implements FromArray, WithHeadings, WithEvents, W
     public function array(): array
     {
         return [
-            ['IF201', 'Pemrograman Web', 3, 'Teknik Informatika'],
-            ['SI302', 'Basis Data Lanjut', 3, 'Sistem Informasi'],
+            ['IF201', 'Pemrograman Web', 'Teknik Informatika'],
+            ['SI302', 'Basis Data Lanjut', 'Sistem Informasi'],
         ];
     }
 
@@ -25,7 +25,6 @@ class MataKuliahTemplateExport implements FromArray, WithHeadings, WithEvents, W
         return [
             'kode_mk',
             'nama_mk',
-            'sks',
             'nama_prodi',
         ];
     }
@@ -43,8 +42,7 @@ class MataKuliahTemplateExport implements FromArray, WithHeadings, WithEvents, W
             AfterSheet::class => function(AfterSheet $event) {
                 $event->sheet->getDelegate()->getComment('A1')->getText()->createTextRun("Kode Mata Kuliah. Opsional.");
                 $event->sheet->getDelegate()->getComment('B1')->getText()->createTextRun("Nama Mata Kuliah. Wajib diisi.");
-                $event->sheet->getDelegate()->getComment('C1')->getText()->createTextRun("Jumlah SKS. Angka (Default 3).");
-                $event->sheet->getDelegate()->getComment('D1')->getText()->createTextRun("Nama Program Studi (Opsional, sesuaikan dengan data Prodi).");
+                $event->sheet->getDelegate()->getComment('C1')->getText()->createTextRun("Nama Program Studi (Opsional, sesuaikan dengan data Prodi).");
             },
         ];
     }

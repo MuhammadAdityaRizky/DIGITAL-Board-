@@ -190,9 +190,15 @@
                                         <div class="text-right text-[10px] font-semibold text-slate-500 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-xs">
                                             <i class="fa-solid fa-calendar-day text-teal-700 mr-1"></i>{{ date('d F Y', strtotime($ag->tanggal)) }} | {{ substr($ag->jam_mulai, 0, 5) }} - {{ substr($ag->jam_selesai, 0, 5) }} WIB
                                         </div>
-                                        <a href="{{ route('admin.absensi.input', $ag->id) }}" class="text-[10px] bg-teal-600 hover:bg-teal-700 text-white font-bold py-1.5 px-3 rounded-lg transition shadow-sm flex items-center gap-1.5">
-                                            <i class="fa-solid fa-user-check"></i> Input Absensi Manual
-                                        </a>
+                                        @if($ag->tanggal > date('Y-m-d'))
+                                            <span class="text-[10px] bg-slate-100 text-slate-400 border border-slate-200 font-semibold py-1.5 px-3 rounded-lg flex items-center gap-1.5 cursor-not-allowed select-none" title="Sesi perkuliahan belum berlangsung">
+                                                <i class="fa-solid fa-lock text-[9px]"></i> Presensi Dibuka Hari H
+                                            </span>
+                                        @else
+                                            <a href="{{ route('admin.absensi.input', $ag->id) }}" class="text-[10px] bg-teal-600 hover:bg-teal-700 text-white font-bold py-1.5 px-3 rounded-lg transition shadow-sm flex items-center gap-1.5">
+                                                <i class="fa-solid fa-user-check"></i> {{ $ag->tanggal === date('Y-m-d') ? 'Input Absensi Manual' : 'Edit Rekap Absensi' }}
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                                 

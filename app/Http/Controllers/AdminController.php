@@ -278,10 +278,10 @@ class AdminController extends Controller
             $query->where('tanggal', $request->tanggal);
         }
 
-        if ($request->get('sort') === 'terlama') {
-            $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc');
-        } else {
+        if ($request->get('sort') === 'terbaru') {
             $query->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
+        } else {
+            $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc');
         }
 
         $allAgendas = $query->get();
@@ -291,7 +291,7 @@ class AdminController extends Controller
         $fakultas = Fakultas::orderBy('nama_fakultas', 'asc')->get();
         $prodis = Prodi::with('fakultas')->orderBy('nama_prodi', 'asc')->get();
         $kelases = Kelas::all();
-        $mataKuliahs = MataKuliah::orderBy('nama_mk', 'asc')->get();
+        $mataKuliahs = MataKuliah::with('prodi.fakultas')->orderBy('nama_mk', 'asc')->get();
 
         return view('admin.agenda', compact('allAgendas', 'dosens', 'labs', 'fakultas', 'prodis', 'kelases', 'mataKuliahs'));
     }
@@ -315,6 +315,45 @@ class AdminController extends Controller
             'status_agenda' => 'required|in:Akan Datang,Berlangsung,Selesai,Dibatalkan',
             'rencana_pembelajaran' => 'nullable|string',
         ]);
+
+        // Cek Bentrok Laboratorium
+        $bentrokLab = Agenda::with(['dosen', 'lab'])
+            ->where('lab_id', $request->lab_id)
+            ->where('tanggal', $request->tanggal)
+            ->where('status_agenda', '!=', 'Dibatalkan')
+            ->where(function ($query) use ($request) {
+                $query->where('jam_mulai', '<', $request->waktu_keluar)
+                      ->where('jam_selesai', '>', $request->waktu_masuk);
+            })
+            ->first();
+
+        if ($bentrokLab) {
+            $labName = $bentrokLab->lab->nama_lab ?? 'Laboratorium';
+            $jamRange = substr($bentrokLab->jam_mulai, 0, 5) . ' - ' . substr($bentrokLab->jam_selesai, 0, 5) . ' WIB';
+            $dosenName = $bentrokLab->dosen->nama ?? 'Dosen Lain';
+            return back()->withErrors([
+                'waktu_masuk' => "⛔ BENTROK RUANGAN! {$labName} sudah digunakan pada jam {$jamRange} untuk mata kuliah \"{$bentrokLab->mata_kuliah} (Kelas {$bentrokLab->kelas})\" oleh {$dosenName}. Silakan pilih jam atau lab lain."
+            ])->withInput();
+        }
+
+        // Cek Bentrok Dosen
+        $bentrokDosen = Agenda::with('lab')
+            ->where('dosen_id', $request->dosen_id)
+            ->where('tanggal', $request->tanggal)
+            ->where('status_agenda', '!=', 'Dibatalkan')
+            ->where(function ($query) use ($request) {
+                $query->where('jam_mulai', '<', $request->waktu_keluar)
+                      ->where('jam_selesai', '>', $request->waktu_masuk);
+            })
+            ->first();
+
+        if ($bentrokDosen) {
+            $jamRange = substr($bentrokDosen->jam_mulai, 0, 5) . ' - ' . substr($bentrokDosen->jam_selesai, 0, 5) . ' WIB';
+            $labName = $bentrokDosen->lab->nama_lab ?? 'Lab';
+            return back()->withErrors([
+                'waktu_masuk' => "⛔ BENTROK JADWAL DOSEN! Dosen pengajar sudah memiliki jadwal di {$labName} pada jam {$jamRange} (\"{$bentrokDosen->mata_kuliah}\")."
+            ])->withInput();
+        }
 
         Agenda::create([
             'dosen_id' => $request->dosen_id,
@@ -356,6 +395,47 @@ class AdminController extends Controller
             'status_agenda' => 'required|in:Akan Datang,Berlangsung,Selesai,Dibatalkan',
             'rencana_pembelajaran' => 'nullable|string',
         ]);
+
+        // Cek Bentrok Laboratorium (kecuali agenda ini sendiri)
+        $bentrokLab = Agenda::with(['dosen', 'lab'])
+            ->where('lab_id', $request->lab_id)
+            ->where('id', '!=', $id)
+            ->where('tanggal', $request->tanggal)
+            ->where('status_agenda', '!=', 'Dibatalkan')
+            ->where(function ($query) use ($request) {
+                $query->where('jam_mulai', '<', $request->waktu_keluar)
+                      ->where('jam_selesai', '>', $request->waktu_masuk);
+            })
+            ->first();
+
+        if ($bentrokLab) {
+            $labName = $bentrokLab->lab->nama_lab ?? 'Laboratorium';
+            $jamRange = substr($bentrokLab->jam_mulai, 0, 5) . ' - ' . substr($bentrokLab->jam_selesai, 0, 5) . ' WIB';
+            $dosenName = $bentrokLab->dosen->nama ?? 'Dosen Lain';
+            return back()->withErrors([
+                'waktu_masuk' => "⛔ BENTROK RUANGAN! {$labName} sudah digunakan pada jam {$jamRange} untuk mata kuliah \"{$bentrokLab->mata_kuliah} (Kelas {$bentrokLab->kelas})\" oleh {$dosenName}. Silakan pilih jam atau lab lain."
+            ])->withInput();
+        }
+
+        // Cek Bentrok Dosen (kecuali agenda ini sendiri)
+        $bentrokDosen = Agenda::with('lab')
+            ->where('dosen_id', $request->dosen_id)
+            ->where('id', '!=', $id)
+            ->where('tanggal', $request->tanggal)
+            ->where('status_agenda', '!=', 'Dibatalkan')
+            ->where(function ($query) use ($request) {
+                $query->where('jam_mulai', '<', $request->waktu_keluar)
+                      ->where('jam_selesai', '>', $request->waktu_masuk);
+            })
+            ->first();
+
+        if ($bentrokDosen) {
+            $jamRange = substr($bentrokDosen->jam_mulai, 0, 5) . ' - ' . substr($bentrokDosen->jam_selesai, 0, 5) . ' WIB';
+            $labName = $bentrokDosen->lab->nama_lab ?? 'Lab';
+            return back()->withErrors([
+                'waktu_masuk' => "⛔ BENTROK JADWAL DOSEN! Dosen pengajar sudah memiliki jadwal di {$labName} pada jam {$jamRange} (\"{$bentrokDosen->mata_kuliah}\")."
+            ])->withInput();
+        }
 
         $agenda = Agenda::findOrFail($id);
         $agenda->update([
@@ -466,6 +546,12 @@ class AdminController extends Controller
     {
         $agenda = Agenda::with(['dosen', 'lab'])->findOrFail($id);
         
+        if ($agenda->tanggal > date('Y-m-d')) {
+            return redirect()->route('admin.absensi')->withErrors([
+                'msg' => 'Sesi perkuliahan ini belum dimulai (Jadwal: ' . \Carbon\Carbon::parse($agenda->tanggal)->translatedFormat('l, d F Y') . '). Presensi mahasiswa hanya dapat dibuka pada hari H pelaksanaan perkuliahan.'
+            ]);
+        }
+        
         $existingAbsensi = \App\Models\Absensi::where('agenda_id', $agenda->id)->get()->keyBy('mahasiswa_id');
         $existingAbsensiIds = $existingAbsensi->keys()->toArray();
 
@@ -539,6 +625,10 @@ class AdminController extends Controller
 
         $agenda = Agenda::findOrFail($id);
 
+        if ($agenda->tanggal > date('Y-m-d')) {
+            return redirect()->back()->with('error', 'Tidak dapat mengimpor absensi untuk sesi perkuliahan di masa mendatang.');
+        }
+
         try {
             Excel::import(new KehadiranImport($agenda), $request->file('file_excel'));
             return redirect()->back()->with('success', 'Data absensi berhasil diimpor dari Excel.');
@@ -584,6 +674,13 @@ class AdminController extends Controller
         ]);
 
         $agenda = Agenda::findOrFail($id);
+
+        if ($agenda->tanggal > date('Y-m-d')) {
+            return redirect()->route('admin.absensi')->withErrors([
+                'msg' => 'Presensi tidak dapat disimpan untuk sesi perkuliahan yang belum dimulai.'
+            ]);
+        }
+
         $waktu_masuk = now();
 
         foreach ($request->absensi as $mahasiswa_id => $status) {
@@ -929,7 +1026,7 @@ class AdminController extends Controller
         $fakultas = Fakultas::orderBy('nama_fakultas')->get();
         $prodis = Prodi::with('fakultas')->orderBy('nama_prodi')->get();
         $kelas = Kelas::orderBy('nama_kelas')->get();
-        $mataKuliahs = MataKuliah::with('prodi')->orderBy('nama_mk')->get();
+        $mataKuliahs = MataKuliah::with('prodi.fakultas')->orderBy('nama_mk')->get();
 
         return view('admin.akademik', compact('fakultas', 'prodis', 'kelas', 'mataKuliahs'));
     }
@@ -1015,13 +1112,11 @@ class AdminController extends Controller
         $request->validate([
             'nama_mk' => 'required|string|max:150',
             'kode_mk' => 'nullable|string|max:30',
-            'sks' => 'nullable|integer',
             'id_prodi' => 'nullable|exists:prodi,id',
         ]);
         MataKuliah::create([
             'kode_mk' => $request->kode_mk,
             'nama_mk' => $request->nama_mk,
-            'sks' => $request->sks ?? 3,
             'id_prodi' => $request->id_prodi,
         ]);
         return back()->with('success', 'Mata Kuliah berhasil ditambahkan.');
@@ -1032,13 +1127,11 @@ class AdminController extends Controller
         $request->validate([
             'nama_mk' => 'required|string|max:150',
             'kode_mk' => 'nullable|string|max:30',
-            'sks' => 'nullable|integer',
             'id_prodi' => 'nullable|exists:prodi,id',
         ]);
         MataKuliah::findOrFail($id)->update([
             'kode_mk' => $request->kode_mk,
             'nama_mk' => $request->nama_mk,
-            'sks' => $request->sks ?? 3,
             'id_prodi' => $request->id_prodi,
         ]);
         return back()->with('success', 'Mata Kuliah berhasil diperbarui.');
@@ -1222,9 +1315,9 @@ class AdminController extends Controller
 
         $jadwals = $query->orderBy('jam_mulai', 'asc')->get();
 
-        $dosens = Dosen::orderBy('nama', 'asc')->get();
-        $prodis = Prodi::orderBy('nama_prodi', 'asc')->get();
-        $mataKuliahs = MataKuliah::orderBy('nama_mk', 'asc')->get();
+        $dosens = Dosen::with('prodi')->orderBy('nama', 'asc')->get();
+        $prodis = Prodi::with('fakultas')->orderBy('nama_prodi', 'asc')->get();
+        $mataKuliahs = MataKuliah::with('prodi')->orderBy('nama_mk', 'asc')->get();
         $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
 
         $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -1267,12 +1360,17 @@ class AdminController extends Controller
             'hari' => $request->hari,
             'jam_mulai' => $request->jam_mulai,
             'jam_selesai' => $request->jam_selesai,
-            'kelas' => $request->kelas ?? 'Reg A',
+            'kelas' => $request->kelas ?? 'A',
             'semester' => $request->semester ?? '1',
             'program_kuliah' => $request->program_kuliah ?? 'Reguler',
             'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
             'is_aktif' => true,
         ]);
+
+        if ($request->boolean('auto_generate_16')) {
+            $this->generate16Pertemuan($jadwal->id);
+            return back()->with('success', 'Jadwal Penggunaan Lab berhasil ditambahkan dan 16 sesi pertemuan agenda praktikum langsung dibuat!');
+        }
 
         return back()->with('success', 'Jadwal Penggunaan Lab berhasil ditambahkan.');
     }
@@ -1304,7 +1402,7 @@ class AdminController extends Controller
             'hari' => $request->hari,
             'jam_mulai' => $request->jam_mulai,
             'jam_selesai' => $request->jam_selesai,
-            'kelas' => $request->kelas ?? 'Reg A',
+            'kelas' => $request->kelas ?? 'A',
             'semester' => $request->semester ?? '1',
             'program_kuliah' => $request->program_kuliah ?? 'Reguler',
             'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
@@ -1373,94 +1471,6 @@ class AdminController extends Controller
         }
 
         return back()->with('success', "Berhasil membuat {$totalCreated} sesi pertemuan perkuliahan 1 semester secara otomatis untuk seluruh jadwal lab!");
-    }
-
-    public function statistik(Request $request)
-    {
-        $allAgendas = Agenda::with('lab')->orderBy('tanggal', 'desc')->get();
-        
-        $selectedAgendaIds = $request->input('agenda_ids', []);
-        if (!is_array($selectedAgendaIds)) {
-            $selectedAgendaIds = [$selectedAgendaIds];
-        }
-
-        $agendas = collect();
-        $studentStats = collect();
-        $summary = [
-            'total_expected' => 0,
-            'hadir' => 0,
-            'izin' => 0,
-            'sakit' => 0,
-            'alpa' => 0,
-            'rate' => 100
-        ];
-
-        if (!empty($selectedAgendaIds)) {
-            $agendas = Agenda::with(['dosen', 'lab', 'absensi.mahasiswa'])
-                ->whereIn('id', $selectedAgendaIds)
-                ->get();
-
-            $studentsData = [];
-            foreach ($agendas as $agenda) {
-                $students = Mahasiswa::where('kelas', $agenda->kelas)
-                    ->whereHas('fakultas', function($q) use ($agenda) {
-                        $q->where('nama_fakultas', $agenda->fakultas);
-                    })
-                    ->whereHas('prodi', function($q) use ($agenda) {
-                        $q->where('nama_prodi', $agenda->jurusan);
-                    })
-                    ->get();
-
-                $summary['total_expected'] += $students->count();
-
-                $absensiByStudent = $agenda->absensi->keyBy('mahasiswa_id');
-
-                foreach ($students as $mhs) {
-                    if (!isset($studentsData[$mhs->id])) {
-                        $studentsData[$mhs->id] = [
-                            'mahasiswa' => $mhs,
-                            'hadir' => 0,
-                            'izin' => 0,
-                            'sakit' => 0,
-                            'alpa' => 0,
-                            'total' => 0
-                        ];
-                    }
-
-                    $studentsData[$mhs->id]['total']++;
-                    
-                    $abs = $absensiByStudent->get($mhs->id);
-                    if ($abs) {
-                        $status = strtolower($abs->status_kehadiran);
-                        if ($status === 'hadir' || $status === 'terlambat') {
-                            $studentsData[$mhs->id]['hadir']++;
-                            $summary['hadir']++;
-                        } elseif ($status === 'izin') {
-                            $studentsData[$mhs->id]['izin']++;
-                            $summary['izin']++;
-                        } elseif ($status === 'sakit') {
-                            $studentsData[$mhs->id]['sakit']++;
-                            $summary['sakit']++;
-                        } else {
-                            $studentsData[$mhs->id]['alpa']++;
-                            $summary['alpa']++;
-                        }
-                    } else {
-                        $studentsData[$mhs->id]['alpa']++;
-                        $summary['alpa']++;
-                    }
-                }
-            }
-
-            $studentStats = collect($studentsData);
-            
-            $totalReal = $summary['hadir'] + $summary['izin'] + $summary['sakit'] + $summary['alpa'];
-            if ($totalReal > 0) {
-                $summary['rate'] = round(($summary['hadir'] / $totalReal) * 100, 1);
-            }
-        }
-
-        return view('admin.statistik', compact('allAgendas', 'selectedAgendaIds', 'agendas', 'studentStats', 'summary'));
     }
 }
 

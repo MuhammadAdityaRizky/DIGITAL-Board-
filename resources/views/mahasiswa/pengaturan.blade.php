@@ -44,6 +44,14 @@
                 <span class="text-xs font-semibold tracking-wide">Pengumuman</span>
             </a>
         </nav>
+
+        <!-- Tombol Panduan Mahasiswa di Sidebar -->
+        <div class="p-3 border-t border-slate-800 mt-auto">
+            <button type="button" onclick="openTutorialMahasiswaModal()" class="flex items-center gap-3 px-3.5 py-2.5 bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 hover:text-white rounded-xl w-full transition text-xs font-bold cursor-pointer">
+                <i class="fa-solid fa-book-open-reader text-sm text-amber-400"></i>
+                <span>Panduan Mahasiswa</span>
+            </button>
+        </div>
     </aside>
 
     <!-- Main Content -->
@@ -59,8 +67,15 @@
                 <h2 class="font-bold text-base text-slate-800 hidden lg:block">Pengaturan Akun & Profil</h2>
             </div>
 
-            <!-- Profile Avatar & Dropdown Menu -->
-            <div class="relative" id="profileDropdownWrapper">
+            <div class="flex items-center gap-2.5">
+                <!-- Tombol Panduan / Tutorial Mahasiswa -->
+                <button type="button" onclick="openTutorialMahasiswaModal()" class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Mahasiswa">
+                    <i class="fa-solid fa-circle-question text-amber-600 text-sm"></i>
+                    <span class="hidden sm:inline">Panduan Sistem</span>
+                </button>
+
+                <!-- Profile Avatar & Dropdown Menu -->
+                <div class="relative" id="profileDropdownWrapper">
                 <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1 rounded-xl hover:bg-slate-50 transition">
                     <div class="text-right hidden sm:block">
                         <p class="font-bold text-xs text-slate-800 group-hover:text-teal-700 transition">{{ $mahasiswa->nama_lengkap }}</p>
@@ -563,5 +578,7 @@
             }
         });
     </script>
+
+    @include('mahasiswa.partials.modal_tutorial')
 </body>
 </html>

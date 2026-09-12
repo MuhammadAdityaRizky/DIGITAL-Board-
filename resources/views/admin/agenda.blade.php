@@ -95,32 +95,32 @@
             @endif
 
             <!-- Search & Filter Bar -->
-            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm max-w-5xl">
-                <form action="{{ route('admin.agenda') }}" method="GET" class="flex flex-col sm:flex-row gap-4 items-end text-xs">
+            <div class="bg-white border border-slate-200/80 rounded-xl p-4 shadow-xs max-w-5xl">
+                <form action="{{ route('admin.agenda') }}" method="GET" class="flex flex-col sm:flex-row gap-3 items-end text-xs">
                     <div class="flex-grow w-full">
-                        <label class="block text-slate-600 font-bold mb-1.5">Cari Agenda / Dosen</label>
+                        <label class="block text-slate-600 font-semibold mb-1">Cari Agenda / Dosen</label>
                         <div class="relative">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan nama mata kuliah, nama dosen..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari mata kuliah, nama dosen..." class="w-full pl-8 pr-3 py-2 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition placeholder:text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
                         </div>
                     </div>
-                    <div class="w-full sm:w-48">
-                        <label class="block text-slate-600 font-bold mb-1.5">Tanggal</label>
-                        <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                    <div class="w-full sm:w-44">
+                        <label class="block text-slate-600 font-semibold mb-1">Tanggal</label>
+                        <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
                     </div>
-                    <div class="w-full sm:w-48">
-                        <label class="block text-slate-600 font-bold mb-1.5">Urutkan Tanggal</label>
-                        <select name="sort" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
-                            <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama</option>
+                    <div class="w-full sm:w-44">
+                        <label class="block text-slate-600 font-semibold mb-1">Urutan</label>
+                        <select name="sort" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
+                            <option value="terlama" {{ request('sort', 'terlama') != 'terbaru' ? 'selected' : '' }}>Pertemuan 1 - 16</option>
+                            <option value="terbaru" {{ request('sort') == 'terbaru' ? 'selected' : '' }}>Pertemuan 16 - 1</option>
                         </select>
                     </div>
                     <div class="flex gap-2 w-full sm:w-auto">
-                        <button type="submit" class="flex-grow sm:flex-grow-0 px-5 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition-all shadow-sm">
+                        <button type="submit" class="flex-grow sm:flex-grow-0 px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg font-semibold transition-all shadow-xs">
                             Filter
                         </button>
                         @if(request()->anyFilled(['search', 'tanggal', 'sort']))
-                            <a href="{{ route('admin.agenda') }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all border border-slate-200 text-center">
+                            <a href="{{ route('admin.agenda') }}" class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-lg font-semibold transition-all border border-slate-200 text-center">
                                 Reset
                             </a>
                         @endif
@@ -130,34 +130,63 @@
 
             <!-- Agendas List Grouped by Mata Kuliah -->
             @php
-                $groupedAgendas = $allAgendas->groupBy('mata_kuliah');
+                $isSortDesc = request('sort') === 'terbaru';
+                $groupedAgendas = $allAgendas->groupBy('mata_kuliah')->map(function($group) use ($isSortDesc) {
+                    return $group->sortBy(function($item) {
+                        $num = 999;
+                        if ($item->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $item->catatan, $m)) {
+                            $num = (int)$m[1];
+                        }
+                        return ($item->kelas ?? '') . '_' . sprintf('%04d', $num) . '_' . $item->tanggal . ' ' . $item->jam_mulai;
+                    }, SORT_REGULAR, $isSortDesc)->values();
+                });
             @endphp
 
-            <div class="space-y-6 max-w-5xl">
-                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-wrap justify-between items-center gap-3">
+            <div class="space-y-4 max-w-5xl">
+                <div class="bg-white border border-slate-200/80 rounded-xl px-5 py-3.5 shadow-xs flex flex-wrap justify-between items-center gap-3">
                     <div>
-                        <h3 class="font-bold text-base text-slate-800">Daftar Agenda Mengajar Seluruh Dosen</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Dikelompokkan berdasarkan Mata Kuliah beserta jumlah seluruh sesi/pertemuan.</p>
+                        <h3 class="font-bold text-sm text-slate-900 tracking-tight">Daftar Agenda Perkuliahan</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">{{ $groupedAgendas->count() }} Mata Kuliah • {{ $allAgendas->count() }} Total Sesi</p>
                     </div>
-                    <div class="flex items-center gap-2.5">
-                        <span class="text-xs bg-teal-50 text-teal-800 font-bold px-3 py-1.5 rounded-xl border border-teal-200 shadow-xs">
-                            <i class="fa-solid fa-layer-group mr-1.5"></i> {{ $groupedAgendas->count() }} Mata Kuliah ({{ $allAgendas->count() }} Total Sesi)
-                        </span>
-                        <button onclick="openAddModal()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                            <i class="fa-solid fa-plus"></i> Tambah Agenda
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button type="button" onclick="toggleExpandAll(this)" id="btn-toggle-expand-all" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Buka atau Tutup Semua Sesi">
+                            <i class="fa-solid fa-chevron-down text-slate-400 text-[10px] transition-transform duration-200" id="icon-toggle-expand-all"></i>
+                            <span id="text-toggle-expand-all">Buka Semua</span>
                         </button>
-                        <button onclick="toggleModal('modal-import-agenda')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                            <i class="fa-solid fa-file-import"></i> Import Agenda
+                        <button type="button" onclick="toggleSelectAllAgendas(this)" id="btn-select-all-global" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Pilih Seluruh Sesi">
+                            <i class="fa-regular fa-square-check text-slate-400 text-xs"></i>
+                            <span>Pilih Semua</span>
+                        </button>
+                        <button onclick="toggleModal('modal-import-agenda')" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                            <i class="fa-solid fa-arrow-up-from-bracket text-slate-400 text-xs"></i>
+                            <span>Import</span>
+                        </button>
+                        <button onclick="openAddModal()" class="px-3.5 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                            <i class="fa-solid fa-plus text-xs"></i>
+                            <span>Tambah Agenda</span>
                         </button>
                     </div>
                 </div>
 
                 @if($groupedAgendas->count() > 0)
-                    <div id="btn-bulk-delete" class="hidden p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between shadow-sm">
-                        <span class="text-xs font-bold text-rose-800"><span id="bulk-count">0</span> agenda terpilih</span>
-                        <button type="button" onclick="submitBulkDeleteForm()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                            <i class="fa-solid fa-trash-can"></i> Hapus Terpilih
-                        </button>
+                    <div id="btn-bulk-delete" class="hidden p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between shadow-sm sticky top-4 z-40">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xs">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-semibold text-rose-900 block"><span id="bulk-count">0</span> sesi agenda terpilih</span>
+                                <span class="text-[11px] text-rose-600">Sesi dan absensi yang dicentang akan dihapus permanen</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="clearAllSelections()" class="px-3 py-1.5 bg-white hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-medium transition">
+                                Batal
+                            </button>
+                            <button type="button" onclick="submitBulkDeleteForm()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-xs">
+                                <i class="fa-solid fa-trash-can text-xs"></i> Hapus Terpilih
+                            </button>
+                        </div>
                     </div>
 
                     @foreach($groupedAgendas as $namaMatkul => $agendasGroup)
@@ -167,109 +196,179 @@
                             $berlangsungCount = $agendasGroup->where('status_agenda', 'Berlangsung')->count();
                             $akanDatangCount = $agendasGroup->where('status_agenda', 'Akan Datang')->count();
                             $dibatalkanCount = $agendasGroup->where('status_agenda', 'Dibatalkan')->count();
-                            $groupSlug = Str::slug($namaMatkul ?: 'umum');
+                            $groupSlug = 'group-' . $loop->index . '-' . Str::slug($namaMatkul ?: 'umum');
                             $matchedMk = isset($mataKuliahs) ? $mataKuliahs->firstWhere('nama_mk', $namaMatkul) : null;
+                            $firstItem = $agendasGroup->first();
+
+                            $minTanggal = $agendasGroup->min('tanggal');
+                            $maxTanggal = $agendasGroup->max('tanggal');
+                            $isPastCourse = $maxTanggal < date('Y-m-d') && $berlangsungCount === 0;
+
+                            if ($minTanggal && $maxTanggal) {
+                                if ($minTanggal === $maxTanggal) {
+                                    $periodeText = date('d M Y', strtotime($minTanggal));
+                                } else {
+                                    $periodeText = date('d M Y', strtotime($minTanggal)) . ' - ' . date('d M Y', strtotime($maxTanggal));
+                                }
+                            } else {
+                                $periodeText = '-';
+                            }
+
+                            $isFiltered = request()->anyFilled(['search', 'tanggal']);
+                            $isExpanded = $isFiltered || ($berlangsungCount > 0) || ($loop->first && $groupedAgendas->count() === 1);
                         @endphp
-                        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden space-y-0">
-                            <!-- Card Header for Mata Kuliah Group -->
-                            <div class="bg-slate-800 text-white px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <i class="fa-solid fa-book-bookmark text-teal-400 text-base"></i>
-                                        <h4 class="font-extrabold text-base tracking-wide">{{ $namaMatkul }}</h4>
-                                        @if($matchedMk && $matchedMk->kode_mk)
-                                            <span class="px-2 py-0.5 bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-mono font-bold rounded">
-                                                {{ $matchedMk->kode_mk }}
+                        <div class="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden transition-all group-mk-card" id="card-{{ $groupSlug }}">
+                            <!-- Clickable Header for Mata Kuliah Group -->
+                            <div onclick="toggleAccordion('{{ $groupSlug }}')" 
+                                 class="bg-white hover:bg-slate-50/75 px-5 py-3.5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 cursor-pointer select-none transition-colors border-b border-slate-100"
+                                 role="button" 
+                                 aria-expanded="{{ $isExpanded ? 'true' : 'false' }}"
+                                 id="header-{{ $groupSlug }}">
+                                <div class="flex items-center gap-3.5 min-w-0">
+                                    <div class="w-9 h-9 rounded-lg bg-teal-50 border border-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs shrink-0">
+                                        <i class="fa-solid fa-book-bookmark text-teal-700"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h4 class="font-bold text-sm text-slate-800 tracking-tight">{{ $namaMatkul }}</h4>
+                                            @if($matchedMk && $matchedMk->kode_mk)
+                                                <span class="px-1.5 py-0.5 bg-slate-100 text-slate-600 font-mono text-[11px] font-semibold rounded">
+                                                    {{ $matchedMk->kode_mk }}
+                                                </span>
+                                            @endif
+                                            @if($firstItem->kelas)
+                                                <span class="px-2 py-0.5 bg-teal-50 text-teal-800 border border-teal-200 rounded-full text-[10px] font-bold">
+                                                    Kelas {{ $firstItem->kelas }}
+                                                </span>
+                                            @endif
+                                            @if($isPastCourse)
+                                                <span class="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-[10px] font-bold flex items-center gap-1" title="Agenda semester lalu">
+                                                    <i class="fa-solid fa-clock-rotate-left text-[9px] text-amber-600"></i> Semester Lalu
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <div class="text-xs text-slate-500 font-normal mt-1 flex items-center gap-2 flex-wrap">
+                                            <span class="inline-flex items-center gap-1 text-slate-700 font-semibold bg-white border border-slate-200 px-2 py-0.5 rounded text-[11px] shadow-2xs">
+                                                <i class="fa-regular fa-calendar-days text-teal-700"></i> {{ $periodeText }}
                                             </span>
+                                            <span class="text-slate-300">•</span>
+                                            <span>{{ $totalPertemuan }} Pertemuan</span>
+                                            <span class="text-slate-300">•</span>
+                                            <span>{{ $firstItem->jurusan ?? 'Program Studi' }}</span>
+                                            <span class="text-slate-300">•</span>
+                                            <span>{{ $firstItem->lab->nama_lab ?? 'Lab' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 self-end sm:self-center shrink-0">
+                                    @if($berlangsungCount > 0)
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-semibold">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Berlangsung
+                                        </span>
+                                    @endif
+                                    
+                                    <div class="text-xs text-slate-500 font-medium hidden md:block">
+                                        @if($selesaiCount > 0)
+                                            <span class="text-emerald-700 font-semibold">{{ $selesaiCount }} Selesai</span>
+                                        @endif
+                                        @if($selesaiCount > 0 && $akanDatangCount > 0)
+                                            <span class="text-slate-300 mx-1">•</span>
+                                        @endif
+                                        @if($akanDatangCount > 0)
+                                            <span>{{ $akanDatangCount }} Mendatang</span>
                                         @endif
                                     </div>
-                                    <p class="text-[11px] text-slate-300 font-medium">
-                                        Total {{ $totalPertemuan }} Pertemuan Praktikum / Kuliah
-                                    </p>
-                                </div>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <span class="px-2.5 py-1 bg-teal-600/90 text-white text-[10px] font-bold rounded-lg uppercase tracking-wider shadow-xs">
-                                        <i class="fa-solid fa-calendar-check mr-1"></i> {{ $totalPertemuan }} Pertemuan
-                                    </span>
-                                    @if($selesaiCount > 0)
-                                        <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold rounded">
-                                            {{ $selesaiCount }} Selesai
-                                        </span>
-                                    @endif
-                                    @if($berlangsungCount > 0)
-                                        <span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold rounded animate-pulse">
-                                            {{ $berlangsungCount }} Berlangsung
-                                        </span>
-                                    @endif
-                                    @if($akanDatangCount > 0)
-                                        <span class="px-2 py-0.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-bold rounded">
-                                            {{ $akanDatangCount }} Akan Datang
-                                        </span>
-                                    @endif
+
+                                    <div class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 transition">
+                                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200 {{ $isExpanded ? 'rotate-180 text-teal-800' : '' }}" id="chevron-{{ $groupSlug }}"></i>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- List Table for Sessions in this Mata Kuliah -->
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-xs text-left text-slate-600">
-                                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                                        <tr>
-                                            <th class="p-3.5 w-10 text-center">
-                                                <input type="checkbox" onclick="toggleSelectGroup(this, '{{ $groupSlug }}')" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer">
-                                            </th>
-                                            <th class="p-3.5">Pertemuan & Tanggal</th>
-                                            <th class="p-3.5">Detail & Kelas</th>
-                                            <th class="p-3.5">Dosen Mengajar & Pengampu</th>
-                                            <th class="p-3.5">Ruang Lab</th>
-                                            <th class="p-3.5 text-center">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100">
-                                        @foreach($agendasGroup as $index => $ag)
-                                            <tr class="hover:bg-slate-50/70 transition item-{{ $groupSlug }}">
-                                                <td class="p-3.5 text-center">
-                                                    <input type="checkbox" name="ids[]" value="{{ $ag->id }}" class="agenda-checkbox rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer" onclick="updateBulkDeleteBtn()">
-                                                </td>
-                                                <td class="p-3.5">
-                                                    <span class="inline-block px-2 py-0.5 bg-slate-100 text-slate-700 font-bold rounded text-[10px] mb-1">Pertemuan {{ $index + 1 }}</span>
-                                                    <span class="font-bold text-slate-800 block">{{ date('d M Y', strtotime($ag->tanggal)) }}</span>
-                                                    <span class="text-[10px] font-mono text-slate-400">{{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB</span>
-                                                </td>
-                                                <td class="p-3.5 space-y-1">
-                                                    <div>
-                                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase @if($ag->status_agenda == 'Berlangsung') bg-amber-100 text-amber-800 @elseif($ag->status_agenda == 'Selesai') bg-emerald-100 text-emerald-800 @elseif($ag->status_agenda == 'Dibatalkan') bg-rose-100 text-rose-800 @else bg-slate-100 text-slate-700 @endif">{{ $ag->status_agenda }}</span>
-                                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[9px] font-semibold uppercase ml-1">{{ $ag->program_kuliah ?? 'Reguler' }}</span>
-                                                    </div>
-                                                    <p class="text-[10px] text-slate-500 font-medium">Kelas: <strong>{{ $ag->kelas ?: '-' }}</strong> • Semester: <strong>{{ $ag->semester ?: '1' }}</strong></p>
-                                                </td>
-                                                <td class="p-3.5 space-y-1">
-                                                    <div>
-                                                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Mengajar</span>
-                                                        <span class="font-semibold text-slate-800 block text-xs">{{ $ag->dosen->nama ?? '-' }}</span>
-                                                    </div>
-                                                    <div>
-                                                        <span class="text-[9px] font-bold text-teal-600 uppercase tracking-wider block">Pengampu</span>
-                                                        <span class="font-semibold text-teal-900 block text-xs">{{ $ag->dosenPengampu->nama ?? $ag->dosen->nama ?? '-' }}</span>
-                                                    </div>
-                                                </td>
-                                                <td class="p-3.5 text-slate-500">
-                                                    <span class="block font-semibold text-slate-800">{{ $ag->lab->nama_lab ?? '-' }}</span>
-                                                    <span class="text-[10px] text-slate-400">{{ $ag->lab->lokasi ?? '-' }}</span>
-                                                </td>
-                                                <td class="p-3.5">
-                                                    <div class="flex justify-center items-center gap-1.5">
-                                                        <button type="button" onclick='openEditModal(@json($ag))' class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-lg font-bold transition flex items-center gap-1 text-xs">
-                                                            <i class="fa-solid fa-pen-to-square"></i> Edit
-                                                        </button>
-                                                        <button type="button" onclick="confirmDeleteAgenda('{{ route('admin.agenda.delete', $ag->id) }}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-650 border border-rose-200 rounded-lg font-bold transition flex items-center gap-1 text-xs">
-                                                            <i class="fa-solid fa-trash-can"></i> Hapus
-                                                        </button>
-                                                    </div>
-                                                </td>
+                            <!-- List Table for Sessions in this Mata Kuliah (Collapsible) -->
+                            <div id="content-{{ $groupSlug }}" class="accordion-content {{ $isExpanded ? '' : 'hidden' }}">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-xs text-left text-slate-600">
+                                        <thead class="bg-slate-50/75 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
+                                            <tr>
+                                                <th class="p-3.5 w-10 text-center">
+                                                    <input type="checkbox" data-slug="{{ $groupSlug }}" onclick="toggleSelectGroup(this, '{{ $groupSlug }}')" class="master-group-checkbox rounded border-slate-300 text-teal-800 focus:ring-teal-700/30 cursor-pointer" title="Pilih Semua Pertemuan di Kelas Ini">
+                                                </th>
+                                                <th class="p-3.5">Pertemuan & Waktu</th>
+                                                <th class="p-3.5">Detail Kelas & Status</th>
+                                                <th class="p-3.5">Dosen Pengajar</th>
+                                                <th class="p-3.5">Lokasi Lab</th>
+                                                <th class="p-3.5 text-right pr-5">Aksi</th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">
+                                            @foreach($agendasGroup as $index => $ag)
+                                                @php
+                                                    $pertemuanNum = null;
+                                                    if ($ag->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $ag->catatan, $m)) {
+                                                        $pertemuanNum = $m[1];
+                                                    } else {
+                                                        $pertemuanNum = $index + 1;
+                                                    }
+                                                @endphp
+                                                <tr class="hover:bg-slate-50/60 transition-colors item-{{ $groupSlug }}">
+                                                    <td class="p-3.5 text-center">
+                                                        <input type="checkbox" name="ids[]" value="{{ $ag->id }}" class="agenda-checkbox rounded border-slate-300 text-teal-800 focus:ring-teal-700/30 cursor-pointer" onclick="updateBulkDeleteBtn()">
+                                                    </td>
+                                                    <td class="p-3.5">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="inline-block px-2 py-0.5 bg-slate-100 text-slate-700 font-bold rounded text-[10px]">Pertemuan {{ $pertemuanNum }}</span>
+                                                            <span class="font-semibold text-slate-800 text-xs">{{ date('d M Y', strtotime($ag->tanggal)) }}</span>
+                                                        </div>
+                                                        <div class="text-[11px] text-slate-500 font-mono mt-0.5">
+                                                            {{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB
+                                                        </div>
+                                                    </td>
+                                                    <td class="p-3.5 space-y-1">
+                                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                                            @if($ag->status_agenda == 'Berlangsung')
+                                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 inline-flex items-center gap-1">
+                                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Berlangsung
+                                                                </span>
+                                                            @elseif($ag->status_agenda == 'Selesai')
+                                                                <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">Selesai</span>
+                                                            @elseif($ag->status_agenda == 'Dibatalkan')
+                                                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-100">Dibatalkan</span>
+                                                            @else
+                                                                <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-50 text-slate-600 border border-slate-200">Akan Datang</span>
+                                                            @endif
+                                                        </div>
+                                                        <div class="text-[11px] text-slate-500">
+                                                            Kelas {{ $ag->kelas ?: '-' }} • Smt {{ $ag->semester ?: '1' }} • {{ $ag->program_kuliah ?? 'Reguler' }}
+                                                        </div>
+                                                    </td>
+                                                    <td class="p-3.5">
+                                                        <div class="font-semibold text-slate-800 text-xs">{{ $ag->dosen->nama ?? '-' }}</div>
+                                                        @if($ag->dosen_pengampu_id && $ag->dosen_pengampu_id != $ag->dosen_id)
+                                                            <div class="text-[11px] text-slate-500 mt-0.5">
+                                                                <span class="text-slate-400">Pengampu:</span> {{ $ag->dosenPengampu->nama ?? '-' }}
+                                                            </div>
+                                                        @endif
+                                                    </td>
+                                                    <td class="p-3.5">
+                                                        <div class="font-medium text-slate-800 text-xs">{{ $ag->lab->nama_lab ?? '-' }}</div>
+                                                        <div class="text-[11px] text-slate-400">{{ $ag->lab->lokasi ?? '-' }}</div>
+                                                    </td>
+                                                    <td class="p-3.5 text-right pr-5">
+                                                        <div class="inline-flex items-center gap-1.5">
+                                                            <button type="button" onclick='openEditModal(@json($ag))' class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg font-semibold transition text-xs shadow-xs" title="Edit Agenda">
+                                                                <i class="fa-solid fa-pen-to-square text-[10px] text-slate-400 mr-1"></i> Edit
+                                                            </button>
+                                                            <button type="button" onclick="confirmDeleteAgenda('{{ route('admin.agenda.delete', $ag->id) }}')" class="px-2.5 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-lg font-semibold transition text-xs shadow-xs" title="Hapus Agenda">
+                                                                <i class="fa-solid fa-trash-can text-[10px] text-rose-400 mr-1"></i> Hapus
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -393,7 +492,9 @@
                                             <div class="matkul-item-option px-3 py-2 text-sm text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition-colors flex items-center justify-between group"
                                                  data-name="{{ $mk->nama_mk }}"
                                                  data-code="{{ $mk->kode_mk ?? '' }}"
-                                                 onclick="selectMatkulItem('{{ addslashes($mk->nama_mk) }}')">
+                                                 data-prodi="{{ $mk->prodi->nama_prodi ?? '' }}"
+                                                 data-fakultas="{{ $mk->prodi->fakultas->nama_fakultas ?? '' }}"
+                                                 onclick="selectMatkulItem('{{ addslashes($mk->nama_mk) }}', '{{ addslashes($mk->prodi->nama_prodi ?? '') }}', '{{ addslashes($mk->prodi->fakultas->nama_fakultas ?? '') }}')">
                                                 <div class="flex items-center gap-2 overflow-hidden">
                                                     <i class="fa-solid fa-book-bookmark text-slate-300 group-hover:text-teal-600 text-xs shrink-0"></i>
                                                     <span class="font-medium truncate text-xs sm:text-sm">{{ $mk->nama_mk }}</span>
@@ -430,15 +531,52 @@
                         </div>
                     </div>
 
-                    <!-- Kelas -->
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Kelas <span class="text-slate-400 font-normal text-[10px]">(Opsional)</span></label>
-                        <select id="form_kelas" name="kelas" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <option value="">Pilih Kelas (Kosongkan jika tidak ada)</option>
-                            @foreach($kelases as $k)
-                                <option value="{{ $k->nama_kelas }}">{{ $k->nama_kelas }}</option>
-                            @endforeach
-                        </select>
+                    <!-- Kelas Combobox (Database Aligned: A, B, C) -->
+                    <div class="relative" id="kelas_combobox_wrapper">
+                        <label class="block text-slate-700 font-bold mb-1">
+                            Kelas <span class="text-slate-400 font-normal text-[10px]">(Opsional)</span>
+                        </label>
+                        <div class="relative flex items-center">
+                            <input type="text" 
+                                   name="kelas" 
+                                   id="form_kelas" 
+                                   placeholder="Pilih atau ketik kelas..." 
+                                   autocomplete="off"
+                                   onclick="openAgendaKelasDropdown()"
+                                   onfocus="openAgendaKelasDropdown()"
+                                   oninput="handleAgendaKelasInput(this.value)"
+                                   class="w-full p-2.5 pr-8 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs font-semibold text-slate-800 transition">
+                            <button type="button" 
+                                    onclick="toggleAgendaKelasDropdown(event)" 
+                                    tabindex="-1"
+                                    class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                <i id="kelas_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                            </button>
+                        </div>
+
+                        <!-- Dropdown Menu for Kelas (Pure Database Classes: A, B, C) -->
+                        <div id="kelas_dropdown_menu" 
+                             class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl p-2 max-h-48 overflow-y-auto custom-scrollbar flex flex-col space-y-1"
+                             style="background-color: #ffffff !important;">
+                            <div class="px-2 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 bg-slate-50 rounded">
+                                <i class="fa-solid fa-graduation-cap text-teal-600 text-[10px]"></i> Data Kelas (Database)
+                            </div>
+                            @if(isset($kelases) && count($kelases) > 0)
+                                @foreach($kelases as $k)
+                                    <div class="agenda-kelas-item px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition flex items-center justify-between group"
+                                         data-name="{{ $k->nama_kelas }}"
+                                         onclick="selectAgendaKelasItem('{{ $k->nama_kelas }}')">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-6 h-6 rounded-md bg-teal-100/80 text-teal-800 flex items-center justify-center font-bold text-xs group-hover:bg-teal-700 group-hover:text-white transition">
+                                                {{ $k->nama_kelas }}
+                                            </span>
+                                            <span class="font-bold text-slate-800">Kelas {{ $k->nama_kelas }}</span>
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 group-hover:text-teal-700 font-medium">Pilih</span>
+                                    </div>
+                                @endforeach
+                            @endif
+                        </div>
                     </div>
 
                     <!-- Semester -->
@@ -577,15 +715,176 @@
     </form>
 
     <script>
+        // ==========================================
+        // ACCORDION EXPAND / COLLAPSE CONTROLLERS
+        // ==========================================
+        function toggleAccordion(slug) {
+            const content = document.getElementById('content-' + slug);
+            const chevron = document.getElementById('chevron-' + slug);
+            const header = document.getElementById('header-' + slug);
+
+            if (!content) return;
+
+            const isHidden = content.classList.contains('hidden');
+
+            if (isHidden) {
+                content.classList.remove('hidden');
+                if (chevron) {
+                    chevron.classList.add('rotate-180', 'text-teal-800');
+                }
+                if (header) header.setAttribute('aria-expanded', 'true');
+            } else {
+                content.classList.add('hidden');
+                if (chevron) {
+                    chevron.classList.remove('rotate-180', 'text-teal-800');
+                }
+                if (header) header.setAttribute('aria-expanded', 'false');
+            }
+
+            syncGlobalExpandBtn();
+        }
+
+        function toggleExpandAll(btn) {
+            const allContents = document.querySelectorAll('.accordion-content');
+            if (allContents.length === 0) return;
+
+            const anyClosed = Array.from(allContents).some(c => c.classList.contains('hidden'));
+
+            allContents.forEach(c => {
+                const slug = c.id.replace('content-', '');
+                const chevron = document.getElementById('chevron-' + slug);
+                const header = document.getElementById('header-' + slug);
+
+                if (anyClosed) {
+                    c.classList.remove('hidden');
+                    if (chevron) chevron.classList.add('rotate-180', 'text-teal-800');
+                    if (header) header.setAttribute('aria-expanded', 'true');
+                } else {
+                    c.classList.add('hidden');
+                    if (chevron) chevron.classList.remove('rotate-180', 'text-teal-800');
+                    if (header) header.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            syncGlobalExpandBtn();
+        }
+
+        function syncGlobalExpandBtn() {
+            const allContents = document.querySelectorAll('.accordion-content');
+            if (allContents.length === 0) return;
+
+            const allOpen = Array.from(allContents).every(c => !c.classList.contains('hidden'));
+            const textEl = document.getElementById('text-toggle-expand-all');
+            const iconEl = document.getElementById('icon-toggle-expand-all');
+
+            if (textEl) {
+                textEl.innerText = allOpen ? 'Tutup Semua' : 'Buka Semua';
+            }
+            if (iconEl) {
+                if (allOpen) {
+                    iconEl.classList.add('rotate-180');
+                } else {
+                    iconEl.classList.remove('rotate-180');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            syncGlobalExpandBtn();
+        });
+        function toggleSelectGroup(master, slug) {
+            const content = document.getElementById('content-' + slug);
+            if (master.checked && content && content.classList.contains('hidden')) {
+                toggleAccordion(slug);
+            }
+            const checkboxes = document.querySelectorAll('.item-' + slug + ' .agenda-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = master.checked;
+            });
+            updateBulkDeleteBtn();
+        }
+
+        function toggleSelectAllAgendas(btn) {
+            const checkboxes = document.querySelectorAll('.agenda-checkbox');
+            const anyUnchecked = Array.from(checkboxes).some(cb => !cb.checked);
+            
+            checkboxes.forEach(cb => {
+                cb.checked = anyUnchecked;
+            });
+
+            document.querySelectorAll('.master-group-checkbox').forEach(master => {
+                master.checked = anyUnchecked;
+            });
+
+            if (btn) {
+                const span = btn.querySelector('span');
+                if (span) {
+                    span.innerText = anyUnchecked ? 'Batal Pilih Semua' : 'Pilih Semua Sesi';
+                }
+            }
+
+            updateBulkDeleteBtn();
+        }
+
+        function clearAllSelections() {
+            document.querySelectorAll('.agenda-checkbox').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.master-group-checkbox').forEach(master => master.checked = false);
+            
+            const btn = document.getElementById('btn-select-all-global');
+            if (btn) {
+                const span = btn.querySelector('span');
+                if (span) span.innerText = 'Pilih Semua Sesi';
+            }
+
+            updateBulkDeleteBtn();
+        }
+
+        function updateBulkDeleteBtn() {
+            const checked = document.querySelectorAll('.agenda-checkbox:checked');
+            const bulkBtn = document.getElementById('btn-bulk-delete');
+            const bulkCount = document.getElementById('bulk-count');
+            
+            if (checked.length > 0) {
+                if (bulkBtn) bulkBtn.classList.remove('hidden');
+                if (bulkCount) bulkCount.innerText = checked.length;
+            } else {
+                if (bulkBtn) bulkBtn.classList.add('hidden');
+            }
+
+            // Sync master checkboxes for each group
+            document.querySelectorAll('.master-group-checkbox').forEach(master => {
+                const slug = master.getAttribute('data-slug');
+                if (slug) {
+                    const groupCheckboxes = document.querySelectorAll('.item-' + slug + ' .agenda-checkbox');
+                    if (groupCheckboxes.length > 0) {
+                        const allChecked = Array.from(groupCheckboxes).every(cb => cb.checked);
+                        master.checked = allChecked;
+                    }
+                }
+            });
+        }
+
         function submitBulkDeleteForm() {
+            const checked = document.querySelectorAll('.agenda-checkbox:checked');
+            if (checked.length === 0) {
+                Swal.fire({
+                    title: 'Pilih Agenda Terlebih Dahulu',
+                    text: 'Silakan centang minimal satu agenda untuk dihapus.',
+                    icon: 'info',
+                    confirmButtonColor: '#0f766e',
+                    confirmButtonText: 'Mengerti'
+                });
+                return;
+            }
+
             Swal.fire({
-                title: 'Hapus Agenda Terpilih?',
-                text: 'Semua data agenda terpilih akan terhapus!',
+                title: 'Hapus ' + checked.length + ' Agenda Terpilih?',
+                text: 'Semua data dari ' + checked.length + ' agenda praktikum yang Anda centang beserta absensinya akan dihapus permanen!',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#e11d48',
                 cancelButtonColor: '#64748b',
-                confirmButtonText: 'Ya, Hapus!',
+                confirmButtonText: 'Ya, Hapus ' + checked.length + ' Agenda!',
                 cancelButtonText: 'Batal',
                 customClass: {
                     popup: 'rounded-3xl p-6 shadow-2xl',
@@ -597,8 +896,8 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     const form = document.getElementById('actual-bulk-delete-form');
-                    form.innerHTML = '@csrf @method("DELETE")';
-                    document.querySelectorAll('.agenda-checkbox:checked').forEach(cb => {
+                    form.querySelectorAll('input[name="ids[]"]').forEach(el => el.remove());
+                    checked.forEach(cb => {
                         const input = document.createElement('input');
                         input.type = 'hidden';
                         input.name = 'ids[]';
@@ -608,24 +907,6 @@
                     form.submit();
                 }
             });
-        }
-
-        function toggleSelectAll(master) {
-            const checkboxes = document.querySelectorAll('.agenda-checkbox');
-            checkboxes.forEach(cb => cb.checked = master.checked);
-            updateBulkDeleteBtn();
-        }
-
-        function updateBulkDeleteBtn() {
-            const checked = document.querySelectorAll('.agenda-checkbox:checked');
-            const bulkBtn = document.getElementById('btn-bulk-delete');
-            const bulkCount = document.getElementById('bulk-count');
-            if (checked.length > 0) {
-                bulkBtn.classList.remove('hidden');
-                if (bulkCount) bulkCount.innerText = checked.length;
-            } else {
-                bulkBtn.classList.add('hidden');
-            }
         }
 
         function confirmDeleteAgenda(actionUrl) {
@@ -718,9 +999,20 @@
             }
         }
 
-        function selectMatkulItem(name) {
+        function selectMatkulItem(name, prodiName, fakultasName) {
             const mainInput = document.getElementById('form_judul_agenda');
             if (mainInput) mainInput.value = name;
+            if (fakultasName) {
+                const fakSelect = document.getElementById('form_fakultas');
+                if (fakSelect) {
+                    fakSelect.value = fakultasName;
+                    if (typeof filterJurusan === 'function') filterJurusan();
+                }
+            }
+            if (prodiName) {
+                const jurSelect = document.getElementById('form_jurusan');
+                if (jurSelect) jurSelect.value = prodiName;
+            }
             closeMatkulDropdown();
         }
 
@@ -742,10 +1034,65 @@
             }
         }
 
+        // ==========================================
+        // AGEDA KELAS COMBOBOX FUNCTIONS
+        // ==========================================
+        function openAgendaKelasDropdown() {
+            closeMatkulDropdown();
+            const menu = document.getElementById('kelas_dropdown_menu');
+            const icon = document.getElementById('kelas_chevron_icon');
+            if (menu) menu.classList.remove('hidden');
+            if (icon) icon.classList.add('rotate-180');
+        }
+
+        function closeAgendaKelasDropdown() {
+            const menu = document.getElementById('kelas_dropdown_menu');
+            const icon = document.getElementById('kelas_chevron_icon');
+            if (menu) menu.classList.add('hidden');
+            if (icon) icon.classList.remove('rotate-180');
+        }
+
+        function toggleAgendaKelasDropdown(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('kelas_dropdown_menu');
+            if (menu && menu.classList.contains('hidden')) {
+                openAgendaKelasDropdown();
+            } else {
+                closeAgendaKelasDropdown();
+            }
+        }
+
+        function filterAgendaKelasList(query) {
+            const q = (query || '').toLowerCase().trim();
+            const items = document.querySelectorAll('.agenda-kelas-item');
+            items.forEach(item => {
+                const val = (item.getAttribute('data-name') || '').toLowerCase();
+                if (val.includes(q)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function selectAgendaKelasItem(val) {
+            document.getElementById('form_kelas').value = val;
+            closeAgendaKelasDropdown();
+        }
+
+        function handleAgendaKelasInput(val) {
+            openAgendaKelasDropdown();
+            filterAgendaKelasList(val);
+        }
+
         document.addEventListener('click', function(e) {
             const wrapper = document.getElementById('matkul_combobox_wrapper');
             if (wrapper && !wrapper.contains(e.target)) {
                 closeMatkulDropdown();
+            }
+            const kelasWrapper = document.getElementById('kelas_combobox_wrapper');
+            if (kelasWrapper && !kelasWrapper.contains(e.target)) {
+                closeAgendaKelasDropdown();
             }
         });
 
@@ -768,6 +1115,7 @@
             document.getElementById('form_program_kuliah').value = 'Reguler';
             document.getElementById('form_jenis_pertemuan').value = 'Praktikum';
             document.getElementById('form_kelas').value = '';
+            closeAgendaKelasDropdown();
             document.getElementById('form_semester').value = '';
             document.getElementById('form_fakultas').value = '';
             document.getElementById('form_jurusan').value = '';
@@ -799,31 +1147,8 @@
 
             document.getElementById('form_program_kuliah').value = ag.program_kuliah || 'Reguler';
             document.getElementById('form_jenis_pertemuan').value = ag.jenis_pertemuan || 'Praktikum';
-            const kelasSelect = document.getElementById('form_kelas');
-            if (ag.kelas) {
-                // Remove any previously dynamically added custom option
-                const prevCustom = kelasSelect.querySelector('.custom-dynamic-opt');
-                if (prevCustom) prevCustom.remove();
-
-                // Check if ag.kelas already exists in options
-                let exists = false;
-                for (let i = 0; i < kelasSelect.options.length; i++) {
-                    if (kelasSelect.options[i].value === ag.kelas) {
-                        exists = true;
-                        break;
-                    }
-                }
-                if (!exists) {
-                    const opt = document.createElement('option');
-                    opt.value = ag.kelas;
-                    opt.text = ag.kelas;
-                    opt.classList.add('custom-dynamic-opt');
-                    kelasSelect.appendChild(opt);
-                }
-                kelasSelect.value = ag.kelas;
-            } else {
-                kelasSelect.value = '';
-            }
+            document.getElementById('form_kelas').value = ag.kelas || '';
+            closeAgendaKelasDropdown();
             document.getElementById('form_semester').value = ag.semester || '';
             document.getElementById('form_fakultas').value = ag.fakultas || '';
             filterJurusan();

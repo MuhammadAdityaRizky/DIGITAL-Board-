@@ -22,81 +22,102 @@
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
             <div>
-                <h1 class="font-bold text-sm leading-tight">DIGITAL Board</h1>
-                <p class="text-[10px] font-semibold tracking-wider text-teal-400">Smart Lab Management</p>
+                <h1 class="font-extrabold text-sm leading-tight text-white">DIGITAL Board</h1>
+                <p class="text-xs font-bold tracking-wide text-teal-300">Smart Lab Management</p>
             </div>
         </div>
         
-        <nav class="flex-1 px-3 py-4 space-y-1">
-            <a href="{{ route('dosen.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-border-all"></i>
-                <span class="text-xs font-semibold tracking-wide">Dashboard</span>
+        <nav class="flex-1 px-3 py-4 space-y-1.5">
+            <a href="{{ route('dosen.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-border-all text-sm"></i>
+                <span class="text-sm font-bold tracking-wide">Dashboard</span>
             </a>
-            <a href="{{ route('dosen.agenda') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white rounded-xl w-full shadow-xs">
-                <i class="fa-solid fa-calendar-alt"></i>
-                <span class="text-xs font-semibold tracking-wide">Agenda</span>
+            <a href="{{ route('dosen.agenda') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white rounded-xl w-full font-extrabold shadow-md">
+                <i class="fa-solid fa-calendar-alt text-sm"></i>
+                <span class="text-sm font-bold tracking-wide">Agenda Perkuliahan</span>
             </a>
-            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-gear"></i>
-                <span class="text-xs font-semibold tracking-wide">Pengaturan Akun</span>
+            <a href="{{ route('dosen.jadwal-lab') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-calendar-check text-sm"></i>
+                <span class="text-sm font-bold tracking-wide">Ketersediaan Lab</span>
+            </a>
+            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-gear text-sm"></i>
+                <span class="text-sm font-bold tracking-wide">Pengaturan Akun</span>
             </a>
         </nav>
+
+        <!-- Tombol Panduan Dosen di Sidebar -->
+        <div class="p-3 border-t border-slate-800 mt-auto">
+            <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-3 px-3.5 py-2.5 bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 hover:text-white rounded-xl w-full transition text-xs font-bold cursor-pointer">
+                <i class="fa-solid fa-book-open-reader text-sm text-amber-400"></i>
+                <span>Panduan Dosen</span>
+            </button>
+        </div>
     </aside>
 
     <!-- Main Content -->
     <main class="flex-1 flex flex-col h-full overflow-hidden relative">
         
         <!-- Top Navbar -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0 shadow-sm">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-teal-800 text-white rounded-lg flex lg:hidden items-center justify-center font-bold">
-                    <i class="fa-solid fa-graduation-cap text-sm"></i>
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0 shadow-xs">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-teal-800 text-white rounded-xl flex lg:hidden items-center justify-center font-bold shadow-xs">
+                    <i class="fa-solid fa-graduation-cap text-base"></i>
                 </div>
-                <h2 class="font-bold text-base text-slate-800 lg:hidden">DIGITAL Board</h2>
-                <h2 class="font-bold text-base text-slate-800 hidden lg:block">Riwayat Agenda Mengajar</h2>
+                <div>
+                    <h2 class="font-extrabold text-base text-slate-800 lg:hidden">DIGITAL Board</h2>
+                    <h2 class="font-extrabold text-lg text-slate-900 hidden lg:block">Riwayat Agenda Perkuliahan</h2>
+                </div>
             </div>
 
-            <!-- Profile Avatar & Dropdown Menu -->
-            <div class="relative" id="profileDropdownWrapper">
-                <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1 rounded-xl hover:bg-slate-50 transition">
+            <div class="flex items-center gap-2.5">
+                <!-- Tombol Panduan / Tutorial Dosen -->
+                <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
+                    <i class="fa-solid fa-circle-question text-amber-600 text-sm"></i>
+                    <span class="hidden sm:inline">Panduan Sistem</span>
+                </button>
+
+                <!-- Profile Avatar & Dropdown Menu -->
+                <div class="relative" id="profileDropdownWrapper">
+                <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1.5 rounded-xl hover:bg-slate-100 transition border border-transparent hover:border-slate-200">
                     <div class="text-right hidden sm:block">
-                        <p class="font-bold text-xs text-slate-800 group-hover:text-teal-700 transition">{{ $dosen->nama }}</p>
-                        <p class="text-[9px] font-semibold tracking-wider text-slate-500">NIP: {{ $dosen->nip }} • Dosen</p>
+                        <p class="font-extrabold text-sm text-slate-900 group-hover:text-teal-800 transition">{{ $dosen->nama }}</p>
+                        <p class="text-xs font-bold text-slate-600">NIP: {{ $dosen->nip }} • Dosen Pengajar</p>
                     </div>
-                    <div class="w-9 h-9 rounded-full bg-teal-100 group-hover:bg-teal-200 text-teal-900 border border-teal-200 flex items-center justify-center font-bold text-xs transition transform group-hover:scale-105 shadow-xs">
+                    <div class="w-10 h-10 rounded-full bg-teal-100 group-hover:bg-teal-200 text-teal-900 border-2 border-teal-300 flex items-center justify-center font-extrabold text-sm transition transform group-hover:scale-105 shadow-xs">
                         {{ substr($dosen->nama, 0, 2) }}
                     </div>
-                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 transition hidden sm:inline-block"></i>
+                    <i class="fa-solid fa-chevron-down text-xs text-slate-500 group-hover:text-slate-800 transition hidden sm:inline-block"></i>
                 </button>
 
                 <!-- Dropdown Menu -->
-                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 hidden transform transition-all duration-200 origin-top-right">
-                    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                        <p class="text-xs font-bold text-slate-800 truncate">{{ $dosen->nama }}</p>
-                        <p class="text-[10px] text-slate-500 font-mono mt-0.5">NIP: {{ $dosen->nip }}</p>
-                        <span class="inline-block mt-1.5 px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200/60 rounded-md text-[9px] font-bold">
-                            Dosen Pengajar
+                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-2 w-72 bg-white border-2 border-slate-200 rounded-2xl shadow-2xl py-2 z-50 hidden transform transition-all duration-200 origin-top-right">
+                    <div class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70">
+                        <p class="text-sm font-extrabold text-slate-900 truncate">{{ $dosen->nama }}</p>
+                        <p class="text-xs font-bold text-slate-600 font-mono mt-0.5">NIP: {{ $dosen->nip }}</p>
+                        <span class="inline-block mt-2 px-2.5 py-0.5 bg-teal-100 text-teal-900 border border-teal-300 rounded-md text-xs font-extrabold">
+                            <i class="fa-solid fa-chalkboard-user mr-1"></i> Dosen Pengajar
                         </span>
                     </div>
 
-                    <div class="py-1">
-                        <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-2.5 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-800 transition font-medium group">
-                            <div class="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-teal-100 group-hover:text-teal-700 flex items-center justify-center text-slate-500 transition">
-                                <i class="fa-solid fa-gear text-xs"></i>
+                    <div class="py-1.5 px-1">
+                        <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 hover:bg-teal-50 hover:text-teal-900 rounded-xl transition font-bold group">
+                            <div class="w-8 h-8 rounded-lg bg-teal-100 group-hover:bg-teal-200 text-teal-800 flex items-center justify-center transition">
+                                <i class="fa-solid fa-gear text-sm"></i>
                             </div>
                             <div>
-                                <span class="font-bold block">Pengaturan Akun</span>
-                                <span class="text-[10px] text-slate-400 block font-normal">Edit profil & ganti password</span>
+                                <span class="font-extrabold block">Pengaturan Akun</span>
+                                <span class="text-xs text-slate-500 block font-normal">Edit profil & ganti password</span>
                             </div>
                         </a>
                     </div>
 
-                    <div class="pt-1 border-t border-slate-100">
+                    <div class="pt-1.5 border-t border-slate-100 px-1">
                         <form action="{{ route('logout') }}" method="POST" class="logout-form">
                             @csrf
-                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-rose-600 hover:bg-rose-50 transition font-bold text-left group">
-                                <div class="w-7 h-7 rounded-lg bg-rose-50 group-hover:bg-rose-100 text-rose-600 flex items-center justify-center transition">
-                                    <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-700 hover:bg-rose-50 rounded-xl transition font-extrabold text-left group cursor-pointer">
+                                <div class="w-8 h-8 rounded-lg bg-rose-100 group-hover:bg-rose-200 text-rose-700 flex items-center justify-center transition">
+                                    <i class="fa-solid fa-right-from-bracket text-sm"></i>
                                 </div>
                                 <span>Keluar / Logout</span>
                             </button>
@@ -131,32 +152,32 @@
             @endif
             
             <!-- Filter Bar -->
-            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <div class="bg-white border-2 border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
                 <form action="{{ route('dosen.agenda') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end text-xs">
                     <div class="flex-grow w-full">
-                        <label class="block text-slate-655 font-bold mb-1.5">Cari Sesi / Mata Kuliah</label>
+                        <label class="block text-slate-800 font-extrabold text-xs uppercase tracking-wider mb-2">Cari Sesi / Mata Kuliah</label>
                         <div class="relative">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan mata kuliah, catatan..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Ketik nama mata kuliah, catatan..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-teal-700 focus:ring-4 focus:ring-teal-700/20 outline-none text-sm font-semibold text-slate-900 placeholder:text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
                         </div>
                     </div>
-                    <div class="w-full md:w-48">
-                        <label class="block text-slate-655 font-bold mb-1.5">Tanggal Pelaksanaan</label>
-                        <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                    <div class="w-full md:w-52">
+                        <label class="block text-slate-800 font-extrabold text-xs uppercase tracking-wider mb-2">Tanggal Pelaksanaan</label>
+                        <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-teal-700 focus:ring-4 focus:ring-teal-700/20 outline-none text-sm font-semibold text-slate-900">
                     </div>
-                    <div class="w-full md:w-48">
-                        <label class="block text-slate-655 font-bold mb-1.5">Urutkan Tanggal</label>
-                        <select name="sort" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
-                            <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama</option>
+                    <div class="w-full md:w-52">
+                        <label class="block text-slate-800 font-extrabold text-xs uppercase tracking-wider mb-2">Urutkan Tanggal</label>
+                        <select name="sort" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-teal-700 focus:ring-4 focus:ring-teal-700/20 outline-none text-sm font-bold text-slate-900">
+                            <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru Lebih Dahulu</option>
+                            <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama Lebih Dahulu</option>
                         </select>
                     </div>
                     <div class="flex gap-2 w-full md:w-auto">
-                        <button type="submit" class="flex-grow md:flex-grow-0 px-5 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition-all shadow-sm">
+                        <button type="submit" class="flex-grow md:flex-grow-0 px-6 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-extrabold text-sm uppercase tracking-wider transition-all shadow-sm cursor-pointer">
                             Filter
                         </button>
                         @if(request()->anyFilled(['search', 'tanggal', 'sort']))
-                            <a href="{{ route('dosen.agenda') }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all border border-slate-200 text-center">
+                            <a href="{{ route('dosen.agenda') }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-sm transition-all border border-slate-300 text-center cursor-pointer">
                                 Reset
                             </a>
                         @endif
@@ -165,34 +186,41 @@
             </div>
 
             <!-- Agendas List -->
-            <div class="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
-                <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex flex-wrap justify-between items-center gap-3">
+            <div class="bg-white border-2 border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+                <div class="bg-slate-50/80 border-b border-slate-200 px-6 py-4 flex flex-wrap justify-between items-center gap-3">
                     <div>
-                        <h3 class="font-bold text-sm text-slate-800">Daftar Agenda Perkuliahan & Pertemuan</h3>
-                        <span class="text-[10px] bg-teal-50 text-teal-800 border border-teal-200 font-bold px-2.5 py-0.5 rounded-full mt-1 inline-block">{{ $groupedAgendas->count() }} Mata Kuliah ({{ $agendas->total() }} Sesi Pertemuan)</span>
+                        <h3 class="font-extrabold text-base text-slate-900">Daftar Agenda Perkuliahan & Pertemuan</h3>
+                        <span class="text-xs bg-teal-50 text-teal-900 border border-teal-300 font-bold px-3 py-1 rounded-full mt-1.5 inline-block">{{ $groupedAgendas->count() }} Mata Kuliah ({{ $agendas->total() }} Sesi Pertemuan)</span>
                     </div>
                     
-                    <div class="flex items-center gap-3 ml-auto">
+                    <div class="flex items-center gap-2.5 ml-auto flex-wrap">
                         @if($agendas->count() > 0)
-                            <button type="button" id="btn-toggle-select" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg transition-all flex items-center gap-1.5 shadow-sm">
-                                <i class="fa-solid fa-square-check"></i> Pilih Banyak
+                            <button type="button" onclick="toggleAllCourseAccordions(this)" id="btn-toggle-all-courses" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 text-xs font-extrabold rounded-xl transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka atau tutup semua daftar pertemuan">
+                                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200" id="icon-toggle-all-courses"></i>
+                                <span id="text-toggle-all-courses">Buka Semua</span>
                             </button>
-                            <div id="container-check-all" class="flex items-center gap-2 mr-2 border-r border-slate-250 pr-3 hidden">
-                                <input type="checkbox" id="check-all" class="rounded text-teal-800 focus:ring-teal-700/30 w-3.5 h-3.5">
-                                <label for="check-all" class="text-[11px] text-slate-650 font-bold cursor-pointer">Pilih Semua</label>
+                            <button type="button" id="btn-toggle-select" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 text-xs font-extrabold rounded-xl transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                                <i class="fa-solid fa-square-check text-slate-600"></i> Pilih Banyak
+                            </button>
+                            <div id="container-check-all" class="flex items-center gap-2 mr-2 border-r border-slate-300 pr-3 hidden">
+                                <input type="checkbox" id="check-all" class="rounded text-teal-800 focus:ring-teal-700/30 w-4 h-4 cursor-pointer">
+                                <label for="check-all" class="text-xs text-slate-800 font-bold cursor-pointer select-none">Pilih Semua</label>
                             </div>
-                            <button type="button" onclick="submitBulkDelete()" id="btn-bulk-delete" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-250 text-rose-700 text-[10px] font-bold rounded-lg transition-all hidden flex items-center gap-1.5 shadow-sm">
+                            <button type="button" onclick="submitBulkDelete()" id="btn-bulk-delete" class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-800 text-xs font-extrabold rounded-xl transition-all hidden flex items-center gap-1.5 shadow-2xs cursor-pointer">
                                 <i class="fa-solid fa-trash-can"></i> Hapus Terpilih (<span id="selected-count">0</span>)
                             </button>
                         @endif
-                        <button onclick="document.getElementById('modal-import-global').classList.remove('hidden')" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-md transition-all flex items-center gap-1.5">
+                        <a href="{{ route('dosen.jadwal-lab') }}" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-calendar-check"></i> Cek Ketersediaan Lab
+                        </a>
+                        <button onclick="document.getElementById('modal-import-global').classList.remove('hidden')" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
                             <i class="fa-solid fa-file-excel"></i> Import Excel Global
                         </button>
-                        <button type="button" onclick="startDosenQRScanner()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg shadow-md transition-all flex items-center gap-1.5">
+                        <button type="button" onclick="startDosenQRScanner()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
                             <i class="fa-solid fa-qrcode"></i> Scan QR
                         </button>
-                        <button type="button" onclick="toggleModal('modal-add-agenda')" class="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-lg shadow-md transition-all flex items-center gap-1.5">
-                            <i class="fa-solid fa-calendar-plus"></i> Buat Agenda Mata Kuliah
+                        <button type="button" onclick="toggleModal('modal-add-agenda')" class="px-4.5 py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-calendar-plus"></i> Buat Agenda Baru
                         </button>
                     </div>
                 </div>
@@ -240,6 +268,27 @@
                     </div>
                 </div>
                 
+                <!-- Sticky Bulk Delete Action Bar -->
+                <div id="sticky-bulk-bar" class="hidden mx-6 mt-4 p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between shadow-sm sticky top-4 z-40">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-rose-900 block"><span id="sticky-selected-count">0</span> agenda terpilih</span>
+                            <span class="text-xs text-rose-700 font-semibold">Data sesi dan absensi agenda terpilih akan dihapus permanen</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="cancelBulkSelection()" class="px-3.5 py-1.5 bg-white hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition">
+                            Batal Pilih
+                        </button>
+                        <button type="button" onclick="submitBulkDelete()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-trash-can"></i> Hapus Terpilih
+                        </button>
+                    </div>
+                </div>
+
                 <div id="agenda-list-container" class="p-6 space-y-4">
                     @include('dosen.agenda_partial')
                 </div>
@@ -250,23 +299,23 @@
     </main>
 
     <!-- Bottom Navigation Bar (Mobile Only - Symmetrical Layout with Center QR) -->
-    <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-lg">
-        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
+    <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t-2 border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-xl">
+        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-600 hover:text-slate-900">
             <i class="fa-solid fa-border-all text-lg"></i>
-            <span class="text-[9px] font-medium">Dashboard</span>
+            <span class="text-xs font-bold">Dashboard</span>
         </a>
-        <a href="{{ route('dosen.agenda') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-bold">
+        <a href="{{ route('dosen.agenda') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-extrabold">
             <i class="fa-solid fa-calendar-alt text-lg"></i>
-            <span class="text-[9px] font-bold">Agenda</span>
+            <span class="text-xs font-extrabold">Agenda</span>
         </a>
         <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-800 text-white rounded-2xl shadow-xl border-4 border-white">
-            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white bg-teal-800 rounded-xl hover:bg-teal-900 transition-all" title="Scan QR Presensi">
+            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white bg-teal-800 rounded-xl hover:bg-teal-900 transition-all cursor-pointer" title="Scan QR Presensi">
                 <i class="fa-solid fa-qrcode text-2xl text-white"></i>
             </button>
         </div>
-        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
+        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-600 hover:text-slate-900">
             <i class="fa-solid fa-gear text-lg"></i>
-            <span class="text-[9px] font-medium">Pengaturan</span>
+            <span class="text-xs font-bold">Pengaturan</span>
         </a>
     </nav>
 
@@ -346,6 +395,7 @@
                                              data-title="{{ $j->mata_kuliah }} - {{ $j->kelas }} ({{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }}-{{ substr($j->jam_selesai,0,5) }})"
                                              data-search="{{ strtolower($j->mata_kuliah . ' ' . $j->kelas . ' ' . $j->hari . ' ' . ($j->lab->nama_lab ?? '') . ' ' . ($j->prodi->nama_prodi ?? '')) }}"
                                              data-lab="{{ strtoupper($j->lab->nama_lab ?? 'Lab') }}"
+                                             data-lab-id="{{ $j->lab_id }}"
                                              data-kelas="{{ $j->kelas ?? 'Reg A' }}"
                                              data-semester="{{ $j->semester ?? '1' }}"
                                              data-prodi="{{ $j->prodi->nama_prodi ?? 'Sistem Informasi' }}"
@@ -355,11 +405,11 @@
                                              onclick="selectComboboxModal(this)">
                                             <div class="flex items-center justify-between font-bold text-slate-800 text-xs">
                                                 <span class="text-teal-900 font-extrabold">{{ $j->mata_kuliah }}</span>
-                                                <span class="px-2 py-0.5 bg-teal-100 text-teal-800 rounded-full text-[10px] font-bold">Kelas {{ $j->kelas }}</span>
+                                                <span class="px-2.5 py-0.5 bg-teal-100 text-teal-900 rounded-full text-xs font-bold">Kelas {{ $j->kelas }}</span>
                                             </div>
-                                            <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium mt-0.5">
-                                                <span><i class="fa-regular fa-clock mr-1 text-slate-400"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }} - {{ substr($j->jam_selesai,0,5) }} WIB</span>
-                                                <span class="text-teal-700 font-semibold"><i class="fa-solid fa-door-open mr-1"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
+                                            <div class="flex items-center justify-between text-xs text-slate-600 font-medium mt-1">
+                                                <span><i class="fa-regular fa-clock mr-1.5 text-slate-400"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }} - {{ substr($j->jam_selesai,0,5) }} WIB</span>
+                                                <span class="text-teal-800 font-bold"><i class="fa-solid fa-door-open mr-1.5"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
                                             </div>
                                         </div>
                                     @endforeach
@@ -370,15 +420,15 @@
                             </div>
 
                             <!-- Detail Box of Selected Matkul -->
-                            <div id="modal-jadwal-info-box" class="hidden mt-2.5 p-3 bg-teal-50/80 border border-teal-200 rounded-xl space-y-1 text-[11px]">
+                            <div id="modal-jadwal-info-box" class="hidden mt-2.5 p-3.5 bg-teal-50 border border-teal-200 rounded-xl space-y-1.5 text-xs">
                                 <div class="flex justify-between items-center font-bold text-teal-900">
-                                    <span id="modal-info-lab"><i class="fa-solid fa-door-open mr-1 text-teal-600"></i> Lab</span>
-                                    <span id="modal-info-kelas" class="px-2 py-0.5 bg-teal-200/60 rounded text-[10px]">Kelas</span>
+                                    <span id="modal-info-lab"><i class="fa-solid fa-door-open mr-1.5 text-teal-600"></i> Lab</span>
+                                    <span id="modal-info-kelas" class="px-2.5 py-0.5 bg-teal-200 text-teal-900 rounded text-xs font-bold">Kelas</span>
                                 </div>
-                                <div class="text-slate-600">
-                                    <span>Jadwal Rutin: <strong id="modal-info-rutin" class="text-slate-800">-</strong></span>
+                                <div class="text-slate-700">
+                                    <span>Jadwal Rutin: <strong id="modal-info-rutin" class="text-slate-900 font-bold">-</strong></span>
                                 </div>
-                                <div class="text-[10px] text-slate-500" id="modal-info-prodi">-</div>
+                                <div class="text-xs text-slate-600 font-medium" id="modal-info-prodi">-</div>
                             </div>
                         @else
                             <div class="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs">
@@ -390,19 +440,31 @@
                     <!-- 2. Tanggal Pelaksanaan -->
                     <div>
                         <label class="block text-slate-700 font-bold mb-1">Tanggal Pertemuan <span class="text-rose-500">*</span></label>
-                        <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-semibold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                        <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" onchange="checkLiveModalClash()" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-semibold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                     </div>
 
                     <!-- 3. Jam Mulai & Jam Selesai -->
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-slate-700 font-bold mb-1">Jam Mulai <span class="text-rose-500">*</span></label>
-                            <input type="time" name="waktu_masuk" id="modal_input_waktu_masuk" required value="08:00" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <input type="time" name="waktu_masuk" id="modal_input_waktu_masuk" required value="08:00" onchange="checkLiveModalClash()" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                         </div>
                         <div>
                             <label class="block text-slate-700 font-bold mb-1">Jam Selesai <span class="text-rose-500">*</span></label>
-                            <input type="time" name="waktu_keluar" id="modal_input_waktu_keluar" required value="10:30" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <input type="time" name="waktu_keluar" id="modal_input_waktu_keluar" required value="10:30" onchange="checkLiveModalClash()" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                         </div>
+                    </div>
+
+                    <!-- Peringatan Otomatis Real-Time Jika Bentrok -->
+                    <div id="modal-live-clash-box" class="hidden p-3 bg-rose-50 border-2 border-rose-300 rounded-xl text-xs font-bold text-rose-900 space-y-1">
+                        <div class="flex items-center gap-1.5 text-rose-900 font-black">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-600 text-sm"></i>
+                            <span id="modal-clash-title">Bentrok Ruangan Terdeteksi!</span>
+                        </div>
+                        <p id="modal-clash-msg" class="text-rose-700 font-medium"></p>
+                        <a href="{{ route('dosen.jadwal-lab') }}" target="_blank" class="inline-flex items-center gap-1 text-teal-800 hover:text-teal-950 font-black underline text-xs pt-1">
+                            <i class="fa-solid fa-calendar-days"></i> Buka Kalender Jam Kosong Lab &rarr;
+                        </a>
                     </div>
 
                     <!-- 4. Rencana Pembelajaran -->
@@ -413,11 +475,11 @@
 
                     <!-- Fallback Collapsible: Pengaturan Ruangan Lain -->
                     <details class="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden group">
-                        <summary class="px-3 py-2 text-[11px] font-bold text-slate-500 hover:text-slate-700 cursor-pointer flex items-center justify-between select-none">
-                            <span><i class="fa-solid fa-sliders mr-1"></i> Pengaturan Tambahan / Ganti Ruang Lab</span>
+                        <summary class="px-3.5 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 cursor-pointer flex items-center justify-between select-none">
+                            <span><i class="fa-solid fa-sliders mr-1.5"></i> Pengaturan Tambahan / Ganti Ruang Lab</span>
                             <i class="fa-solid fa-chevron-down group-open:rotate-180 transition-transform"></i>
                         </summary>
-                        <div class="p-3 border-t border-slate-200 space-y-3 bg-white">
+                        <div class="p-3.5 border-t border-slate-200 space-y-3 bg-white">
                             <div>
                                 <label class="block text-slate-700 font-bold mb-1">Ganti Laboratorium (Opsional)</label>
                                 <select name="lab_id" class="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-xs">
@@ -583,28 +645,214 @@
         @method('DELETE')
     </form>
 
-    <!-- Bulk delete checkboxes Script -->
+    <!-- Bulk delete checkboxes & Accordion Script -->
     <script>
+        let selectModeActive = false;
+
+        // ==========================================
+        // ACCORDION EXPAND / COLLAPSE CONTROLLERS
+        // ==========================================
+        function toggleCourseAccordion(slug) {
+            const content = document.getElementById('content-' + slug);
+            const chevron = document.getElementById('chevron-' + slug);
+            const header = document.getElementById('header-' + slug);
+
+            if (!content) return;
+
+            const isHidden = content.classList.contains('hidden');
+
+            if (isHidden) {
+                content.classList.remove('hidden');
+                if (chevron) chevron.classList.add('rotate-180', 'text-teal-800');
+                if (header) header.setAttribute('aria-expanded', 'true');
+            } else {
+                content.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180', 'text-teal-800');
+                if (header) header.setAttribute('aria-expanded', 'false');
+            }
+
+            syncGlobalCourseExpandBtn();
+        }
+
+        function toggleAllCourseAccordions(btn) {
+            const allContents = document.querySelectorAll('.course-accordion-content');
+            if (allContents.length === 0) return;
+
+            const anyClosed = Array.from(allContents).some(c => c.classList.contains('hidden'));
+
+            allContents.forEach(c => {
+                const slug = c.id.replace('content-', '');
+                const chevron = document.getElementById('chevron-' + slug);
+                const header = document.getElementById('header-' + slug);
+
+                if (anyClosed) {
+                    c.classList.remove('hidden');
+                    if (chevron) chevron.classList.add('rotate-180', 'text-teal-800');
+                    if (header) header.setAttribute('aria-expanded', 'true');
+                } else {
+                    c.classList.add('hidden');
+                    if (chevron) chevron.classList.remove('rotate-180', 'text-teal-800');
+                    if (header) header.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            syncGlobalCourseExpandBtn();
+        }
+
+        function syncGlobalCourseExpandBtn() {
+            const allContents = document.querySelectorAll('.course-accordion-content');
+            if (allContents.length === 0) return;
+
+            const allOpen = Array.from(allContents).every(c => !c.classList.contains('hidden'));
+            const textEl = document.getElementById('text-toggle-all-courses');
+            const iconEl = document.getElementById('icon-toggle-all-courses');
+
+            if (textEl) {
+                textEl.innerText = allOpen ? 'Tutup Semua' : 'Buka Semua';
+            }
+            if (iconEl) {
+                if (allOpen) {
+                    iconEl.classList.add('rotate-180');
+                } else {
+                    iconEl.classList.remove('rotate-180');
+                }
+            }
+        }
+
+        function toggleCourseGroup(master, slug) {
+            const content = document.getElementById('content-' + slug);
+            if (content && content.classList.contains('hidden') && master.checked) {
+                toggleCourseAccordion(slug);
+            }
+            const checkboxes = document.querySelectorAll('.item-' + slug + ' .agenda-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = master.checked;
+            });
+            updateBulkDeleteButton();
+        }
+
+        function handleSingleCheckboxChange() {
+            updateBulkDeleteButton();
+        }
+
+        function toggleSelectMode() {
+            selectModeActive = !selectModeActive;
+            applySelectModeUI();
+        }
+
+        function cancelBulkSelection() {
+            selectModeActive = false;
+            applySelectModeUI();
+        }
+
+        function applySelectModeUI() {
+            const btnToggleSelect = document.getElementById('btn-toggle-select');
+            const containerCheckAll = document.getElementById('container-check-all');
+            const checkAll = document.getElementById('check-all');
+            const containerCheckboxes = document.querySelectorAll('.container-checkbox');
+            const innerContainers = document.querySelectorAll('.inner-agenda-container');
+
+            if (selectModeActive) {
+                if (containerCheckAll) containerCheckAll.classList.remove('hidden');
+                containerCheckboxes.forEach(cb => {
+                    cb.classList.remove('hidden');
+                    if (cb.classList.contains('items-center')) {
+                        cb.classList.add('flex');
+                    }
+                });
+                innerContainers.forEach(container => {
+                    container.classList.remove('pl-0');
+                    container.classList.add('pl-7');
+                });
+                if (btnToggleSelect) {
+                    btnToggleSelect.innerHTML = `<i class="fa-solid fa-xmark"></i> Selesai Pilih`;
+                    btnToggleSelect.classList.remove('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
+                    btnToggleSelect.classList.add('bg-slate-200', 'text-slate-800');
+                }
+            } else {
+                if (containerCheckAll) containerCheckAll.classList.add('hidden');
+                containerCheckboxes.forEach(cb => {
+                    cb.classList.add('hidden');
+                    if (cb.classList.contains('flex')) {
+                        cb.classList.remove('flex');
+                    }
+                });
+                innerContainers.forEach(container => {
+                    container.classList.remove('pl-7');
+                    container.classList.add('pl-0');
+                });
+                if (btnToggleSelect) {
+                    btnToggleSelect.innerHTML = `<i class="fa-solid fa-square-check"></i> Pilih Banyak`;
+                    btnToggleSelect.classList.remove('bg-slate-200', 'text-slate-800');
+                    btnToggleSelect.classList.add('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
+                }
+                if (checkAll) checkAll.checked = false;
+                document.querySelectorAll('.agenda-checkbox').forEach(cb => cb.checked = false);
+                document.querySelectorAll('.course-master-checkbox').forEach(cb => cb.checked = false);
+            }
+            updateBulkDeleteButton();
+        }
+
+        function updateBulkDeleteButton() {
+            const allCheckboxes = document.querySelectorAll('.agenda-checkbox');
+            const checkedBoxes = document.querySelectorAll('.agenda-checkbox:checked');
+            const checkedCount = checkedBoxes.length;
+
+            const selectedCount = document.getElementById('selected-count');
+            const stickySelectedCount = document.getElementById('sticky-selected-count');
+            const btnBulkDelete = document.getElementById('btn-bulk-delete');
+            const stickyBulkBar = document.getElementById('sticky-bulk-bar');
+            const checkAll = document.getElementById('check-all');
+
+            if (selectedCount) selectedCount.innerText = checkedCount;
+            if (stickySelectedCount) stickySelectedCount.innerText = checkedCount;
+
+            if (checkedCount > 0 && selectModeActive) {
+                if (btnBulkDelete) btnBulkDelete.classList.remove('hidden');
+                if (stickyBulkBar) stickyBulkBar.classList.remove('hidden');
+            } else {
+                if (btnBulkDelete) btnBulkDelete.classList.add('hidden');
+                if (stickyBulkBar) stickyBulkBar.classList.add('hidden');
+            }
+
+            if (checkAll && allCheckboxes.length > 0) {
+                checkAll.checked = (checkedCount === allCheckboxes.length);
+            }
+
+            // Sync each course master checkbox
+            document.querySelectorAll('.course-master-checkbox').forEach(master => {
+                const slug = master.getAttribute('data-course');
+                if (slug) {
+                    const groupCbs = document.querySelectorAll('.item-' + slug + ' .agenda-checkbox');
+                    if (groupCbs.length > 0) {
+                        const allGroupChecked = Array.from(groupCbs).every(cb => cb.checked);
+                        master.checked = allGroupChecked;
+                    }
+                }
+            });
+        }
+
         function submitBulkDelete() {
             const checkedBoxes = document.querySelectorAll('.agenda-checkbox:checked');
             if (checkedBoxes.length === 0) {
                 Swal.fire({
                     icon: 'info',
-                    title: 'Pilih Agenda',
-                    text: 'Silakan pilih setidaknya satu agenda untuk dihapus.',
-                    confirmButtonColor: '#0c4ea6'
+                    title: 'Pilih Agenda Terlebih Dahulu',
+                    text: 'Silakan centang setidaknya satu agenda untuk dihapus.',
+                    confirmButtonColor: '#0f766e',
+                    confirmButtonText: 'Mengerti'
                 });
                 return;
             }
             
             Swal.fire({
-                title: 'Hapus Agenda Terpilih?',
-                text: 'Apakah Anda yakin ingin menghapus seluruh agenda terpilih?',
+                title: 'Hapus ' + checkedBoxes.length + ' Agenda Terpilih?',
+                text: 'Semua data dari ' + checkedBoxes.length + ' agenda perkuliahan terpilih beserta absensinya akan dihapus permanen!',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#e11d48',
                 cancelButtonColor: '#64748b',
-                confirmButtonText: 'Ya, Hapus!',
+                confirmButtonText: 'Ya, Hapus ' + checkedBoxes.length + ' Agenda!',
                 cancelButtonText: 'Batal',
                 customClass: {
                     popup: 'rounded-3xl p-6 shadow-2xl',
@@ -631,91 +879,29 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const checkAll = document.getElementById('check-all');
-            const checkboxes = document.querySelectorAll('.agenda-checkbox');
-            const btnBulkDelete = document.getElementById('btn-bulk-delete');
-            const selectedCount = document.getElementById('selected-count');
-            
             const btnToggleSelect = document.getElementById('btn-toggle-select');
-            const containerCheckAll = document.getElementById('container-check-all');
-            const containerCheckboxes = document.querySelectorAll('.container-checkbox');
-            const innerContainers = document.querySelectorAll('.inner-agenda-container');
-            
-            let selectModeActive = false;
-
             if (btnToggleSelect) {
-                btnToggleSelect.addEventListener('click', function() {
-                    selectModeActive = !selectModeActive;
-                    
-                    if (selectModeActive) {
-                        // Activate select mode
-                        containerCheckAll.classList.remove('hidden');
-                        containerCheckboxes.forEach(cb => cb.classList.remove('hidden'));
-                        innerContainers.forEach(container => {
-                            container.classList.remove('pl-2');
-                            container.classList.add('pl-7');
-                        });
-                        btnToggleSelect.innerHTML = `<i class="fa-solid fa-xmark"></i> Batal Pilih`;
-                        btnToggleSelect.classList.remove('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
-                        btnToggleSelect.classList.add('bg-slate-200', 'text-slate-800');
-                    } else {
-                        // Deactivate select mode
-                        containerCheckAll.classList.add('hidden');
-                        containerCheckboxes.forEach(cb => cb.classList.add('hidden'));
-                        innerContainers.forEach(container => {
-                            container.classList.remove('pl-7');
-                            container.classList.add('pl-2');
-                        });
-                        btnToggleSelect.innerHTML = `<i class="fa-solid fa-square-check"></i> Pilih Banyak`;
-                        btnToggleSelect.classList.remove('bg-slate-200', 'text-slate-800');
-                        btnToggleSelect.classList.add('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
-                        
-                        // Uncheck everything
-                        if (checkAll) checkAll.checked = false;
-                        document.querySelectorAll('.agenda-checkbox').forEach(cb => cb.checked = false);
-                        updateBulkDeleteButton();
-                    }
-                });
+                btnToggleSelect.addEventListener('click', toggleSelectMode);
             }
 
+            const checkAll = document.getElementById('check-all');
             if (checkAll) {
                 checkAll.addEventListener('change', function() {
                     const currentCheckboxes = document.querySelectorAll('.agenda-checkbox');
                     currentCheckboxes.forEach(cb => {
                         cb.checked = this.checked;
                     });
+                    document.querySelectorAll('.course-master-checkbox').forEach(cb => {
+                        cb.checked = this.checked;
+                    });
                     updateBulkDeleteButton();
                 });
-
-                document.addEventListener('change', function(e) {
-                    if (e.target && e.target.classList.contains('agenda-checkbox')) {
-                        const currentCheckboxes = document.querySelectorAll('.agenda-checkbox');
-                        const allChecked = Array.from(currentCheckboxes).every(c => c.checked);
-                        if (checkAll) checkAll.checked = allChecked;
-                        updateBulkDeleteButton();
-                    }
-                });
-            }
-
-            function updateBulkDeleteButton() {
-                const currentCheckboxes = document.querySelectorAll('.agenda-checkbox');
-                const checkedCount = Array.from(currentCheckboxes).filter(c => c.checked).length;
-                if (selectedCount) {
-                    selectedCount.innerText = checkedCount;
-                }
-                if (btnBulkDelete) {
-                    if (checkedCount > 0 && selectModeActive) {
-                        btnBulkDelete.classList.remove('hidden');
-                    } else {
-                        btnBulkDelete.classList.add('hidden');
-                    }
-                }
             }
 
             // Real-time dynamic polling for student check-ins
             function pollAgendas() {
-                // If bulk selection mode is active, do not poll
-                if (selectModeActive) return;
+                // If bulk selection mode is active or any checkbox is checked, do NOT poll
+                if (selectModeActive || document.querySelectorAll('.agenda-checkbox:checked').length > 0) return;
 
                 // If any modal (edit agenda, add agenda) is open, do not poll
                 const openModal = document.querySelector('div[id^="modal-"]:not(.hidden)');
@@ -727,7 +913,18 @@
                     return;
                 }
 
-                // Backup which details are currently open
+                // Backup which course accordions and details are open/closed
+                const openCourseSlugs = [];
+                const closedCourseSlugs = [];
+                document.querySelectorAll('.course-accordion-content').forEach(el => {
+                    const slug = el.id.replace('content-', '');
+                    if (!el.classList.contains('hidden')) {
+                        openCourseSlugs.push(slug);
+                    } else {
+                        closedCourseSlugs.push(slug);
+                    }
+                });
+
                 const openDetailsIndices = [];
                 document.querySelectorAll('#agenda-list-container details').forEach((details, index) => {
                     if (details.open) {
@@ -750,17 +947,44 @@
                         if (container.innerHTML !== data.html) {
                             container.innerHTML = data.html;
 
-                            // Restore open state
+                            // Restore accordion open/closed state
+                            openCourseSlugs.forEach(slug => {
+                                const content = document.getElementById('content-' + slug);
+                                const chevron = document.getElementById('chevron-' + slug);
+                                const header = document.getElementById('header-' + slug);
+                                if (content) content.classList.remove('hidden');
+                                if (chevron) chevron.classList.add('rotate-180', 'text-teal-800');
+                                if (header) header.setAttribute('aria-expanded', 'true');
+                            });
+                            closedCourseSlugs.forEach(slug => {
+                                const content = document.getElementById('content-' + slug);
+                                const chevron = document.getElementById('chevron-' + slug);
+                                const header = document.getElementById('header-' + slug);
+                                if (content) content.classList.add('hidden');
+                                if (chevron) chevron.classList.remove('rotate-180', 'text-teal-800');
+                                if (header) header.setAttribute('aria-expanded', 'false');
+                            });
+                            syncGlobalCourseExpandBtn();
+
+                            // Restore open state for details
                             document.querySelectorAll('#agenda-list-container details').forEach((details, index) => {
                                 if (openDetailsIndices.includes(index)) {
                                     details.open = true;
                                 }
                             });
+
+                            // Re-apply select mode UI if active
+                            if (selectModeActive) {
+                                applySelectModeUI();
+                            }
                         }
                     }
                 })
                 .catch(err => console.error("Error polling agendas: ", err));
             }
+
+            // Sync global button on initial load
+            syncGlobalCourseExpandBtn();
 
             // Start polling every 5 seconds
             setInterval(pollAgendas, 5000);
@@ -955,6 +1179,51 @@
             if (inKeluar && jamSelesai) inKeluar.value = jamSelesai;
 
             toggleComboboxModal(false);
+            checkLiveModalClash();
+        }
+
+        function checkLiveModalClash() {
+            const warningBox = document.getElementById('modal-live-clash-box');
+            const warningTitle = document.getElementById('modal-clash-title');
+            const warningMsg = document.getElementById('modal-clash-msg');
+            const inMasuk = document.getElementById('modal_input_waktu_masuk');
+            const inKeluar = document.getElementById('modal_input_waktu_keluar');
+            const tglInput = document.querySelector('input[name="tanggal"]');
+            const labSelect = document.querySelector('select[name="lab_id"]');
+
+            if (!inMasuk || !inKeluar || !tglInput) return;
+
+            let labId = labSelect && labSelect.value ? labSelect.value : null;
+            if (!labId) {
+                const activeItem = document.querySelector('#combobox_menu_modal .combobox-item.bg-teal-100\\/80');
+                if (activeItem && activeItem.dataset.labId) {
+                    labId = activeItem.dataset.labId;
+                }
+            }
+
+            const tanggal = tglInput.value;
+            const waktuMasuk = inMasuk.value;
+            const waktuKeluar = inKeluar.value;
+
+            if (!tanggal || !waktuMasuk || !waktuKeluar || !labId) {
+                if (warningBox) warningBox.classList.add('hidden');
+                return;
+            }
+
+            const url = `{{ route('dosen.jadwal-lab.check-availability') }}?lab_id=${labId}&tanggal=${tanggal}&waktu_masuk=${waktuMasuk}&waktu_keluar=${waktuKeluar}`;
+
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.available === false) {
+                        if (warningBox) warningBox.classList.remove('hidden');
+                        if (warningTitle) warningTitle.innerText = data.title;
+                        if (warningMsg) warningMsg.innerText = data.message;
+                    } else {
+                        if (warningBox) warningBox.classList.add('hidden');
+                    }
+                })
+                .catch(err => console.error("Gagal memeriksa bentrok jadwal: ", err));
         }
 
         document.addEventListener('click', function(e) {
@@ -1110,5 +1379,7 @@
             }
         });
     </script>
+
+    @include('dosen.partials.modal_tutorial')
 </body>
 </html>

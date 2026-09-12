@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Rekap Kehadiran Mahasiswa - Digital Board</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 12px; color: #333; margin: 30px; }
-        .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 18px; text-transform: uppercase; }
-        .header p { margin: 5px 0 0 0; font-size: 11px; color: #555; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 13px; color: #1e293b; margin: 30px; }
+        .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #0f766e; padding-bottom: 12px; }
+        .header h1 { margin: 0; font-size: 20px; text-transform: uppercase; color: #0f766e; }
+        .header p { margin: 5px 0 0 0; font-size: 12px; color: #475569; }
         .details-table { width: 100%; margin-bottom: 20px; border: none; }
-        .details-table td { padding: 4px 0; border: none; font-size: 12px; }
-        .details-table td.label { font-weight: bold; width: 15%; }
-        .details-table td.value { width: 35%; }
+        .details-table td { padding: 5px 0; border: none; font-size: 13px; }
+        .details-table td.label { font-weight: bold; width: 16%; color: #334155; }
+        .details-table td.value { width: 34%; color: #0f172a; }
         table.data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        table.data-table, table.data-table th, table.data-table td { border: 1px solid #333; }
-        table.data-table th, table.data-table td { padding: 8px; text-align: left; }
-        table.data-table th { background-color: #f2f2f2; font-weight: bold; }
+        table.data-table, table.data-table th, table.data-table td { border: 1px solid #cbd5e1; }
+        table.data-table th, table.data-table td { padding: 9px 10px; text-align: left; }
+        table.data-table th { background-color: #f1f5f9; font-weight: bold; color: #0f172a; }
         table.data-table td.center { text-align: center; }
         @media print {
             .no-print { display: none; }

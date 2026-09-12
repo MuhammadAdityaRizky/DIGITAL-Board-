@@ -82,6 +82,12 @@ class MahasiswaController extends Controller
 
         $agenda = $tokenValidation['agenda'];
 
+        if ($agenda->tanggal > date('Y-m-d')) {
+            return back()->withErrors([
+                'qr_code_token' => 'Absensi ditolak! Sesi perkuliahan ini belum dimulai (Jadwal: ' . \Carbon\Carbon::parse($agenda->tanggal)->translatedFormat('l, d F Y') . '). Presensi mahasiswa hanya dibuka pada hari H pelaksanaan perkuliahan.'
+            ]);
+        }
+
         // 1. Validasi Fakultas (Fakultas harus sama)
         if ($agenda->fakultas && $agenda->fakultas !== $mahasiswa->fakultas->nama_fakultas) {
             return back()->withErrors([

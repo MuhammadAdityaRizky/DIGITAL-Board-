@@ -22,87 +22,115 @@
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
             <div>
-                <h1 class="font-bold text-sm leading-tight">DIGITAL Board</h1>
-                <p class="text-[10px] font-semibold tracking-wider text-teal-400">Smart Lab Management</p>
+                <h1 class="font-extrabold text-sm leading-tight text-white">DIGITAL Board</h1>
+                <p class="text-xs font-bold tracking-wide text-teal-300">Smart Lab Management</p>
             </div>
         </div>
         
-        <nav class="flex-1 px-3 py-4 space-y-1">
-            <a href="{{ route('dosen.dashboard') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-850 text-white rounded-xl w-full">
-                <i class="fa-solid fa-border-all"></i>
-                <span class="text-xs font-semibold tracking-wide">Dashboard</span>
+        <nav class="flex-1 px-3 py-4 space-y-1.5">
+            <a href="{{ route('dosen.dashboard') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white rounded-xl w-full font-extrabold shadow-md">
+                <i class="fa-solid fa-border-all text-sm"></i>
+                <span class="text-sm font-bold tracking-wide">Dashboard</span>
             </a>
-            <a href="{{ route('dosen.agenda') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-calendar-alt"></i>
-                <span class="text-xs font-semibold tracking-wide">Agenda</span>
+            <a href="{{ route('dosen.agenda') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-calendar-alt text-sm"></i>
+                <span class="text-sm font-bold tracking-wide">Agenda Perkuliahan</span>
             </a>
-            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-gear"></i>
-                <span class="text-xs font-semibold tracking-wide">Pengaturan Akun</span>
+            <a href="{{ route('dosen.jadwal-lab') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-calendar-check text-sm"></i>
+                <span class="text-sm font-bold tracking-wide">Ketersediaan Lab</span>
+            </a>
+            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-gear text-sm"></i>
+                <span class="text-sm font-bold tracking-wide">Pengaturan Akun</span>
             </a>
         </nav>
+
+        <!-- Tombol Panduan Dosen di Sidebar -->
+        <div class="p-3 border-t border-slate-800 mt-auto">
+            <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-3 px-3.5 py-2.5 bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 hover:text-white rounded-xl w-full transition text-xs font-bold cursor-pointer">
+                <i class="fa-solid fa-book-open-reader text-sm text-amber-400"></i>
+                <span>Panduan Dosen</span>
+            </button>
+        </div>
     </aside>
 
     <!-- Main Content -->
     <main class="flex-1 flex flex-col h-full overflow-hidden relative">
         
         <!-- Top Navbar -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0 shadow-sm">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-teal-800 text-white rounded-lg flex lg:hidden items-center justify-center font-bold">
-                    <i class="fa-solid fa-graduation-cap text-sm"></i>
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0 shadow-xs">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-teal-800 text-white rounded-xl flex lg:hidden items-center justify-center font-bold shadow-xs">
+                    <i class="fa-solid fa-graduation-cap text-base"></i>
                 </div>
-                <h2 class="font-bold text-base text-slate-800 lg:hidden">DIGITAL Board</h2>
-                <h2 class="font-bold text-base text-slate-800 hidden lg:block">Dashboard Dosen</h2>
+                <div>
+                    <h2 class="font-extrabold text-base text-slate-800 lg:hidden">DIGITAL Board</h2>
+                    <h2 class="font-extrabold text-lg text-slate-900 hidden lg:block">Portal Dosen Pengajar</h2>
+                </div>
             </div>
 
-            <!-- Profile Avatar & Dropdown Menu -->
-            <div class="relative" id="profileDropdownWrapper">
-                <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1 rounded-xl hover:bg-slate-50 transition">
+            <div class="flex items-center gap-2.5">
+                <!-- Tombol Panduan / Tutorial Dosen -->
+                <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
+                    <i class="fa-solid fa-circle-question text-amber-600 text-sm"></i>
+                    <span class="hidden sm:inline">Panduan Sistem</span>
+                </button>
+
+                <!-- Single Global Scan QR Button for Desktop -->
+                <button type="button" onclick="startDosenQRScanner()" class="hidden md:flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer" title="Pindai QR Code di Layar Digital Board Lab">
+                    <i class="fa-solid fa-qrcode text-teal-400"></i>
+                    <span>Scan QR Board</span>
+                </button>
+
+                <!-- Profile Avatar & Dropdown Menu -->
+                <div class="relative" id="profileDropdownWrapper">
+                <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1.5 rounded-xl hover:bg-slate-100 transition border border-transparent hover:border-slate-200">
                     <div class="text-right hidden sm:block">
-                        <p class="font-bold text-xs text-slate-800 group-hover:text-teal-700 transition">{{ $dosen->nama }}</p>
-                        <p class="text-[9px] font-semibold tracking-wider text-slate-500">NIP: {{ $dosen->nip }} • Dosen</p>
+                        <p class="font-extrabold text-sm text-slate-900 group-hover:text-teal-800 transition">{{ $dosen->nama }}</p>
+                        <p class="text-xs font-bold text-slate-600">NIP: {{ $dosen->nip }} • Dosen Pengajar</p>
                     </div>
-                    <div class="w-9 h-9 rounded-full bg-teal-100 group-hover:bg-teal-200 text-teal-900 border border-teal-200 flex items-center justify-center font-bold text-xs transition transform group-hover:scale-105 shadow-xs">
+                    <div class="w-10 h-10 rounded-full bg-teal-100 group-hover:bg-teal-200 text-teal-900 border-2 border-teal-300 flex items-center justify-center font-extrabold text-sm transition transform group-hover:scale-105 shadow-xs">
                         {{ substr($dosen->nama, 0, 2) }}
                     </div>
-                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 transition hidden sm:inline-block"></i>
+                    <i class="fa-solid fa-chevron-down text-xs text-slate-500 group-hover:text-slate-800 transition hidden sm:inline-block"></i>
                 </button>
 
                 <!-- Dropdown Menu -->
-                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 hidden transform transition-all duration-200 origin-top-right">
-                    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                        <p class="text-xs font-bold text-slate-800 truncate">{{ $dosen->nama }}</p>
-                        <p class="text-[10px] text-slate-500 font-mono mt-0.5">NIP: {{ $dosen->nip }}</p>
-                        <span class="inline-block mt-1.5 px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200/60 rounded-md text-[9px] font-bold">
-                            Dosen Pengajar
+                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-2 w-72 bg-white border-2 border-slate-200 rounded-2xl shadow-2xl py-2 z-50 hidden transform transition-all duration-200 origin-top-right">
+                    <div class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70">
+                        <p class="text-sm font-extrabold text-slate-900 truncate">{{ $dosen->nama }}</p>
+                        <p class="text-xs font-bold text-slate-600 font-mono mt-0.5">NIP: {{ $dosen->nip }}</p>
+                        <span class="inline-block mt-2 px-2.5 py-0.5 bg-teal-100 text-teal-900 border border-teal-300 rounded-md text-xs font-extrabold">
+                            <i class="fa-solid fa-chalkboard-user mr-1"></i> Dosen Pengajar
                         </span>
                     </div>
 
-                    <div class="py-1">
-                        <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-2.5 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-800 transition font-medium group">
-                            <div class="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-teal-100 group-hover:text-teal-700 flex items-center justify-center text-slate-500 transition">
-                                <i class="fa-solid fa-gear text-xs"></i>
+                    <div class="py-1.5 px-1">
+                        <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 hover:bg-teal-50 hover:text-teal-900 rounded-xl transition font-bold group">
+                            <div class="w-8 h-8 rounded-lg bg-teal-100 group-hover:bg-teal-200 text-teal-800 flex items-center justify-center transition">
+                                <i class="fa-solid fa-gear text-sm"></i>
                             </div>
                             <div>
-                                <span class="font-bold block">Pengaturan Akun</span>
-                                <span class="text-[10px] text-slate-400 block font-normal">Edit profil & ganti password</span>
+                                <span class="font-extrabold block">Pengaturan Akun</span>
+                                <span class="text-xs text-slate-500 block font-normal">Edit profil & ganti password</span>
                             </div>
                         </a>
                     </div>
 
-                    <div class="pt-1 border-t border-slate-100">
+                    <div class="pt-1.5 border-t border-slate-100 px-1">
                         <form action="{{ route('logout') }}" method="POST" class="logout-form">
                             @csrf
-                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-rose-600 hover:bg-rose-50 transition font-bold text-left group">
-                                <div class="w-7 h-7 rounded-lg bg-rose-50 group-hover:bg-rose-100 text-rose-600 flex items-center justify-center transition">
-                                    <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-700 hover:bg-rose-50 rounded-xl transition font-extrabold text-left group cursor-pointer">
+                                <div class="w-8 h-8 rounded-lg bg-rose-100 group-hover:bg-rose-200 text-rose-700 flex items-center justify-center transition">
+                                    <i class="fa-solid fa-right-from-bracket text-sm"></i>
                                 </div>
                                 <span>Keluar / Logout</span>
                             </button>
                         </form>
                     </div>
                 </div>
+            </div>
             </div>
         </header>
 
@@ -116,8 +144,8 @@
                     <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Selamat Datang, {{ $dosen->nama }}</h2>
                     <p class="text-xs text-teal-200/90 font-mono">NIP: {{ $dosen->nip }}</p>
                     @if($dosen->kompetensi)
-                        <div class="pt-1 text-[10px] text-emerald-100 flex items-center gap-1.5">
-                            <i class="fa-solid fa-star text-amber-400 animate-pulse"></i>
+                        <div class="pt-1 text-xs text-emerald-100 font-bold flex items-center gap-1.5">
+                            <i class="fa-solid fa-star text-amber-400"></i>
                             <span>Kompetensi: <strong class="text-white">{{ $dosen->kompetensi }}</strong></span>
                         </div>
                     @endif
@@ -134,13 +162,13 @@
             <div class="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white rounded-2xl p-5 shadow-lg border border-emerald-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div class="space-y-1">
                     <div class="flex items-center gap-2">
-                        <span class="px-2.5 py-0.5 bg-emerald-500 text-white rounded-full text-[10px] font-extrabold uppercase tracking-wide animate-pulse">
+                        <span class="px-3 py-1 bg-emerald-500 text-white rounded-full text-xs font-extrabold uppercase tracking-wide">
                             <i class="fa-solid fa-bolt mr-1"></i> Sesi Praktikum Hari Ini Ditemukan
                         </span>
-                        <span class="text-xs text-emerald-300 font-semibold font-mono">{{ $todayScheduledJadwal->hari }}, {{ substr($todayScheduledJadwal->jam_mulai,0,5) }} - {{ substr($todayScheduledJadwal->jam_selesai,0,5) }} WIB</span>
+                        <span class="text-xs text-emerald-300 font-bold font-mono">{{ $todayScheduledJadwal->hari }}, {{ substr($todayScheduledJadwal->jam_mulai,0,5) }} - {{ substr($todayScheduledJadwal->jam_selesai,0,5) }} WIB</span>
                     </div>
-                    <h3 class="text-lg font-bold text-white mt-1">{{ $todayScheduledJadwal->mata_kuliah }}</h3>
-                    <p class="text-xs text-slate-300">
+                    <h3 class="text-lg font-extrabold text-white mt-1">{{ $todayScheduledJadwal->mata_kuliah }}</h3>
+                    <p class="text-xs text-slate-300 font-semibold">
                         <i class="fa-solid fa-door-open text-teal-400 mr-1"></i> {{ $todayScheduledJadwal->lab->nama_lab ?? 'Lab' }} • Kelas {{ $todayScheduledJadwal->kelas }} (Semester {{ $todayScheduledJadwal->semester }})
                     </p>
                 </div>
@@ -152,7 +180,7 @@
                         <input type="hidden" name="waktu_masuk" value="{{ substr($todayScheduledJadwal->jam_mulai,0,5) }}">
                         <input type="hidden" name="waktu_keluar" value="{{ substr($todayScheduledJadwal->jam_selesai,0,5) }}">
                         <input type="hidden" name="rencana_pembelajaran" value="Sesi Praktikum Regular - {{ $todayScheduledJadwal->mata_kuliah }}">
-                        <button type="submit" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                        <button type="submit" class="px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
                             <i class="fa-solid fa-play"></i>
                             <span>1-Click Start Agenda Hari Ini</span>
                         </button>
@@ -174,16 +202,16 @@
 
             <!-- Announcements -->
             @if(isset($pengumuman) && $pengumuman->count() > 0)
-            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-4 items-start shadow-sm">
-                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
+            <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 flex gap-4 items-start shadow-xs">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 text-base">
                     <i class="fa-solid fa-bullhorn"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-amber-800 text-sm flex items-center gap-2">
+                    <h3 class="font-extrabold text-amber-900 text-sm flex items-center gap-2">
                         PENGUMUMAN RESMI LAB
-                        <span class="text-[10px] font-normal text-amber-600/80">({{ date('d M Y', strtotime($pengumuman->first()->created_at)) }})</span>
+                        <span class="text-xs font-bold text-amber-700">({{ date('d M Y', strtotime($pengumuman->first()->created_at)) }})</span>
                     </h3>
-                    <p class="text-amber-700 text-xs mt-1">
+                    <p class="text-amber-900 text-xs mt-1 font-medium">
                         <strong>{{ $pengumuman->first()->judul }}:</strong> {{ $pengumuman->first()->isi_pengumuman }}
                     </p>
                 </div>
@@ -196,56 +224,59 @@
                 <div class="lg:col-span-1 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between relative overflow-hidden">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center font-bold text-sm border border-teal-100">
-                                <i class="fa-solid fa-calendar-check"></i>
+                            <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-800 flex items-center justify-center font-bold text-base border border-teal-200 shadow-2xs">
+                                <i class="fa-solid fa-calendar-day"></i>
                             </div>
-                            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Agenda Hari Ini</span>
+                            <span class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Jadwal Mengajar Hari Ini</span>
                         </div>
-                        <span class="px-2 py-0.5 bg-teal-50 text-teal-800 border border-teal-200 rounded text-[10px] font-bold">
+                        <span class="px-2.5 py-1 bg-teal-50 text-teal-900 border border-teal-200 rounded-lg text-xs font-bold">
                             {{ \Carbon\Carbon::today()->translatedFormat('d M Y') }}
                         </span>
                     </div>
 
                     <div class="mt-4">
                         <div class="flex items-baseline gap-2">
-                            <span class="text-3xl font-extrabold text-slate-800">{{ $todayAgendas->count() }}</span>
-                            <span class="text-xs font-bold text-slate-500">Sesi Pertemuan</span>
+                            <span class="text-3xl font-extrabold text-slate-900">{{ $todayAgendas->count() }}</span>
+                            <span class="text-sm font-bold text-slate-700">Sesi Pertemuan</span>
                         </div>
-                        <p class="text-[11px] text-slate-450 mt-1 font-medium">Praktikum Aktif Terjadwal</p>
+                        <p class="text-xs text-slate-600 mt-1 font-medium">Sesi Praktikum Terjadwal Hari Ini</p>
                     </div>
 
                     <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                        <a href="{{ route('dosen.agenda') }}" class="text-[11px] font-bold text-teal-800 hover:text-teal-900 transition flex items-center gap-1">
-                            <span>Kelola Semua Agenda</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        <a href="{{ route('dosen.agenda') }}" class="text-xs font-extrabold text-teal-800 hover:text-teal-900 transition flex items-center gap-1.5">
+                            <span>Kelola Semua Sesi</span> <i class="fa-solid fa-arrow-right text-xs"></i>
                         </a>
-                        <span class="text-[10px] font-mono text-slate-400">Total: {{ $agendas->count() }} Agenda</span>
+                        <span class="text-xs font-semibold text-slate-500">Total: {{ $agendas->count() }} Sesi</span>
                     </div>
                 </div>
 
-                <!-- Bento 2: Buat Agenda Mata Kuliah Form (Moved from right column, replacing Absensi Dosen) -->
+                <!-- Bento 2: Mulai Sesi Praktikum / Buka Kelas Lab Form -->
                 <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between">
                     <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-slate-100">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-lg bg-teal-800 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-                                <i class="fa-solid fa-calendar-plus"></i>
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-teal-800 text-white flex items-center justify-center font-bold text-base shadow-xs">
+                                <i class="fa-solid fa-chalkboard-user"></i>
                             </div>
                             <div>
-                                <h3 class="font-bold text-xs text-slate-800">Buat Agenda Mata Kuliah Baru</h3>
-                                <p class="text-[10px] text-slate-400 font-medium">Pilih mata kuliah & buat jadwal sesi praktikum secara cepat</p>
+                                <h3 class="font-extrabold text-sm text-slate-900">Mulai Sesi Mengajar / Praktikum Hari Ini</h3>
+                                <p class="text-xs text-slate-600 font-medium mt-0.5">Pilih jadwal Anda untuk mengaktifkan info di Digital Board Lab & membuka presensi mahasiswa</p>
                             </div>
                         </div>
-                        <span class="px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-lg text-[10px] font-bold hidden sm:inline-block">
-                            <i class="fa-solid fa-bolt mr-1 text-teal-600"></i> Buat Agenda Cepat
+                        <span class="px-2.5 py-1 bg-teal-50 text-teal-900 border border-teal-200 rounded-lg text-xs font-bold hidden sm:inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-tv text-teal-700"></i> Terkoneksi ke Board Lab
                         </span>
                     </div>
 
                     <form action="{{ route('dosen.agenda.store') }}" method="POST" class="space-y-3 text-xs">
                         @csrf
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- 1. Combobox Mata Kuliah Berdasarkan Jadwal -->
-                            <div class="space-y-1">
-                                <label class="block text-slate-700 font-bold text-[11px]">Mata Kuliah & Kelas <span class="text-rose-500">*</span></label>
+                            <div class="space-y-1.5">
+                                <label class="block text-slate-800 font-extrabold text-xs flex items-center justify-between">
+                                    <span>Mata Kuliah & Kelas <span class="text-rose-600">*</span></span>
+                                    <span class="text-xs text-slate-500 font-medium">Pilih Jadwal Rutin</span>
+                                </label>
                                 @if(isset($jadwalPenggunaanLab) && $jadwalPenggunaanLab->count() > 0)
                                     <!-- Hidden input for form submission -->
                                     <input type="hidden" name="jadwal_penggunaan_lab_id" id="dashboard_jadwal_id" required>
@@ -253,30 +284,35 @@
                                     <!-- Custom Searchable Combobox Component -->
                                     <div class="relative" id="combobox_container_dashboard">
                                         <div class="relative flex items-center">
-                                            <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-400 text-xs pointer-events-none"></i>
+                                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-slate-400 text-sm pointer-events-none"></i>
                                             <input type="text" 
                                                    id="combobox_search_dashboard" 
-                                                   placeholder="-- Cari / Pilih Mata Kuliah Terjadwal --" 
+                                                   placeholder="-- Klik untuk Pilih Mata Kuliah --" 
                                                    autocomplete="off"
                                                    onclick="toggleComboboxDashboard(true)"
                                                    onfocus="toggleComboboxDashboard(true)"
                                                    oninput="filterComboboxDashboard(this.value)"
-                                                   class="w-full pl-8 pr-8 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-bold text-xs focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition placeholder:font-normal placeholder:text-slate-400 cursor-pointer" />
+                                                   class="w-full pl-9 pr-9 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold text-xs focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition placeholder:font-medium placeholder:text-slate-400 cursor-pointer shadow-2xs" />
                                             <button type="button" 
                                                     onclick="toggleComboboxDashboard()" 
-                                                    class="absolute right-2 text-slate-400 hover:text-slate-600 p-1 focus:outline-none">
+                                                    class="absolute right-2.5 text-slate-500 hover:text-slate-700 p-1 focus:outline-none cursor-pointer">
                                                 <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200" id="combobox_arrow_dashboard"></i>
                                             </button>
                                         </div>
 
                                         <!-- Dropdown Options Menu -->
                                         <div id="combobox_menu_dashboard" 
-                                             class="hidden absolute z-30 left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl divide-y divide-slate-100">
+                                             class="hidden absolute z-30 left-0 right-0 mt-1 max-h-72 overflow-y-auto bg-white border border-slate-300 rounded-2xl shadow-xl divide-y divide-slate-100">
                                             @foreach($jadwalPenggunaanLab as $j)
-                                                <div class="combobox-item p-2.5 hover:bg-teal-50/80 cursor-pointer transition flex flex-col gap-0.5"
+                                                @php
+                                                    $semLabel = str_contains(strtolower($j->semester ?? ''), 'semester') 
+                                                        ? $j->semester 
+                                                        : 'Semester ' . ($j->semester ?? '1');
+                                                @endphp
+                                                <div class="combobox-item p-3.5 hover:bg-teal-50 cursor-pointer transition flex flex-col gap-1.5"
                                                      data-id="{{ $j->id }}"
-                                                     data-title="{{ $j->mata_kuliah }} - {{ $j->kelas }} ({{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }}-{{ substr($j->jam_selesai,0,5) }})"
-                                                     data-search="{{ strtolower($j->mata_kuliah . ' ' . $j->kelas . ' ' . $j->hari . ' ' . ($j->lab->nama_lab ?? '') . ' ' . ($j->prodi->nama_prodi ?? '')) }}"
+                                                     data-title="{{ $j->mata_kuliah }} - Kelas {{ $j->kelas }} ({{ $semLabel }}, Setiap {{ $j->hari }})"
+                                                     data-search="{{ strtolower($j->mata_kuliah . ' ' . $j->kelas . ' ' . $j->hari . ' ' . ($j->lab->nama_lab ?? '') . ' ' . ($j->prodi->nama_prodi ?? '') . ' ' . $semLabel) }}"
                                                      data-lab="{{ strtoupper($j->lab->nama_lab ?? 'Lab') }}"
                                                      data-kelas="{{ $j->kelas ?? 'Reg A' }}"
                                                      data-semester="{{ $j->semester ?? '1' }}"
@@ -285,66 +321,77 @@
                                                      data-jam-mulai="{{ substr($j->jam_mulai, 0, 5) }}"
                                                      data-jam-selesai="{{ substr($j->jam_selesai, 0, 5) }}"
                                                      onclick="selectComboboxDashboard(this)">
-                                                    <div class="flex items-center justify-between font-bold text-slate-800 text-xs">
-                                                        <span class="text-teal-900 font-extrabold truncate max-w-[200px]">{{ $j->mata_kuliah }}</span>
-                                                        <span class="px-2 py-0.5 bg-teal-100 text-teal-800 rounded-full text-[10px] font-bold">Kelas {{ $j->kelas }}</span>
+                                                    <div class="flex items-center justify-between gap-2 font-bold text-slate-900 text-xs sm:text-sm">
+                                                        <span class="text-teal-950 font-extrabold">{{ $j->mata_kuliah }}</span>
+                                                        <div class="flex items-center gap-1.5 shrink-0">
+                                                            <span class="px-2.5 py-0.5 bg-teal-50 text-teal-900 border border-teal-200 rounded-md text-xs font-extrabold uppercase">
+                                                                {{ $semLabel }}
+                                                            </span>
+                                                            <span class="px-2.5 py-0.5 bg-teal-100 text-teal-900 rounded-md text-xs font-bold">Kelas {{ $j->kelas }}</span>
+                                                        </div>
                                                     </div>
-                                                    <div class="flex items-center justify-between text-[10px] text-slate-500 font-medium mt-0.5">
-                                                        <span><i class="fa-regular fa-clock mr-1 text-slate-400"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }}-{{ substr($j->jam_selesai,0,5) }}</span>
-                                                        <span class="text-teal-700 font-semibold"><i class="fa-solid fa-door-open mr-1"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
+                                                    <div class="flex items-center justify-between text-xs text-slate-600 font-semibold mt-0.5">
+                                                        <span><i class="fa-regular fa-calendar-check mr-1.5 text-teal-700"></i>Setiap {{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }} - {{ substr($j->jam_selesai,0,5) }} WIB</span>
+                                                        <span class="text-teal-900 font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200/60"><i class="fa-solid fa-door-open mr-1 text-teal-700"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
                                                     </div>
                                                 </div>
                                             @endforeach
-                                            <div id="combobox_empty_dashboard" class="hidden p-3 text-center text-slate-400 text-xs italic">
-                                                Tidak ada mata kuliah yang cocok dengan kata kunci pencarian.
+                                            <div id="combobox_empty_dashboard" class="hidden p-4 text-center text-slate-500 text-xs font-medium italic">
+                                                Tidak ada jadwal mata kuliah yang cocok dengan pencarian.
                                             </div>
                                         </div>
                                     </div>
 
                                     <!-- Detail Box -->
-                                    <div id="jadwal-info-box" class="hidden mt-1.5 p-2 bg-teal-50/80 border border-teal-200 rounded-lg space-y-0.5 text-[10px]">
-                                        <div class="flex justify-between items-center font-bold text-teal-900">
-                                            <span id="info-lab"><i class="fa-solid fa-door-open mr-1 text-teal-600"></i> Lab</span>
-                                            <span id="info-kelas" class="px-1.5 py-0.5 bg-teal-200/60 rounded text-[9px]">Kelas</span>
+                                    <div id="jadwal-info-box" class="hidden mt-2 p-2.5 bg-teal-50 border border-teal-200 rounded-xl space-y-1 text-xs">
+                                        <div class="flex justify-between items-center font-bold text-teal-950">
+                                            <span id="info-lab"><i class="fa-solid fa-door-open mr-1 text-teal-700"></i> Lab</span>
+                                            <span id="info-kelas" class="px-2 py-0.5 bg-teal-200/80 rounded text-xs">Kelas</span>
                                         </div>
-                                        <div class="text-slate-600 truncate">
-                                            <span>Jadwal: <strong id="info-rutin" class="text-slate-800">-</strong></span>
+                                        <div class="text-slate-700 truncate font-medium">
+                                            <span>Jadwal: <strong id="info-rutin" class="text-slate-900">-</strong></span>
                                         </div>
                                     </div>
                                 @else
-                                    <div class="p-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-[11px]">
-                                        Belum ada jadwal mata kuliah yang di-plotting.
+                                    <div class="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl text-xs font-medium">
+                                        Belum ada jadwal mata kuliah yang di-plotting oleh Admin.
                                     </div>
                                 @endif
                             </div>
 
                             <!-- 2. Rencana Pembelajaran -->
-                            <div class="space-y-1">
-                                <label class="block text-slate-700 font-bold text-[11px]">Rencana Pembelajaran / Materi <span class="text-rose-500">*</span></label>
-                                <textarea name="rencana_pembelajaran" rows="2" required placeholder="Tuliskan materi pembelajaran pada pertemuan ini..." class="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 text-xs focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none resize-none"></textarea>
+                            <div class="space-y-1.5">
+                                <label class="block text-slate-800 font-extrabold text-xs">Materi / Pokok Bahasan Hari Ini <span class="text-rose-600">*</span></label>
+                                <textarea name="rencana_pembelajaran" rows="2" required placeholder="Contoh: Pengenalan Sintaks C++, Variabel & Tipe Data..." class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs font-medium focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none resize-none placeholder:text-slate-400"></textarea>
                             </div>
                         </div>
 
                         <!-- Row 2: Date, Waktu & Submit -->
                         <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end pt-1">
                             <div>
-                                <label class="block text-slate-700 font-bold text-[11px] mb-1">Tanggal <span class="text-rose-500">*</span></label>
-                                <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" class="w-full p-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 text-xs font-semibold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                <label class="block text-slate-800 font-extrabold text-xs mb-1">Tanggal Pertemuan <span class="text-rose-600">*</span></label>
+                                <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" class="w-full p-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                             </div>
                             <div>
-                                <label class="block text-slate-700 font-bold text-[11px] mb-1">Jam Mulai <span class="text-rose-500">*</span></label>
-                                <input type="time" name="waktu_masuk" id="input_waktu_masuk" required value="08:00" class="w-full p-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 text-xs font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                <label class="block text-slate-800 font-extrabold text-xs mb-1">Jam Masuk <span class="text-rose-600">*</span></label>
+                                <input type="time" name="waktu_masuk" id="input_waktu_masuk" required value="08:00" class="w-full p-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                             </div>
                             <div>
-                                <label class="block text-slate-700 font-bold text-[11px] mb-1">Jam Selesai <span class="text-rose-500">*</span></label>
-                                <input type="time" name="waktu_keluar" id="input_waktu_keluar" required value="10:30" class="w-full p-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 text-xs font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                <label class="block text-slate-800 font-extrabold text-xs mb-1">Jam Selesai <span class="text-rose-600">*</span></label>
+                                <input type="time" name="waktu_keluar" id="input_waktu_keluar" required value="10:30" class="w-full p-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                             </div>
                             <div>
-                                <button type="submit" class="w-full py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5">
-                                    <i class="fa-solid fa-calendar-check"></i>
-                                    <span>Buat Agenda</span>
+                                <button type="submit" class="w-full py-2.5 px-4 bg-teal-800 hover:bg-teal-900 text-white text-xs font-extrabold rounded-xl shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                                    <i class="fa-solid fa-play text-xs"></i>
+                                    <span>Buka Sesi & Presensi</span>
                                 </button>
                             </div>
+                        </div>
+
+                        <!-- Microcopy Hint -->
+                        <div class="pt-1 flex items-center gap-2 text-xs text-slate-600 font-medium">
+                            <i class="fa-solid fa-circle-info text-teal-700 shrink-0"></i>
+                            <span>Sesi yang dibuka otomatis tayang di monitor lab dan mahasiswa dapat melakukan presensi kehadiran.</span>
                         </div>
                     </form>
                 </div>
@@ -359,12 +406,12 @@
                         <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex flex-wrap justify-between items-center gap-2">
                             <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
                                 <i class="fa-solid fa-calendar-check text-teal-800"></i>
-                                <span>Prioritas Agenda & Kelas</span>
+                                <span>Daftar Sesi Mengajar & Kelas</span>
                                 <span class="text-xs text-slate-450 font-semibold hidden sm:inline">({{ \Carbon\Carbon::today()->translatedFormat('l, d M Y') }})</span>
                             </h3>
                             <div class="flex items-center gap-2">
-                                <span class="text-[10px] bg-teal-50 text-teal-800 font-bold px-2.5 py-1 rounded-full border border-teal-200">{{ $agendas->count() }} Prioritas (Max 10)</span>
-                                <a href="{{ route('dosen.agenda') }}" class="text-[10px] text-teal-850 hover:underline font-bold flex items-center gap-1">Lihat Semua <i class="fa-solid fa-arrow-right"></i></a>
+                                <span class="text-xs bg-teal-50 text-teal-900 font-bold px-3 py-1 rounded-full border border-teal-300">{{ $agendas->count() }} Sesi Terjadwal</span>
+                                <a href="{{ route('dosen.agenda') }}" class="text-xs text-teal-900 hover:text-teal-700 hover:underline font-extrabold flex items-center gap-1.5 ml-1">Lihat Semua <i class="fa-solid fa-arrow-right"></i></a>
                             </div>
                         </div>
                         
@@ -386,115 +433,147 @@
                                                     <i class="fa-solid fa-graduation-cap text-teal-300 text-xs"></i>
                                                     <span>{{ strtoupper($semesterName) }}</span>
                                                 </div>
-                                                <span class="text-[11px] text-slate-400 font-bold">({{ $semesterAgendas->count() }} Sesi Pertemuan)</span>
+                                                <span class="text-xs text-slate-600 font-bold">({{ $semesterAgendas->count() }} Sesi Pertemuan)</span>
                                             </div>
                                         </div>
 
                                         <!-- Agenda Cards List for this Semester -->
                                         <div class="space-y-4">
                                             @foreach($semesterAgendas as $ag)
+                                            @php
+                                                $carbonTgl = \Carbon\Carbon::parse($ag->tanggal);
+                                                $isToday = $ag->tanggal === date('Y-m-d');
+                                                $isFuture = $ag->tanggal > date('Y-m-d');
+                                            @endphp
                                             <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4 hover:border-teal-300 transition-all shadow-sm">
                                                 <div class="flex flex-col md:flex-row gap-5 items-start">
-                                                    <!-- Time block -->
-                                                    <div class="bg-teal-900 text-white rounded-xl p-3 flex flex-col items-center justify-center min-w-[80px] shadow-sm">
-                                                        <span class="text-xl font-bold leading-none">{{ substr($ag->jam_mulai,0,2) }}</span>
-                                                        <span class="text-[9px] font-semibold uppercase tracking-wider text-teal-300 mt-1">{{ substr($ag->jam_mulai,3,2) }} WIB</span>
+                                                    <!-- Real Calendar Date & Time Block -->
+                                                    <div class="rounded-xl p-3 flex flex-col items-center justify-center min-w-[105px] shadow-sm text-center {{ $isToday ? 'bg-teal-900 text-white border-2 border-teal-500' : 'bg-slate-800 text-white' }}">
+                                                        <span class="text-xs font-extrabold uppercase tracking-wider {{ $isToday ? 'text-teal-300' : 'text-slate-300' }}">
+                                                            {{ $carbonTgl->translatedFormat('l') }}
+                                                        </span>
+                                                        <span class="text-2xl font-black leading-tight my-0.5">
+                                                            {{ $carbonTgl->format('d') }}
+                                                        </span>
+                                                        <span class="text-xs font-bold uppercase {{ $isToday ? 'text-teal-200' : 'text-slate-300' }}">
+                                                            {{ $carbonTgl->translatedFormat('M Y') }}
+                                                        </span>
+                                                        <div class="mt-1 pt-1 border-t {{ $isToday ? 'border-teal-700/80 text-teal-300' : 'border-slate-700 text-slate-300' }} w-full text-xs font-mono font-bold">
+                                                            {{ substr($ag->jam_mulai,0,5) }} WIB
+                                                        </div>
                                                     </div>
                                                     
                                                     <!-- Details -->
                                                     <div class="flex-1 space-y-3 w-full">
                                                         <div>
                                                             <div class="flex flex-wrap items-center gap-2">
-                                                                @if($ag->status_agenda === 'Berlangsung')
-                                                                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded text-[9px] font-bold uppercase tracking-wider">Berlangsung</span>
-                                                                @elseif($ag->status_agenda === 'Selesai')
-                                                                    <span class="px-2 py-0.5 bg-slate-100 text-slate-650 border border-slate-200 rounded text-[9px] font-bold uppercase tracking-wider">Selesai</span>
-                                                                @elseif($ag->status_agenda === 'Dibatalkan')
-                                                                    <span class="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-100 rounded text-[9px] font-bold uppercase tracking-wider">Dibatalkan</span>
-                                                                @else
-                                                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9px] font-bold uppercase tracking-wider">Mendatang</span>
+                                                                @if($isToday)
+                                                                    <span class="px-2.5 py-1 bg-teal-100 text-teal-900 border border-teal-300 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                                                                        <span class="w-2 h-2 rounded-full bg-teal-600 animate-ping"></span> Hari Ini
+                                                                    </span>
                                                                 @endif
-                                                                <span class="px-2 py-0.5 bg-teal-50 text-teal-800 border border-teal-200 rounded text-[9px] font-extrabold uppercase">
+                                                                @if($ag->status_agenda === 'Berlangsung')
+                                                                    <span class="px-2.5 py-1 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg text-xs font-extrabold uppercase tracking-wider animate-pulse">Berlangsung</span>
+                                                                @elseif($ag->status_agenda === 'Selesai')
+                                                                    <span class="px-2.5 py-1 bg-slate-200 text-slate-800 border border-slate-300 rounded-lg text-xs font-bold uppercase tracking-wider">Selesai</span>
+                                                                @elseif($ag->status_agenda === 'Dibatalkan')
+                                                                    <span class="px-2.5 py-1 bg-rose-100 text-rose-800 border border-rose-200 rounded-lg text-xs font-bold uppercase tracking-wider">Dibatalkan</span>
+                                                                @else
+                                                                    <span class="px-2.5 py-1 bg-blue-100 text-blue-900 border border-blue-200 rounded-lg text-xs font-bold uppercase tracking-wider">Mendatang</span>
+                                                                @endif
+                                                                <span class="px-2.5 py-1 bg-teal-50 text-teal-900 border border-teal-200 rounded-lg text-xs font-extrabold uppercase">
                                                                     {{ str_contains(strtolower($ag->semester ?? ''), 'semester') ? $ag->semester : 'Semester ' . ($ag->semester ?? '1') }}
                                                                 </span>
                                                                 @if($ag->kelas)
-                                                                    <span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded text-[9px] font-bold">
+                                                                    <span class="px-2.5 py-1 bg-slate-100 text-slate-800 border border-slate-200 rounded-lg text-xs font-bold">
                                                                         Kelas: {{ $ag->kelas }}
                                                                     </span>
                                                                 @endif
+                                                                <span class="text-xs font-bold text-slate-700 ml-auto flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1 rounded-lg">
+                                                                    <i class="fa-regular fa-clock text-teal-700"></i>
+                                                                    {{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB
+                                                                </span>
                                                             </div>
-                                                            <h4 class="font-bold text-slate-800 text-lg mt-1.5">{{ $ag->mata_kuliah }}</h4>
-                                                            <p class="text-xs text-slate-500 mt-1">Catatan/Materi: <span class="text-slate-650 font-medium">{{ $ag->catatan ?? 'Tidak ada catatan.' }}</span></p>
-                                                            <p class="text-[11px] text-slate-450 mt-0.5 flex flex-wrap items-center gap-2">
-                                                                <span><i class="fa-solid fa-location-dot mr-1"></i>{{ $ag->lab->nama_lab }}</span>
-                                                                <span class="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-extrabold font-mono text-teal-850 select-all" title="Kode Token Agenda">ID AGENDA: AGENDA_ID_{{ $ag->id }}</span>
-                                                            </p>
+
+                                                            <h4 class="font-black text-slate-900 text-lg md:text-xl mt-2 tracking-tight">{{ $ag->mata_kuliah }}</h4>
+                                                            
+                                                            <!-- Explicit Date & Location Line -->
+                                                            <div class="flex flex-wrap items-center gap-3 text-xs text-slate-700 mt-1.5 font-semibold">
+                                                                <span class="font-bold text-teal-950 flex items-center gap-1.5">
+                                                                    <i class="fa-regular fa-calendar-days text-teal-700"></i>
+                                                                    {{ $carbonTgl->translatedFormat('l, d F Y') }}
+                                                                </span>
+                                                                <span class="text-slate-300">•</span>
+                                                                <span class="flex items-center gap-1 text-slate-700 font-bold">
+                                                                    <i class="fa-solid fa-location-dot text-teal-700"></i>
+                                                                    {{ $ag->lab->nama_lab ?? 'Lab' }}
+                                                                </span>
+                                                            </div>
+
+                                                            <p class="text-xs text-slate-700 mt-2 font-medium">Catatan / Materi: <strong class="text-slate-900">{{ $ag->catatan ?: 'Belum ada catatan.' }}</strong></p>
                                                         </div>
                                                         
-                                                         <!-- Actions -->
+                                                         <!-- Direct Actions -->
                                                          <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200 w-full">
-                                                             @php
-                                                                 $isPastOrSelesai = ($ag->tanggal < date('Y-m-d')) || ($ag->status_agenda === 'Selesai');
-                                                                 $canAccessFeatures = !empty($ag->dosen_waktu_masuk) || $isPastOrSelesai;
-                                                             @endphp
-
-                                                             @if($canAccessFeatures)
-                                                                 <div class="flex flex-wrap items-center gap-2">
+                                                             <div class="flex flex-wrap items-center gap-2.5">
+                                                                 @if($isFuture)
+                                                                     <span class="px-4 py-2 bg-slate-100 text-slate-600 border border-slate-300 rounded-xl text-xs font-bold flex items-center gap-2 cursor-not-allowed select-none" title="Presensi hanya dapat dibuka pada hari H pelaksanaan perkuliahan">
+                                                                         <i class="fa-solid fa-lock text-xs text-slate-500"></i>
+                                                                         <span>Presensi Dibuka Hari H</span>
+                                                                     </span>
+                                                                     <span class="text-xs text-slate-500 font-medium italic">
+                                                                         (Perkuliahan belum dimulai)
+                                                                     </span>
+                                                                 @else
                                                                      @if($ag->dosen_waktu_masuk)
-                                                                         <span class="px-2.5 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1.5 mr-1" title="Waktu Absen Masuk Dosen">
-                                                                             <i class="fa-solid fa-circle-check text-emerald-600"></i> Hadir: {{ date('H:i', strtotime($ag->dosen_waktu_masuk)) }} WIB
+                                                                         <span class="px-3 py-2 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-extrabold flex items-center gap-1.5 mr-1 shadow-2xs" title="Waktu Absen Masuk Dosen">
+                                                                             <i class="fa-solid fa-circle-check text-emerald-700"></i> Hadir: {{ date('H:i', strtotime($ag->dosen_waktu_masuk)) }} WIB
                                                                          </span>
                                                                      @endif
 
                                                                      <!-- 1. Tombol Absensi Mahasiswa -->
                                                                      <a href="{{ route('dosen.absensi.input', $ag->id) }}" 
-                                                                        class="px-3 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                                                                        class="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-extrabold transition flex items-center gap-2 shadow-sm cursor-pointer"
                                                                         title="Input & Kelola Absensi Mahasiswa">
-                                                                         <i class="fa-solid fa-users-viewfinder"></i> Absensi Mahasiswa
+                                                                         <i class="fa-solid fa-users-viewfinder text-sm"></i>
+                                                                         <span>{{ $isToday ? 'Absensi Mahasiswa' : 'Edit Rekap Absensi' }}</span>
                                                                      </a>
 
                                                                      <!-- 2. Tombol Realisasi Pembelajaran -->
                                                                      <button type="button" 
                                                                              onclick="toggleModal('modal-dashboard-realisasi-{{ $ag->id }}')" 
-                                                                             class="px-3 py-1.5 {{ $ag->materi_realisasi ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200' }} rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
-                                                                             title="Isi/Edit Realisasi Pembelajaran">
-                                                                         <i class="fa-solid fa-book-open"></i> Realisasi
+                                                                             class="px-4 py-2 {{ $ag->materi_realisasi ? 'bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-2 border-amber-300' }} rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                                                             title="Isi atau perbarui realisasi pembelajaran">
+                                                                         <i class="fa-solid fa-book-open text-amber-700"></i> 
+                                                                         <span>{{ $ag->materi_realisasi ? 'Realisasi' : 'Isi Realisasi' }}</span>
                                                                          @if($ag->materi_realisasi)
-                                                                             <i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i>
+                                                                             <i class="fa-solid fa-circle-check text-emerald-700 text-xs"></i>
                                                                          @endif
                                                                      </button>
 
                                                                      <!-- 3. Tombol Berita Acara -->
                                                                      <button type="button" 
                                                                              onclick="toggleModal('modal-dashboard-berita-acara-{{ $ag->id }}')" 
-                                                                             class="px-3 py-1.5 {{ $ag->berita_acara ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200' }} rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
-                                                                             title="Isi/Edit Berita Acara Perkuliahan">
-                                                                         <i class="fa-solid fa-file-signature"></i> Berita Acara
+                                                                             class="px-4 py-2 {{ $ag->berita_acara ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-950 border border-indigo-300' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border-2 border-indigo-300' }} rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                                                             title="Tuliskan berita acara perkuliahan">
+                                                                         <i class="fa-solid fa-file-signature text-indigo-700"></i> 
+                                                                         <span>{{ $ag->berita_acara ? 'Berita Acara' : 'Isi Berita Acara' }}</span>
                                                                          @if($ag->berita_acara)
-                                                                             <i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i>
+                                                                             <i class="fa-solid fa-circle-check text-emerald-700 text-xs"></i>
                                                                          @endif
                                                                      </button>
-                                                                 </div>
-                                                             @else
-                                                                 <div class="flex flex-wrap items-center gap-2">
-                                                                      <button type="button" onclick="startDosenQRScanner()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-2" title="Lakukan Absensi QR Dosen di Board Kelas">
-                                                                          <i class="fa-solid fa-camera"></i> Absen QR Board
-                                                                      </button>
+                                                                 @endif
+                                                             </div>
 
-                                                                      <span class="text-[11px] text-amber-800 font-medium bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
-                                                                          <i class="fa-solid fa-circle-info text-amber-600"></i> Lakukan Absen QR Board untuk membuka fitur perkuliahan.
-                                                                      </span>
-                                                                  </div>
-                                                             @endif
-
-                                                            <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1.5 rounded-lg shrink-0 ml-auto">
-                                                                <i class="fa-solid fa-user-check"></i>
-                                                                {{ $ag->absensi->count() }} Mahasiswa Hadir
-                                                            </div>
-                                                        </div>
+                                                             <div class="flex items-center gap-1.5 text-xs font-extrabold {{ $isFuture ? 'text-slate-500 bg-slate-100 border-slate-300' : 'text-emerald-900 bg-emerald-50 border border-emerald-300' }} px-3 py-2 rounded-xl shrink-0 ml-auto shadow-2xs">
+                                                                  <i class="fa-solid {{ $isFuture ? 'fa-calendar-clock text-slate-500' : 'fa-user-check text-emerald-700' }}"></i>
+                                                                  {{ $isFuture ? 'Sesi Terjadwal' : $ag->absensi->count() . ' Mahasiswa Hadir' }}
+                                                             </div>
+                                                         </div>
                                                     </div>
                                                 </div>
 
+                                                @if(!$isFuture)
                                                 <!-- MODAL: Realisasi Pembelajaran Dashboard -->
                                                 <div id="modal-dashboard-realisasi-{{ $ag->id }}" class="fixed inset-0 z-50 overflow-y-auto hidden text-xs">
                                                     <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="toggleModal('modal-dashboard-realisasi-{{ $ag->id }}')"></div>
@@ -507,7 +586,7 @@
                                                                     </div>
                                                                     <div>
                                                                         <h3 class="font-bold text-sm text-slate-800">Realisasi Pembelajaran</h3>
-                                                                        <p class="text-[10px] text-slate-500 font-semibold">{{ $ag->mata_kuliah }}</p>
+                                                                        <p class="text-xs text-slate-600 font-bold">{{ $ag->mata_kuliah }}</p>
                                                                     </div>
                                                                 </div>
                                                                 <button type="button" onclick="toggleModal('modal-dashboard-realisasi-{{ $ag->id }}')" class="text-slate-400 hover:text-slate-600 text-lg">
@@ -550,7 +629,7 @@
                                                                     </div>
                                                                     <div>
                                                                         <h3 class="font-bold text-sm text-slate-800">Berita Acara Perkuliahan</h3>
-                                                                        <p class="text-[10px] text-slate-500 font-semibold">{{ $ag->mata_kuliah }}</p>
+                                                                        <p class="text-xs text-slate-600 font-bold">{{ $ag->mata_kuliah }}</p>
                                                                     </div>
                                                                 </div>
                                                                 <button type="button" onclick="toggleModal('modal-dashboard-berita-acara-{{ $ag->id }}')" class="text-slate-400 hover:text-slate-600 text-lg">
@@ -613,7 +692,7 @@
                                                                 <span><i class="fa-solid fa-users text-indigo-650"></i> Daftar Kehadiran Mahasiswa</span>
                                                                 <div class="flex items-center gap-2.5">
                                                                     @if($ag->absensi->count() > 0)
-                                                                        <a href="{{ route('dosen.agenda.export-kehadiran', $ag->id) }}" target="_blank" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-[10px] font-bold uppercase flex items-center gap-1 transition">
+                                                                        <a href="{{ route('dosen.agenda.export-kehadiran', $ag->id) }}" target="_blank" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg text-xs font-extrabold uppercase flex items-center gap-1.5 transition">
                                                                             <i class="fa-solid fa-print"></i> Cetak Absen
                                                                         </a>
                                                                     @endif
@@ -641,7 +720,7 @@
                                                                                     <td class="p-2.5 font-mono text-teal-800">{{ $abs->mahasiswa->nim }}</td>
                                                                                     <td class="p-2.5 text-slate-550">{{ $abs->waktu_masuk }}</td>
                                                                                     <td class="p-2.5">
-                                                                                        <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold rounded text-[10px] uppercase">
+                                                                                        <span class="px-2.5 py-1 bg-emerald-100 text-emerald-900 border border-emerald-300 font-extrabold rounded-md text-xs uppercase">
                                                                                             {{ $abs->status_kehadiran }}
                                                                                         </span>
                                                                                     </td>
@@ -659,6 +738,7 @@
 
                                                     </div>
                                                 </details>
+                                                @endif
                                             </div>
                                             @endforeach
                                         </div>
@@ -688,43 +768,48 @@
                     <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 space-y-4">
                         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div>
-                                <h3 class="font-bold text-xs text-slate-800 flex items-center gap-2">
+                                <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
                                     <i class="fa-solid fa-calendar-check text-teal-800"></i> Jadwal Mengajar Lab Anda
                                 </h3>
-                                <p class="text-[10px] text-slate-400 font-medium mt-0.5">Jadwal rutin mingguan dari Admin</p>
+                                <p class="text-xs text-slate-600 font-medium mt-0.5">Jadwal rutin mingguan dari Admin</p>
                             </div>
-                            <span class="px-2 py-0.5 bg-teal-50 text-teal-800 border border-teal-200 rounded text-[10px] font-bold">
+                            <span class="px-2.5 py-1 bg-teal-50 text-teal-900 border border-teal-200 rounded-lg text-xs font-bold">
                                 {{ isset($jadwalPenggunaanLab) ? $jadwalPenggunaanLab->count() : 0 }} Jadwal
                             </span>
                         </div>
 
                         @if(isset($jadwalPenggunaanLab) && $jadwalPenggunaanLab->count() > 0)
-                            <div class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                            <div class="space-y-3 max-h-84 overflow-y-auto pr-1">
                                 @foreach($jadwalPenggunaanLab as $j)
                                     @php
                                         $createdSessions = \App\Models\Agenda::where('jadwal_penggunaan_lab_id', $j->id)->count();
                                     @endphp
-                                    <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2 hover:border-teal-300 transition">
-                                        <div class="flex items-center justify-between">
-                                            <span class="font-bold text-xs text-slate-800 truncate max-w-[180px]">{{ $j->mata_kuliah }}</span>
-                                            <span class="px-2 py-0.5 bg-teal-100 text-teal-800 rounded text-[9px] font-bold">Kelas {{ $j->kelas }}</span>
+                                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 hover:border-teal-400 transition">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="font-extrabold text-xs sm:text-sm text-slate-900 truncate max-w-[200px]">{{ $j->mata_kuliah }}</span>
+                                            <div class="flex items-center gap-1.5 shrink-0">
+                                                <span class="px-2 py-0.5 bg-teal-50 text-teal-900 border border-teal-200 rounded text-xs font-extrabold uppercase">
+                                                    {{ str_contains(strtolower($j->semester ?? ''), 'semester') ? $j->semester : 'Smt ' . ($j->semester ?? '1') }}
+                                                </span>
+                                                <span class="px-2 py-0.5 bg-teal-100 text-teal-900 rounded text-xs font-bold">Kelas {{ $j->kelas }}</span>
+                                            </div>
                                         </div>
-                                        <div class="flex items-center justify-between text-[10px] text-slate-500 font-medium">
-                                            <span><i class="fa-regular fa-clock mr-1 text-slate-400"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }}-{{ substr($j->jam_selesai,0,5) }}</span>
-                                            <span class="text-teal-700 font-semibold"><i class="fa-solid fa-door-open mr-1"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
+                                        <div class="flex items-center justify-between text-xs text-slate-700 font-semibold">
+                                            <span><i class="fa-regular fa-clock mr-1.5 text-teal-700"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }}-{{ substr($j->jam_selesai,0,5) }} WIB</span>
+                                            <span class="text-teal-900 font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200/60"><i class="fa-solid fa-door-open mr-1 text-teal-700"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
                                         </div>
-                                        <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
-                                            <span class="text-slate-500 font-medium">Status Pertemuan:</span>
+                                        <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
+                                            <span class="text-slate-600 font-medium">Status Pertemuan:</span>
                                             @if($createdSessions >= 16)
-                                                <span class="font-bold text-emerald-700 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                                    <i class="fa-solid fa-circle-check text-emerald-600"></i> 16 Sesi Siap
+                                                <span class="font-extrabold text-emerald-900 flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300">
+                                                    <i class="fa-solid fa-circle-check text-emerald-700"></i> 16 Sesi Siap
                                                 </span>
                                             @elseif($createdSessions > 0)
-                                                <span class="font-bold text-teal-700 flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
-                                                    <i class="fa-solid fa-calendar-days text-teal-600"></i> {{ $createdSessions }} dari 16 Sesi
+                                                <span class="font-extrabold text-teal-900 flex items-center gap-1.5 bg-teal-50 px-2.5 py-1 rounded-lg border border-teal-300">
+                                                    <i class="fa-solid fa-calendar-days text-teal-700"></i> {{ $createdSessions }} dari 16 Sesi
                                                 </span>
                                             @else
-                                                <span class="text-slate-400 italic bg-slate-100 px-2 py-0.5 rounded">
+                                                <span class="text-slate-600 font-semibold italic bg-slate-200/60 px-2.5 py-1 rounded-lg">
                                                     Disiapkan Admin
                                                 </span>
                                             @endif
@@ -733,40 +818,40 @@
                                 @endforeach
                             </div>
                         @else
-                            <div class="text-center py-6 text-slate-400 text-xs italic">
+                            <div class="text-center py-6 text-slate-500 text-xs italic font-medium">
                                 Belum ada plotting jadwal lab untuk akun Anda.
                             </div>
                         @endif
                     </div>
 
                     <!-- Widget 2: Panduan Alur Perkuliahan Digital Board -->
-                    <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 space-y-3">
-                        <div class="flex items-center gap-2 border-b border-slate-100 pb-2.5">
-                            <div class="w-7 h-7 rounded-lg bg-teal-50 text-teal-800 flex items-center justify-center font-bold text-xs border border-teal-200">
+                    <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 space-y-3.5">
+                        <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+                            <div class="w-8 h-8 rounded-xl bg-teal-50 text-teal-800 flex items-center justify-center font-bold text-sm border border-teal-200">
                                 <i class="fa-solid fa-graduation-cap"></i>
                             </div>
-                            <h4 class="font-bold text-xs text-slate-800">Alur Perkuliahan Digital Board</h4>
+                            <h4 class="font-extrabold text-sm text-slate-900">Alur Perkuliahan Digital Board</h4>
                         </div>
-                        <ul class="space-y-2.5 text-[11px] text-slate-650 font-medium">
-                            <li class="flex items-start gap-2.5 p-2 bg-teal-50/60 border border-teal-100 rounded-xl">
-                                <span class="w-5 h-5 rounded-full bg-teal-800 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5 shadow-xs">1</span>
+                        <ul class="space-y-3 text-xs text-slate-700 font-medium">
+                            <li class="flex items-start gap-3 p-2.5 bg-teal-50 border border-teal-100 rounded-xl">
+                                <span class="w-6 h-6 rounded-full bg-teal-800 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 shadow-2xs">1</span>
                                 <div>
-                                    <strong class="text-teal-900 font-bold block text-xs">Absen QR Board</strong>
-                                    <span class="text-slate-600">Lakukan scan QR di papan lab untuk membuka fitur perkuliahan hari ini.</span>
+                                    <strong class="text-teal-950 font-extrabold block text-xs">Absen QR Board</strong>
+                                    <span class="text-slate-700">Lakukan scan QR di papan lab untuk membuka fitur perkuliahan hari ini.</span>
                                 </div>
                             </li>
-                            <li class="flex items-start gap-2.5 p-2 bg-indigo-50/60 border border-indigo-100 rounded-xl">
-                                <span class="w-5 h-5 rounded-full bg-indigo-800 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5 shadow-xs">2</span>
+                            <li class="flex items-start gap-3 p-2.5 bg-indigo-50 border border-indigo-100 rounded-xl">
+                                <span class="w-6 h-6 rounded-full bg-indigo-800 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 shadow-2xs">2</span>
                                 <div>
-                                    <strong class="text-indigo-900 font-bold block text-xs">Absensi Mahasiswa</strong>
-                                    <span class="text-slate-600">Cek & input kehadiran, izin WhatsApp, atau alpa mahasiswa.</span>
+                                    <strong class="text-indigo-950 font-extrabold block text-xs">Absensi Mahasiswa</strong>
+                                    <span class="text-slate-700">Cek & input kehadiran, izin WhatsApp, atau alpa mahasiswa.</span>
                                 </div>
                             </li>
-                            <li class="flex items-start gap-2.5 p-2 bg-amber-50/60 border border-amber-100 rounded-xl">
-                                <span class="w-5 h-5 rounded-full bg-amber-800 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5 shadow-xs">3</span>
+                            <li class="flex items-start gap-3 p-2.5 bg-amber-50 border border-amber-100 rounded-xl">
+                                <span class="w-6 h-6 rounded-full bg-amber-800 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 shadow-2xs">3</span>
                                 <div>
-                                    <strong class="text-amber-900 font-bold block text-xs">Realisasi & Berita Acara</strong>
-                                    <span class="text-slate-600">Catat pokok materi dan tuliskan Berita Acara perkuliahan resmi.</span>
+                                    <strong class="text-amber-950 font-extrabold block text-xs">Realisasi & Berita Acara</strong>
+                                    <span class="text-slate-700">Catat pokok materi dan tuliskan Berita Acara perkuliahan resmi.</span>
                                 </div>
                             </li>
                         </ul>
@@ -1038,7 +1123,7 @@
                             <i class="fa-solid fa-paper-plane"></i> Kirim
                         </button>
                     </div>
-                    <p class="text-[10px] text-slate-400 italic">Gunakan ini jika kamera HP Anda bermasalah atau tidak dapat diakses.</p>
+                    <p class="text-xs text-slate-500 font-medium italic">Gunakan input ini jika kamera perangkat Anda bermasalah atau tidak dapat dibuka.</p>
                 </div>
             </div>
             
@@ -1159,23 +1244,23 @@
     </script>
 
     <!-- Bottom Navigation Bar (Mobile Only - Symmetrical Layout with Center QR) -->
-    <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-lg">
-        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-bold">
+    <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t-2 border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-xl">
+        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-extrabold">
             <i class="fa-solid fa-border-all text-lg"></i>
-            <span class="text-[9px] font-bold">Dashboard</span>
+            <span class="text-xs font-extrabold">Dashboard</span>
         </a>
-        <a href="{{ route('dosen.agenda') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
+        <a href="{{ route('dosen.agenda') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-600 hover:text-slate-900">
             <i class="fa-solid fa-calendar-alt text-lg"></i>
-            <span class="text-[9px] font-medium">Agenda</span>
+            <span class="text-xs font-bold">Agenda</span>
         </a>
         <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-800 text-white rounded-2xl shadow-xl border-4 border-white">
-            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white bg-teal-800 rounded-xl hover:bg-teal-900 transition-all" title="Scan QR Presensi">
+            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white bg-teal-800 rounded-xl hover:bg-teal-900 transition-all cursor-pointer" title="Scan QR Presensi">
                 <i class="fa-solid fa-qrcode text-2xl text-white"></i>
             </button>
         </div>
-        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
+        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-600 hover:text-slate-900">
             <i class="fa-solid fa-gear text-lg"></i>
-            <span class="text-[9px] font-medium">Pengaturan</span>
+            <span class="text-xs font-bold">Pengaturan</span>
         </a>
     </nav>
 
@@ -1324,5 +1409,7 @@
             }
         });
     </script>
+
+    @include('dosen.partials.modal_tutorial')
 </body>
 </html>

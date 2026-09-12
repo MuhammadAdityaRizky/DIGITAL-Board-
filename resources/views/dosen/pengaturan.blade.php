@@ -17,85 +17,106 @@
     <!-- Sidebar (Desktop Only) -->
     <aside class="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 h-full hidden lg:flex">
         <div class="p-6 flex items-center gap-3 border-b border-slate-800">
-            <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+            <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">
                 <i class="fa-solid fa-graduation-cap"></i>
             </div>
             <div>
-                <h1 class="font-bold text-sm leading-tight">DIGITAL Board</h1>
-                <p class="text-[10px] font-semibold tracking-wider text-teal-400">Smart Lab Management</p>
+                <h1 class="font-extrabold text-sm leading-tight text-white">DIGITAL Board</h1>
+                <p class="text-xs font-bold tracking-wide text-teal-300">Smart Lab Management</p>
             </div>
         </div>
         
-        <nav class="flex-1 px-3 py-4 space-y-1">
-            <a href="{{ route('dosen.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-border-all"></i>
-                <span class="text-xs font-semibold tracking-wide">Dashboard</span>
+        <nav class="flex-1 px-3 py-4 space-y-1.5">
+            <a href="{{ route('dosen.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-border-all text-sm"></i>
+                <span class="text-sm font-bold tracking-wide">Dashboard</span>
             </a>
-            <a href="{{ route('dosen.agenda') }}" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
-                <i class="fa-solid fa-calendar-alt"></i>
-                <span class="text-xs font-semibold tracking-wide">Agenda</span>
+            <a href="{{ route('dosen.agenda') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-calendar-alt text-sm"></i>
+                <span class="text-sm font-bold tracking-wide">Agenda Perkuliahan</span>
             </a>
-            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-850 text-white rounded-xl w-full font-bold">
-                <i class="fa-solid fa-gear"></i>
-                <span class="text-xs font-semibold tracking-wide">Pengaturan Akun</span>
+            <a href="{{ route('dosen.jadwal-lab') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+                <i class="fa-solid fa-calendar-check text-sm"></i>
+                <span class="text-sm font-bold tracking-wide">Ketersediaan Lab</span>
+            </a>
+            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white rounded-xl w-full font-extrabold shadow-md">
+                <i class="fa-solid fa-gear text-sm"></i>
+                <span class="text-sm font-bold tracking-wide">Pengaturan Akun</span>
             </a>
         </nav>
+
+        <!-- Tombol Panduan Dosen di Sidebar -->
+        <div class="p-3 border-t border-slate-800 mt-auto">
+            <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-3 px-3.5 py-2.5 bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 hover:text-white rounded-xl w-full transition text-xs font-bold cursor-pointer">
+                <i class="fa-solid fa-book-open-reader text-sm text-amber-400"></i>
+                <span>Panduan Dosen</span>
+            </button>
+        </div>
     </aside>
 
     <!-- Main Content -->
     <main class="flex-1 flex flex-col h-full overflow-hidden relative">
         
         <!-- Top Navbar -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0 shadow-sm">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-teal-800 text-white rounded-lg flex lg:hidden items-center justify-center font-bold">
-                    <i class="fa-solid fa-graduation-cap text-sm"></i>
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0 shadow-xs">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-teal-800 text-white rounded-xl flex lg:hidden items-center justify-center font-bold shadow-xs">
+                    <i class="fa-solid fa-graduation-cap text-base"></i>
                 </div>
-                <h2 class="font-bold text-base text-slate-800 lg:hidden">DIGITAL Board</h2>
-                <h2 class="font-bold text-base text-slate-800 hidden lg:block">Pengaturan Akun Dosen</h2>
+                <div>
+                    <h2 class="font-extrabold text-base text-slate-800 lg:hidden">DIGITAL Board</h2>
+                    <h2 class="font-extrabold text-lg text-slate-900 hidden lg:block">Pengaturan Akun & Keamanan</h2>
+                </div>
             </div>
 
-            <!-- Profile Avatar & Dropdown Menu -->
-            <div class="relative" id="profileDropdownWrapper">
-                <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1 rounded-xl hover:bg-slate-50 transition">
+            <div class="flex items-center gap-2.5">
+                <!-- Tombol Panduan / Tutorial Dosen -->
+                <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
+                    <i class="fa-solid fa-circle-question text-amber-600 text-sm"></i>
+                    <span class="hidden sm:inline">Panduan Sistem</span>
+                </button>
+
+                <!-- Profile Avatar & Dropdown Menu -->
+                <div class="relative" id="profileDropdownWrapper">
+                <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1.5 rounded-xl hover:bg-slate-100 transition border border-transparent hover:border-slate-200">
                     <div class="text-right hidden sm:block">
-                        <p class="font-bold text-xs text-slate-800 group-hover:text-teal-700 transition">{{ $dosen->nama }}</p>
-                        <p class="text-[9px] font-semibold tracking-wider text-slate-500">NIP: {{ $dosen->nip }} • Dosen</p>
+                        <p class="font-extrabold text-sm text-slate-900 group-hover:text-teal-800 transition">{{ $dosen->nama }}</p>
+                        <p class="text-xs font-bold text-slate-600">NIP: {{ $dosen->nip }} • Dosen Pengajar</p>
                     </div>
-                    <div class="w-9 h-9 rounded-full bg-teal-100 group-hover:bg-teal-200 text-teal-900 border border-teal-200 flex items-center justify-center font-bold text-xs transition transform group-hover:scale-105 shadow-xs">
+                    <div class="w-10 h-10 rounded-full bg-teal-100 group-hover:bg-teal-200 text-teal-900 border-2 border-teal-300 flex items-center justify-center font-extrabold text-sm transition transform group-hover:scale-105 shadow-xs">
                         {{ substr($dosen->nama, 0, 2) }}
                     </div>
-                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 group-hover:text-slate-600 transition hidden sm:inline-block"></i>
+                    <i class="fa-solid fa-chevron-down text-xs text-slate-500 group-hover:text-slate-800 transition hidden sm:inline-block"></i>
                 </button>
 
                 <!-- Dropdown Menu -->
-                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 hidden transform transition-all duration-200 origin-top-right">
-                    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                        <p class="text-xs font-bold text-slate-800 truncate">{{ $dosen->nama }}</p>
-                        <p class="text-[10px] text-slate-500 font-mono mt-0.5">NIP: {{ $dosen->nip }}</p>
-                        <span class="inline-block mt-1.5 px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200/60 rounded-md text-[9px] font-bold">
-                            Dosen Pengajar
+                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-2 w-72 bg-white border-2 border-slate-200 rounded-2xl shadow-2xl py-2 z-50 hidden transform transition-all duration-200 origin-top-right">
+                    <div class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70">
+                        <p class="text-sm font-extrabold text-slate-900 truncate">{{ $dosen->nama }}</p>
+                        <p class="text-xs font-bold text-slate-600 font-mono mt-0.5">NIP: {{ $dosen->nip }}</p>
+                        <span class="inline-block mt-2 px-2.5 py-0.5 bg-teal-100 text-teal-900 border border-teal-300 rounded-md text-xs font-extrabold">
+                            <i class="fa-solid fa-chalkboard-user mr-1"></i> Dosen Pengajar
                         </span>
                     </div>
 
-                    <div class="py-1">
-                        <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-2.5 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-800 transition font-medium group">
-                            <div class="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-teal-100 group-hover:text-teal-700 flex items-center justify-center text-slate-500 transition">
-                                <i class="fa-solid fa-gear text-xs"></i>
+                    <div class="py-1.5 px-1">
+                        <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-800 hover:bg-teal-50 hover:text-teal-900 rounded-xl transition font-bold group">
+                            <div class="w-8 h-8 rounded-lg bg-teal-100 group-hover:bg-teal-200 text-teal-800 flex items-center justify-center transition">
+                                <i class="fa-solid fa-gear text-sm"></i>
                             </div>
                             <div>
-                                <span class="font-bold block">Pengaturan Akun</span>
-                                <span class="text-[10px] text-slate-400 block font-normal">Edit profil & ganti password</span>
+                                <span class="font-extrabold block">Pengaturan Akun</span>
+                                <span class="text-xs text-slate-500 block font-normal">Profil & ganti password</span>
                             </div>
                         </a>
                     </div>
 
-                    <div class="pt-1 border-t border-slate-100">
+                    <div class="pt-1.5 border-t border-slate-100 px-1">
                         <form action="{{ route('logout') }}" method="POST" class="logout-form">
                             @csrf
-                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-rose-600 hover:bg-rose-50 transition font-bold text-left group">
-                                <div class="w-7 h-7 rounded-lg bg-rose-50 group-hover:bg-rose-100 text-rose-600 flex items-center justify-center transition">
-                                    <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-700 hover:bg-rose-50 rounded-xl transition font-extrabold text-left group cursor-pointer">
+                                <div class="w-8 h-8 rounded-lg bg-rose-100 group-hover:bg-rose-200 text-rose-700 flex items-center justify-center transition">
+                                    <i class="fa-solid fa-right-from-bracket text-sm"></i>
                                 </div>
                                 <span>Keluar / Logout</span>
                             </button>
@@ -106,25 +127,38 @@
         </header>
 
         <!-- Content Area -->
-        <div class="flex-grow overflow-auto p-4 md:p-6 space-y-6">
+        <div class="flex-grow overflow-auto p-4 md:p-8 space-y-6">
             
+            <!-- Banner / Header Info -->
+            <div class="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-sm max-w-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-teal-50 border-2 border-teal-200 text-teal-800 flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-lg text-slate-900">Pengaturan Profil & Keamanan</h3>
+                        <p class="text-sm font-medium text-slate-600 mt-0.5">Informasi akun resmi dosen pengajar dan pembaruan kata sandi masuk portal.</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Success/Error Alert -->
             @if(session('success'))
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-850 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm max-w-2xl">
-                    <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 text-lg"></i>
+                <div class="bg-emerald-50 border-2 border-emerald-300 text-emerald-900 p-4 rounded-2xl text-sm flex items-start gap-3 shadow-xs max-w-3xl">
+                    <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 text-xl flex-shrink-0"></i>
                     <div>
-                        <span class="font-bold">Berhasil!</span>
-                        <p class="mt-0.5">{{ session('success') }}</p>
+                        <span class="font-extrabold">Pembaruan Berhasil!</span>
+                        <p class="mt-0.5 font-medium">{{ session('success') }}</p>
                     </div>
                 </div>
             @endif
 
             @if($errors->any())
-                <div class="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm max-w-2xl">
-                    <i class="fa-solid fa-circle-xmark text-rose-600 mt-0.5 text-lg"></i>
+                <div class="bg-rose-50 border-2 border-rose-300 text-rose-900 p-4 rounded-2xl text-sm flex items-start gap-3 shadow-xs max-w-3xl">
+                    <i class="fa-solid fa-circle-xmark text-rose-600 mt-0.5 text-xl flex-shrink-0"></i>
                     <div>
-                        <span class="font-bold">Terjadi Kesalahan:</span>
-                        <ul class="list-disc list-inside mt-0.5 space-y-0.5">
+                        <span class="font-extrabold">Terjadi Kesalahan:</span>
+                        <ul class="list-disc list-inside mt-1 space-y-1 font-medium">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
@@ -134,50 +168,97 @@
             @endif
 
             <!-- Settings Form Cards -->
-            <div class="grid grid-cols-1 gap-6 max-w-2xl">
+            <div class="max-w-3xl space-y-6">
                 <!-- Account Info Form -->
-                <div class="bg-white border border-slate-200 shadow-sm rounded-xl p-6">
-                    <h3 class="font-bold text-sm text-slate-800 mb-5 flex items-center gap-2">
-                        <i class="fa-solid fa-user-gear text-teal-800"></i> Informasi Profil Dosen
-                    </h3>
+                <div class="bg-white border-2 border-slate-200 shadow-sm rounded-2xl p-6 sm:p-8 space-y-6">
                     
-                    <form action="{{ route('dosen.pengaturan.update') }}" method="POST" class="space-y-4 text-xs">
+                    <div>
+                        <h4 class="font-extrabold text-base text-slate-900 flex items-center gap-2.5">
+                            <span class="w-8 h-8 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center text-sm">
+                                <i class="fa-solid fa-id-card"></i>
+                            </span>
+                            Data Identitas Dosen
+                        </h4>
+                        <p class="text-xs text-slate-500 font-medium mt-1">Data identitas berikut terhubung secara terpusat dengan data kepegawaian universitas.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <label class="block text-xs font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                <i class="fa-solid fa-user text-slate-400"></i> Nama Lengkap (Resmi)
+                            </label>
+                            <div class="relative">
+                                <input type="text" value="{{ $dosen->nama }}" disabled class="w-full py-2.5 px-3 rounded-lg bg-white border border-slate-200 text-slate-900 font-bold text-sm outline-none cursor-not-allowed shadow-2xs">
+                                <span class="absolute right-3 top-3 text-xs text-slate-400 font-semibold" title="Terkunci dari Pusat"><i class="fa-solid fa-lock"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <label class="block text-xs font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                                <i class="fa-solid fa-fingerprint text-slate-400"></i> NIP (Nomor Induk Pegawai)
+                            </label>
+                            <div class="relative">
+                                <input type="text" value="{{ $dosen->nip }}" disabled class="w-full py-2.5 px-3 rounded-lg bg-white border border-slate-200 text-slate-900 font-mono font-bold text-sm outline-none cursor-not-allowed shadow-2xs">
+                                <span class="absolute right-3 top-3 text-xs text-slate-400 font-semibold" title="Terkunci dari Pusat"><i class="fa-solid fa-lock"></i></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Password Update Section -->
+                    <form action="{{ route('dosen.pengaturan.update') }}" method="POST" class="pt-6 border-t-2 border-slate-100 space-y-6">
                         @csrf
                         @method('PUT')
                         
                         <div>
-                            <label class="block text-slate-400 font-bold mb-1.5 uppercase tracking-wider">Nama Lengkap (Tidak dapat diubah)</label>
-                            <input type="text" value="{{ $dosen->nama }}" disabled class="w-full p-2.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-500 outline-none cursor-not-allowed">
+                            <h4 class="font-extrabold text-base text-slate-900 flex items-center gap-2.5">
+                                <span class="w-8 h-8 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center text-sm">
+                                    <i class="fa-solid fa-key"></i>
+                                </span>
+                                Ganti Kata Sandi (Password)
+                            </h4>
+                            <p class="text-xs text-slate-600 font-medium mt-1">Gunakan kombinasi minimal 6 karakter yang mudah Anda ingat namun sulit ditebak oleh orang lain.</p>
                         </div>
-
+                        
                         <div>
-                            <label class="block text-slate-400 font-bold mb-1.5 uppercase tracking-wider">NIP (Tidak dapat diubah)</label>
-                            <input type="text" value="{{ $dosen->nip }}" disabled class="w-full p-2.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-500 outline-none font-mono font-semibold cursor-not-allowed">
+                            <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">
+                                Password Lama <span class="text-rose-600">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="password" id="input_password_lama" name="password_lama" required placeholder="Masukkan password saat ini..." class="w-full py-3 pl-4 pr-12 rounded-xl bg-white border-2 border-slate-300 text-slate-900 font-bold text-sm focus:border-teal-700 focus:ring-4 focus:ring-teal-700/20 outline-none transition placeholder:text-slate-400">
+                                <button type="button" onclick="togglePasswordVisibility('input_password_lama', this)" class="absolute right-3 top-3 p-1 text-slate-400 hover:text-slate-700 focus:outline-none cursor-pointer" title="Tampilkan password">
+                                    <i class="fa-solid fa-eye text-sm"></i>
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="pt-4 border-t border-slate-100 space-y-4">
-                            <h4 class="font-bold text-[11px] text-slate-500 uppercase tracking-widest flex items-center gap-1.5"><i class="fa-solid fa-key"></i> Ubah Password Akun</h4>
-                            
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
-                                <label class="block text-slate-700 font-bold mb-1.5 uppercase tracking-wider">Password Lama</label>
-                                <input type="password" name="password_lama" required placeholder="Masukkan password saat ini..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-slate-700 font-bold mb-1.5 uppercase tracking-wider">Password Baru</label>
-                                    <input type="password" name="password" required placeholder="Min. 6 karakter..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                                <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">
+                                    Password Baru <span class="text-rose-600">*</span>
+                                </label>
+                                <div class="relative">
+                                    <input type="password" id="input_password_baru" name="password" required placeholder="Min. 6 karakter..." class="w-full py-3 pl-4 pr-12 rounded-xl bg-white border-2 border-slate-300 text-slate-900 font-bold text-sm focus:border-teal-700 focus:ring-4 focus:ring-teal-700/20 outline-none transition placeholder:text-slate-400">
+                                    <button type="button" onclick="togglePasswordVisibility('input_password_baru', this)" class="absolute right-3 top-3 p-1 text-slate-400 hover:text-slate-700 focus:outline-none cursor-pointer" title="Tampilkan password">
+                                        <i class="fa-solid fa-eye text-sm"></i>
+                                    </button>
                                 </div>
-                                <div>
-                                    <label class="block text-slate-700 font-bold mb-1.5 uppercase tracking-wider">Konfirmasi Password Baru</label>
-                                    <input type="password" name="password_confirmation" required placeholder="Ulangi password baru..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">
+                                    Ulangi Password Baru <span class="text-rose-600">*</span>
+                                </label>
+                                <div class="relative">
+                                    <input type="password" id="input_password_konfirmasi" name="password_confirmation" required placeholder="Ketik ulang password baru..." class="w-full py-3 pl-4 pr-12 rounded-xl bg-white border-2 border-slate-300 text-slate-900 font-bold text-sm focus:border-teal-700 focus:ring-4 focus:ring-teal-700/20 outline-none transition placeholder:text-slate-400">
+                                    <button type="button" onclick="togglePasswordVisibility('input_password_konfirmasi', this)" class="absolute right-3 top-3 p-1 text-slate-400 hover:text-slate-700 focus:outline-none cursor-pointer" title="Tampilkan password">
+                                        <i class="fa-solid fa-eye text-sm"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
                         <div class="pt-4 flex justify-end">
-                            <button type="submit" class="px-6 py-3 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold uppercase tracking-wider shadow-md transition-all flex items-center gap-2">
-                                <i class="fa-solid fa-save"></i> Simpan Perubahan
+                            <button type="submit" class="w-full sm:w-auto px-7 py-3.5 bg-teal-800 hover:bg-teal-900 active:scale-98 text-white rounded-xl font-extrabold text-sm uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 cursor-pointer">
+                                <i class="fa-solid fa-floppy-disk text-base"></i> Simpan Kata Sandi Baru
                             </button>
                         </div>
                     </form>
@@ -188,25 +269,42 @@
     </main>
 
     <!-- Bottom Navigation Bar (Mobile Only - Symmetrical Layout with Center QR) -->
-    <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-lg">
-        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
+    <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t-2 border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-xl">
+        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-600 hover:text-slate-900">
             <i class="fa-solid fa-border-all text-lg"></i>
-            <span class="text-[9px] font-medium">Dashboard</span>
+            <span class="text-xs font-bold">Dashboard</span>
         </a>
-        <a href="{{ route('dosen.agenda') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-500 hover:text-slate-800">
+        <a href="{{ route('dosen.agenda') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-600 hover:text-slate-900">
             <i class="fa-solid fa-calendar-alt text-lg"></i>
-            <span class="text-[9px] font-medium">Agenda</span>
+            <span class="text-xs font-bold">Agenda</span>
         </a>
         <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-800 text-white rounded-2xl shadow-xl border-4 border-white">
-            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white bg-teal-800 rounded-xl hover:bg-teal-900 transition-all" title="Scan QR Presensi">
+            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white bg-teal-800 rounded-xl hover:bg-teal-900 transition-all cursor-pointer" title="Scan QR Presensi">
                 <i class="fa-solid fa-qrcode text-2xl text-white"></i>
             </button>
         </div>
-        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-bold">
+        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-extrabold">
             <i class="fa-solid fa-gear text-lg"></i>
-            <span class="text-[9px] font-bold">Pengaturan</span>
+            <span class="text-xs font-extrabold">Pengaturan</span>
         </a>
     </nav>
+
+    <!-- Script Password Toggle -->
+    <script>
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
 
     <!-- Profile Dropdown Handler -->
     <script>
@@ -483,5 +581,7 @@
             }
         });
     </script>
+
+    @include('dosen.partials.modal_tutorial')
 </body>
 </html>

@@ -56,14 +56,6 @@
             <span class="text-xs">Laporan Absensi</span>
         </a>
 
-        <!-- 6. Statistik Kehadiran -->
-        @php
-            $isStatistik = request()->routeIs('admin.statistik*');
-        @endphp
-        <a href="{{ route('admin.statistik') }}" class="flex items-center gap-3 px-4 py-2.5 {{ $isStatistik ? 'bg-teal-800 text-white font-bold shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium' }} rounded-xl w-full transition">
-            <i class="fa-solid fa-chart-pie"></i>
-            <span class="text-xs">Statistik Kehadiran</span>
-        </a>
 
         <!-- 7. Data Akademik -->
         @php

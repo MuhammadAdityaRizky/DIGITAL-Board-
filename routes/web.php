@@ -68,8 +68,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/jadwal-lab/{id}', [AdminController::class, 'deleteJadwalPenggunaanLab'])->name('jadwal-lab.delete');
         Route::post('/jadwal-lab/{id}/generate-16', [AdminController::class, 'generate16Pertemuan'])->name('jadwal-lab.generate-16');
         Route::post('/jadwal-lab/bulk-generate-16', [AdminController::class, 'bulkGenerate16Pertemuan'])->name('jadwal-lab.bulk-generate-16');
-
-        Route::get('/statistik', [AdminController::class, 'statistik'])->name('statistik');
+        
         Route::get('/akademik', [AdminController::class, 'akademik'])->name('akademik');
         Route::post('/akademik/fakultas', [AdminController::class, 'storeFakultas'])->name('akademik.fakultas.store');
         Route::put('/akademik/fakultas/{id}', [AdminController::class, 'updateFakultas'])->name('akademik.fakultas.update');
@@ -112,6 +111,8 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/agenda', [DosenController::class, 'agenda'])->name('agenda');
         Route::get('/agenda/{id}/export-kehadiran', [DosenController::class, 'exportKehadiran'])->name('agenda.export-kehadiran');
+        Route::get('/jadwal-lab', [DosenController::class, 'jadwalPenggunaanLab'])->name('jadwal-lab');
+        Route::get('/jadwal-lab/check-availability', [DosenController::class, 'checkLabAvailability'])->name('jadwal-lab.check-availability');
         Route::get('/pengaturan', [DosenController::class, 'pengaturan'])->name('pengaturan');
         Route::put('/pengaturan', [DosenController::class, 'updatePengaturan'])->name('pengaturan.update');
     });

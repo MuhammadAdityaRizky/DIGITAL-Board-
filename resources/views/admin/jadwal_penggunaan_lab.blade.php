@@ -14,6 +14,10 @@
         .custom-sidebar-scroll::-webkit-scrollbar { width: 4px; }
         .custom-sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-slate-800 pb-16 lg:pb-0">
@@ -93,15 +97,15 @@
 
                 <div class="flex items-center gap-2.5">
                     @if($jadwals->count() > 0)
-                        <form action="{{ route('admin.jadwal-lab.bulk-generate-16') }}" method="POST" onsubmit="return confirm('Otomatis buat 16 sesi agenda pertemuan perkuliahan 1 semester untuk SEMUA jadwal di lab ini?');" class="inline">
+                        <form id="form-bulk-generate" action="{{ route('admin.jadwal-lab.bulk-generate-16') }}" method="POST" class="inline">
                             @csrf
                             <input type="hidden" name="lab_id" value="{{ $selectedLabId }}">
-                            <button type="submit" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Otomatis buat 16 pertemuan untuk seluruh mata kuliah di lab ini">
+                            <button type="button" onclick="confirmBulkGenerate()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="Otomatis buat 16 pertemuan untuk seluruh mata kuliah di lab ini">
                                 <i class="fa-solid fa-wand-magic-sparkles"></i> Generate 16 Sesi Lab Ini
                             </button>
                         </form>
                     @endif
-                    <button type="button" onclick="openAddModal()" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                    <button type="button" onclick="openAddModal()" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                         <i class="fa-solid fa-plus"></i> Tambah Slot Jadwal
                     </button>
                 </div>
@@ -176,7 +180,7 @@
                                                     <div class="p-2 rounded-lg border {{ $bgColor }} shadow-xs mb-1 text-[11px] leading-tight relative group">
                                                         <div class="font-extrabold line-clamp-2">{{ $m->mata_kuliah }}</div>
                                                         <div class="text-[10px] text-teal-200 mt-1 font-semibold">
-                                                            {{ $m->kelas ?: 'Reg A' }} @if($m->semester)• Sem {{ $m->semester }}@endif
+                                                            Kelas {{ $m->kelas ?: 'A' }} @if($m->program_kuliah)• {{ $m->program_kuliah }}@endif @if($m->semester)• Sem {{ $m->semester }}@endif
                                                         </div>
                                                         <div class="text-[10px] text-slate-200 mt-0.5 font-medium flex items-center gap-1">
                                                             <i class="fa-solid fa-user-tie text-[9px]"></i> {{ $m->dosen->nama ?? '-' }}
@@ -186,23 +190,16 @@
                                                         </div>
 
                                                         <!-- Action buttons on hover -->
-                                                        <div class="absolute right-1.5 top-1.5 hidden group-hover:flex items-center gap-1">
-                                                            <form action="{{ route('admin.jadwal-lab.generate-16', $m->id) }}" method="POST" onsubmit="return confirm('Otomatis generate 16 sesi agenda praktikum 1 semester untuk {{ $m->mata_kuliah }}?');" class="inline">
-                                                                @csrf
-                                                                <button type="submit" class="w-5 h-5 rounded bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center text-[9px] shadow-2xs" title="Generate 16 Sesi Agenda 1 Semester">
-                                                                    <i class="fa-solid fa-wand-magic-sparkles"></i>
-                                                                </button>
-                                                            </form>
-                                                            <button onclick="openEditModal({{ json_encode($m) }})" class="w-5 h-5 rounded bg-white/20 hover:bg-white/40 text-white flex items-center justify-center text-[9px]" title="Edit">
+                                                        <div class="absolute right-1.5 top-1.5 hidden group-hover:flex items-center gap-1 z-20">
+                                                            <button type="button" onclick="confirmSingleGenerate({{ $m->id }}, {{ json_encode($m->mata_kuliah) }})" class="w-6 h-6 rounded bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center text-[10px] shadow-sm cursor-pointer" title="Generate 16 Sesi Agenda 1 Semester">
+                                                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                                            </button>
+                                                            <button type="button" onclick="openEditModal({{ json_encode($m) }})" class="w-6 h-6 rounded bg-white/30 hover:bg-white/50 text-white flex items-center justify-center text-[10px] shadow-sm cursor-pointer" title="Edit">
                                                                 <i class="fa-solid fa-pen"></i>
                                                             </button>
-                                                            <form action="{{ route('admin.jadwal-lab.delete', $m->id) }}" method="POST" onsubmit="return confirm('Hapus jadwal ini?');" class="inline">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" class="w-5 h-5 rounded bg-rose-600/80 hover:bg-rose-700 text-white flex items-center justify-center text-[9px]" title="Hapus">
-                                                                    <i class="fa-solid fa-trash"></i>
-                                                                </button>
-                                                            </form>
+                                                            <button type="button" onclick="confirmDeleteJadwal({{ $m->id }}, {{ json_encode($m->mata_kuliah) }})" class="w-6 h-6 rounded bg-rose-600/90 hover:bg-rose-700 text-white flex items-center justify-center text-[10px] shadow-sm cursor-pointer" title="Hapus">
+                                                                <i class="fa-solid fa-trash"></i>
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 @endforeach
@@ -248,103 +245,474 @@
     @include('admin.partials.bottom_nav')
 
     <!-- Modal Tambah / Edit Jadwal Master -->
-    <div id="modal-jadwal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden text-xs">
-        <div class="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-100">
-            <div class="bg-slate-800 text-white px-6 py-4 flex justify-between items-center">
-                <h4 id="modal-jadwal-title" class="font-bold text-sm">Tambah Slot Jadwal Penggunaan Lab</h4>
-                <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-white text-base"><i class="fa-solid fa-xmark"></i></button>
+    <div id="modal-jadwal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden text-xs transition-all duration-200" style="background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px);">
+        <div class="bg-white rounded-2xl w-full max-w-xl max-h-[92vh] flex flex-col shadow-2xl border border-slate-100 overflow-hidden">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 flex justify-between items-center border-b border-slate-800 shrink-0" style="background-color: #0f172a !important; color: #ffffff !important;">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm border" style="background-color: rgba(13, 148, 136, 0.25); color: #2dd4bf; border-color: rgba(13, 148, 136, 0.4);">
+                        <i class="fa-solid fa-calendar-plus"></i>
+                    </div>
+                    <div>
+                        <h4 id="modal-jadwal-title" class="font-bold text-sm leading-tight text-white" style="color: #ffffff !important;">Tambah Slot Jadwal Penggunaan Lab</h4>
+                        <p class="text-[10px] mt-0.5 text-slate-300" style="color: #94a3b8 !important;">Atur alokasi ruang lab, mata kuliah, dosen, dan kelas</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal()" class="w-8 h-8 rounded-lg flex items-center justify-center transition cursor-pointer hover:bg-slate-800" style="color: #94a3b8;">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
             </div>
-            <form id="form-jadwal" action="{{ route('admin.jadwal-lab.store') }}" method="POST" class="p-6 space-y-4">
+
+            <!-- Modal Form -->
+            <form id="form-jadwal" action="{{ route('admin.jadwal-lab.store') }}" method="POST" class="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
                 @csrf
                 <input type="hidden" id="method-field" name="_method" value="POST">
                 <input type="hidden" name="tahun_akademik" value="{{ $tahunAkademik }}">
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Row 1: Lab & Hari -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Ruang Laboratorium <span class="text-rose-500">*</span></label>
-                        <select name="lab_id" id="form_lab_id" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            @foreach($labs as $l)
-                                <option value="{{ $l->id }}" {{ $selectedLabId == $l->id ? 'selected' : '' }}>{{ strtoupper($l->nama_lab) }}</option>
-                            @endforeach
-                        </select>
+                        <label class="block text-slate-700 font-bold mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-door-open text-teal-600 text-[11px]"></i>
+                            <span>Ruang Laboratorium <span class="text-rose-500">*</span></span>
+                        </label>
+                        <div class="relative">
+                            <select name="lab_id" id="form_lab_id" required class="w-full p-2.5 pl-3 pr-8 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition appearance-none cursor-pointer">
+                                @foreach($labs as $l)
+                                    <option value="{{ $l->id }}" {{ $selectedLabId == $l->id ? 'selected' : '' }}>{{ strtoupper($l->nama_lab) }}</option>
+                                @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Hari <span class="text-rose-500">*</span></label>
-                        <select name="hari" id="form_hari" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            @foreach($hariList as $h)
-                                <option value="{{ $h }}">{{ $h }}</option>
-                            @endforeach
-                        </select>
+                        <label class="block text-slate-700 font-bold mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-calendar-day text-teal-600 text-[11px]"></i>
+                            <span>Hari Praktikum <span class="text-rose-500">*</span></span>
+                        </label>
+                        <div class="relative">
+                            <select name="hari" id="form_hari" required class="w-full p-2.5 pl-3 pr-8 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition appearance-none cursor-pointer">
+                                @foreach($hariList as $h)
+                                    <option value="{{ $h }}">{{ $h }}</option>
+                                @endforeach
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                        </div>
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Mata Kuliah <span class="text-rose-500">*</span></label>
-                    <input type="text" list="matkul-list" name="mata_kuliah" id="form_mata_kuliah" required placeholder="Contoh: Praktikum Dasar Bahasa Pemrograman" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-semibold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                    <datalist id="matkul-list">
-                        @foreach($mataKuliahs as $mk)
-                            <option value="{{ $mk->nama_mk }}">{{ $mk->nama_mk }}</option>
-                        @endforeach
-                    </datalist>
+                <!-- Row 2: Program Studi (Pilih Dulu) & Semester -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <!-- Program Studi Combobox -->
+                    <div class="relative z-30" id="prodi_combobox_wrapper">
+                        <label class="block text-slate-700 font-bold mb-1.5 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-building-columns text-teal-600 text-[11px]"></i>
+                                <span>Program Studi <span class="text-rose-500">*</span></span>
+                            </span>
+                            <span class="text-[10px] text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded font-medium border border-teal-100">Pilih Terlebih Dahulu</span>
+                        </label>
+                        <input type="hidden" name="id_prodi" id="form_id_prodi" value="">
+                        <div class="relative flex items-center">
+                            <input type="text" 
+                                   id="form_prodi_name" 
+                                   autocomplete="off" 
+                                   placeholder="Pilih prodi untuk memfilter matkul..." 
+                                   onclick="openProdiDropdown()" 
+                                   onfocus="openProdiDropdown()" 
+                                   oninput="handleProdiInput(this.value)" 
+                                   class="w-full p-2.5 pr-8 rounded-xl bg-slate-50 border border-slate-200 font-semibold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition cursor-pointer">
+                            <button type="button" 
+                                    onclick="toggleProdiDropdown(event)" 
+                                    tabindex="-1" 
+                                    class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                <i id="prodi_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                            </button>
+                        </div>
+
+                        <!-- Dropdown Menu for Program Studi -->
+                        <div id="prodi_dropdown_menu" 
+                             class="hidden absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl p-2 max-h-56 overflow-y-auto custom-scrollbar flex flex-col space-y-1.5" 
+                             style="background-color: #ffffff !important;">
+                            
+                            <!-- Search filter input within dropdown -->
+                            <div class="relative shrink-0">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" 
+                                       id="prodi_search_input" 
+                                       oninput="filterProdiList(this.value)" 
+                                       placeholder="Cari nama prodi atau fakultas..." 
+                                       autocomplete="off" 
+                                       class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700">
+                            </div>
+
+                            <!-- Option Semua / Umum -->
+                            <div class="prodi-item-option px-2.5 py-1.5 text-xs text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer transition flex items-center justify-between" 
+                                 data-id="" 
+                                 data-name="-- Semua Program Studi --" 
+                                 data-search="semua umum all" 
+                                 onclick="selectProdiItem('', '-- Semua Program Studi --')">
+                                <span class="font-medium italic text-slate-500">-- Semua Program Studi --</span>
+                                <span class="text-[10px] text-slate-400">Tampilkan Semua</span>
+                            </div>
+
+                            @php
+                                $groupedProdis = $prodis->groupBy(function($item) {
+                                    return $item->fakultas->nama_fakultas ?? 'Fakultas Lain / Umum';
+                                });
+                            @endphp
+                            @foreach($groupedProdis as $fakultasName => $items)
+                                <div class="prodi-group-header px-2 pt-2 pb-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 border-t border-slate-100 mt-1" 
+                                     data-fakultas="{{ strtolower($fakultasName) }}">
+                                    <i class="fa-solid fa-building-columns text-teal-600 text-[10px]"></i>
+                                    <span>{{ $fakultasName }}</span>
+                                </div>
+                                @foreach($items as $p)
+                                    <div class="prodi-item-option px-2.5 py-1.5 text-xs text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition flex items-center justify-between group" 
+                                         data-id="{{ $p->id }}" 
+                                         data-name="{{ $p->nama_prodi }}" 
+                                         data-search="{{ strtolower($p->nama_prodi . ' ' . $fakultasName) }}" 
+                                         onclick="selectProdiItem('{{ $p->id }}', '{{ addslashes($p->nama_prodi) }}')">
+                                        <div class="flex items-center gap-2 overflow-hidden">
+                                            <i class="fa-solid fa-check opacity-0 group-hover:opacity-100 text-teal-600 text-[10px] shrink-0 transition-opacity"></i>
+                                            <span class="font-semibold truncate">{{ $p->nama_prodi }}</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endforeach
+                            <div id="prodi_no_results" class="hidden px-3 py-2 text-xs text-slate-400 italic text-center">
+                                Program studi tidak ditemukan.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Semester -->
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-layer-group text-teal-600 text-[11px]"></i>
+                            <span>Semester</span>
+                        </label>
+                        <div class="relative">
+                            <select name="semester" id="form_semester" class="w-full p-2.5 pl-3 pr-8 rounded-xl bg-slate-50 border border-slate-200 font-semibold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition appearance-none cursor-pointer">
+                                @for($i=1; $i<=8; $i++)
+                                    <option value="{{ $i }}">Semester {{ $i }}</option>
+                                @endfor
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Dosen Pengajar <span class="text-rose-500">*</span></label>
-                        <select name="dosen_id" id="form_dosen_id" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-semibold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <option value="">-- Pilih Dosen --</option>
+                <!-- Row 3: Mata Kuliah Combobox (Filtered by Selected Prodi) -->
+                <div class="relative z-20" id="matkul_combobox_wrapper">
+                    <label class="block text-slate-700 font-bold mb-1.5 flex items-center justify-between">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-book-bookmark text-teal-600 text-[11px]"></i>
+                            <span>Mata Kuliah <span class="text-rose-500">*</span></span>
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span id="matkul_prodi_badge" class="hidden text-[10px] bg-teal-50 text-teal-800 border border-teal-200 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                                <i class="fa-solid fa-filter text-[9px] text-teal-600"></i> Filter Prodi: <b id="matkul_prodi_badge_text"></b>
+                            </span>
+                            <span class="text-[10px] text-slate-400 font-normal">Pilih opsi atau ketik manual</span>
+                        </div>
+                    </label>
+                    
+                    <div class="relative flex items-center">
+                        <input type="text" 
+                               name="mata_kuliah" 
+                               id="form_mata_kuliah" 
+                               required 
+                               autocomplete="off" 
+                               placeholder="Cari atau ketik nama mata kuliah..." 
+                               onclick="openMatkulDropdown()" 
+                               onfocus="openMatkulDropdown()" 
+                               oninput="handleMatkulInput(this.value)" 
+                               class="w-full p-2.5 pr-9 rounded-xl bg-slate-50 border border-slate-200 font-semibold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition-all">
+                        <button type="button" 
+                                onclick="toggleMatkulDropdown(event)" 
+                                tabindex="-1" 
+                                class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                            <i id="matkul_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                        </button>
+                    </div>
+
+                    <!-- Dropdown Menu Box for Mata Kuliah -->
+                    <div id="matkul_dropdown_menu" 
+                         class="hidden absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl p-2.5 max-h-56 flex flex-col space-y-2" 
+                         style="background-color: #ffffff !important;">
+                        
+                        <!-- Search Bar within Dropdown -->
+                        <div class="relative shrink-0">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" 
+                                   id="matkul_search_input" 
+                                   oninput="filterMatkulSearch(this.value)" 
+                                   placeholder="Filter mata kuliah..." 
+                                   autocomplete="off" 
+                                   class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700">
+                        </div>
+
+                        <!-- Custom Direct Input Option -->
+                        <div class="border-b border-slate-100 pb-1 shrink-0">
+                            <button type="button" 
+                                    onclick="selectCustomMatkulMode()" 
+                                    class="w-full text-left px-2.5 py-1.5 text-xs font-semibold text-teal-700 hover:bg-teal-50 rounded-lg flex items-center justify-between transition-colors cursor-pointer">
+                                <span class="flex items-center gap-2">
+                                    <i class="fa-solid fa-pen-to-square text-teal-600 text-xs"></i>
+                                    <span>Gunakan teks yang sedang diketik</span>
+                                </span>
+                                <span class="text-[10px] bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded font-bold">Manual</span>
+                            </button>
+                        </div>
+
+                        <!-- Options List -->
+                        <div id="matkul_options_container" class="overflow-y-auto flex-1 space-y-0.5 max-h-40 pr-1 custom-scrollbar">
+                            @if(isset($mataKuliahs) && count($mataKuliahs) > 0)
+                                @foreach($mataKuliahs as $mk)
+                                    <div class="matkul-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition-colors flex items-center justify-between group" 
+                                         data-name="{{ $mk->nama_mk }}" 
+                                         data-code="{{ $mk->kode_mk ?? '' }}" 
+                                         data-prodi="{{ $mk->id_prodi ?? '' }}" 
+                                         data-prodi-name="{{ $mk->prodi->nama_prodi ?? '' }}" 
+                                         onclick="selectMatkulItem('{{ addslashes($mk->nama_mk) }}', '{{ $mk->id_prodi ?? '' }}')">
+                                        <div class="flex items-center gap-2 overflow-hidden">
+                                            <i class="fa-solid fa-graduation-cap text-slate-300 group-hover:text-teal-600 text-xs shrink-0"></i>
+                                            <span class="font-semibold truncate">{{ $mk->nama_mk }}</span>
+                                            @if($mk->prodi)
+                                                <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded group-hover:bg-teal-100 group-hover:text-teal-700 font-medium shrink-0">{{ $mk->prodi->nama_prodi }}</span>
+                                            @endif
+                                        </div>
+                                        @if($mk->kode_mk)
+                                            <span class="text-[10px] text-slate-400 bg-slate-100 group-hover:bg-teal-100 group-hover:text-teal-800 px-1.5 py-0.5 rounded font-mono ml-2 shrink-0">{{ $mk->kode_mk }}</span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="px-3 py-3 text-xs text-slate-400 italic text-center">Belum ada data mata kuliah. Silakan ketik manual.</div>
+                            @endif
+                            <div id="matkul_no_results" class="hidden px-3 py-3 text-xs text-slate-400 italic text-center">
+                                Mata kuliah tidak ditemukan untuk prodi ini. Anda dapat langsung mengetikkan namanya.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 4: Dosen Pengajar Combobox (Filtered by Selected Prodi) -->
+                <div class="relative z-10" id="dosen_combobox_wrapper">
+                    <label class="block text-slate-700 font-bold mb-1.5 flex items-center justify-between">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-user-tie text-teal-600 text-[11px]"></i>
+                            <span>Dosen Pengajar <span class="text-rose-500">*</span></span>
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span id="dosen_prodi_badge" class="hidden text-[10px] bg-teal-50 text-teal-800 border border-teal-200 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                                <i class="fa-solid fa-filter text-[9px] text-teal-600"></i> Filter Prodi: <b id="dosen_prodi_badge_text"></b>
+                            </span>
+                        </div>
+                    </label>
+                    <input type="hidden" name="dosen_id" id="form_dosen_id" required value="">
+                    <div class="relative flex items-center">
+                        <input type="text" 
+                               id="form_dosen_name" 
+                               required 
+                               autocomplete="off" 
+                               placeholder="Pilih atau cari dosen pengajar..." 
+                               onclick="openDosenDropdown()" 
+                               onfocus="openDosenDropdown()" 
+                               oninput="handleDosenInput(this.value)" 
+                               class="w-full p-2.5 pr-8 rounded-xl bg-slate-50 border border-slate-200 font-semibold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition cursor-pointer">
+                        <button type="button" 
+                                onclick="toggleDosenDropdown(event)" 
+                                tabindex="-1" 
+                                class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                            <i id="dosen_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                        </button>
+                    </div>
+
+                    <!-- Dropdown Menu for Dosen -->
+                    <div id="dosen_dropdown_menu" 
+                         class="hidden absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl p-2.5 max-h-56 flex flex-col space-y-1.5" 
+                         style="background-color: #ffffff !important;">
+                        
+                        <!-- Search Bar within Dropdown -->
+                        <div class="relative shrink-0">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" 
+                                   id="dosen_search_input" 
+                                   oninput="filterDosenSearch(this.value)" 
+                                   placeholder="Cari nama dosen / NIDN..." 
+                                   autocomplete="off" 
+                                   class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700">
+                        </div>
+
+                        <div id="dosen_options_container" class="space-y-0.5 overflow-y-auto flex-1 max-h-40 custom-scrollbar pr-1">
                             @foreach($dosens as $d)
-                                <option value="{{ $d->id }}">{{ $d->nama }}</option>
+                                <div class="dosen-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition flex items-center justify-between group" 
+                                     data-id="{{ $d->id }}" 
+                                     data-name="{{ $d->nama }}" 
+                                     data-prodi="{{ $d->id_prodi ?? '' }}" 
+                                     data-prodi-name="{{ $d->prodi->nama_prodi ?? '' }}" 
+                                     onclick="selectDosenItem('{{ $d->id }}', '{{ addslashes($d->nama) }}', '{{ $d->id_prodi ?? '' }}')">
+                                    <div class="flex items-center gap-2 overflow-hidden">
+                                        <i class="fa-solid fa-user-check text-slate-300 group-hover:text-teal-600 text-xs shrink-0"></i>
+                                        <span class="font-semibold truncate">{{ $d->nama }}</span>
+                                        @if($d->prodi)
+                                            <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded group-hover:bg-teal-100 group-hover:text-teal-700 font-medium shrink-0">{{ $d->prodi->nama_prodi }}</span>
+                                        @endif
+                                    </div>
+                                    @if($d->nidn)
+                                        <span class="text-[10px] text-slate-400 bg-slate-100 group-hover:bg-teal-100 group-hover:text-teal-800 px-1.5 py-0.5 rounded font-mono shrink-0">NIDN: {{ $d->nidn }}</span>
+                                    @endif
+                                </div>
                             @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Program Studi</label>
-                        <select name="id_prodi" id="form_id_prodi" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-semibold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <option value="">-- Pilih Program Studi --</option>
-                            @foreach($prodis as $p)
-                                <option value="{{ $p->id }}">{{ $p->nama_prodi }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Kelas</label>
-                        <input type="text" name="kelas" id="form_kelas" value="Reg A" placeholder="Reg A" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-semibold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Semester</label>
-                        <select name="semester" id="form_semester" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-semibold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            @for($i=1; $i<=8; $i++)
-                                <option value="{{ $i }}">Sem {{ $i }}</option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Program</label>
-                        <select name="program_kuliah" id="form_program_kuliah" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-semibold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <option value="Reguler">Reguler</option>
-                            <option value="Karyawan">Karyawan</option>
-                        </select>
+                        </div>
+                        <div id="dosen_no_results" class="hidden px-3 py-2 text-xs text-slate-400 italic text-center">
+                            Dosen tidak ditemukan untuk prodi ini.
+                        </div>
+                        <!-- Toggle view all dosens button -->
+                        <div class="border-t border-slate-100 pt-1 shrink-0 text-center">
+                            <button type="button" 
+                                    id="dosen_toggle_all_btn" 
+                                    onclick="toggleShowAllDosens(event)" 
+                                    class="hidden text-[10px] text-teal-700 hover:text-teal-900 font-bold px-2 py-1 rounded hover:bg-teal-50 transition cursor-pointer">
+                                Lihat Dosen Semua Prodi →
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Jam Mulai <span class="text-rose-500">*</span></label>
-                        <input type="time" name="jam_mulai" id="form_jam_mulai" required value="08:00" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                <!-- Row 5: Kelas Combobox & Program Kuliah -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <!-- Kelas Combobox (Database Aligned: A, B, C) -->
+                    <div class="relative z-10" id="kelas_combobox_wrapper">
+                        <label class="block text-slate-700 font-bold mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-users text-teal-600 text-[11px]"></i>
+                            <span>Kelas <span class="text-rose-500">*</span></span>
+                        </label>
+                        <div class="relative flex items-center">
+                            <input type="text" 
+                                   name="kelas" 
+                                   id="form_kelas" 
+                                   value="A" 
+                                   placeholder="Contoh: A" 
+                                   autocomplete="off" 
+                                   onclick="openKelasDropdown()" 
+                                   onfocus="openKelasDropdown()" 
+                                   oninput="handleKelasInput(this.value)" 
+                                   class="w-full p-2.5 pr-8 rounded-xl bg-slate-50 border border-slate-200 font-semibold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition">
+                            <button type="button" 
+                                    onclick="toggleKelasDropdown(event)" 
+                                    tabindex="-1" 
+                                    class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                <i id="kelas_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                            </button>
+                        </div>
+
+                        <!-- Dropdown Menu for Kelas (Pure Database Classes: A, B, C) -->
+                        <div id="kelas_dropdown_menu" 
+                             class="hidden absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl p-2 max-h-48 overflow-y-auto custom-scrollbar flex flex-col space-y-1" 
+                             style="background-color: #ffffff !important;">
+                            <div class="px-2 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 bg-slate-50 rounded">
+                                <i class="fa-solid fa-graduation-cap text-teal-600 text-[10px]"></i> Data Kelas (Database)
+                            </div>
+                            @if(isset($kelas) && count($kelas) > 0)
+                                @foreach($kelas as $k)
+                                    <div class="kelas-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition flex items-center justify-between group" 
+                                         data-name="{{ $k->nama_kelas }}" 
+                                         onclick="selectKelasItem('{{ $k->nama_kelas }}')">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-6 h-6 rounded-md bg-teal-100/80 text-teal-800 flex items-center justify-center font-bold text-xs group-hover:bg-teal-700 group-hover:text-white transition">
+                                                {{ $k->nama_kelas }}
+                                            </span>
+                                            <span class="font-bold text-slate-800">Kelas {{ $k->nama_kelas }}</span>
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 group-hover:text-teal-700 font-medium">Pilih</span>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="kelas-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition flex items-center justify-between group" 
+                                     data-name="A" 
+                                     onclick="selectKelasItem('A')">
+                                    <span class="font-bold">Kelas A</span>
+                                    <span class="text-[10px] text-slate-400">Pilih</span>
+                                </div>
+                                <div class="kelas-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition flex items-center justify-between group" 
+                                     data-name="B" 
+                                     onclick="selectKelasItem('B')">
+                                    <span class="font-bold">Kelas B</span>
+                                    <span class="text-[10px] text-slate-400">Pilih</span>
+                                </div>
+                                <div class="kelas-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition flex items-center justify-between group" 
+                                     data-name="C" 
+                                     onclick="selectKelasItem('C')">
+                                    <span class="font-bold">Kelas C</span>
+                                    <span class="text-[10px] text-slate-400">Pilih</span>
+                                </div>
+                            @endif
+                        </div>
                     </div>
+
+                    <!-- Program Kuliah -->
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Jam Selesai <span class="text-rose-500">*</span></label>
-                        <input type="time" name="jam_selesai" id="form_jam_selesai" required value="10:30" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                        <label class="block text-slate-700 font-bold mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-graduation-cap text-teal-600 text-[11px]"></i>
+                            <span>Program Kuliah</span>
+                        </label>
+                        <div class="relative">
+                            <select name="program_kuliah" id="form_program_kuliah" class="w-full p-2.5 pl-3 pr-8 rounded-xl bg-slate-50 border border-slate-200 font-semibold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition appearance-none cursor-pointer">
+                                <option value="Reguler">Reguler</option>
+                                <option value="Karyawan">Karyawan</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                        </div>
                     </div>
                 </div>
 
-                <div class="pt-2 flex justify-end gap-2 border-t border-slate-100">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">Batal</button>
-                    <button type="submit" class="px-5 py-2 bg-teal-800 hover:bg-teal-900 text-white font-bold rounded-xl transition shadow-sm">Simpan Jadwal</button>
+                <!-- Row 6: Waktu Jam Mulai & Selesai -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-clock text-teal-600 text-[11px]"></i>
+                            <span>Jam Mulai <span class="text-rose-500">*</span></span>
+                        </label>
+                        <input type="time" name="jam_mulai" id="form_jam_mulai" required value="08:00" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-clock-rotate-left text-teal-600 text-[11px]"></i>
+                            <span>Jam Selesai <span class="text-rose-500">*</span></span>
+                        </label>
+                        <input type="time" name="jam_selesai" id="form_jam_selesai" required value="10:30" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition">
+                    </div>
+                </div>
+
+                <!-- Options Row -->
+                <div id="modal-add-options" class="p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl">
+                    <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs font-bold text-indigo-950">
+                        <input type="checkbox" name="auto_generate_16" value="1" checked class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                        <span>Otomatis Langsung Generate 16 Sesi Perkuliahan ke Agenda</span>
+                    </label>
+                    <p class="text-[10px] text-indigo-700 mt-1 ml-6 font-medium">Sistem akan otomatis mengalokasikan 16 pertemuan kuliah/praktikum 1 semester di menu Agenda</p>
+                </div>
+
+                <!-- Footer Buttons -->
+                <div class="pt-4 mt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5">
+                    <div id="modal-edit-actions" class="hidden">
+                        <button type="button" onclick="generateFromModalCurrent()" class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
+                            <span>Generate 16 Pertemuan</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-2.5 ml-auto">
+                        <button type="button" onclick="closeModal()" class="px-5 py-2.5 font-bold rounded-xl text-xs transition cursor-pointer hover:bg-slate-200" style="background-color: #f1f5f9 !important; color: #334155 !important; border: 1px solid #cbd5e1 !important;">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-6 py-2.5 font-bold rounded-xl text-xs transition shadow-md hover:opacity-95 flex items-center gap-2 cursor-pointer" style="background-color: #0f766e !important; color: #ffffff !important;">
+                            <i class="fa-solid fa-floppy-disk" style="color: #ffffff !important;"></i>
+                            <span style="color: #ffffff !important;">Simpan Jadwal</span>
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -356,11 +724,595 @@
         const title = document.getElementById('modal-jadwal-title');
         const methodField = document.getElementById('method-field');
 
+        // Helper: Close All Combobox Dropdowns
+        function closeAllDropdowns() {
+            closeMatkulDropdown();
+            closeKelasDropdown();
+            closeDosenDropdown();
+            closeProdiDropdown();
+        }
+
+        let activeProdiFilterId = '';
+        let isShowingAllDosens = false;
+
+        // ==========================================
+        // 1. PROGRAM STUDI COMBOBOX (STEP 1: ROOT FILTER)
+        // ==========================================
+        function openProdiDropdown() {
+            closeMatkulDropdown();
+            closeDosenDropdown();
+            closeKelasDropdown();
+            const menu = document.getElementById('prodi_dropdown_menu');
+            const icon = document.getElementById('prodi_chevron_icon');
+            if (menu) menu.classList.remove('hidden');
+            if (icon) icon.classList.add('rotate-180');
+        }
+
+        function closeProdiDropdown() {
+            const menu = document.getElementById('prodi_dropdown_menu');
+            const icon = document.getElementById('prodi_chevron_icon');
+            if (menu) menu.classList.add('hidden');
+            if (icon) icon.classList.remove('rotate-180');
+        }
+
+        function toggleProdiDropdown(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('prodi_dropdown_menu');
+            if (menu && menu.classList.contains('hidden')) {
+                openProdiDropdown();
+                const searchInput = document.getElementById('prodi_search_input');
+                if (searchInput) searchInput.focus();
+            } else {
+                closeProdiDropdown();
+            }
+        }
+
+        function filterProdiList(query) {
+            const q = (query || '').toLowerCase().trim();
+            const items = document.querySelectorAll('.prodi-item-option');
+            const headers = document.querySelectorAll('.prodi-group-header');
+            const noResults = document.getElementById('prodi_no_results');
+            let visibleCount = 0;
+
+            items.forEach(item => {
+                const searchStr = (item.getAttribute('data-search') || '').toLowerCase();
+                if (searchStr.includes(q)) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            headers.forEach(h => {
+                h.style.display = (q === '') ? '' : 'none';
+            });
+
+            if (noResults) {
+                noResults.style.display = (visibleCount === 0 && items.length > 0) ? 'block' : 'none';
+            }
+        }
+
+        function selectProdiItem(id, name) {
+            activeProdiFilterId = id ? String(id) : '';
+            isShowingAllDosens = false;
+
+            document.getElementById('form_id_prodi').value = activeProdiFilterId;
+            document.getElementById('form_prodi_name').value = name || '';
+
+            // Reset search inputs
+            const matkulSearch = document.getElementById('matkul_search_input');
+            if (matkulSearch) matkulSearch.value = '';
+            const dosenSearch = document.getElementById('dosen_search_input');
+            if (dosenSearch) dosenSearch.value = '';
+
+            // Run cascading filters
+            filterMatkulByProdi(activeProdiFilterId);
+            filterDosenByProdi(activeProdiFilterId, false);
+
+            // Check if existing matkul matches the new prodi
+            const matkulInput = document.getElementById('form_mata_kuliah');
+            if (matkulInput && matkulInput.value.trim() && activeProdiFilterId) {
+                let matchFound = false;
+                document.querySelectorAll('.matkul-item-option').forEach(opt => {
+                    if (opt.style.display !== 'none' && opt.getAttribute('data-name').toLowerCase() === matkulInput.value.trim().toLowerCase()) {
+                        matchFound = true;
+                    }
+                });
+                if (!matchFound) {
+                    matkulInput.value = '';
+                }
+            }
+
+            // Check if existing dosen matches the new prodi
+            const dosenIdInput = document.getElementById('form_dosen_id');
+            if (dosenIdInput && dosenIdInput.value && activeProdiFilterId) {
+                const currentDosenOpt = document.querySelector(`.dosen-item-option[data-id="${dosenIdInput.value}"]`);
+                if (currentDosenOpt && currentDosenOpt.getAttribute('data-prodi') !== activeProdiFilterId) {
+                    dosenIdInput.value = '';
+                    document.getElementById('form_dosen_name').value = '';
+                }
+            }
+
+            closeProdiDropdown();
+        }
+
+        function handleProdiInput(val) {
+            openProdiDropdown();
+            const searchInput = document.getElementById('prodi_search_input');
+            if (searchInput) searchInput.value = val;
+            filterProdiList(val);
+        }
+
+        // ==========================================
+        // 2. MATA KULIAH COMBOBOX (STEP 2: FILTERED BY PRODI)
+        // ==========================================
+        function openMatkulDropdown() {
+            closeKelasDropdown();
+            closeDosenDropdown();
+            closeProdiDropdown();
+            const menu = document.getElementById('matkul_dropdown_menu');
+            const icon = document.getElementById('matkul_chevron_icon');
+            if (menu) menu.classList.remove('hidden');
+            if (icon) icon.classList.add('rotate-180');
+        }
+
+        function closeMatkulDropdown() {
+            const menu = document.getElementById('matkul_dropdown_menu');
+            const icon = document.getElementById('matkul_chevron_icon');
+            if (menu) menu.classList.add('hidden');
+            if (icon) icon.classList.remove('rotate-180');
+        }
+
+        function toggleMatkulDropdown(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('matkul_dropdown_menu');
+            if (menu && menu.classList.contains('hidden')) {
+                openMatkulDropdown();
+                const searchInput = document.getElementById('matkul_search_input');
+                if (searchInput) searchInput.focus();
+            } else {
+                closeMatkulDropdown();
+            }
+        }
+
+        function filterMatkulByProdi(prodiId) {
+            const pid = prodiId ? String(prodiId) : '';
+            const items = document.querySelectorAll('.matkul-item-option');
+            const badge = document.getElementById('matkul_prodi_badge');
+            const badgeText = document.getElementById('matkul_prodi_badge_text');
+            const noResults = document.getElementById('matkul_no_results');
+            const searchVal = (document.getElementById('matkul_search_input')?.value || '').toLowerCase().trim();
+
+            if (badge && badgeText) {
+                if (pid) {
+                    const matchedProdi = document.querySelector(`.prodi-item-option[data-id="${pid}"]`);
+                    badgeText.textContent = matchedProdi ? matchedProdi.getAttribute('data-name') : '';
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            let visibleCount = 0;
+            items.forEach(item => {
+                const itemProdi = item.getAttribute('data-prodi') || '';
+                const name = (item.getAttribute('data-name') || '').toLowerCase();
+                const code = (item.getAttribute('data-code') || '').toLowerCase();
+
+                const matchProdi = !pid || itemProdi === pid;
+                const matchSearch = !searchVal || name.includes(searchVal) || code.includes(searchVal);
+
+                if (matchProdi && matchSearch) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            if (noResults) {
+                if (visibleCount === 0) {
+                    noResults.textContent = pid 
+                        ? 'Belum ada master mata kuliah untuk prodi ini. Silakan ketik nama mata kuliah secara manual.' 
+                        : 'Mata kuliah tidak ditemukan. Silakan ketik manual.';
+                    noResults.style.display = 'block';
+                } else {
+                    noResults.style.display = 'none';
+                }
+            }
+        }
+
+        function filterMatkulSearch(query) {
+            filterMatkulByProdi(activeProdiFilterId);
+        }
+
+        function selectMatkulItem(name, prodiId) {
+            const mainInput = document.getElementById('form_mata_kuliah');
+            if (mainInput) mainInput.value = name;
+
+            // Auto-align prodi if not yet selected
+            if (prodiId && !activeProdiFilterId) {
+                const prodiOption = document.querySelector(`.prodi-item-option[data-id="${prodiId}"]`);
+                const prodiName = prodiOption ? prodiOption.getAttribute('data-name') : '';
+                selectProdiItem(prodiId, prodiName);
+            }
+
+            closeMatkulDropdown();
+        }
+
+        function selectCustomMatkulMode() {
+            closeMatkulDropdown();
+            const mainInput = document.getElementById('form_mata_kuliah');
+            if (mainInput) {
+                mainInput.focus();
+                mainInput.select();
+            }
+        }
+
+        function handleMatkulInput(val) {
+            openMatkulDropdown();
+            const searchInput = document.getElementById('matkul_search_input');
+            if (searchInput) {
+                searchInput.value = val;
+            }
+            filterMatkulByProdi(activeProdiFilterId);
+        }
+
+        // ==========================================
+        // 3. DOSEN PENGAJAR COMBOBOX (STEP 3: FILTERED BY PRODI)
+        // ==========================================
+        function openDosenDropdown() {
+            closeMatkulDropdown();
+            closeKelasDropdown();
+            closeProdiDropdown();
+            const menu = document.getElementById('dosen_dropdown_menu');
+            const icon = document.getElementById('dosen_chevron_icon');
+            if (menu) menu.classList.remove('hidden');
+            if (icon) icon.classList.add('rotate-180');
+        }
+
+        function closeDosenDropdown() {
+            const menu = document.getElementById('dosen_dropdown_menu');
+            const icon = document.getElementById('dosen_chevron_icon');
+            if (menu) menu.classList.add('hidden');
+            if (icon) icon.classList.remove('rotate-180');
+        }
+
+        function toggleDosenDropdown(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('dosen_dropdown_menu');
+            if (menu && menu.classList.contains('hidden')) {
+                openDosenDropdown();
+                const searchInput = document.getElementById('dosen_search_input');
+                if (searchInput) searchInput.focus();
+            } else {
+                closeDosenDropdown();
+            }
+        }
+
+        function filterDosenByProdi(prodiId, forceShowAll = false) {
+            const pid = prodiId ? String(prodiId) : '';
+            const items = document.querySelectorAll('.dosen-item-option');
+            const badge = document.getElementById('dosen_prodi_badge');
+            const badgeText = document.getElementById('dosen_prodi_badge_text');
+            const noResults = document.getElementById('dosen_no_results');
+            const toggleBtn = document.getElementById('dosen_toggle_all_btn');
+            const searchVal = (document.getElementById('dosen_search_input')?.value || '').toLowerCase().trim();
+
+            if (badge && badgeText) {
+                if (pid && !forceShowAll) {
+                    const matchedProdi = document.querySelector(`.prodi-item-option[data-id="${pid}"]`);
+                    badgeText.textContent = matchedProdi ? matchedProdi.getAttribute('data-name') : '';
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            let count = 0;
+            items.forEach(item => {
+                const itemProdi = item.getAttribute('data-prodi') || '';
+                const name = (item.getAttribute('data-name') || '').toLowerCase();
+
+                const matchProdi = forceShowAll || !pid || itemProdi === pid;
+                const matchSearch = !searchVal || name.includes(searchVal);
+
+                if (matchProdi && matchSearch) {
+                    item.style.display = '';
+                    count++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            if (toggleBtn) {
+                if (pid) {
+                    toggleBtn.classList.remove('hidden');
+                    toggleBtn.textContent = forceShowAll ? '← Tampilkan Hanya Dosen Prodi Ini' : 'Lihat Dosen Semua Prodi →';
+                } else {
+                    toggleBtn.classList.add('hidden');
+                }
+            }
+
+            if (noResults) {
+                if (count === 0) {
+                    noResults.textContent = pid && !forceShowAll 
+                        ? 'Belum ada dosen untuk prodi ini. Klik tombol di bawah untuk melihat semua dosen.' 
+                        : 'Dosen tidak ditemukan.';
+                    noResults.style.display = 'block';
+                } else {
+                    noResults.style.display = 'none';
+                }
+            }
+        }
+
+        function filterDosenSearch(query) {
+            filterDosenByProdi(activeProdiFilterId, isShowingAllDosens);
+        }
+
+        function toggleShowAllDosens(e) {
+            if (e) e.stopPropagation();
+            isShowingAllDosens = !isShowingAllDosens;
+            filterDosenByProdi(activeProdiFilterId, isShowingAllDosens);
+        }
+
+        function selectDosenItem(id, name, prodiId) {
+            document.getElementById('form_dosen_id').value = id;
+            document.getElementById('form_dosen_name').value = name;
+
+            // Auto-align prodi if not yet selected
+            if (prodiId && !activeProdiFilterId) {
+                const prodiOption = document.querySelector(`.prodi-item-option[data-id="${prodiId}"]`);
+                const prodiName = prodiOption ? prodiOption.getAttribute('data-name') : '';
+                selectProdiItem(prodiId, prodiName);
+            }
+
+            closeDosenDropdown();
+        }
+
+        function handleDosenInput(val) {
+            openDosenDropdown();
+            const searchInput = document.getElementById('dosen_search_input');
+            if (searchInput) searchInput.value = val;
+            filterDosenByProdi(activeProdiFilterId, isShowingAllDosens);
+        }
+
+        // ==========================================
+        // 4. KELAS COMBOBOX
+        // ==========================================
+        function openKelasDropdown() {
+            closeMatkulDropdown();
+            closeDosenDropdown();
+            closeProdiDropdown();
+            const menu = document.getElementById('kelas_dropdown_menu');
+            const icon = document.getElementById('kelas_chevron_icon');
+            if (menu) menu.classList.remove('hidden');
+            if (icon) icon.classList.add('rotate-180');
+        }
+
+        function closeKelasDropdown() {
+            const menu = document.getElementById('kelas_dropdown_menu');
+            const icon = document.getElementById('kelas_chevron_icon');
+            if (menu) menu.classList.add('hidden');
+            if (icon) icon.classList.remove('rotate-180');
+        }
+
+        function toggleKelasDropdown(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('kelas_dropdown_menu');
+            if (menu && menu.classList.contains('hidden')) {
+                openKelasDropdown();
+            } else {
+                closeKelasDropdown();
+            }
+        }
+
+        function filterKelasList(query) {
+            const q = (query || '').toLowerCase().trim();
+            const items = document.querySelectorAll('.kelas-item-option');
+            items.forEach(item => {
+                const val = (item.getAttribute('data-name') || '').toLowerCase();
+                if (val.includes(q)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function selectKelasItem(val) {
+            document.getElementById('form_kelas').value = val;
+            closeKelasDropdown();
+        }
+
+        function handleKelasInput(val) {
+            openKelasDropdown();
+            filterKelasList(val);
+        }
+
+        // ==========================================
+        // GLOBAL EVENT LISTENERS (OUTSIDE CLICK & ESC)
+        // ==========================================
+        document.addEventListener('click', function(e) {
+            const prodiWrapper = document.getElementById('prodi_combobox_wrapper');
+            if (prodiWrapper && !prodiWrapper.contains(e.target)) {
+                closeProdiDropdown();
+            }
+            const matkulWrapper = document.getElementById('matkul_combobox_wrapper');
+            if (matkulWrapper && !matkulWrapper.contains(e.target)) {
+                closeMatkulDropdown();
+            }
+            const dosenWrapper = document.getElementById('dosen_combobox_wrapper');
+            if (dosenWrapper && !dosenWrapper.contains(e.target)) {
+                closeDosenDropdown();
+            }
+            const kelasWrapper = document.getElementById('kelas_combobox_wrapper');
+            if (kelasWrapper && !kelasWrapper.contains(e.target)) {
+                closeKelasDropdown();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const prodiMenu = document.getElementById('prodi_dropdown_menu');
+                const matkulMenu = document.getElementById('matkul_dropdown_menu');
+                const dosenMenu = document.getElementById('dosen_dropdown_menu');
+                const kelasMenu = document.getElementById('kelas_dropdown_menu');
+                if (prodiMenu && !prodiMenu.classList.contains('hidden')) {
+                    closeProdiDropdown();
+                } else if (matkulMenu && !matkulMenu.classList.contains('hidden')) {
+                    closeMatkulDropdown();
+                } else if (dosenMenu && !dosenMenu.classList.contains('hidden')) {
+                    closeDosenDropdown();
+                } else if (kelasMenu && !kelasMenu.classList.contains('hidden')) {
+                    closeKelasDropdown();
+                } else if (modal && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            }
+        });
+
+        // ==========================================
+        // MODAL OPEN / CLOSE CONTROLLERS
+        // ==========================================
+        let currentEditingJadwal = null;
+
+        function confirmBulkGenerate() {
+            Swal.fire({
+                title: 'Generate 16 Sesi Lab Ini?',
+                text: 'Sistem akan otomatis membuat 16 sesi agenda pertemuan perkuliahan 1 semester untuk SEMUA mata kuliah yang terjadwal di lab ini.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Ya, Generate 16 Sesi!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Sedang Membuat 16 Sesi Pertemuan...',
+                        text: 'Mohon tunggu, sistem sedang membuat jadwal praktikum di database.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    document.getElementById('form-bulk-generate').submit();
+                }
+            });
+        }
+
+        function confirmSingleGenerate(jadwalId, matkulName) {
+            Swal.fire({
+                title: 'Generate 16 Pertemuan?',
+                text: 'Otomatis buat 16 sesi agenda praktikum 1 semester untuk ' + matkulName + '?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Ya, Generate!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Sedang Membuat Sesi...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{{ url("admin/jadwal-lab") }}/' + jadwalId + '/generate-16';
+                    form.innerHTML = '@csrf';
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
+        function confirmDeleteJadwal(jadwalId, matkulName) {
+            Swal.fire({
+                title: 'Hapus Jadwal Lab?',
+                text: 'Apakah Anda yakin ingin menghapus slot jadwal untuk: ' + matkulName + '?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{{ url("admin/jadwal-lab") }}/' + jadwalId;
+                    form.innerHTML = '@csrf @method("DELETE")';
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
+        function generateFromModalCurrent() {
+            if (currentEditingJadwal) {
+                confirmSingleGenerate(currentEditingJadwal.id, currentEditingJadwal.mata_kuliah);
+            }
+        }
+
         function openAddModal() {
+            currentEditingJadwal = null;
+            const editActions = document.getElementById('modal-edit-actions');
+            const addOptions = document.getElementById('modal-add-options');
+            if (editActions) editActions.classList.add('hidden');
+            if (addOptions) addOptions.classList.remove('hidden');
+
             title.textContent = 'Tambah Slot Jadwal Penggunaan Lab';
             form.action = "{{ route('admin.jadwal-lab.store') }}";
             methodField.value = 'POST';
             form.reset();
+
+            activeProdiFilterId = '';
+            isShowingAllDosens = false;
+
+            document.getElementById('form_id_prodi').value = '';
+            document.getElementById('form_prodi_name').value = '';
+            document.getElementById('form_mata_kuliah').value = '';
+            document.getElementById('form_dosen_id').value = '';
+            document.getElementById('form_dosen_name').value = '';
+            document.getElementById('form_kelas').value = 'A';
+            document.getElementById('form_semester').value = '1';
+            document.getElementById('form_program_kuliah').value = 'Reguler';
+            document.getElementById('form_jam_mulai').value = '08:00';
+            document.getElementById('form_jam_selesai').value = '10:30';
+
+            // Reset filters to show all
+            filterMatkulByProdi('');
+            filterDosenByProdi('', true);
+
+            closeAllDropdowns();
             modal.classList.remove('hidden');
         }
 
@@ -372,27 +1324,115 @@
         }
 
         function openEditModal(jadwal) {
+            currentEditingJadwal = jadwal;
+            const editActions = document.getElementById('modal-edit-actions');
+            const addOptions = document.getElementById('modal-add-options');
+            if (editActions) editActions.classList.remove('hidden');
+            if (addOptions) addOptions.classList.add('hidden');
+
             title.textContent = 'Edit Slot Jadwal Penggunaan Lab';
             form.action = "{{ url('admin/jadwal-lab') }}/" + jadwal.id;
             methodField.value = 'PUT';
 
             document.getElementById('form_lab_id').value = jadwal.lab_id;
             document.getElementById('form_hari').value = jadwal.hari;
-            document.getElementById('form_mata_kuliah').value = jadwal.mata_kuliah;
-            document.getElementById('form_dosen_id').value = jadwal.dosen_id;
-            document.getElementById('form_id_prodi').value = jadwal.id_prodi || '';
-            document.getElementById('form_kelas').value = jadwal.kelas || 'Reg A';
-            document.getElementById('form_semester').value = jadwal.semester || '1';
-            document.getElementById('form_program_kuliah').value = jadwal.program_kuliah || 'Reguler';
-            document.getElementById('form_jam_mulai').value = jadwal.jam_mulai.substr(0, 5);
-            document.getElementById('form_jam_selesai').value = jadwal.jam_selesai.substr(0, 5);
 
+            // 1. Set Program Studi first!
+            activeProdiFilterId = jadwal.id_prodi ? String(jadwal.id_prodi) : '';
+            isShowingAllDosens = false;
+            document.getElementById('form_id_prodi').value = activeProdiFilterId;
+
+            const matchedProdi = document.querySelector(`.prodi-item-option[data-id="${activeProdiFilterId}"]`);
+            if (matchedProdi) {
+                document.getElementById('form_prodi_name').value = matchedProdi.getAttribute('data-name');
+            } else {
+                document.getElementById('form_prodi_name').value = '';
+            }
+
+            // 2. Set Semester
+            document.getElementById('form_semester').value = jadwal.semester || '1';
+
+            // 3. Apply cascading filters for matkul & dosen
+            filterMatkulByProdi(activeProdiFilterId);
+            filterDosenByProdi(activeProdiFilterId, false);
+
+            // 4. Set Mata Kuliah
+            document.getElementById('form_mata_kuliah').value = jadwal.mata_kuliah || '';
+
+            // 5. Set Dosen
+            document.getElementById('form_dosen_id').value = jadwal.dosen_id || '';
+            const matchedDosen = document.querySelector(`.dosen-item-option[data-id="${jadwal.dosen_id}"]`);
+            if (matchedDosen) {
+                document.getElementById('form_dosen_name').value = matchedDosen.getAttribute('data-name');
+            } else {
+                document.getElementById('form_dosen_name').value = '';
+            }
+
+            // 6. Set Kelas & Program Kuliah
+            document.getElementById('form_kelas').value = jadwal.kelas ? jadwal.kelas.replace(/^(Reg|Karyawan)\s+/i, '') : 'A';
+            document.getElementById('form_program_kuliah').value = jadwal.program_kuliah || 'Reguler';
+
+            // 7. Set Jam
+            document.getElementById('form_jam_mulai').value = jadwal.jam_mulai ? jadwal.jam_mulai.substr(0, 5) : '08:00';
+            document.getElementById('form_jam_selesai').value = jadwal.jam_selesai ? jadwal.jam_selesai.substr(0, 5) : '10:30';
+
+            closeAllDropdowns();
             modal.classList.remove('hidden');
         }
 
         function closeModal() {
+            closeAllDropdowns();
             modal.classList.add('hidden');
         }
+
+        // SweetAlert2 Alerts for Session & Form Submits
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: @json(session('success')),
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    customClass: {
+                        popup: 'rounded-3xl p-6',
+                        title: 'text-lg font-extrabold text-slate-800',
+                        htmlContainer: 'text-xs text-slate-600 font-medium'
+                    }
+                });
+            @endif
+
+            @if(session('error') || session('failed'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: @json(session('error') ?? session('failed')),
+                    confirmButtonColor: '#0c4ea6',
+                    customClass: {
+                        popup: 'rounded-3xl p-6',
+                        title: 'text-lg font-extrabold text-slate-800',
+                        htmlContainer: 'text-xs text-slate-600 font-medium',
+                        confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold'
+                    }
+                });
+            @endif
+
+            @if($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal!',
+                    text: @json($errors->first()),
+                    confirmButtonColor: '#0c4ea6',
+                    customClass: {
+                        popup: 'rounded-3xl p-6',
+                        title: 'text-lg font-extrabold text-slate-800',
+                        htmlContainer: 'text-xs text-slate-600 font-medium',
+                        confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold'
+                    }
+                });
+            @endif
+        });
     </script>
 </body>
 </html>

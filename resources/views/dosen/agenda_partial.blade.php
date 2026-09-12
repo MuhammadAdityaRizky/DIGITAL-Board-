@@ -1,37 +1,84 @@
 @if(isset($groupedAgendas) && $groupedAgendas->count() > 0)
-    <div class="space-y-6">
+    <div class="space-y-4">
+        @php
+            $hasActiveAnywhere = false;
+            foreach ($groupedAgendas as $sList) {
+                if ($sList->where('status_agenda', 'Berlangsung')->count() > 0 || $sList->where('tanggal', date('Y-m-d'))->count() > 0) {
+                    $hasActiveAnywhere = true;
+                    break;
+                }
+            }
+        @endphp
         @foreach($groupedAgendas as $courseTitle => $sessions)
             @php
                 $first = $sessions->first();
                 $totalSessions = $sessions->count();
                 $completedSessions = $sessions->where('status_agenda', 'Selesai')->count();
+                $ongoingSessions = $sessions->where('status_agenda', 'Berlangsung')->count();
+                $todaySessions = $sessions->where('tanggal', date('Y-m-d'))->count();
+                $courseSlug = 'course-' . $loop->index . '-' . Str::slug($courseTitle);
+
+                $minTanggal = $sessions->min('tanggal');
+                $maxTanggal = $sessions->max('tanggal');
+                $isPastCourse = $maxTanggal < date('Y-m-d') && $ongoingSessions === 0;
+
+                if ($minTanggal && $maxTanggal) {
+                    if ($minTanggal === $maxTanggal) {
+                        $periodeText = date('d M Y', strtotime($minTanggal));
+                    } else {
+                        $periodeText = date('d M Y', strtotime($minTanggal)) . ' - ' . date('d M Y', strtotime($maxTanggal));
+                    }
+                } else {
+                    $periodeText = '-';
+                }
+
+                $isFiltered = request()->anyFilled(['search', 'tanggal']);
+                // Default expanded jika difilter, ada sesi berlangsung, ada sesi hari ini, atau jika tidak ada yang aktif maka matkul pertama saja
+                $isExpanded = $isFiltered || ($ongoingSessions > 0) || ($todaySessions > 0) || (!$hasActiveAnywhere && $loop->first);
             @endphp
             <!-- Course Card Container -->
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden transition hover:border-slate-300">
-                <!-- Course Card Header -->
-                <div class="bg-slate-50/80 border-b border-slate-200 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <!-- Course Card Header (Clickable Accordion) -->
+                <div onclick="toggleCourseAccordion('{{ $courseSlug }}')" 
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCourseAccordion('{{ $courseSlug }}');}"
+                     class="bg-slate-50/80 hover:bg-slate-100/75 border-b border-slate-200 px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none transition-colors group/header"
+                     role="button"
+                     tabindex="0"
+                     aria-expanded="{{ $isExpanded ? 'true' : 'false' }}"
+                     id="header-{{ $courseSlug }}"
+                     title="Klik untuk membuka / menutup daftar sesi pertemuan">
                     <div class="flex items-start sm:items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-teal-800 text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
+                        <div class="w-10 h-10 rounded-xl bg-teal-800 text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0 group-hover/header:scale-105 transition">
                             <i class="fa-solid fa-book-bookmark"></i>
                         </div>
                         <div>
                             <div class="flex items-center gap-2 flex-wrap">
-                                <h3 class="font-bold text-base text-slate-800">{{ $first->mata_kuliah }}</h3>
+                                <h3 class="font-extrabold text-base sm:text-lg text-slate-900 group-hover/header:text-teal-900 transition">{{ $first->mata_kuliah }}</h3>
                                 @if($first->kelas)
-                                    <span class="px-2.5 py-0.5 bg-teal-50 text-teal-800 border border-teal-200 rounded-full text-[11px] font-bold">
+                                    <span class="px-3 py-1 bg-teal-100 text-teal-950 border border-teal-300 rounded-lg text-xs font-extrabold">
                                         Kelas {{ $first->kelas }}
                                     </span>
                                 @endif
                                 @if($first->semester)
-                                    <span class="px-2.5 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded-full text-[11px] font-bold">
+                                    <span class="px-3 py-1 bg-slate-100 text-slate-800 border border-slate-300 rounded-lg text-xs font-bold">
                                         Semester {{ $first->semester }}
                                     </span>
                                 @endif
+                                @if($isPastCourse)
+                                    <span class="px-3 py-1 bg-amber-50 text-amber-900 border border-amber-300 rounded-lg text-xs font-extrabold flex items-center gap-1.5" title="Data agenda perkuliahan semester lalu">
+                                        <i class="fa-solid fa-clock-rotate-left text-xs text-amber-700"></i> Semester Lalu
+                                    </span>
+                                @endif
                             </div>
-                            <div class="flex items-center gap-2 sm:gap-3 text-xs text-slate-500 mt-1 flex-wrap font-medium">
-                                <span><i class="fa-solid fa-location-dot mr-1 text-slate-400"></i>{{ $first->lab->nama_lab ?? 'Laboratorium' }}</span>
+                            <div class="flex items-center gap-2 sm:gap-3 text-xs text-slate-600 mt-2 flex-wrap font-semibold">
+                                <span class="inline-flex items-center gap-1.5 text-slate-800 font-bold bg-white border border-slate-300 px-3 py-1 rounded-lg shadow-2xs" title="Rentang Tanggal Pertemuan">
+                                    <i class="fa-regular fa-calendar-days text-teal-700"></i>
+                                    <span>{{ $periodeText }}</span>
+                                </span>
                                 <span class="text-slate-300">•</span>
-                                <span><i class="fa-solid fa-graduation-cap mr-1 text-slate-400"></i>{{ $first->jurusan ?? 'Program Studi' }}</span>
+                                <span><i class="fa-solid fa-location-dot mr-1 text-teal-700"></i>{{ $first->lab->nama_lab ?? 'Laboratorium' }}</span>
+                                <span class="text-slate-300">•</span>
+                                <span><i class="fa-solid fa-graduation-cap mr-1 text-teal-700"></i>{{ $first->jurusan ?? 'Program Studi' }}</span>
                                 @if($first->program_kuliah)
                                     <span class="text-slate-300">•</span>
                                     <span>Program {{ $first->program_kuliah }}</span>
@@ -41,6 +88,15 @@
                     </div>
 
                     <div class="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                        <div class="container-checkbox hidden items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-slate-300 rounded-xl shadow-xs" onclick="event.stopPropagation()">
+                            <input type="checkbox" data-course="{{ $courseSlug }}" onchange="toggleCourseGroup(this, '{{ $courseSlug }}')" class="course-master-checkbox rounded text-teal-800 focus:ring-teal-700/30 w-4 h-4 cursor-pointer" id="master-{{ $courseSlug }}">
+                            <label for="master-{{ $courseSlug }}" class="text-xs font-bold text-slate-800 cursor-pointer select-none">Pilih Semua di Matkul Ini</label>
+                        </div>
+                        @if($ongoingSessions > 0)
+                            <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold animate-pulse flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> {{ $ongoingSessions }} Berlangsung
+                            </span>
+                        @endif
                         <span class="px-3 py-1 bg-teal-50 text-teal-900 border border-teal-200 rounded-xl text-xs font-bold shadow-xs">
                             <i class="fa-solid fa-calendar-days mr-1 text-teal-700"></i> {{ $totalSessions }} Pertemuan
                         </span>
@@ -49,143 +105,161 @@
                                 {{ $completedSessions }} Selesai
                             </span>
                         @endif
+                        <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 group-hover/header:text-teal-800 group-hover/header:border-teal-300 transition shadow-xs" title="Buka / Tutup Sesi Pertemuan">
+                            <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200 {{ $isExpanded ? 'rotate-180 text-teal-800' : '' }}" id="chevron-{{ $courseSlug }}"></i>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Sessions List inside Course Container -->
-                <div class="divide-y divide-slate-100">
+                <!-- Sessions List inside Course Container (Collapsible) -->
+                <div id="content-{{ $courseSlug }}" class="course-accordion-content divide-y divide-slate-100 {{ $isExpanded ? '' : 'hidden' }}">
                     @foreach($sessions as $sessionIndex => $ag)
-                        <div class="p-4 sm:p-5 hover:bg-slate-50/60 transition relative group">
+                        @php
+                            $isToday = $ag->tanggal === date('Y-m-d');
+                            $isFuture = $ag->tanggal > date('Y-m-d');
+                        @endphp
+                        <div class="p-4 sm:p-5 hover:bg-slate-50/60 transition relative group item-{{ $courseSlug }}">
                             <!-- Selection Checkbox for bulk delete -->
                             <div class="absolute left-3 top-4 z-10 container-checkbox hidden">
-                                <input type="checkbox" name="agenda_ids[]" value="{{ $ag->id }}" class="agenda-checkbox rounded text-teal-800 focus:ring-teal-700/30 w-4 h-4 cursor-pointer">
+                                <input type="checkbox" name="agenda_ids[]" value="{{ $ag->id }}" class="agenda-checkbox rounded text-teal-800 focus:ring-teal-700/30 w-4 h-4 cursor-pointer" onchange="handleSingleCheckboxChange()">
                             </div>
 
                             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pl-0 inner-agenda-container transition-all">
                                 
                                 <!-- Left Column: Session Badge, Time, Status -->
                                 <div class="flex items-start gap-3.5 min-w-[240px]">
-                                    <div class="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex flex-col items-center justify-center text-slate-800 flex-shrink-0 shadow-xs">
-                                        <span class="text-[9px] font-bold text-slate-400 uppercase leading-none">Ke-</span>
-                                        <span class="text-base font-extrabold text-teal-800 leading-none mt-0.5">{{ $sessionIndex + 1 }}</span>
+                                    <div class="w-12 h-12 rounded-xl bg-slate-100 border border-slate-300 flex flex-col items-center justify-center text-slate-800 flex-shrink-0 shadow-2xs">
+                                        <span class="text-xs font-bold text-slate-500 uppercase leading-none">Ke-</span>
+                                        <span class="text-lg font-black text-teal-900 leading-none mt-0.5">{{ $sessionIndex + 1 }}</span>
                                     </div>
                                     <div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-bold text-xs text-slate-800">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="font-extrabold text-sm text-slate-900">
                                                 {{ date('d M Y', strtotime($ag->tanggal)) }}
                                             </span>
+                                            @if(in_array($ag->id, $clashingAgendaIds ?? []))
+                                                <span class="px-2.5 py-0.5 bg-rose-600 text-white font-black rounded-md text-xs uppercase tracking-wider animate-pulse flex items-center gap-1 shadow-xs" title="Jadwal ini bentrok ruangan lab dengan sesi lain pada jam yang sama!">
+                                                    <i class="fa-solid fa-triangle-exclamation"></i> Bentrok Ruangan!
+                                                </span>
+                                            @endif
                                             @if($ag->status_agenda === 'Berlangsung')
-                                                <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[9px] font-bold uppercase tracking-wider animate-pulse">
+                                                <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-md text-xs font-extrabold uppercase tracking-wider animate-pulse">
                                                     Berlangsung
                                                 </span>
                                             @elseif($ag->status_agenda === 'Selesai')
-                                                <span class="px-2 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[9px] font-bold uppercase tracking-wider">
+                                                <span class="px-2.5 py-0.5 bg-slate-200 text-slate-800 border border-slate-300 rounded-md text-xs font-bold uppercase tracking-wider">
                                                     Selesai
                                                 </span>
                                             @elseif($ag->status_agenda === 'Dibatalkan')
-                                                <span class="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded text-[9px] font-bold uppercase tracking-wider">
+                                                <span class="px-2.5 py-0.5 bg-rose-100 text-rose-800 border border-rose-200 rounded-md text-xs font-bold uppercase tracking-wider">
                                                     Dibatalkan
                                                 </span>
                                             @else
-                                                <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[9px] font-bold uppercase tracking-wider">
+                                                <span class="px-2.5 py-0.5 bg-blue-100 text-blue-900 border border-blue-200 rounded-md text-xs font-bold uppercase tracking-wider">
                                                     Mendatang
                                                 </span>
                                             @endif
                                         </div>
-                                        <p class="text-[11px] font-mono font-semibold text-slate-500 mt-1">
-                                            <i class="fa-regular fa-clock mr-1 text-slate-400"></i>{{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB
+                                        <p class="text-xs font-mono font-bold text-slate-700 mt-1">
+                                            <i class="fa-regular fa-clock mr-1 text-teal-700"></i>{{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB
                                         </p>
                                         <div class="flex items-center gap-2 mt-1">
                                             @if($ag->dosen_waktu_masuk)
-                                                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
-                                                    <i class="fa-solid fa-check mr-1"></i>Dosen Masuk {{ date('H:i', strtotime($ag->dosen_waktu_masuk)) }}
+                                                <span class="text-xs font-extrabold text-emerald-900 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-md">
+                                                    <i class="fa-solid fa-check mr-1 text-emerald-700"></i>Hadir {{ date('H:i', strtotime($ag->dosen_waktu_masuk)) }}
                                                 </span>
                                             @endif
-                                            <span class="text-[10px] font-bold text-teal-800 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded">
-                                                <i class="fa-solid fa-users mr-1"></i>{{ $ag->absensi->count() }} Hadir
+                                            <span class="text-xs font-bold {{ $isFuture ? 'text-slate-600 bg-slate-100 border-slate-300' : 'text-teal-900 bg-teal-50 border-teal-200' }} border px-2 py-0.5 rounded-md">
+                                                <i class="fa-solid {{ $isFuture ? 'fa-calendar-clock text-slate-500' : 'fa-users text-teal-700' }} mr-1"></i>{{ $isFuture ? 'Sesi Terjadwal' : $ag->absensi->count() . ' Hadir' }}
                                             </span>
                                         </div>
+                                        @if(in_array($ag->id, $clashingAgendaIds ?? []))
+                                            <div class="mt-2 p-2 bg-rose-100/90 border border-rose-300 rounded-lg text-rose-900 text-xs font-bold flex flex-wrap items-center justify-between gap-2">
+                                                <span><i class="fa-solid fa-circle-exclamation mr-1 text-rose-600"></i> Ruang <strong>{{ $ag->lab->nama_lab ?? 'Lab' }}</strong> bentrok dengan kelas lain di jam ini!</span>
+                                                <a href="{{ route('dosen.jadwal-lab', ['lab_id' => $ag->lab_id, 'tanggal' => $ag->tanggal]) }}" class="px-2 py-0.5 bg-white hover:bg-rose-50 text-rose-800 border border-rose-300 rounded text-xs font-black transition">
+                                                    Cek Jam Kosong &rarr;
+                                                </a>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
 
                                 <!-- Middle Column: Rencana, Realisasi & Berita Acara Overview -->
                                 <div class="flex-1 space-y-1.5 max-w-xl text-xs">
-                                    <div class="text-slate-600">
-                                        <span class="font-bold text-slate-700">Rencana/Catatan:</span>
-                                        <span class="text-slate-600 ml-1">{{ $ag->catatan ?: 'Belum ada catatan rencana.' }}</span>
+                                    <div class="text-slate-700">
+                                        <span class="font-extrabold text-slate-900">Rencana/Catatan:</span>
+                                        <span class="text-slate-700 ml-1 font-medium">{{ $ag->catatan ?: 'Belum ada catatan rencana.' }}</span>
                                     </div>
 
                                     <!-- Realisasi Snippet -->
                                     <div class="flex items-start gap-1.5">
-                                        <span class="font-bold text-amber-800 text-[11px] flex-shrink-0">Realisasi:</span>
+                                        <span class="font-extrabold text-amber-900 text-xs shrink-0">Realisasi:</span>
                                         @if($ag->materi_realisasi)
-                                            <span class="text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[11px] font-medium leading-tight line-clamp-2">
+                                            <span class="text-emerald-900 bg-emerald-50 border border-emerald-300 px-2.5 py-0.5 rounded-md text-xs font-medium leading-relaxed line-clamp-2">
                                                 {{ $ag->materi_realisasi }}
                                             </span>
+                                        @elseif($isFuture)
+                                            <span class="text-slate-500 text-xs italic">Belum dimulai (diisi saat perkuliahan)</span>
                                         @else
-                                            <span class="text-slate-400 text-[11px] italic">Belum diisi (klik tombol Realisasi)</span>
+                                            <span class="text-amber-800 text-xs font-semibold italic">Belum diisi (klik tombol Isi Realisasi)</span>
                                         @endif
                                     </div>
 
                                     <!-- Berita Acara Snippet -->
                                     <div class="flex items-start gap-1.5">
-                                        <span class="font-bold text-indigo-800 text-[11px] flex-shrink-0">Berita Acara:</span>
+                                        <span class="font-extrabold text-indigo-900 text-xs shrink-0">Berita Acara:</span>
                                         @if($ag->berita_acara)
-                                            <span class="text-indigo-900 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded text-[11px] font-medium leading-tight line-clamp-2">
+                                            <span class="text-indigo-950 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-md text-xs font-medium leading-relaxed line-clamp-2">
                                                 {{ Str::limit($ag->berita_acara, 100) }}
                                             </span>
+                                        @elseif($isFuture)
+                                            <span class="text-slate-500 text-xs italic">Belum dimulai (diisi saat perkuliahan)</span>
                                         @else
-                                            <span class="text-slate-400 text-[11px] italic">Belum diisi (klik tombol Berita Acara)</span>
+                                            <span class="text-indigo-800 text-xs font-semibold italic">Belum diisi (klik tombol Isi Berita Acara)</span>
                                         @endif
                                     </div>
                                 </div>
 
                                  <!-- Right Column: 3 KEY ACTIONS + Secondary Tools -->
-                                 <div class="flex flex-wrap lg:flex-nowrap items-center gap-2 flex-shrink-0">
-                                     @php
-                                         $isPastOrSelesai = ($ag->tanggal < date('Y-m-d')) || ($ag->status_agenda === 'Selesai');
-                                         $canAccessFeatures = !empty($ag->dosen_waktu_masuk) || $isPastOrSelesai;
-                                     @endphp
+                                 <div class="flex flex-wrap lg:flex-nowrap items-center gap-2.5 flex-shrink-0">
+                                      @if($isFuture)
+                                          <span class="px-4 py-2 bg-slate-100 text-slate-600 border border-slate-300 rounded-xl text-xs font-bold flex items-center gap-2 cursor-not-allowed select-none" title="Presensi hanya dapat dibuka pada hari H pelaksanaan perkuliahan">
+                                              <i class="fa-solid fa-lock text-xs text-slate-500"></i>
+                                              <span>Presensi Dibuka Hari H</span>
+                                          </span>
+                                      @else
+                                          <!-- 1. Tombol Absensi Mahasiswa (Input/Check Status Hadir, Izin, Sakit, Alpa) -->
+                                          <a href="{{ route('dosen.absensi.input', $ag->id) }}" 
+                                             class="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-extrabold transition flex items-center gap-2 shadow-sm cursor-pointer"
+                                             title="Buka Input Absensi Mahasiswa (Hadir, Izin WhatsApp, Sakit, Alpa)">
+                                              <i class="fa-solid fa-users-viewfinder text-sm"></i>
+                                              <span>{{ $isToday ? 'Absensi Mahasiswa' : 'Edit Rekap Absensi' }}</span>
+                                          </a>
 
-                                     @if($canAccessFeatures)
-                                         <!-- 1. Tombol Absensi Mahasiswa (Input/Check Status Hadir, Izin, Sakit, Alpa) -->
-                                         <a href="{{ route('dosen.absensi.input', $ag->id) }}" 
-                                            class="px-3 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
-                                            title="Buka Input Absensi Mahasiswa (Hadir, Izin WhatsApp, Sakit, Alpa)">
-                                             <i class="fa-solid fa-users-viewfinder"></i>
-                                             <span>Absensi Mahasiswa</span>
-                                         </a>
+                                          <!-- 2. Tombol Realisasi Pembelajaran -->
+                                          <button type="button" 
+                                                  onclick="toggleModal('modal-realisasi-{{ $ag->id }}')" 
+                                                  class="px-3.5 py-2 {{ $ag->materi_realisasi ? 'bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-2 border-amber-300' }} rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                                  title="Isi atau perbarui realisasi materi yang diajarkan">
+                                              <i class="fa-solid fa-book-open text-amber-700"></i>
+                                              <span>{{ $ag->materi_realisasi ? 'Realisasi' : 'Isi Realisasi' }}</span>
+                                              @if($ag->materi_realisasi)
+                                                  <i class="fa-solid fa-circle-check text-emerald-700 text-xs"></i>
+                                              @endif
+                                          </button>
 
-                                         <!-- 2. Tombol Realisasi Pembelajaran -->
-                                         <button type="button" 
-                                                 onclick="toggleModal('modal-realisasi-{{ $ag->id }}')" 
-                                                 class="px-3 py-2 {{ $ag->materi_realisasi ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300' : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200' }} rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
-                                                 title="Isi atau perbarui realisasi materi yang diajarkan">
-                                             <i class="fa-solid fa-book-open"></i>
-                                             <span>Realisasi</span>
-                                             @if($ag->materi_realisasi)
-                                                 <i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i>
-                                             @endif
-                                         </button>
-
-                                         <!-- 3. Tombol Berita Acara -->
-                                         <button type="button" 
-                                                 onclick="toggleModal('modal-berita-acara-{{ $ag->id }}')" 
-                                                 class="px-3 py-2 {{ $ag->berita_acara ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200' }} rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
-                                                 title="Tuliskan berita acara resmi sesi perkuliahan">
-                                             <i class="fa-solid fa-file-signature"></i>
-                                             <span>Berita Acara</span>
-                                             @if($ag->berita_acara)
-                                                 <i class="fa-solid fa-circle-check text-emerald-600 text-[10px]"></i>
-                                             @endif
-                                         </button>
-                                     @else
-                                          <div class="flex items-center gap-1.5">
-                                              <button type="button" onclick="startDosenQRScanner()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-2" title="Lakukan Absensi QR Dosen di Board Kelas terlebih dahulu">
-                                                  <i class="fa-solid fa-camera"></i> Absen QR Board
-                                              </button>
-                                          </div>
-                                     @endif
+                                          <!-- 3. Tombol Berita Acara -->
+                                          <button type="button" 
+                                                  onclick="toggleModal('modal-berita-acara-{{ $ag->id }}')" 
+                                                  class="px-3.5 py-2 {{ $ag->berita_acara ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-950 border border-indigo-300' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border-2 border-indigo-300' }} rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                                  title="Tuliskan berita acara resmi sesi perkuliahan">
+                                              <i class="fa-solid fa-file-signature text-indigo-700"></i>
+                                              <span>{{ $ag->berita_acara ? 'Berita Acara' : 'Isi Berita Acara' }}</span>
+                                              @if($ag->berita_acara)
+                                                  <i class="fa-solid fa-circle-check text-emerald-700 text-xs"></i>
+                                              @endif
+                                          </button>
+                                      @endif
 
                                     <!-- Secondary Actions: Print, Edit, Delete -->
                                     <div class="flex items-center gap-1 border-l border-slate-200 pl-2">
@@ -211,6 +285,7 @@
                             </div>
                         </div>
 
+                        @if(!$isFuture)
                         <!-- MODAL: Realisasi Pembelajaran -->
                         <div id="modal-realisasi-{{ $ag->id }}" class="fixed inset-0 z-50 overflow-y-auto hidden text-xs">
                             <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="toggleModal('modal-realisasi-{{ $ag->id }}')"></div>
@@ -223,7 +298,7 @@
                                             </div>
                                             <div>
                                                 <h3 class="font-bold text-sm text-slate-800">Realisasi Pembelajaran</h3>
-                                                <p class="text-[10px] text-slate-500 font-semibold">Pertemuan ke-{{ $sessionIndex + 1 }} • {{ $ag->mata_kuliah }}</p>
+                                                <p class="text-xs text-slate-600 font-bold">Pertemuan ke-{{ $sessionIndex + 1 }} • {{ $ag->mata_kuliah }}</p>
                                             </div>
                                         </div>
                                         <button type="button" onclick="toggleModal('modal-realisasi-{{ $ag->id }}')" class="text-slate-400 hover:text-slate-600 text-lg">
@@ -266,7 +341,7 @@
                                             </div>
                                             <div>
                                                 <h3 class="font-bold text-sm text-slate-800">Berita Acara Perkuliahan</h3>
-                                                <p class="text-[10px] text-slate-500 font-semibold">Pertemuan ke-{{ $sessionIndex + 1 }} • {{ $ag->mata_kuliah }}</p>
+                                                <p class="text-xs text-slate-600 font-bold">Pertemuan ke-{{ $sessionIndex + 1 }} • {{ $ag->mata_kuliah }}</p>
                                             </div>
                                         </div>
                                         <button type="button" onclick="toggleModal('modal-berita-acara-{{ $ag->id }}')" class="text-slate-400 hover:text-slate-600 text-lg">
@@ -290,6 +365,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         <!-- MODAL: Edit Agenda -->
                         <div id="modal-edit-agenda-{{ $ag->id }}" class="fixed inset-0 z-50 overflow-y-auto hidden text-xs">
@@ -317,7 +393,7 @@
                                         </div>
 
                                         <div>
-                                            <label class="block text-slate-700 font-bold mb-1">Dosen Pengampu <span class="text-slate-400 font-normal text-[10px]">(Opsional)</span></label>
+                                            <label class="block text-slate-700 font-bold mb-1">Dosen Pengampu <span class="text-slate-500 font-bold text-xs">(Opsional)</span></label>
                                             <select name="dosen_pengampu_id" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                                                 <option value="">-- Pilih Dosen Pengampu --</option>
                                                 @foreach($dosens as $d)

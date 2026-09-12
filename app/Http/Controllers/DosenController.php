@@ -143,17 +143,46 @@ class DosenController extends Controller
 
             $jadwal = \App\Models\JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu'])->findOrFail($request->jadwal_penggunaan_lab_id);
 
-            // Check for time overlap
-            $overlap = Agenda::where('dosen_id', $dosen->id)
+            $targetLabId = $jadwal->lab_id ?? 5;
+            $targetDosenId = $jadwal->dosen_id ?? $dosen->id;
+
+            // 1. Cek Bentrok Ruang Laboratorium
+            $bentrokLab = Agenda::with(['dosen', 'lab'])
+                ->where('lab_id', $targetLabId)
                 ->where('tanggal', $request->tanggal)
+                ->where('status_agenda', '!=', 'Dibatalkan')
                 ->where(function ($query) use ($request) {
                     $query->where('jam_mulai', '<', $request->waktu_keluar)
                           ->where('jam_selesai', '>', $request->waktu_masuk);
                 })
-                ->exists();
+                ->first();
 
-            if ($overlap) {
-                return back()->withErrors(['waktu_masuk' => 'Jadwal berbenturan dengan agenda Anda yang lain pada hari dan jam tersebut.'])->withInput();
+            if ($bentrokLab) {
+                $labName = $bentrokLab->lab->nama_lab ?? 'Laboratorium';
+                $jamRange = substr($bentrokLab->jam_mulai, 0, 5) . ' - ' . substr($bentrokLab->jam_selesai, 0, 5) . ' WIB';
+                $dosenName = $bentrokLab->dosen->nama ?? 'Dosen Lain';
+                return back()->withErrors([
+                    'waktu_masuk' => "⛔ BENTROK RUANGAN! {$labName} sudah digunakan pada jam {$jamRange} untuk mata kuliah \"{$bentrokLab->mata_kuliah} (Kelas {$bentrokLab->kelas})\" oleh {$dosenName}. Silakan pilih jam atau lab lain."
+                ])->withInput();
+            }
+
+            // 2. Cek Bentrok Dosen
+            $bentrokDosen = Agenda::with('lab')
+                ->where('dosen_id', $targetDosenId)
+                ->where('tanggal', $request->tanggal)
+                ->where('status_agenda', '!=', 'Dibatalkan')
+                ->where(function ($query) use ($request) {
+                    $query->where('jam_mulai', '<', $request->waktu_keluar)
+                          ->where('jam_selesai', '>', $request->waktu_masuk);
+                })
+                ->first();
+
+            if ($bentrokDosen) {
+                $jamRange = substr($bentrokDosen->jam_mulai, 0, 5) . ' - ' . substr($bentrokDosen->jam_selesai, 0, 5) . ' WIB';
+                $labName = $bentrokDosen->lab->nama_lab ?? 'Lab';
+                return back()->withErrors([
+                    'waktu_masuk' => "⛔ BENTROK JADWAL DOSEN! Anda sudah memiliki jadwal mengajar di {$labName} pada jam {$jamRange} (\"{$bentrokDosen->mata_kuliah}\")."
+                ])->withInput();
             }
 
             Agenda::create([
@@ -194,17 +223,43 @@ class DosenController extends Controller
             'rencana_pembelajaran' => 'required|string',
         ]);
 
-        // Check for time overlap
-        $overlap = Agenda::where('dosen_id', $dosen->id)
+        // 1. Cek Bentrok Ruang Laboratorium
+        $bentrokLab = Agenda::with(['dosen', 'lab'])
+            ->where('lab_id', $request->lab_id)
             ->where('tanggal', $request->tanggal)
+            ->where('status_agenda', '!=', 'Dibatalkan')
             ->where(function ($query) use ($request) {
                 $query->where('jam_mulai', '<', $request->waktu_keluar)
                       ->where('jam_selesai', '>', $request->waktu_masuk);
             })
-            ->exists();
+            ->first();
 
-        if ($overlap) {
-            return back()->withErrors(['waktu_masuk' => 'Jadwal berbenturan dengan agenda Anda yang lain pada hari dan jam tersebut.'])->withInput();
+        if ($bentrokLab) {
+            $labName = $bentrokLab->lab->nama_lab ?? 'Laboratorium';
+            $jamRange = substr($bentrokLab->jam_mulai, 0, 5) . ' - ' . substr($bentrokLab->jam_selesai, 0, 5) . ' WIB';
+            $dosenName = $bentrokLab->dosen->nama ?? 'Dosen Lain';
+            return back()->withErrors([
+                'waktu_masuk' => "⛔ BENTROK RUANGAN! {$labName} sudah digunakan pada jam {$jamRange} untuk mata kuliah \"{$bentrokLab->mata_kuliah} (Kelas {$bentrokLab->kelas})\" oleh {$dosenName}. Silakan pilih jam atau lab lain."
+            ])->withInput();
+        }
+
+        // 2. Cek Bentrok Dosen
+        $bentrokDosen = Agenda::with('lab')
+            ->where('dosen_id', $dosen->id)
+            ->where('tanggal', $request->tanggal)
+            ->where('status_agenda', '!=', 'Dibatalkan')
+            ->where(function ($query) use ($request) {
+                $query->where('jam_mulai', '<', $request->waktu_keluar)
+                      ->where('jam_selesai', '>', $request->waktu_masuk);
+            })
+            ->first();
+
+        if ($bentrokDosen) {
+            $jamRange = substr($bentrokDosen->jam_mulai, 0, 5) . ' - ' . substr($bentrokDosen->jam_selesai, 0, 5) . ' WIB';
+            $labName = $bentrokDosen->lab->nama_lab ?? 'Lab';
+            return back()->withErrors([
+                'waktu_masuk' => "⛔ BENTROK JADWAL DOSEN! Anda sudah memiliki jadwal mengajar di {$labName} pada jam {$jamRange} (\"{$bentrokDosen->mata_kuliah}\")."
+            ])->withInput();
         }
 
         Agenda::create([
@@ -248,18 +303,45 @@ class DosenController extends Controller
 
         $agenda = Agenda::findOrFail($id);
 
-        // Check for time overlap (excluding this agenda)
-        $overlap = Agenda::where('dosen_id', $agenda->dosen_id)
+        // 1. Cek Bentrok Ruang Laboratorium (kecuali agenda ini)
+        $bentrokLab = Agenda::with(['dosen', 'lab'])
+            ->where('lab_id', $request->lab_id)
             ->where('id', '!=', $id)
             ->where('tanggal', $request->tanggal)
+            ->where('status_agenda', '!=', 'Dibatalkan')
             ->where(function ($query) use ($request) {
                 $query->where('jam_mulai', '<', $request->waktu_keluar)
                       ->where('jam_selesai', '>', $request->waktu_masuk);
             })
-            ->exists();
+            ->first();
 
-        if ($overlap) {
-            return back()->withErrors(['waktu_masuk' => 'Jadwal berbenturan dengan agenda Anda yang lain pada hari dan jam tersebut.'])->withInput();
+        if ($bentrokLab) {
+            $labName = $bentrokLab->lab->nama_lab ?? 'Laboratorium';
+            $jamRange = substr($bentrokLab->jam_mulai, 0, 5) . ' - ' . substr($bentrokLab->jam_selesai, 0, 5) . ' WIB';
+            $dosenName = $bentrokLab->dosen->nama ?? 'Dosen Lain';
+            return back()->withErrors([
+                'waktu_masuk' => "⛔ BENTROK RUANGAN! {$labName} sudah digunakan pada jam {$jamRange} untuk mata kuliah \"{$bentrokLab->mata_kuliah} (Kelas {$bentrokLab->kelas})\" oleh {$dosenName}. Silakan pilih jam atau lab lain."
+            ])->withInput();
+        }
+
+        // 2. Cek Bentrok Dosen (kecuali agenda ini)
+        $bentrokDosen = Agenda::with('lab')
+            ->where('dosen_id', $agenda->dosen_id)
+            ->where('id', '!=', $id)
+            ->where('tanggal', $request->tanggal)
+            ->where('status_agenda', '!=', 'Dibatalkan')
+            ->where(function ($query) use ($request) {
+                $query->where('jam_mulai', '<', $request->waktu_keluar)
+                      ->where('jam_selesai', '>', $request->waktu_masuk);
+            })
+            ->first();
+
+        if ($bentrokDosen) {
+            $jamRange = substr($bentrokDosen->jam_mulai, 0, 5) . ' - ' . substr($bentrokDosen->jam_selesai, 0, 5) . ' WIB';
+            $labName = $bentrokDosen->lab->nama_lab ?? 'Lab';
+            return back()->withErrors([
+                'waktu_masuk' => "⛔ BENTROK JADWAL DOSEN! Anda sudah memiliki jadwal mengajar di {$labName} pada jam {$jamRange} (\"{$bentrokDosen->mata_kuliah}\")."
+            ])->withInput();
         }
 
         $agenda->update([
@@ -297,6 +379,10 @@ class DosenController extends Controller
 
         $agenda = Agenda::findOrFail($id);
         
+        if ($agenda->tanggal > date('Y-m-d')) {
+            return back()->withErrors(['realisasi_pembelajaran' => 'Realisasi pembelajaran belum dapat diisi untuk sesi yang belum dimulai.']);
+        }
+
         $agenda->update([
             'materi_realisasi' => $request->realisasi_pembelajaran,
         ]);
@@ -311,6 +397,11 @@ class DosenController extends Controller
         ]);
 
         $agenda = Agenda::findOrFail($id);
+
+        if ($agenda->tanggal > date('Y-m-d')) {
+            return back()->withErrors(['berita_acara' => 'Berita Acara belum dapat diisi untuk sesi yang belum dimulai.']);
+        }
+
         $agenda->update([
             'berita_acara' => $request->berita_acara,
         ]);
@@ -340,6 +431,10 @@ class DosenController extends Controller
                 return back()->withErrors(['msg' => 'Agenda tidak ditemukan atau Anda tidak memiliki akses.']);
             }
 
+            if ($agenda->tanggal > date('Y-m-d')) {
+                return back()->withErrors(['msg' => 'Sesi perkuliahan ini belum dimulai. Absensi Dosen hanya dapat dilakukan pada hari pelaksanaan.']);
+            }
+
             if ($agenda->dosen_waktu_masuk) {
                 return back()->with('info', 'Anda sudah terabsen masuk untuk agenda ini.');
             }
@@ -365,6 +460,10 @@ class DosenController extends Controller
 
         if ($agenda->dosen_id !== $dosen->id && $agenda->dosen_pengampu_id !== $dosen->id) {
             return back()->withErrors(['qr_code_token' => 'Anda bukan Dosen pengajar untuk agenda ini.']);
+        }
+
+        if ($agenda->tanggal > date('Y-m-d')) {
+            return back()->withErrors(['qr_code_token' => 'Sesi perkuliahan ini belum dimulai. Absensi Dosen hanya dapat dilakukan pada hari pelaksanaan.']);
         }
 
         if ($agenda->dosen_waktu_masuk) {
@@ -500,12 +599,27 @@ class DosenController extends Controller
                 return $item->mata_kuliah . '-' . $item->kelas . '-' . $item->dosen_id;
             });
 
+        $dosenAgendaIds = $allDosenAgendas->pluck('id')->toArray();
+        $clashingAgendaIds = Agenda::whereIn('id', $dosenAgendaIds)
+            ->whereExists(function ($subQuery) {
+                $subQuery->select(\DB::raw(1))
+                    ->from('agenda as a2')
+                    ->whereColumn('a2.lab_id', 'agenda.lab_id')
+                    ->whereColumn('a2.tanggal', 'agenda.tanggal')
+                    ->whereColumn('a2.id', '!=', 'agenda.id')
+                    ->where('a2.status_agenda', '!=', 'Dibatalkan')
+                    ->whereRaw('agenda.jam_mulai < a2.jam_selesai')
+                    ->whereRaw('agenda.jam_selesai > a2.jam_mulai');
+            })
+            ->pluck('id')
+            ->toArray();
+
         if ($request->ajax()) {
-            $html = view('dosen.agenda_partial', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses', 'groupedAgendas', 'jadwalPenggunaanLab'))->render();
+            $html = view('dosen.agenda_partial', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses', 'groupedAgendas', 'jadwalPenggunaanLab', 'clashingAgendaIds'))->render();
             return response()->json(['html' => $html]);
         }
 
-        return view('dosen.agenda', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses', 'groupedAgendas', 'jadwalPenggunaanLab'));
+        return view('dosen.agenda', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses', 'groupedAgendas', 'jadwalPenggunaanLab', 'clashingAgendaIds'));
     }
 
     public function inputAbsensi($id)
@@ -517,6 +631,12 @@ class DosenController extends Controller
         
         if ($agenda->dosen_id !== $dosen->id && $agenda->dosen_pengampu_id !== $dosen->id) {
             abort(403, 'Anda tidak memiliki akses ke sesi ini.');
+        }
+
+        if ($agenda->tanggal > date('Y-m-d')) {
+            return redirect()->route('dosen.dashboard')->withErrors([
+                'msg' => 'Sesi perkuliahan ini belum dimulai (Jadwal: ' . \Carbon\Carbon::parse($agenda->tanggal)->translatedFormat('l, d F Y') . '). Presensi mahasiswa hanya dapat dibuka pada hari H pelaksanaan perkuliahan.'
+            ]);
         }
 
         $existingAbsensi = \App\Models\Absensi::where('agenda_id', $agenda->id)->get()->keyBy('mahasiswa_id');
@@ -598,6 +718,10 @@ class DosenController extends Controller
             abort(403, 'Anda tidak memiliki akses ke sesi ini.');
         }
 
+        if ($agenda->tanggal > date('Y-m-d')) {
+            return redirect()->back()->with('error', 'Tidak dapat mengimpor absensi untuk sesi perkuliahan di masa mendatang.');
+        }
+
         try {
             Excel::import(new KehadiranImport($agenda), $request->file('file_excel'));
             return redirect()->back()->with('success', 'Data absensi berhasil diimpor dari Excel.');
@@ -647,6 +771,12 @@ class DosenController extends Controller
 
         if ($agenda->dosen_id !== $dosen->id && $agenda->dosen_pengampu_id !== $dosen->id) {
             abort(403, 'Anda tidak memiliki akses ke sesi ini.');
+        }
+
+        if ($agenda->tanggal > date('Y-m-d')) {
+            return redirect()->route('dosen.dashboard')->withErrors([
+                'msg' => 'Presensi tidak dapat disimpan untuk sesi perkuliahan yang belum dimulai.'
+            ]);
         }
 
         $request->validate([
@@ -721,10 +851,199 @@ class DosenController extends Controller
 
         $dosen = Dosen::where('user_id', auth()->id())->firstOrFail();
 
-        Agenda::whereIn('id', $request->agenda_ids)
-            ->where('dosen_id', $dosen->id)
+        $deletedCount = Agenda::whereIn('id', $request->agenda_ids)
+            ->where(function($q) use ($dosen) {
+                $q->where('dosen_id', $dosen->id)
+                  ->orWhere('dosen_pengampu_id', $dosen->id);
+            })
             ->delete();
 
-        return back()->with('success', 'Agenda terpilih berhasil dihapus.');
+        return back()->with('success', $deletedCount . ' agenda perkuliahan berhasil dihapus.');
+    }
+
+    /**
+     * Kalender Visual Ketersediaan Lab untuk Dosen (Senior-Friendly)
+     */
+    public function jadwalPenggunaanLab(Request $request)
+    {
+        $dosen = Dosen::where('user_id', auth()->id())->firstOrFail();
+        $labs = Laboratorium::orderBy('nama_lab', 'asc')->get();
+        $selectedLabId = $request->get('lab_id', $labs->first()->id ?? null);
+        $selectedDate = $request->get('tanggal', date('Y-m-d'));
+        
+        $selectedLab = Laboratorium::find($selectedLabId) ?? $labs->first();
+        if ($selectedLab) {
+            $selectedLabId = $selectedLab->id;
+        }
+
+        // Perhitungan Tanggal & Hari
+        $carbonDate = \Carbon\Carbon::parse($selectedDate);
+        $dayNames = [
+            1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 0 => 'Minggu'
+        ];
+        $selectedDayName = $dayNames[$carbonDate->dayOfWeek] ?? 'Senin';
+
+        // 1. Ambil jadwal rutin mingguan untuk lab ini
+        $rutinJadwals = \App\Models\JadwalPenggunaanLab::with(['dosen', 'prodi'])
+            ->where('lab_id', $selectedLabId)
+            ->where('is_aktif', true)
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
+
+        // 2. Ambil seluruh agenda aktual pada tanggal yang dipilih di lab ini
+        $agendasOnDate = Agenda::with(['dosen', 'lab'])
+            ->where('lab_id', $selectedLabId)
+            ->where('tanggal', $selectedDate)
+            ->where('status_agenda', '!=', 'Dibatalkan')
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
+
+        // Standar slot waktu harian (08:00 - 21:00)
+        $timeSlots = [
+            ['start' => '08:00', 'end' => '10:00', 'label' => '08:00 - 10:00 WIB', 'session' => 'Pagi 1'],
+            ['start' => '10:00', 'end' => '12:00', 'label' => '10:00 - 12:00 WIB', 'session' => 'Pagi 2'],
+            ['start' => '13:00', 'end' => '15:00', 'label' => '13:00 - 15:00 WIB', 'session' => 'Siang 1'],
+            ['start' => '15:00', 'end' => '17:00', 'label' => '15:00 - 17:00 WIB', 'session' => 'Sore 1'],
+            ['start' => '17:00', 'end' => '19:00', 'label' => '17:00 - 19:00 WIB', 'session' => 'Sore 2'],
+            ['start' => '19:00', 'end' => '21:00', 'label' => '19:00 - 21:00 WIB', 'session' => 'Malam 1'],
+        ];
+
+        // Hitung ketersediaan slot harian untuk tanggal terpilih
+        $slotAvailability = [];
+        foreach ($timeSlots as $slot) {
+            $slotStart = $slot['start'] . ':00';
+            $slotEnd = $slot['end'] . ':00';
+
+            // Cek agenda aktual terlebih dahulu
+            $agendaOccupant = $agendasOnDate->first(function($a) use ($slotStart, $slotEnd) {
+                return $a->jam_mulai < $slotEnd && $a->jam_selesai > $slotStart;
+            });
+
+            // Jika tidak ada agenda aktual, cek jadwal rutin mingguan
+            $rutinOccupant = null;
+            if (!$agendaOccupant) {
+                $rutinOccupant = $rutinJadwals->first(function($j) use ($selectedDayName, $slotStart, $slotEnd) {
+                    return $j->hari === $selectedDayName && ($j->jam_mulai < $slotEnd && $j->jam_selesai > $slotStart);
+                });
+            }
+
+            $occupant = $agendaOccupant ?? $rutinOccupant;
+            $isOccupied = !is_null($occupant);
+            $isMine = false;
+            $title = '';
+            $dosenName = '';
+            $kelas = '';
+            $exactTime = '';
+
+            if ($occupant) {
+                $isMine = ($occupant->dosen_id == $dosen->id || ($occupant->dosen_pengampu_id ?? null) == $dosen->id);
+                $title = $occupant->mata_kuliah;
+                $dosenName = $occupant->dosen->nama ?? 'Dosen';
+                $kelas = $occupant->kelas ?? '-';
+                $exactTime = substr($occupant->jam_mulai, 0, 5) . ' - ' . substr($occupant->jam_selesai, 0, 5);
+            }
+
+            $slotAvailability[] = [
+                'slot' => $slot,
+                'is_occupied' => $isOccupied,
+                'is_mine' => $isMine,
+                'title' => $title,
+                'dosen_name' => $dosenName,
+                'kelas' => $kelas,
+                'exact_time' => $exactTime,
+                'source' => $agendaOccupant ? 'Agenda' : ($rutinOccupant ? 'Jadwal Rutin' : 'Kosong'),
+            ];
+        }
+
+        // Data untuk mode Matriks Mingguan
+        $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        $matrixSlots = [
+            '08.00-10.00', '10.00-12.00', '13.00-15.00', '15.00-17.00', '17.00-19.00', '19.00-21.00'
+        ];
+
+        // Daftar kelas dosen untuk modal Buat Agenda / Kuliah Pengganti
+        $myClasses = \App\Models\JadwalPenggunaanLab::where(function($q) use ($dosen) {
+                $q->where('dosen_id', $dosen->id)
+                  ->orWhere('dosen_pengampu_id', $dosen->id);
+            })
+            ->with(['lab', 'prodi'])
+            ->get();
+
+        return view('dosen.jadwal_lab', compact(
+            'dosen', 'labs', 'selectedLab', 'selectedLabId', 'selectedDate',
+            'carbonDate', 'selectedDayName', 'slotAvailability', 'timeSlots',
+            'hariList', 'matrixSlots', 'rutinJadwals', 'myClasses'
+        ));
+    }
+
+    /**
+     * Endpoint API Ringan untuk Cek Ketersediaan Lab Real-time (Anti-Bentrok)
+     */
+    public function checkLabAvailability(Request $request)
+    {
+        $labId = $request->get('lab_id');
+        $tanggal = $request->get('tanggal');
+        $waktuMasuk = $request->get('waktu_masuk');
+        $waktuKeluar = $request->get('waktu_keluar');
+        $excludeAgendaId = $request->get('exclude_agenda_id');
+        $dosen = Dosen::where('user_id', auth()->id())->first();
+
+        if (!$labId || !$tanggal || !$waktuMasuk || !$waktuKeluar) {
+            return response()->json(['available' => true, 'message' => 'Lengkapi data jam untuk cek ketersediaan.']);
+        }
+
+        // 1. Cek bentrok ruangan lab
+        $clashLab = Agenda::with('dosen')
+            ->where('lab_id', $labId)
+            ->where('tanggal', $tanggal)
+            ->where('status_agenda', '!=', 'Dibatalkan')
+            ->when($excludeAgendaId, fn($q) => $q->where('id', '!=', $excludeAgendaId))
+            ->where(function ($query) use ($waktuMasuk, $waktuKeluar) {
+                $query->where('jam_mulai', '<', $waktuKeluar)
+                      ->where('jam_selesai', '>', $waktuMasuk);
+            })
+            ->first();
+
+        if ($clashLab) {
+            $jam = substr($clashLab->jam_mulai, 0, 5) . ' - ' . substr($clashLab->jam_selesai, 0, 5);
+            $dosenName = $clashLab->dosen->nama ?? 'Dosen Lain';
+            return response()->json([
+                'available' => false,
+                'clash_type' => 'lab',
+                'title' => 'Lab Sudah Terisi!',
+                'message' => "Ruangan lab pada jam {$jam} WIB sudah digunakan untuk \"{$clashLab->mata_kuliah} ({$clashLab->kelas})\" oleh {$dosenName}.",
+            ]);
+        }
+
+        // 2. Cek bentrok dosen
+        if ($dosen) {
+            $clashDosen = Agenda::with('lab')
+                ->where('dosen_id', $dosen->id)
+                ->where('tanggal', $tanggal)
+                ->where('status_agenda', '!=', 'Dibatalkan')
+                ->when($excludeAgendaId, fn($q) => $q->where('id', '!=', $excludeAgendaId))
+                ->where(function ($query) use ($waktuMasuk, $waktuKeluar) {
+                    $query->where('jam_mulai', '<', $waktuKeluar)
+                          ->where('jam_selesai', '>', $waktuMasuk);
+                })
+                ->first();
+
+            if ($clashDosen) {
+                $jam = substr($clashDosen->jam_mulai, 0, 5) . ' - ' . substr($clashDosen->jam_selesai, 0, 5);
+                $labName = $clashDosen->lab->nama_lab ?? 'Lab';
+                return response()->json([
+                    'available' => false,
+                    'clash_type' => 'dosen',
+                    'title' => 'Bentrok Jadwal Dosen!',
+                    'message' => "Anda sudah memiliki jadwal mengajar lain di {$labName} pada jam {$jam} WIB (\"{$clashDosen->mata_kuliah}\").",
+                ]);
+            }
+        }
+
+        return response()->json([
+            'available' => true,
+            'title' => 'Ruangan Tersedia!',
+            'message' => 'Lab dan jam yang Anda pilih kosong dan siap digunakan.',
+        ]);
     }
 }
