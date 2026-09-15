@@ -40,7 +40,7 @@
                 <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1 rounded-xl hover:bg-slate-50 transition">
                     <div class="text-right hidden sm:block">
                         <p class="font-bold text-xs text-slate-800 group-hover:text-teal-700 transition">{{ auth()->user()->username }}</p>
-                        <p class="text-[9px] font-semibold tracking-wider text-slate-500 uppercase">SUPER ADMIN</p>
+                        <p class="text-[9px] font-semibold tracking-wider text-slate-500 uppercase">{{ auth()->user()->isSuperAdmin() ? 'SUPER ADMIN' : 'ADMIN FAKULTAS' }}</p>
                     </div>
                     <div class="w-9 h-9 rounded-full bg-teal-100 group-hover:bg-teal-200 text-teal-900 border border-teal-200 flex items-center justify-center font-bold text-xs transition transform group-hover:scale-105 shadow-xs">
                         {{ strtoupper(substr(auth()->user()->username ?? 'AD', 0, 2)) }}
@@ -53,7 +53,7 @@
                     <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
                         <p class="text-xs font-bold text-slate-800 truncate">{{ auth()->user()->username ?? 'Administrator' }}</p>
                         <span class="inline-block mt-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/60 rounded-md text-[9px] font-bold uppercase tracking-wider">
-                            Super Admin
+                            {{ auth()->user()->isSuperAdmin() ? 'Super Admin' : (auth()->user()->fakultas?->nama_fakultas ?? 'Admin Fakultas') }}
                         </span>
                     </div>
 
@@ -88,12 +88,22 @@
 
             <!-- Search & Action Bar -->
             <div class="flex flex-col sm:flex-row gap-4 items-center justify-between max-w-4xl">
-                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm w-full sm:w-96 text-xs">
-                    <form action="{{ route('admin.laboratorium') }}" method="GET" class="relative">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau lokasi lab..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
-                    </form>
-                </div>
+                <form action="{{ route('admin.laboratorium') }}" method="GET" class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-2.5 shadow-sm relative w-full sm:w-72 text-xs">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau lokasi lab..." class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                        <i class="fa-solid fa-magnifying-glass absolute left-5 top-4 text-slate-400"></i>
+                    </div>
+                    @if(auth()->user()->isSuperAdmin())
+                        <div class="bg-white border border-slate-200 rounded-2xl p-2 shadow-sm text-xs">
+                            <select name="fakultas_id" onchange="this.form.submit()" class="px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-700 focus:ring-2 focus:ring-teal-700/30 outline-none">
+                                <option value="">Semua Fakultas</option>
+                                @foreach($fakultas as $f)
+                                    <option value="{{ $f->id }}" {{ request('fakultas_id') == $f->id ? 'selected' : '' }}>{{ $f->nama_fakultas }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+                </form>
 
                 <div class="flex gap-2 w-full sm:w-auto">
                     <button onclick="toggleModal('modal-import-lab')" class="w-full sm:w-auto px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
@@ -116,16 +126,21 @@
                             @foreach($labs as $l)
                                 <div class="p-5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between shadow-sm">
                                     <div class="space-y-1">
-                                        <h4 class="font-bold text-slate-800 text-sm">{{ $l->nama_lab }}</h4>
+                                        <div class="flex items-center gap-2">
+                                            <h4 class="font-bold text-slate-800 text-sm">{{ $l->nama_lab }}</h4>
+                                            @if($l->fakultas)
+                                                <span class="px-2 py-0.5 bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-bold rounded-md">{{ $l->fakultas->nama_fakultas }}</span>
+                                            @endif
+                                        </div>
                                         <p class="text-xs text-slate-500 flex items-center gap-1.5"><i class="fa-solid fa-map-pin text-slate-400"></i> {{ $l->lokasi }} • <i class="fa-solid fa-users text-slate-400 text-[10px]"></i> {{ $l->kapasitas }} Kursi</p>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <button onclick='editLab(@json($l))' class="w-8 h-8 rounded-lg bg-white border border-slate-250 flex items-center justify-center text-teal-750 hover:text-teal-900 transition shadow-xs" title="Edit Lab"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
+                                        <button onclick='editLab(@json($l))' class="w-8 h-8 rounded-lg bg-white border border-slate-250 flex items-center justify-center text-teal-750 hover:text-teal-900 transition shadow-xs cursor-pointer" title="Edit Lab"><i class="fa-solid fa-pen-to-square text-xs"></i></button>
                                         
                                         <form action="{{ route('admin.laboratorium.delete', $l->id) }}" method="POST" onsubmit="return confirmAction(event, 'Semua agenda/kelas terkait akan ikut terhapus!', 'Hapus Laboratorium?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="w-8 h-8 rounded-lg bg-white border border-rose-250 flex items-center justify-center text-rose-500 hover:text-rose-700 transition shadow-xs" title="Hapus Lab"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                                            <button type="submit" class="w-8 h-8 rounded-lg bg-white border border-rose-250 flex items-center justify-center text-rose-500 hover:text-rose-700 transition shadow-xs cursor-pointer" title="Hapus Lab"><i class="fa-solid fa-trash-can text-xs"></i></button>
                                         </form>
                                     </div>
                                 </div>
@@ -158,6 +173,20 @@
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">Nama Laboratorium</label>
                     <input type="text" id="lab-nama_lab" name="nama_lab" required placeholder="Contoh: Lab Komputer 1" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Fakultas Naungan</label>
+                    @if(auth()->user()->isSuperAdmin())
+                        <select id="lab-fakultas_id" name="fakultas_id" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
+                            <option value="">-- Pilih Fakultas --</option>
+                            @foreach($fakultas as $f)
+                                <option value="{{ $f->id }}">{{ $f->nama_fakultas }}</option>
+                            @endforeach
+                        </select>
+                    @else
+                        <input type="hidden" name="fakultas_id" value="{{ auth()->user()->fakultas_id }}">
+                        <input type="text" readonly disabled value="{{ auth()->user()->fakultas?->nama_fakultas ?? 'Fakultas Anda' }}" class="w-full p-2.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-500 font-bold cursor-not-allowed">
+                    @endif
                 </div>
                 <div>
                     <label class="block text-slate-700 font-bold mb-1">Lokasi Gedung / Ruang</label>
@@ -273,6 +302,9 @@
                 document.getElementById('lab-nama_lab').value = "";
                 document.getElementById('lab-lokasi').value = "";
                 document.getElementById('lab-kapasitas').value = "30";
+                if (document.getElementById('lab-fakultas_id')) {
+                    document.getElementById('lab-fakultas_id').value = "";
+                }
             }
         }
 
@@ -286,6 +318,9 @@
             document.getElementById('lab-nama_lab').value = lab.nama_lab;
             document.getElementById('lab-lokasi').value = lab.lokasi;
             document.getElementById('lab-kapasitas').value = lab.kapasitas || "30";
+            if (document.getElementById('lab-fakultas_id')) {
+                document.getElementById('lab-fakultas_id').value = lab.fakultas_id || "";
+            }
             
             toggleModal('modal-lab');
         }

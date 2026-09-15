@@ -35,6 +35,34 @@ class User extends Authenticatable
         return $this->hasOne(Mahasiswa::class);
     }
 
+    public function fakultas()
+    {
+        return $this->belongsTo(Fakultas::class, 'fakultas_id');
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin' || ($this->role === 'admin' && is_null($this->fakultas_id));
+    }
+
+    public function isAdminFakultas(): bool
+    {
+        return $this->role === 'admin' && !is_null($this->fakultas_id);
+    }
+
+    public function canManageLab(?Laboratorium $lab): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if (!$lab || !$this->fakultas_id) {
+            return false;
+        }
+
+        return (int)$lab->fakultas_id === (int)$this->fakultas_id;
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
@@ -44,4 +72,3 @@ class User extends Authenticatable
     }
 
 }
-

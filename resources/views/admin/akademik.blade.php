@@ -291,6 +291,9 @@
                         <p class="text-xs text-slate-500 mt-0.5">Kelola daftar mata kuliah dan pemetaan program studi.</p>
                     </div>
                     <div class="flex items-center gap-2">
+                        <button type="button" onclick="submitBulkDeleteMatkul()" id="btn-bulk-delete-matkul" class="px-3.5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm hidden cursor-pointer">
+                            <i class="fa-solid fa-trash-can"></i> Hapus Terpilih (<span id="bulk-delete-count-matkul">0</span>)
+                        </button>
                         <button onclick="openModal('modal-import-matkul')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-file-import"></i> Import Mata Kuliah
                         </button>
@@ -300,10 +303,17 @@
                     </div>
                 </div>
 
+                <form id="bulk-delete-matkul-form" action="{{ route('admin.akademik.matkul.bulk-delete') }}" method="POST" class="hidden">
+                    @csrf
+                    @method('DELETE')
+                </form>
+
                 <!-- Minimalist Search & Filter Bar -->
                 <div class="flex flex-col sm:flex-row items-center gap-2 pt-1">
                     <div class="relative flex-1 w-full">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
                         <input type="text" 
                                id="filter_matkul_search" 
                                oninput="filterMatkulTable()" 
@@ -336,9 +346,13 @@
                     <table class="w-full text-left text-slate-650">
                         <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                             <tr>
+                                <th class="p-3 w-10 text-center">
+                                    <input type="checkbox" id="select-all-matkul" class="rounded border-slate-300 text-teal-700 focus:ring-teal-700 cursor-pointer">
+                                </th>
                                 <th class="p-3 w-28">Kode MK</th>
                                 <th class="p-3">Nama Mata Kuliah</th>
                                 <th class="p-3">Program Studi</th>
+                                <th class="p-3 text-center w-24 whitespace-nowrap">SKS</th>
                                 <th class="p-3 text-center w-28">Aksi</th>
                             </tr>
                         </thead>
@@ -350,6 +364,9 @@
                                     data-kode="{{ strtolower($mk->kode_mk ?? '') }}"
                                     data-prodi-id="{{ $mk->id_prodi ?? 'umum' }}"
                                     data-prodi-name="{{ strtolower(($mk->prodi->nama_prodi ?? 'semua umum') . ' ' . ($mk->prodi->fakultas->nama_fakultas ?? '')) }}">
+                                    <td class="p-3 text-center">
+                                        <input type="checkbox" value="{{ $mk->id }}" class="checkbox-matkul rounded border-slate-300 text-teal-700 focus:ring-teal-700 cursor-pointer">
+                                    </td>
                                     <td class="p-3 font-mono text-slate-400 font-bold">{{ $mk->kode_mk ?: '-' }}</td>
                                     <td class="p-3 font-bold text-slate-800 text-sm">{{ $mk->nama_mk }}</td>
                                     <td class="p-3">
@@ -362,10 +379,14 @@
                                             <span class="text-slate-400 italic">Semua Prodi (Mata Kuliah Umum)</span>
                                         @endif
                                     </td>
+                                    <td class="p-3 text-center whitespace-nowrap">
+                                        <span class="font-bold text-slate-700 text-xs">{{ $mk->sks ?? 3 }}</span>
+                                        <span class="text-slate-400 text-[11px] font-medium ml-0.5">SKS</span>
+                                    </td>
                                     <td class="p-3 text-center">
                                         <div class="flex items-center justify-center gap-3">
                                             <button type="button" 
-                                                    onclick="openEditMatkulModal({{ $mk->id }}, '{{ addslashes($mk->nama_mk) }}', '{{ addslashes($mk->kode_mk ?? '') }}', '{{ $mk->id_prodi ?? '' }}')" 
+                                                    onclick="openEditMatkulModal({{ $mk->id }}, '{{ addslashes($mk->nama_mk) }}', '{{ addslashes($mk->kode_mk ?? '') }}', '{{ $mk->id_prodi ?? '' }}', {{ $mk->sks ?? 3 }})" 
                                                     class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer">
                                                 <i class="fa-solid fa-pen-to-square"></i> Edit
                                             </button>
@@ -382,13 +403,13 @@
                                 </tr>
                                 @endforeach
                                 <tr id="matkul_empty_state" style="display: none;">
-                                    <td colspan="4" class="p-6 text-center text-slate-400 italic">
+                                    <td colspan="6" class="p-6 text-center text-slate-400 italic">
                                         Tidak ada mata kuliah yang cocok dengan filter pencarian.
                                     </td>
                                 </tr>
                             @else
                                 <tr>
-                                    <td colspan="4" class="p-8 text-center text-slate-400 italic">Belum ada data mata kuliah.</td>
+                                    <td colspan="6" class="p-8 text-center text-slate-400 italic">Belum ada data mata kuliah.</td>
                                 </tr>
                             @endif
                         </tbody>
@@ -638,6 +659,10 @@
                     <label class="block text-slate-700 font-bold mb-1">Nama Mata Kuliah <span class="text-rose-500">*</span></label>
                     <input type="text" name="nama_mk" required placeholder="Contoh: Pemrograman Web" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
                 </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Bobot SKS <span class="text-rose-500">*</span></label>
+                    <input type="number" name="sks" min="1" max="10" value="3" required placeholder="Contoh: 1, 2, atau 3" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
+                </div>
                 <div class="relative" id="add_prodi_combobox_wrapper">
                     <label class="block text-slate-700 font-bold mb-1">Program Studi</label>
                     <input type="hidden" name="id_prodi" id="add_matkul_id_prodi" value="">
@@ -663,7 +688,9 @@
                          class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl p-2 max-h-52 overflow-y-auto custom-scrollbar flex flex-col space-y-1" 
                          style="background-color: #ffffff !important;">
                         <div class="relative shrink-0 mb-1">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </div>
                             <input type="text" 
                                    id="add_prodi_search_input" 
                                    oninput="filterAddProdiList(this.value)" 
@@ -725,6 +752,10 @@
                     <label class="block text-slate-700 font-bold mb-1">Nama Mata Kuliah <span class="text-rose-500">*</span></label>
                     <input type="text" id="edit-matkul-nama" name="nama_mk" required class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
                 </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Bobot SKS <span class="text-rose-500">*</span></label>
+                    <input type="number" id="edit-matkul-sks" name="sks" min="1" max="10" required placeholder="Contoh: 1, 2, atau 3" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
+                </div>
                 <div class="relative" id="edit_prodi_combobox_wrapper">
                     <label class="block text-slate-700 font-bold mb-1">Program Studi</label>
                     <input type="hidden" id="edit-matkul-prodi" name="id_prodi" value="">
@@ -750,7 +781,9 @@
                          class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl p-2 max-h-52 overflow-y-auto custom-scrollbar flex flex-col space-y-1" 
                          style="background-color: #ffffff !important;">
                         <div class="relative shrink-0 mb-1">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </div>
                             <input type="text" 
                                    id="edit_prodi_search_input" 
                                    oninput="filterEditProdiList(this.value)" 
@@ -830,10 +863,11 @@
             openModal('modal-edit-kelas');
         }
 
-        function openEditMatkulModal(id, nama, kode, prodiId) {
+        function openEditMatkulModal(id, nama, kode, prodiId, sks) {
             document.getElementById('edit-matkul-form').action = `/admin/akademik/matkul/${id}`;
             document.getElementById('edit-matkul-nama').value = nama;
             document.getElementById('edit-matkul-kode').value = kode;
+            document.getElementById('edit-matkul-sks').value = sks || 3;
             document.getElementById('edit-matkul-prodi').value = prodiId || '';
             
             const matchedOption = document.querySelector(`.edit-prodi-item-option[data-id="${prodiId}"]`);
@@ -1043,6 +1077,102 @@
         }
 
         // ==========================================
+        // BULK DELETE LOGIC FOR MATA KULIAH
+        // ==========================================
+        const selectAllMatkul = document.getElementById('select-all-matkul');
+        const btnBulkDeleteMatkul = document.getElementById('btn-bulk-delete-matkul');
+        const bulkDeleteCountMatkul = document.getElementById('bulk-delete-count-matkul');
+
+        function updateBulkDeleteBtnMatkul() {
+            const checkedCount = document.querySelectorAll('.checkbox-matkul:checked').length;
+            if (btnBulkDeleteMatkul && bulkDeleteCountMatkul) {
+                if (checkedCount > 0) {
+                    btnBulkDeleteMatkul.classList.remove('hidden');
+                    bulkDeleteCountMatkul.innerText = checkedCount;
+                } else {
+                    btnBulkDeleteMatkul.classList.add('hidden');
+                }
+            }
+        }
+
+        if (selectAllMatkul) {
+            selectAllMatkul.addEventListener('change', function() {
+                const rows = document.querySelectorAll('.matkul-row');
+                rows.forEach(row => {
+                    if (row.style.display !== 'none') {
+                        const cb = row.querySelector('.checkbox-matkul');
+                        if (cb) cb.checked = selectAllMatkul.checked;
+                    }
+                });
+                updateBulkDeleteBtnMatkul();
+            });
+        }
+
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.classList.contains('checkbox-matkul')) {
+                const visibleCheckboxes = Array.from(document.querySelectorAll('.matkul-row'))
+                    .filter(r => r.style.display !== 'none')
+                    .map(r => r.querySelector('.checkbox-matkul'))
+                    .filter(Boolean);
+                const allChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
+                if (selectAllMatkul) selectAllMatkul.checked = allChecked;
+                updateBulkDeleteBtnMatkul();
+            }
+        });
+
+        function submitBulkDeleteMatkul() {
+            const checkedBoxes = document.querySelectorAll('.checkbox-matkul:checked');
+            if (checkedBoxes.length === 0) return;
+
+            Swal.fire({
+                title: 'Hapus Mata Kuliah Terpilih?',
+                text: `Apakah Anda yakin ingin menghapus ${checkedBoxes.length} mata kuliah yang dipilih?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('bulk-delete-matkul-form');
+                    if (form) {
+                        form.innerHTML = '';
+                        const csrf = document.createElement('input');
+                        csrf.type = 'hidden';
+                        csrf.name = '_token';
+                        csrf.value = '{{ csrf_token() }}';
+                        form.appendChild(csrf);
+
+                        const method = document.createElement('input');
+                        method.type = 'hidden';
+                        method.name = '_method';
+                        method.value = 'DELETE';
+                        form.appendChild(method);
+
+                        checkedBoxes.forEach(cb => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'ids[]';
+                            input.value = cb.value;
+                            form.appendChild(input);
+                        });
+
+                        form.dataset.confirmed = "true";
+                        form.submit();
+                    }
+                }
+            });
+        }
+
+        // ==========================================
         // REALTIME FILTER & SEARCH FOR MATA KULIAH
         // ==========================================
         function filterMatkulTable() {
@@ -1081,6 +1211,15 @@
                     resetBtn.classList.add('hidden');
                 }
             }
+
+            const visibleCheckboxes = Array.from(document.querySelectorAll('.matkul-row'))
+                .filter(r => r.style.display !== 'none')
+                .map(r => r.querySelector('.checkbox-matkul'))
+                .filter(Boolean);
+            if (selectAllMatkul) {
+                selectAllMatkul.checked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
+            }
+            updateBulkDeleteBtnMatkul();
         }
 
         function resetMatkulFilter() {

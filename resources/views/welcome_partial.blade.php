@@ -38,6 +38,9 @@
                 <div class="flex items-center gap-2 text-[#0b8a5a] font-bold text-sm tracking-wider uppercase">
                     <i class="fa-solid fa-calendar-days text-base"></i>
                     <span>Agenda {{ $activeLab->nama_lab }}</span>
+                    @if($activeLab->fakultas)
+                        <span class="text-[11px] font-semibold text-slate-400 normal-case tracking-normal">({{ $activeLab->fakultas->nama_fakultas }})</span>
+                    @endif
                 </div>
                 <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#00b87c] text-white rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm">
                     <span class="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>
@@ -75,7 +78,7 @@
                         <div class="text-xs text-slate-500 font-semibold space-y-1">
                             <div>{{ $activeAgenda->lab->nama_lab }} • Dosen Mengajar: {{ $activeAgenda->dosen->nama ?? '-' }} • Dosen Pengampu: {{ $activeAgenda->dosenPengampu->nama ?? $activeAgenda->dosen->nama ?? '-' }}</div>
                             <div>Fakultas: {{ $activeAgenda->fakultas }} • Prodi: {{ $activeAgenda->jurusan }}</div>
-                            <div>Program: {{ $activeAgenda->program_kuliah ?? 'Reguler' }} • Tipe: {{ $activeAgenda->jenis_pertemuan ?? 'Praktikum' }} • Semester: {{ $activeAgenda->semester ?? '1' }} • Kelas: {{ $activeAgenda->kelas ?? 'A' }}</div>
+                            <div>Program: {{ $activeAgenda->program_kuliah ?? 'Reguler' }} {{ $activeAgenda->tahun_ajaran }} • Tipe: {{ $activeAgenda->jenis_pertemuan ?? 'Praktikum' }} • Semester: {{ $activeAgenda->semester ?? '1' }} • Kelas: {{ $activeAgenda->kelas ?? 'A' }}</div>
                             <div class="flex items-center gap-1.5 pt-1.5">
                                 <span class="text-slate-400">Kehadiran Dosen:</span>
                                 @if($activeAgenda->dosen_waktu_masuk)
@@ -127,7 +130,7 @@
                          <div class="text-xs text-slate-500 font-semibold space-y-1">
                             <div>{{ $nextAgenda->lab->nama_lab }} • Dosen Mengajar: {{ $nextAgenda->dosen->nama ?? '-' }} • Dosen Pengampu: {{ $nextAgenda->dosenPengampu->nama ?? $nextAgenda->dosen->nama ?? '-' }}</div>
                             <div>Fakultas: {{ $nextAgenda->fakultas }} • Prodi: {{ $nextAgenda->jurusan }}</div>
-                            <div>Program: {{ $nextAgenda->program_kuliah ?? 'Reguler' }} • Semester: {{ $nextAgenda->semester ?? '1' }} • Kelas: {{ $nextAgenda->kelas ?? 'A' }}</div>
+                            <div>Program: {{ $nextAgenda->program_kuliah ?? 'Reguler' }} {{ $nextAgenda->tahun_ajaran }} • Semester: {{ $nextAgenda->semester ?? '1' }} • Kelas: {{ $nextAgenda->kelas ?? 'A' }}</div>
                             <div class="flex items-center gap-1.5 pt-1.5">
                                 <span class="text-slate-400">Kehadiran Dosen:</span>
                                 @if($nextAgenda->dosen_waktu_masuk)

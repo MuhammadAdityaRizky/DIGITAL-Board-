@@ -115,6 +115,12 @@
                     <!-- Room Specs & Details -->
                     <div class="space-y-3">
                         <div class="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                            @if($lab->fakultas)
+                                <span class="px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200/60 rounded-lg flex items-center gap-1.5 font-bold">
+                                    <i class="fa-solid fa-building-columns text-teal-600"></i>
+                                    {{ $lab->fakultas->nama_fakultas }}
+                                </span>
+                            @endif
                             <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg flex items-center gap-1.5 lab-loc-text">
                                 <i class="fa-solid fa-location-dot text-rose-500"></i>
                                 {{ $lab->lokasi }}

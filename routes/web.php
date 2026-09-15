@@ -46,6 +46,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/laboratorium/import', [AdminController::class, 'importLaboratorium'])->name('laboratorium.import');
         
         Route::get('/agenda', [AdminController::class, 'agenda'])->name('agenda');
+        Route::get('/agenda/{id}/berita-acara/cetak', [DosenController::class, 'cetakBeritaAcara'])->name('agenda.berita-acara.cetak');
+        Route::get('/agenda/{id}/realisasi-praktikum/cetak', [DosenController::class, 'cetakRealisasiPraktikum'])->name('agenda.realisasi-praktikum.cetak');
         Route::post('/agenda', [AdminController::class, 'storeAgenda'])->name('agenda.store');
         Route::put('/agenda/{id}', [AdminController::class, 'updateAgenda'])->name('agenda.update');
         Route::delete('/agenda/bulk-delete', [AdminController::class, 'bulkDeleteAgendas'])->name('agenda.bulk-delete');
@@ -61,13 +63,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengumuman', [AdminController::class, 'pengumuman'])->name('pengumuman');
         Route::get('/aktivitas', [AdminController::class, 'aktivitas'])->name('aktivitas');
         
-        // Master Jadwal Penggunaan Lab & Bulk Generate 16 Pertemuan
+        // Master Jadwal Penggunaan Lab
         Route::get('/jadwal-lab', [AdminController::class, 'jadwalPenggunaanLab'])->name('jadwal-lab');
+        Route::get('/jadwal-lab/export', [AdminController::class, 'exportJadwalLab'])->name('jadwal-lab.export');
+        Route::post('/jadwal-lab/import', [AdminController::class, 'importJadwalLab'])->name('jadwal-lab.import');
         Route::post('/jadwal-lab', [AdminController::class, 'storeJadwalPenggunaanLab'])->name('jadwal-lab.store');
         Route::put('/jadwal-lab/{id}', [AdminController::class, 'updateJadwalPenggunaanLab'])->name('jadwal-lab.update');
         Route::delete('/jadwal-lab/{id}', [AdminController::class, 'deleteJadwalPenggunaanLab'])->name('jadwal-lab.delete');
-        Route::post('/jadwal-lab/{id}/generate-16', [AdminController::class, 'generate16Pertemuan'])->name('jadwal-lab.generate-16');
-        Route::post('/jadwal-lab/bulk-generate-16', [AdminController::class, 'bulkGenerate16Pertemuan'])->name('jadwal-lab.bulk-generate-16');
         
         Route::get('/akademik', [AdminController::class, 'akademik'])->name('akademik');
         Route::post('/akademik/fakultas', [AdminController::class, 'storeFakultas'])->name('akademik.fakultas.store');
@@ -88,6 +90,7 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/akademik/matkul', [AdminController::class, 'storeMataKuliah'])->name('akademik.matkul.store');
         Route::put('/akademik/matkul/{id}', [AdminController::class, 'updateMataKuliah'])->name('akademik.matkul.update');
+        Route::delete('/akademik/matkul/bulk-delete', [AdminController::class, 'bulkDeleteMataKuliah'])->name('akademik.matkul.bulk-delete');
         Route::delete('/akademik/matkul/{id}', [AdminController::class, 'deleteMataKuliah'])->name('akademik.matkul.delete');
         Route::post('/akademik/matkul/import', [AdminController::class, 'importMataKuliah'])->name('akademik.matkul.import');
     });
@@ -111,6 +114,8 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/agenda', [DosenController::class, 'agenda'])->name('agenda');
         Route::get('/agenda/{id}/export-kehadiran', [DosenController::class, 'exportKehadiran'])->name('agenda.export-kehadiran');
+        Route::get('/agenda/{id}/berita-acara/cetak', [DosenController::class, 'cetakBeritaAcara'])->name('agenda.berita-acara.cetak');
+        Route::get('/agenda/{id}/realisasi-praktikum/cetak', [DosenController::class, 'cetakRealisasiPraktikum'])->name('agenda.realisasi-praktikum.cetak');
         Route::get('/jadwal-lab', [DosenController::class, 'jadwalPenggunaanLab'])->name('jadwal-lab');
         Route::get('/jadwal-lab/check-availability', [DosenController::class, 'checkLabAvailability'])->name('jadwal-lab.check-availability');
         Route::get('/pengaturan', [DosenController::class, 'pengaturan'])->name('pengaturan');

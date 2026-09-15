@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
@@ -20,39 +21,39 @@
 
     <!-- Sidebar (Desktop Only) -->
     <aside class="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 h-full hidden lg:flex shadow-xl z-20">
-        <div class="p-6 flex items-center gap-3 border-b border-slate-800">
-            <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">
-                <i class="fa-solid fa-graduation-cap"></i>
+        <div class="p-5 flex items-center gap-3 border-b border-slate-800 shrink-0">
+            <div class="w-9 h-9 bg-teal-600 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm">
+                <i class="fa-solid fa-graduation-cap text-lg"></i>
             </div>
             <div>
-                <h1 class="font-extrabold text-sm leading-tight text-white">DIGITAL Board</h1>
-                <p class="text-xs font-bold tracking-wide text-teal-300">Smart Lab Management</p>
+                <h1 class="font-bold text-sm leading-tight text-white">DIGITAL Board</h1>
+                <p class="text-[10px] font-semibold text-teal-400 tracking-wider">PORTAL DOSEN</p>
             </div>
         </div>
         
-        <nav class="flex-1 px-3 py-4 space-y-1.5">
-            <a href="{{ route('dosen.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition font-bold text-sm">
+        <nav class="flex-1 px-3 py-3 space-y-1">
+            <a href="{{ route('dosen.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white font-medium rounded-xl w-full text-xs transition">
                 <i class="fa-solid fa-border-all text-sm"></i>
-                <span class="tracking-wide">Dashboard</span>
+                <span>Dashboard</span>
             </a>
-            <a href="{{ route('dosen.agenda') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition font-bold text-sm">
+            <a href="{{ route('dosen.agenda') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white font-medium rounded-xl w-full text-xs transition">
                 <i class="fa-solid fa-calendar-alt text-sm"></i>
-                <span class="tracking-wide">Agenda Perkuliahan</span>
+                <span>Agenda Perkuliahan</span>
             </a>
-            <a href="{{ route('dosen.jadwal-lab') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white rounded-xl w-full font-extrabold text-sm shadow-md">
+            <a href="{{ route('dosen.jadwal-lab') }}" class="flex items-center gap-3 px-4 py-2.5 bg-teal-800 text-white font-bold shadow-sm rounded-xl w-full text-xs">
                 <i class="fa-solid fa-calendar-check text-sm"></i>
-                <span class="tracking-wide">Ketersediaan Lab</span>
+                <span>Ketersediaan Lab</span>
             </a>
-            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition font-bold text-sm">
+            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white font-medium rounded-xl w-full text-xs transition">
                 <i class="fa-solid fa-gear text-sm"></i>
-                <span class="tracking-wide">Pengaturan Akun</span>
+                <span>Pengaturan Akun</span>
             </a>
         </nav>
 
         <!-- Tombol Panduan Dosen di Sidebar -->
         <div class="p-3 border-t border-slate-800 mt-auto">
-            <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-3 px-3.5 py-2.5 bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 hover:text-white rounded-xl w-full transition text-xs font-bold cursor-pointer">
-                <i class="fa-solid fa-book-open-reader text-sm text-amber-400"></i>
+            <button type="button" onclick="openTutorialDosenModal()" class="min-h-[44px] flex items-center gap-3 px-4 py-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 hover:text-white rounded-xl w-full transition text-sm font-bold cursor-pointer">
+                <i class="fa-solid fa-book-open-reader text-base text-amber-400"></i>
                 <span>Panduan Dosen</span>
             </button>
         </div>
@@ -133,35 +134,32 @@
         <!-- Main Scrollable Body -->
         <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
             
-            <!-- Panduan Penggunaan Ramah Dosen Senior -->
-            <div class="bg-gradient-to-r from-teal-900 via-teal-800 to-slate-900 text-white rounded-2xl p-5 sm:p-6 shadow-md relative overflow-hidden">
-                <div class="relative z-10 max-w-3xl space-y-2">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-teal-700/80 rounded-full text-xs font-extrabold text-teal-200">
-                        <i class="fa-solid fa-circle-info"></i> Petunjuk Kalender Ruangan Lab
+            <!-- Header Ringkasan Jadwal & Ketersediaan Lab -->
+            <div class="bg-white border border-slate-200 rounded-xl p-5 sm:p-6 shadow-2xs">
+                <div class="max-w-3xl space-y-1.5">
+                    <div class="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                        <span class="w-2 h-2 rounded-full bg-slate-900 inline-block"></span>
+                        <span>Portal Ketersediaan Ruangan Laboratorium</span>
                     </div>
-                    <h2 class="text-lg sm:text-xl font-extrabold tracking-tight">
-                        Cek Jam Kosong & Jadwalkan Kuliah Pengganti
+                    <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+                        Jadwal & Ketersediaan Ruangan Lab
                     </h2>
-                    <p class="text-xs sm:text-sm text-teal-100 leading-relaxed font-medium">
-                        Halaman ini memudahkan Anda melihat apakah ruang laboratorium sedang dipakai atau kosong. 
-                        Pilih <strong class="text-white font-bold underline">Laboratorium</strong> dan <strong class="text-white font-bold underline">Tanggal</strong>, lalu klik kotak hijau <strong class="text-emerald-300 font-bold">[ + Pakai Jam Ini ]</strong> untuk langsung memesan jam tersebut tanpa khawatir bentrok dengan dosen lain.
+                    <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                        Pilih laboratorium dan tanggal pelaksanaan untuk memeriksa jam kosong. Klik tombol <strong>Pakai Jam Ini</strong> pada slot yang tersedia untuk langsung menjadwalkan kelas perkuliahan atau kuliah pengganti.
                     </p>
-                </div>
-                <div class="absolute right-4 -bottom-6 text-teal-700/20 text-9xl font-black pointer-events-none hidden sm:block">
-                    <i class="fa-solid fa-calendar-days"></i>
                 </div>
             </div>
 
             <!-- Filter Bilah Pilihan Lab & Tanggal -->
-            <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-2xs space-y-4">
                 <form action="{{ route('dosen.jadwal-lab') }}" method="GET" id="filterLabForm" class="flex flex-wrap items-end gap-3 sm:gap-4">
                     
                     <!-- 1. Pilihan Laboratorium -->
                     <div class="flex-1 min-w-[220px]">
-                        <label class="block text-xs font-extrabold text-slate-800 mb-1.5 flex items-center gap-1.5">
-                            <i class="fa-solid fa-door-open text-teal-700"></i> Pilih Laboratorium:
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-door-open text-slate-500"></i> Pilih laboratorium
                         </label>
-                        <select name="lab_id" onchange="document.getElementById('filterLabForm').submit()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-teal-700 focus:border-teal-700 outline-none cursor-pointer">
+                        <select name="lab_id" onchange="document.getElementById('filterLabForm').submit()" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none cursor-pointer">
                             @foreach($labs as $lab)
                                 <option value="{{ $lab->id }}" {{ $selectedLabId == $lab->id ? 'selected' : '' }}>
                                     {{ $lab->nama_lab }} ({{ $lab->lokasi }})
@@ -172,47 +170,47 @@
 
                     <!-- 2. Pilihan Tanggal -->
                     <div class="w-full sm:w-auto min-w-[190px]">
-                        <label class="block text-xs font-extrabold text-slate-800 mb-1.5 flex items-center gap-1.5">
-                            <i class="fa-solid fa-calendar-day text-teal-700"></i> Tanggal Pelaksanaan:
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-regular fa-calendar text-slate-500"></i> Tanggal pelaksanaan
                         </label>
-                        <input type="date" name="tanggal" value="{{ $selectedDate }}" onchange="document.getElementById('filterLabForm').submit()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-teal-700 focus:border-teal-700 outline-none cursor-pointer">
+                        <input type="date" name="tanggal" value="{{ $selectedDate }}" onchange="document.getElementById('filterLabForm').submit()" class="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none cursor-pointer">
                     </div>
 
                     <!-- Tombol Cepat: Hari Ini & Besok -->
                     <div class="flex items-center gap-2">
-                        <a href="{{ route('dosen.jadwal-lab', ['lab_id' => $selectedLabId, 'tanggal' => date('Y-m-d')]) }}" class="px-3.5 py-2.5 {{ $selectedDate === date('Y-m-d') ? 'bg-teal-800 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700' }} rounded-xl text-xs font-extrabold transition">
-                            Hari Ini
+                        <a href="{{ route('dosen.jadwal-lab', ['lab_id' => $selectedLabId, 'tanggal' => date('Y-m-d')]) }}" class="px-3.5 py-2.5 {{ $selectedDate === date('Y-m-d') ? 'bg-slate-900 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200' }} rounded-lg text-xs font-semibold transition">
+                            Hari ini
                         </a>
-                        <a href="{{ route('dosen.jadwal-lab', ['lab_id' => $selectedLabId, 'tanggal' => date('Y-m-d', strtotime('+1 day'))]) }}" class="px-3.5 py-2.5 {{ $selectedDate === date('Y-m-d', strtotime('+1 day')) ? 'bg-teal-800 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700' }} rounded-xl text-xs font-extrabold transition">
+                        <a href="{{ route('dosen.jadwal-lab', ['lab_id' => $selectedLabId, 'tanggal' => date('Y-m-d', strtotime('+1 day'))]) }}" class="px-3.5 py-2.5 {{ $selectedDate === date('Y-m-d', strtotime('+1 day')) ? 'bg-slate-900 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200' }} rounded-lg text-xs font-semibold transition">
                             Besok
                         </a>
                     </div>
 
                     <!-- Mode Tampilan (Harian vs Matriks Mingguan) -->
-                    <div class="ml-auto flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-                        <button type="button" onclick="switchViewMode('daily')" id="btn-mode-daily" class="px-3 py-1.5 rounded-lg text-xs font-extrabold bg-white text-teal-900 shadow-xs flex items-center gap-1.5 transition">
-                            <i class="fa-solid fa-list-check"></i> Slot Harian
+                    <div class="ml-auto flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                        <button type="button" onclick="switchViewMode('daily')" id="btn-mode-daily" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-xs flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-list-check"></i> Slot harian
                         </button>
-                        <button type="button" onclick="switchViewMode('weekly')" id="btn-mode-weekly" class="px-3 py-1.5 rounded-lg text-xs font-extrabold text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition">
-                            <i class="fa-solid fa-table-cells"></i> Matriks Mingguan
+                        <button type="button" onclick="switchViewMode('weekly')" id="btn-mode-weekly" class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-table-cells"></i> Matriks mingguan
                         </button>
                     </div>
                 </form>
             </div>
 
-            <!-- TAMPILAN 1: SLOT HARIAN (PALING MUDAH UNTUK DOSEN SENIOR) -->
+            <!-- TAMPILAN 1: SLOT HARIAN -->
             <div id="view-daily-slots" class="space-y-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-base font-extrabold text-slate-900">
-                            Ketersediaan Jam pada: <span class="text-teal-800">{{ $carbonDate->translatedFormat('l, d F Y') }}</span>
+                        <h3 class="text-base font-bold text-slate-900">
+                            Ketersediaan Jam: <span>{{ $carbonDate->translatedFormat('l, d F Y') }}</span>
                         </h3>
-                        <p class="text-xs text-slate-600 font-medium">
-                            Laboratorium: <strong class="text-slate-800 font-bold">{{ $selectedLab->nama_lab ?? 'Lab' }}</strong> ({{ $selectedLab->lokasi ?? '' }})
+                        <p class="text-xs text-slate-500 font-normal mt-0.5">
+                            Ruangan: <strong class="text-slate-800 font-semibold">{{ $selectedLab->nama_lab ?? 'Lab' }}</strong> ({{ $selectedLab->lokasi ?? '' }})
                         </p>
                     </div>
-                    <span class="px-3 py-1 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-full text-xs font-extrabold">
-                        {{ collect($slotAvailability)->where('is_occupied', false)->count() }} Slot Jam Kosong
+                    <span class="px-3 py-1 bg-slate-100 text-slate-800 border border-slate-200 rounded-md text-xs font-semibold">
+                        {{ collect($slotAvailability)->where('is_occupied', false)->count() }} slot kosong
                     </span>
                 </div>
 
@@ -220,22 +218,22 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($slotAvailability as $item)
                         @if(!$item['is_occupied'])
-                            <!-- KARTU SLOT KOSONG (HIJAU BESAR & JELAS) -->
-                            <div class="p-5 bg-emerald-50/80 border-2 border-emerald-300 rounded-2xl shadow-xs flex flex-col justify-between hover:border-emerald-500 hover:bg-emerald-100/70 transition space-y-4">
+                            <!-- KARTU SLOT KOSONG -->
+                            <div class="p-5 bg-white border border-slate-200 hover:border-slate-800 rounded-xl shadow-2xs flex flex-col justify-between transition space-y-4">
                                 <div>
                                     <div class="flex items-center justify-between mb-2">
-                                        <span class="px-2.5 py-1 bg-emerald-200/80 text-emerald-900 rounded-lg text-xs font-extrabold flex items-center gap-1.5">
-                                            <i class="fa-regular fa-clock"></i> {{ $item['slot']['label'] }}
+                                        <span class="text-xs font-mono font-semibold text-slate-800 flex items-center gap-1.5">
+                                            <i class="fa-regular fa-clock text-slate-400"></i> {{ $item['slot']['label'] }}
                                         </span>
-                                        <span class="px-2 py-0.5 bg-white text-emerald-800 border border-emerald-300 rounded-md text-xs font-extrabold uppercase">
+                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[11px] font-medium">
                                             {{ $item['slot']['session'] }}
                                         </span>
                                     </div>
                                     <div class="mt-2">
-                                        <h4 class="text-base font-extrabold text-emerald-950 flex items-center gap-1.5">
-                                            <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i> KOSONG (BISA DIPAKAI)
+                                        <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-700 inline-block"></span> Ruangan Kosong
                                         </h4>
-                                        <p class="text-xs text-emerald-800 font-medium mt-1 leading-relaxed">
+                                        <p class="text-xs text-slate-600 font-normal mt-1 leading-relaxed">
                                             Ruangan bebas pada jam ini. Silakan gunakan untuk jadwal kuliah pengganti atau kelas tambahan.
                                         </p>
                                     </div>
@@ -243,50 +241,53 @@
 
                                 <button type="button" 
                                         onclick="openBookingModal('{{ $item['slot']['start'] }}', '{{ $item['slot']['end'] }}')" 
-                                        class="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                                    <i class="fa-solid fa-calendar-plus text-sm"></i> Pakai Jam Ini
+                                        class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition flex items-center justify-center gap-2 shadow-2xs cursor-pointer">
+                                    <i class="fa-regular fa-calendar-plus text-xs"></i> Pakai Jam Ini
                                 </button>
                             </div>
                         @else
-                            <!-- KARTU SLOT TERISI (MERAH TEGAS & TRANSAPARAN INFORMASI) -->
-                            <div class="p-5 {{ $item['is_mine'] ? 'bg-teal-50/80 border-2 border-teal-300' : 'bg-rose-50/80 border-2 border-rose-200' }} rounded-2xl shadow-xs flex flex-col justify-between space-y-4">
+                            <!-- KARTU SLOT TERISI -->
+                            <div class="p-5 bg-slate-50/70 border border-slate-200 rounded-xl shadow-2xs flex flex-col justify-between space-y-4">
                                 <div>
                                     <div class="flex items-center justify-between mb-2">
-                                        <span class="px-2.5 py-1 {{ $item['is_mine'] ? 'bg-teal-200 text-teal-900' : 'bg-rose-200 text-rose-900' }} rounded-lg text-xs font-extrabold flex items-center gap-1.5">
-                                            <i class="fa-regular fa-clock"></i> {{ $item['slot']['label'] }}
+                                        <span class="text-xs font-mono font-semibold text-slate-600 flex items-center gap-1.5">
+                                            <i class="fa-regular fa-clock text-slate-400"></i> {{ $item['slot']['label'] }}
                                         </span>
                                         @if($item['is_mine'])
-                                            <span class="px-2.5 py-0.5 bg-teal-800 text-white rounded-md text-xs font-extrabold">
-                                                🌟 Jadwal Anda
+                                            <span class="px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-200 rounded text-[11px] font-semibold">
+                                                Jadwal Anda
                                             </span>
                                         @else
-                                            <span class="px-2.5 py-0.5 bg-rose-600 text-white rounded-md text-xs font-extrabold">
-                                                ⛔ SUDAH TERISI
+                                            <span class="px-2 py-0.5 bg-slate-200/80 text-slate-700 border border-slate-300 rounded text-[11px] font-medium">
+                                                Terisi
                                             </span>
                                         @endif
                                     </div>
 
                                     <div class="mt-2 space-y-1">
-                                        <h4 class="text-sm font-extrabold text-slate-900 line-clamp-2">
+                                        <h4 class="text-sm font-bold text-slate-900 line-clamp-2">
                                             {{ $item['title'] }}
                                         </h4>
-                                        <div class="flex items-center gap-2 text-xs font-bold text-slate-700">
-                                            <span class="px-2 py-0.5 bg-white border border-slate-200 rounded">Kelas {{ $item['kelas'] }}</span>
-                                            <span>Jam: {{ $item['exact_time'] }} WIB</span>
+                                        <div class="flex items-center gap-2 text-xs text-slate-600">
+                                            <span class="font-medium">Kelas {{ $item['kelas'] }}</span>
+                                            <span>·</span>
+                                            <span>{{ $item['exact_time'] }} WIB</span>
                                         </div>
-                                        <p class="text-xs font-medium text-slate-600 pt-1 flex items-center gap-1.5">
-                                            <i class="fa-solid fa-user-tie text-slate-400"></i> Pengajar: <strong class="text-slate-800">{{ $item['dosen_name'] }}</strong>
+                                        <p class="text-xs text-slate-600 pt-0.5 flex items-center gap-1.5">
+                                            <i class="fa-regular fa-user text-slate-400"></i> Pengajar: <strong class="text-slate-800 font-semibold">{{ $item['dosen_name'] }}</strong>
                                         </p>
                                     </div>
                                 </div>
 
-                                <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs text-slate-500 font-semibold">
+                                <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
                                     <span><i class="fa-solid fa-lock mr-1 text-slate-400"></i> Tidak tersedia</span>
-                                    <span class="italic text-[11px] text-slate-400">Sumber: {{ $item['source'] }}</span>
+                                    <span class="text-[11px] text-slate-400">Sumber: {{ $item['source'] }}</span>
                                 </div>
                             </div>
                         @endif
                     @endforeach
+                </div>
+            </div>
                 </div>
             </div>
 
@@ -371,21 +372,17 @@
         </div>
     </main>
 
-    <!-- MODAL POPUP: BUAT JADWAL / KULIAH PENGGANTI (TERISI OTOMATIS SAAT KLIK SLOT KOSONG) -->
-    <div id="modal-booking-slot" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden text-left animate-in fade-in zoom-in duration-150">
-            <div class="bg-teal-800 text-white px-6 py-4 flex justify-between items-center">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-teal-700 flex items-center justify-center font-bold text-white">
-                        <i class="fa-solid fa-calendar-check text-sm"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-extrabold text-sm">Pakai Jam Kosong Ini</h3>
-                        <p class="text-xs text-teal-200 font-bold">Buat Jadwal Perkuliahan / Kuliah Pengganti</p>
-                    </div>
+    <!-- MODAL POPUP: BUAT JADWAL / KULIAH PENGGANTI (COMBOBOX DENGAN DESAIN AKADEMIK OTENTIK) -->
+    <div id="modal-booking-slot" class="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl border border-slate-300 shadow-xl max-w-lg w-full overflow-hidden text-left animate-in fade-in zoom-in-95 duration-100">
+            <!-- Modal Header Bersih (Non-AI, Gaya Institusi Akademik) -->
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-base text-slate-900">Jadwalkan Kuliah Pengganti</h3>
+                    <p class="text-xs text-slate-500 mt-0.5 font-normal">Pesan jam kosong lab untuk jadwal perkuliahan atau praktikum</p>
                 </div>
-                <button type="button" onclick="closeBookingModal()" class="text-teal-200 hover:text-white text-lg">
-                    <i class="fa-solid fa-xmark"></i>
+                <button type="button" onclick="closeBookingModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 flex items-center justify-center transition" title="Tutup">
+                    <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
             </div>
 
@@ -394,60 +391,122 @@
                 <input type="hidden" name="lab_id" value="{{ $selectedLabId }}">
                 <input type="hidden" name="tanggal" value="{{ $selectedDate }}">
 
-                <!-- Kotak Info Ringkasan Jam & Lab yang Dipilih -->
-                <div class="p-3.5 bg-teal-50 border border-teal-200 rounded-2xl space-y-1">
-                    <div class="flex justify-between items-center text-xs font-extrabold text-teal-950">
-                        <span><i class="fa-solid fa-door-open mr-1 text-teal-700"></i> {{ $selectedLab->nama_lab ?? 'Lab' }} ({{ $selectedLab->lokasi ?? '' }})</span>
-                        <span class="px-2 py-0.5 bg-teal-200 text-teal-900 rounded font-bold">{{ $carbonDate->translatedFormat('l, d F Y') }}</span>
+                <!-- Panel Spesifikasi Ruang & Waktu Terpilih -->
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-lg space-y-2">
+                    <div class="flex justify-between items-center text-xs text-slate-800">
+                        <span class="text-slate-500">Laboratorium:</span>
+                        <span class="font-semibold text-slate-900">{{ $selectedLab->nama_lab ?? 'Lab' }} ({{ $selectedLab->lokasi ?? '' }})</span>
                     </div>
-                    <div class="text-xs font-bold text-slate-700 pt-1">
-                        Jam Pelaksanaan: <span id="modal-display-jam" class="text-teal-900 font-mono font-black text-sm">-</span>
+                    <div class="flex justify-between items-center text-xs text-slate-800">
+                        <span class="text-slate-500">Hari & Tanggal:</span>
+                        <span class="font-semibold text-slate-900">{{ $carbonDate->translatedFormat('l, d F Y') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-slate-800 pt-1.5 border-t border-slate-200">
+                        <span class="text-slate-500">Alokasi Jam:</span>
+                        <span id="modal-display-jam" class="font-mono font-bold text-xs text-slate-900">-</span>
                     </div>
                 </div>
 
-                <!-- Pilihan Mata Kuliah Dosen -->
+                <!-- Pilihan Mata Kuliah & Kelas (COMBOBOX) -->
                 <div>
-                    <label class="block text-slate-800 font-extrabold mb-1">
-                        Pilih Mata Kuliah & Kelas <span class="text-rose-500">*</span>
+                    <label class="block text-xs font-semibold text-slate-900 mb-1.5">
+                        Pilih mata kuliah & kelas <span class="text-rose-600">*</span>
                     </label>
-                    <select name="jadwal_penggunaan_lab_id" id="modal-select-matkul" required onchange="onBookingMatkulChange(this)" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-teal-700 focus:border-teal-700 outline-none">
-                        <option value="">-- Pilih Mata Kuliah Anda --</option>
-                        @foreach($myClasses as $mc)
-                            <option value="{{ $mc->id }}" 
-                                    data-matkul="{{ $mc->mata_kuliah }}" 
-                                    data-kelas="{{ $mc->kelas }}"
-                                    data-prodi="{{ $mc->prodi->nama_prodi ?? 'Informatika' }}">
-                                {{ $mc->mata_kuliah }} - Kelas {{ $mc->kelas }} ({{ $mc->prodi->nama_prodi ?? 'Informatika' }})
-                            </option>
-                        @endforeach
-                    </select>
+                    
+                    <!-- Hidden input penampung value untuk submit form -->
+                    <input type="hidden" name="jadwal_penggunaan_lab_id" id="modal-select-matkul-val" required>
+
+                    <!-- Combobox Input & Dropdown -->
+                    <div class="relative" id="combobox-wrapper">
+                        <div class="relative flex items-center">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-slate-400 text-xs pointer-events-none"></i>
+                            <input type="text" 
+                                   id="combobox-search-input" 
+                                   autocomplete="off"
+                                   placeholder="Ketik untuk mencari mata kuliah atau kelas..."
+                                   class="w-full pl-9 pr-14 py-2.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition"
+                                   onfocus="openComboboxDropdown()"
+                                   oninput="filterComboboxOptions(this.value)">
+                            <div class="absolute right-2 flex items-center gap-1">
+                                <button type="button" 
+                                        id="combobox-clear-btn" 
+                                        onclick="clearComboboxSelection(event)" 
+                                        class="hidden text-slate-400 hover:text-slate-600 w-5 h-5 rounded flex items-center justify-center transition"
+                                        title="Hapus pilihan">
+                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                </button>
+                                <button type="button" 
+                                        onclick="toggleComboboxDropdown(event)" 
+                                        class="text-slate-500 hover:text-slate-800 w-6 h-6 rounded flex items-center justify-center transition">
+                                    <i class="fa-solid fa-chevron-down text-xs transition-transform duration-150" id="combobox-chevron"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Dropdown List Panel -->
+                        <div id="combobox-dropdown" 
+                             class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-56 overflow-y-auto z-50 divide-y divide-slate-100 py-1">
+                            @forelse($myClasses as $mc)
+                                <div class="combobox-item px-3.5 py-2.5 hover:bg-slate-50 cursor-pointer transition flex items-center justify-between group"
+                                     data-id="{{ $mc->id }}"
+                                     data-title="{{ $mc->mata_kuliah }}"
+                                     data-kelas="{{ $mc->kelas }}"
+                                     data-prodi="{{ $mc->prodi->nama_prodi ?? 'Informatika' }}"
+                                     data-search="{{ strtolower($mc->mata_kuliah . ' ' . $mc->kelas . ' ' . ($mc->prodi->nama_prodi ?? '') . ' ' . $mc->hari) }}"
+                                     onclick="selectComboboxOption(this)">
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-900 group-hover:text-black">
+                                            {{ $mc->mata_kuliah }}
+                                        </div>
+                                        <div class="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                            <span class="font-medium text-slate-700">Kelas {{ $mc->kelas ?: '-' }}</span>
+                                            <span>·</span>
+                                            <span>{{ $mc->prodi->nama_prodi ?? 'Informatika' }}</span>
+                                            <span>·</span>
+                                            <span>Hari {{ $mc->hari }} ({{ substr($mc->jam_mulai,0,5) }}-{{ substr($mc->jam_selesai,0,5) }})</span>
+                                        </div>
+                                    </div>
+                                    <div class="combobox-check hidden text-slate-900 font-bold text-xs pl-2">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="px-3 py-4 text-center text-xs text-slate-500">
+                                    Belum ada jadwal kelas aktif terdaftar untuk akun Anda.
+                                </div>
+                            @endforelse
+                            <div id="combobox-no-results" class="hidden px-3 py-4 text-center text-xs text-slate-500">
+                                Tidak ada mata kuliah yang cocok dengan kata kunci.
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Input Jam Mulai & Selesai (Otomatis Terisi & Bisa Disesuaikan) -->
+                <!-- Input Jam Mulai & Selesai -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-slate-800 font-extrabold mb-1">Jam Mulai <span class="text-rose-500">*</span></label>
-                        <input type="time" name="waktu_masuk" id="modal-waktu-masuk" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-extrabold text-slate-900 focus:ring-2 focus:ring-teal-700 focus:border-teal-700 outline-none">
+                        <label class="block text-xs font-semibold text-slate-900 mb-1.5">Jam mulai <span class="text-rose-600">*</span></label>
+                        <input type="time" name="waktu_masuk" id="modal-waktu-masuk" required class="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
                     </div>
                     <div>
-                        <label class="block text-slate-800 font-extrabold mb-1">Jam Selesai <span class="text-rose-500">*</span></label>
-                        <input type="time" name="waktu_keluar" id="modal-waktu-keluar" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-extrabold text-slate-900 focus:ring-2 focus:ring-teal-700 focus:border-teal-700 outline-none">
+                        <label class="block text-xs font-semibold text-slate-900 mb-1.5">Jam selesai <span class="text-rose-600">*</span></label>
+                        <input type="time" name="waktu_keluar" id="modal-waktu-keluar" required class="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
                     </div>
                 </div>
 
-                <!-- Rencana Pembelajaran / Keterangan -->
+                <!-- Materi Praktikum / Keterangan -->
                 <div>
-                    <label class="block text-slate-800 font-extrabold mb-1">Rencana Materi / Keterangan Kuliah Pengganti <span class="text-rose-500">*</span></label>
-                    <textarea name="rencana_pembelajaran" rows="3" required placeholder="Contoh: Kuliah Pengganti Pertemuan 4 yang terlewat / Materi Praktikum Lanjutan..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:ring-2 focus:ring-teal-700 focus:border-teal-700 outline-none"></textarea>
+                    <label class="block text-xs font-semibold text-slate-900 mb-1.5">Materi Praktikum <span class="text-slate-500 font-normal text-[11px]">(Opsional)</span></label>
+                    <textarea name="materi_pembelajaran" rows="3" placeholder="Tuliskan materi praktikum atau topik perkuliahan pengganti (Opsional)..." class="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none leading-relaxed"></textarea>
                 </div>
 
                 <!-- Bilah Aksi Tombol Simpan -->
-                <div class="flex justify-end gap-2 pt-3 border-t border-slate-200">
-                    <button type="button" onclick="closeBookingModal()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-xl transition text-xs">
+                <div class="flex justify-end items-center gap-2.5 pt-3 border-t border-slate-200">
+                    <button type="button" onclick="closeBookingModal()" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-semibold rounded-lg border border-slate-300 transition text-xs">
                         Batal
                     </button>
-                    <button type="submit" class="px-5 py-2.5 bg-teal-800 hover:bg-teal-900 text-white font-extrabold rounded-xl transition shadow-sm text-xs flex items-center gap-1.5">
-                        <i class="fa-solid fa-floppy-disk"></i> Simpan Sesi Pengganti
+                    <button type="submit" class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg transition shadow-2xs text-xs flex items-center gap-2">
+                        <i class="fa-solid fa-check text-xs"></i> Simpan Sesi Pengganti
                     </button>
                 </div>
             </form>
@@ -464,9 +523,9 @@
             <i class="fa-solid fa-calendar-alt text-base"></i>
             <span class="text-xs font-bold">Agenda</span>
         </a>
-        <a href="{{ route('dosen.jadwal-lab') }}" class="flex flex-col items-center gap-1 text-teal-850">
+        <a href="{{ route('dosen.jadwal-lab') }}" class="flex flex-col items-center gap-1 text-teal-800 font-extrabold">
             <i class="fa-solid fa-calendar-check text-base"></i>
-            <span class="text-xs font-bold">Lab</span>
+            <span class="text-xs font-extrabold">Lab</span>
         </a>
         <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-800">
             <i class="fa-solid fa-gear text-base"></i>
@@ -529,11 +588,134 @@
         function closeBookingModal() {
             const modal = document.getElementById('modal-booking-slot');
             if (modal) modal.classList.add('hidden');
+            closeComboboxDropdown();
         }
 
-        function onBookingMatkulChange(selectEl) {
-            // Optional callback
+        /* --- Combobox Searchable Dropdown Logic --- */
+        function openComboboxDropdown() {
+            const dd = document.getElementById('combobox-dropdown');
+            const chevron = document.getElementById('combobox-chevron');
+            if (dd) dd.classList.remove('hidden');
+            if (chevron) chevron.classList.add('rotate-180');
         }
+
+        function closeComboboxDropdown() {
+            const dd = document.getElementById('combobox-dropdown');
+            const chevron = document.getElementById('combobox-chevron');
+            if (dd) dd.classList.add('hidden');
+            if (chevron) chevron.classList.remove('rotate-180');
+        }
+
+        function toggleComboboxDropdown(e) {
+            if (e) e.stopPropagation();
+            const dd = document.getElementById('combobox-dropdown');
+            if (dd && dd.classList.contains('hidden')) {
+                openComboboxDropdown();
+                document.getElementById('combobox-search-input')?.focus();
+            } else {
+                closeComboboxDropdown();
+            }
+        }
+
+        function filterComboboxOptions(keyword) {
+            openComboboxDropdown();
+            const q = (keyword || '').toLowerCase().trim();
+            const items = document.querySelectorAll('.combobox-item');
+            let visibleCount = 0;
+
+            items.forEach(el => {
+                const searchData = el.getAttribute('data-search') || '';
+                if (!q || searchData.includes(q)) {
+                    el.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            const noResults = document.getElementById('combobox-no-results');
+            if (noResults) {
+                if (visibleCount === 0) {
+                    noResults.classList.remove('hidden');
+                } else {
+                    noResults.classList.add('hidden');
+                }
+            }
+
+            const clearBtn = document.getElementById('combobox-clear-btn');
+            if (clearBtn) {
+                if (q.length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+            }
+        }
+
+        function selectComboboxOption(el) {
+            const id = el.getAttribute('data-id');
+            const title = el.getAttribute('data-title');
+            const kelas = el.getAttribute('data-kelas');
+            const prodi = el.getAttribute('data-prodi');
+
+            // Set hidden value for form submission
+            const hiddenInput = document.getElementById('modal-select-matkul-val');
+            if (hiddenInput) hiddenInput.value = id;
+
+            // Set display text on search input
+            const searchInput = document.getElementById('combobox-search-input');
+            if (searchInput) searchInput.value = title + ' - Kelas ' + (kelas || '-') + ' (' + prodi + ')';
+
+            // Show checkmark on selected item
+            document.querySelectorAll('.combobox-check').forEach(c => c.classList.add('hidden'));
+            el.querySelector('.combobox-check')?.classList.remove('hidden');
+
+            // Show clear button
+            document.getElementById('combobox-clear-btn')?.classList.remove('hidden');
+
+            // Close dropdown
+            closeComboboxDropdown();
+
+            // Auto-fill textarea placeholder / initial note if empty
+            const rencanaTextarea = document.querySelector('textarea[name="materi_pembelajaran"]') || document.querySelector('textarea[name="rencana_pembelajaran"]');
+            if (rencanaTextarea && !rencanaTextarea.value.trim()) {
+                rencanaTextarea.value = 'Kuliah Pengganti ' + title + ' (Kelas ' + (kelas || '-') + ')';
+            }
+        }
+
+        function clearComboboxSelection(e) {
+            if (e) e.stopPropagation();
+            const hiddenInput = document.getElementById('modal-select-matkul-val');
+            const searchInput = document.getElementById('combobox-search-input');
+            const clearBtn = document.getElementById('combobox-clear-btn');
+
+            if (hiddenInput) hiddenInput.value = '';
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.focus();
+            }
+            if (clearBtn) clearBtn.classList.add('hidden');
+
+            document.querySelectorAll('.combobox-check').forEach(c => c.classList.add('hidden'));
+            filterComboboxOptions('');
+            openComboboxDropdown();
+        }
+
+        // Close combobox when clicking outside
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('combobox-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                closeComboboxDropdown();
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeComboboxDropdown();
+                closeBookingModal();
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             @if(session('success'))

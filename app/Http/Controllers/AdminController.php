@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\MahasiswaImport;
 use App\Imports\DosenImport;
@@ -27,38 +28,210 @@ use App\Imports\FakultasImport;
 use App\Imports\ProdiImport;
 use App\Imports\KelasImport;
 use App\Imports\KehadiranImport;
+use App\Exports\JadwalLabExport;
+use App\Imports\JadwalLabImport;
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
-        $usersCount = User::count();
-        $dosenCount = Dosen::count();
-        $mhsCount = Mahasiswa::count();
-        $labCount = Laboratorium::count();
-        $agendaCount = Agenda::count();
+        $user = Auth::user();
 
-        // Today's attendance summary
-        $today = date('Y-m-d');
-        $todayHadir = Absensi::whereDate('waktu_masuk', $today)->where('status_kehadiran', 'Hadir')->count();
-        $todayIzin = Absensi::whereDate('waktu_masuk', $today)->where('status_kehadiran', 'Izin')->count();
-        $todayAlpa = Absensi::whereDate('waktu_masuk', $today)->where('status_kehadiran', 'Alpa')->count();
+        $now = \Carbon\Carbon::now();
+        $today = $now->toDateString();
+        $currentTime = $now->format('H:i:s');
+        
+        $daysIndo = [
+            'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
+        ];
+        $monthsIndo = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        $todayFormatted = ($daysIndo[$now->format('l')] ?? $now->format('l')) . ', ' . $now->format('d') . ' ' . ($monthsIndo[(int)$now->format('m')] ?? $now->format('F')) . ' ' . $now->format('Y');
 
-        // Recent activity
-        $recentAbsensi = Absensi::with(['mahasiswa.user', 'agenda.lab'])
-            ->orderBy('waktu_masuk', 'desc')
-            ->limit(5)
-            ->get();
+        if ($user->isAdminFakultas()) {
+            $fakId = $user->fakultas_id;
+            $usersCount = User::where('fakultas_id', $fakId)
+                ->orWhereHas('dosen', fn($q) => $q->where('id_fakultas', $fakId))
+                ->orWhereHas('mahasiswa', fn($q) => $q->where('id_fakultas', $fakId))
+                ->count();
+            $dosenCount = Dosen::where('id_fakultas', $fakId)->count();
+            $mhsCount = Mahasiswa::where('id_fakultas', $fakId)->count();
+            $labCount = Laboratorium::forUser($user)->count();
+            $agendaCount = Agenda::whereHas('lab', fn($q) => $q->where('fakultas_id', $fakId))->count();
+
+            $todayHadir = Absensi::whereDate('waktu_masuk', $today)
+                ->where('status_kehadiran', 'Hadir')
+                ->whereHas('agenda.lab', fn($q) => $q->where('fakultas_id', $fakId))
+                ->count();
+            $todayIzin = Absensi::whereDate('waktu_masuk', $today)
+                ->where('status_kehadiran', 'Izin')
+                ->whereHas('agenda.lab', fn($q) => $q->where('fakultas_id', $fakId))
+                ->count();
+            $todayAlpa = Absensi::whereDate('waktu_masuk', $today)
+                ->where('status_kehadiran', 'Alpa')
+                ->whereHas('agenda.lab', fn($q) => $q->where('fakultas_id', $fakId))
+                ->count();
+
+            $recentAbsensi = Absensi::with(['mahasiswa.user', 'agenda.lab'])
+                ->whereHas('agenda.lab', fn($q) => $q->where('fakultas_id', $fakId))
+                ->orderBy('waktu_masuk', 'desc')
+                ->limit(5)
+                ->get();
+        } else {
+            $usersCount = User::count();
+            $dosenCount = Dosen::count();
+            $mhsCount = Mahasiswa::count();
+            $labCount = Laboratorium::count();
+            $agendaCount = Agenda::count();
+
+            // Today's attendance summary
+            $todayHadir = Absensi::whereDate('waktu_masuk', $today)->where('status_kehadiran', 'Hadir')->count();
+            $todayIzin = Absensi::whereDate('waktu_masuk', $today)->where('status_kehadiran', 'Izin')->count();
+            $todayAlpa = Absensi::whereDate('waktu_masuk', $today)->where('status_kehadiran', 'Alpa')->count();
+
+            // Recent activity
+            $recentAbsensi = Absensi::with(['mahasiswa.user', 'agenda.lab'])
+                ->orderBy('waktu_masuk', 'desc')
+                ->limit(5)
+                ->get();
+        }
+
+        // Operational Queries: Labs & Live Occupancy
+        $labsQuery = Laboratorium::with(['fakultas']);
+        if ($user->isAdminFakultas()) {
+            $labsQuery->where('fakultas_id', $user->fakultas_id);
+        }
+        $laboratoriums = $labsQuery->orderBy('nama_lab')->get();
+
+        // Agendas Today
+        $agendasTodayQuery = Agenda::with(['dosen', 'dosenPengampu', 'lab.fakultas'])
+            ->whereDate('tanggal', $today);
+        if ($user->isAdminFakultas()) {
+            $agendasTodayQuery->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
+        }
+        $agendasToday = $agendasTodayQuery->orderBy('jam_mulai', 'asc')->get();
+
+        // If no agenda today, get upcoming agendas
+        $agendasUpcomingQuery = Agenda::with(['dosen', 'dosenPengampu', 'lab.fakultas'])
+            ->whereDate('tanggal', '>=', $today);
+        if ($user->isAdminFakultas()) {
+            $agendasUpcomingQuery->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
+        }
+        $agendasUpcoming = $agendasUpcomingQuery->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc')->limit(6)->get();
+
+        // Compute Live Status for each Lab
+        $labStatusList = [];
+        $labAktifSaatIni = 0;
+        $alertDosenBelumHadir = [];
+
+        foreach ($laboratoriums as $lab) {
+            // Check currently active agenda right now
+            $currentAgenda = Agenda::with(['dosen', 'dosenPengampu'])
+                ->where('lab_id', $lab->id)
+                ->whereDate('tanggal', $today)
+                ->where('jam_mulai', '<=', $currentTime)
+                ->where('jam_selesai', '>=', $currentTime)
+                ->first();
+
+            // Next upcoming agenda for this lab
+            $nextAgenda = Agenda::with(['dosen', 'dosenPengampu'])
+                ->where('lab_id', $lab->id)
+                ->where(function($q) use ($today, $currentTime) {
+                    $q->where(function($q2) use ($today, $currentTime) {
+                        $q2->whereDate('tanggal', $today)->where('jam_mulai', '>', $currentTime);
+                    })->orWhereDate('tanggal', '>', $today);
+                })
+                ->orderBy('tanggal', 'asc')
+                ->orderBy('jam_mulai', 'asc')
+                ->first();
+
+            $isOccupied = !empty($currentAgenda);
+            if ($isOccupied) {
+                $labAktifSaatIni++;
+                if (empty($currentAgenda->dosen_waktu_masuk)) {
+                    $alertDosenBelumHadir[] = [
+                        'lab' => $lab->nama_lab,
+                        'mata_kuliah' => $currentAgenda->mata_kuliah,
+                        'dosen' => $currentAgenda->dosen?->nama ?? 'Dosen Pengampu',
+                        'jam' => substr($currentAgenda->jam_mulai, 0, 5) . ' - ' . substr($currentAgenda->jam_selesai, 0, 5),
+                        'tipe' => 'sedang_berlangsung'
+                    ];
+                }
+            }
+
+            // Check if next agenda is today and starts soon (within 30 mins) without check-in
+            $nextTanggal = $nextAgenda ? (is_object($nextAgenda->tanggal) ? $nextAgenda->tanggal->toDateString() : substr((string)$nextAgenda->tanggal, 0, 10)) : null;
+            if ($nextAgenda && $nextTanggal == $today) {
+                $startCarbon = \Carbon\Carbon::parse($today . ' ' . $nextAgenda->jam_mulai);
+                $diffMin = $now->diffInMinutes($startCarbon, false);
+                if ($diffMin <= 30 && $diffMin >= 0 && empty($nextAgenda->dosen_waktu_masuk)) {
+                    $alertDosenBelumHadir[] = [
+                        'lab' => $lab->nama_lab,
+                        'mata_kuliah' => $nextAgenda->mata_kuliah,
+                        'dosen' => $nextAgenda->dosen?->nama ?? 'Dosen Pengampu',
+                        'jam' => substr($nextAgenda->jam_mulai, 0, 5) . ' - ' . substr($nextAgenda->jam_selesai, 0, 5),
+                        'tipe' => 'segera_mulai'
+                    ];
+                }
+            }
+
+            $labStatusList[] = [
+                'lab' => $lab,
+                'is_occupied' => $isOccupied,
+                'current_agenda' => $currentAgenda,
+                'next_agenda' => $nextAgenda,
+            ];
+        }
+
+        $totalSesiHariIni = $agendasToday->count();
+        $totalPresensiHariIni = $todayHadir + $todayIzin + $todayAlpa;
+        $attendanceRate = $totalPresensiHariIni > 0 ? round(($todayHadir / $totalPresensiHariIni) * 100) : 0;
+
+        // Active Announcements on Smart Board TVs
+        $pengumumanQuery = \App\Models\Pengumuman::query();
+        if ($user->isAdminFakultas()) {
+            $pengumumanQuery->where(function($q) use ($user) {
+                $q->where('admin_id', $user->id)
+                  ->orWhereHas('laboratoriums', fn($lq) => $lq->where('fakultas_id', $user->fakultas_id));
+            });
+        }
+        $pengumumanAktifCount = $pengumumanQuery->where(function($q) use ($today) {
+            $q->whereNull('tanggal_mulai')->orWhere('tanggal_mulai', '<=', $today);
+        })->where(function($q) use ($today) {
+            $q->whereNull('tanggal_selesai')->orWhere('tanggal_selesai', '>=', $today);
+        })->count();
 
         return view('admin.dashboard', compact(
             'usersCount', 'dosenCount', 'mhsCount', 'labCount', 'agendaCount',
-            'todayHadir', 'todayIzin', 'todayAlpa', 'recentAbsensi'
+            'todayHadir', 'todayIzin', 'todayAlpa', 'recentAbsensi',
+            'todayFormatted', 'laboratoriums', 'agendasToday', 'agendasUpcoming',
+            'labStatusList', 'labAktifSaatIni', 'alertDosenBelumHadir',
+            'totalSesiHariIni', 'attendanceRate', 'totalPresensiHariIni',
+            'pengumumanAktifCount'
         ));
     }
 
     public function pengguna(Request $request)
     {
-        $query = User::with(['dosen.fakultas', 'dosen.prodi', 'mahasiswa.fakultas', 'mahasiswa.prodi'])->orderBy('created_at', 'desc');
+        $authUser = Auth::user();
+        $query = User::with(['fakultas', 'dosen.fakultas', 'dosen.prodi', 'mahasiswa.fakultas', 'mahasiswa.prodi'])->orderBy('created_at', 'desc');
+
+        if ($authUser->isAdminFakultas()) {
+            $fakId = $authUser->fakultas_id;
+            $query->where(function($q) use ($fakId) {
+                $q->where('fakultas_id', $fakId)
+                  ->orWhereHas('dosen', function($qd) use ($fakId) {
+                      $qd->where('id_fakultas', $fakId);
+                  })
+                  ->orWhereHas('mahasiswa', function($qm) use ($fakId) {
+                      $qm->where('id_fakultas', $fakId);
+                  });
+            });
+        }
 
         if ($request->filled('search')) {
             $search = trim($request->search);
@@ -72,6 +245,15 @@ class AdminController extends Controller
                       $qm->where('nama_lengkap', 'like', "%{$search}%")
                         ->orWhere('nim', 'like', "%{$search}%");
                   });
+            });
+        }
+
+        if ($authUser->isSuperAdmin() && $request->filled('fakultas_id')) {
+            $fakId = $request->fakultas_id;
+            $query->where(function($q) use ($fakId) {
+                $q->where('fakultas_id', $fakId)
+                  ->orWhereHas('dosen', fn($qd) => $qd->where('id_fakultas', $fakId))
+                  ->orWhereHas('mahasiswa', fn($qm) => $qm->where('id_fakultas', $fakId));
             });
         }
 
@@ -109,8 +291,14 @@ class AdminController extends Controller
         }
 
         $users = $query->paginate(50)->withQueryString();
-        $fakultas = Fakultas::all();
-        $prodis = Prodi::all();
+
+        if ($authUser->isAdminFakultas()) {
+            $fakultas = Fakultas::where('id', $authUser->fakultas_id)->get();
+            $prodis = Prodi::where('fakultas_id', $authUser->fakultas_id)->get();
+        } else {
+            $fakultas = Fakultas::all();
+            $prodis = Prodi::all();
+        }
         $kelases = Kelas::all();
 
         return view('admin.pengguna', compact('users', 'fakultas', 'prodis', 'kelases'));
@@ -118,57 +306,114 @@ class AdminController extends Controller
 
     public function deleteUser($id)
     {
-        if (auth()->id() == $id) {
+        $authUser = Auth::user();
+        if ($authUser->id == $id) {
             return back()->withErrors(['msg' => 'Anda tidak dapat menghapus akun Anda sendiri.']);
         }
-        User::destroy($id);
+
+        $targetUser = User::with(['dosen', 'mahasiswa'])->findOrFail($id);
+        if ($authUser->isAdminFakultas()) {
+            $userFakId = $targetUser->fakultas_id 
+                ?? $targetUser->dosen?->id_fakultas 
+                ?? $targetUser->mahasiswa?->id_fakultas;
+            if ($userFakId != $authUser->fakultas_id || $targetUser->isSuperAdmin()) {
+                return back()->withErrors(['msg' => 'Anda tidak memiliki izin untuk menghapus pengguna ini.']);
+            }
+        }
+
+        $targetUser->delete();
         return back()->with('success', 'Akun pengguna berhasil dihapus.');
     }
 
     public function bulkDeleteUsers(Request $request)
     {
+        $authUser = Auth::user();
         $ids = $request->ids;
         if (!$ids || empty($ids)) {
             return back()->withErrors(['msg' => 'Tidak ada pengguna yang dipilih untuk dihapus.']);
         }
 
         // Prevent admin from deleting themselves in bulk
-        $ids = array_diff($ids, [auth()->id()]);
+        $ids = array_diff($ids, [$authUser->id]);
 
         if (empty($ids)) {
             return back()->withErrors(['msg' => 'Anda tidak dapat menghapus akun Anda sendiri.']);
         }
 
-        User::whereIn('id', $ids)->delete();
+        $usersToDelete = User::with(['dosen', 'mahasiswa'])->whereIn('id', $ids)->get();
+        $validIds = [];
+
+        foreach ($usersToDelete as $u) {
+            if ($authUser->isAdminFakultas()) {
+                $userFakId = $u->fakultas_id 
+                    ?? $u->dosen?->id_fakultas 
+                    ?? $u->mahasiswa?->id_fakultas;
+                if ($userFakId == $authUser->fakultas_id && !$u->isSuperAdmin()) {
+                    $validIds[] = $u->id;
+                }
+            } else {
+                $validIds[] = $u->id;
+            }
+        }
+
+        if (empty($validIds)) {
+            return back()->withErrors(['msg' => 'Tidak ada pengguna yang dapat Anda hapus dalam pilihan ini.']);
+        }
+
+        User::whereIn('id', $validIds)->delete();
         
-        return back()->with('success', count($ids) . ' akun pengguna berhasil dihapus.');
+        return back()->with('success', count($validIds) . ' akun pengguna berhasil dihapus.');
     }
 
     public function laboratorium(Request $request)
     {
-        $query = Laboratorium::orderBy('nama_lab', 'asc');
+        $user = Auth::user();
+        $query = Laboratorium::with('fakultas')->forUser($user)->orderBy('nama_lab', 'asc');
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('nama_lab', 'like', "%{$search}%")
+            $query->where(function($q) use ($search) {
+                $q->where('nama_lab', 'like', "%{$search}%")
                   ->orWhere('lokasi', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('fakultas_id') && $user->isSuperAdmin()) {
+            $query->where('fakultas_id', $request->fakultas_id);
         }
 
         $labs = $query->paginate(10)->withQueryString();
+        $fakultas = Fakultas::orderBy('nama_fakultas', 'asc')->get();
 
-        return view('admin.laboratorium', compact('labs'));
+        return view('admin.laboratorium', compact('labs', 'fakultas'));
     }
 
     public function updateLab(Request $request, $id)
     {
-        $request->validate([
+        $user = Auth::user();
+        $lab = Laboratorium::findOrFail($id);
+
+        if (!$user->canManageLab($lab)) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah data laboratorium ini.');
+        }
+
+        $rules = [
             'nama_lab' => 'required|string|max:100',
             'lokasi' => 'required|string|max:100',
             'kapasitas' => 'required|integer',
-        ]);
+        ];
 
-        $lab = Laboratorium::findOrFail($id);
+        if ($user->isSuperAdmin()) {
+            $rules['fakultas_id'] = 'required|exists:fakultas,id';
+            $fakultasId = $request->fakultas_id;
+        } else {
+            $fakultasId = $lab->fakultas_id ?? $user->fakultas_id;
+        }
+
+        $request->validate($rules);
+
         $lab->update([
+            'fakultas_id' => $fakultasId,
             'nama_lab' => $request->nama_lab,
             'lokasi' => $request->lokasi,
             'kapasitas' => $request->kapasitas,
@@ -180,7 +425,12 @@ class AdminController extends Controller
     public function deleteLab($id)
     {
         try {
+            $user = Auth::user();
             $lab = Laboratorium::findOrFail($id);
+
+            if (!$user->canManageLab($lab)) {
+                abort(403, 'Anda tidak memiliki akses untuk menghapus laboratorium ini.');
+            }
 
             // 1. Get all agenda IDs associated with this lab
             $agendaIds = Agenda::where('lab_id', $id)->pluck('id');
@@ -241,6 +491,7 @@ class AdminController extends Controller
                     'fakultas' => $jadwal->prodi->fakultas->nama_fakultas ?? 'Teknik',
                     'jurusan' => $jadwal->prodi->nama_prodi ?? $jadwal->jurusan ?? 'Sistem Informasi',
                     'program_kuliah' => $jadwal->program_kuliah ?? 'Reguler',
+                    'tahun_akademik' => $jadwal->tahun_akademik ?? '2026/2027 Ganjil',
                     'jenis_pertemuan' => $jadwal->jenis_pertemuan ?? 'Praktikum',
                     'kelas' => $jadwal->kelas,
                     'semester' => $jadwal->semester ?? '1',
@@ -259,7 +510,12 @@ class AdminController extends Controller
 
     public function agenda(Request $request)
     {
-        $query = Agenda::with(['dosen', 'dosenPengampu', 'lab']);
+        $user = Auth::user();
+        $query = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'jadwalPenggunaanLab']);
+
+        if ($user->isAdminFakultas()) {
+            $query->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -286,10 +542,17 @@ class AdminController extends Controller
 
         $allAgendas = $query->get();
 
-        $dosens = Dosen::orderBy('nama', 'asc')->get();
-        $labs = Laboratorium::orderBy('nama_lab', 'asc')->get();
-        $fakultas = Fakultas::orderBy('nama_fakultas', 'asc')->get();
-        $prodis = Prodi::with('fakultas')->orderBy('nama_prodi', 'asc')->get();
+        if ($user->isAdminFakultas()) {
+            $dosens = Dosen::where('id_fakultas', $user->fakultas_id)->orderBy('nama', 'asc')->get();
+            $labs = Laboratorium::forUser($user)->orderBy('nama_lab', 'asc')->get();
+            $fakultas = Fakultas::where('id', $user->fakultas_id)->get();
+            $prodis = Prodi::where('fakultas_id', $user->fakultas_id)->orderBy('nama_prodi', 'asc')->get();
+        } else {
+            $dosens = Dosen::orderBy('nama', 'asc')->get();
+            $labs = Laboratorium::orderBy('nama_lab', 'asc')->get();
+            $fakultas = Fakultas::orderBy('nama_fakultas', 'asc')->get();
+            $prodis = Prodi::with('fakultas')->orderBy('nama_prodi', 'asc')->get();
+        }
         $kelases = Kelas::all();
         $mataKuliahs = MataKuliah::with('prodi.fakultas')->orderBy('nama_mk', 'asc')->get();
 
@@ -298,11 +561,14 @@ class AdminController extends Controller
 
     public function storeAgenda(Request $request)
     {
+        $user = Auth::user();
+
         $request->validate([
-            'dosen_id' => 'required|exists:dosen,id',
-            'dosen_pengampu_id' => 'nullable|exists:dosen,id',
+            'dosen_pengampu_id' => 'required_without:dosen_id|nullable|exists:dosen,id',
+            'dosen_id' => 'nullable|exists:dosen,id',
             'lab_id' => 'required|exists:laboratorium,id',
-            'judul_agenda' => 'required|string|max:150',
+            'mata_kuliah' => 'required_without:judul_agenda|nullable|string|max:150',
+            'judul_agenda' => 'nullable|string|max:150',
             'kelas' => 'nullable|string|max:50',
             'program_kuliah' => 'required|in:Reguler,Karyawan',
             'jenis_pertemuan' => 'required|in:Teori,Praktikum',
@@ -312,9 +578,20 @@ class AdminController extends Controller
             'tanggal' => 'required|date',
             'waktu_masuk' => 'required',
             'waktu_keluar' => 'required',
-            'status_agenda' => 'required|in:Akan Datang,Berlangsung,Selesai,Dibatalkan',
+            'status_agenda' => 'nullable|string',
+            'materi_pembelajaran' => 'nullable|string',
             'rencana_pembelajaran' => 'nullable|string',
         ]);
+
+        $targetLab = Laboratorium::findOrFail($request->lab_id);
+        if (!$user->canManageLab($targetLab)) {
+            abort(403, 'Anda tidak memiliki wewenang untuk mengatur agenda di laboratorium ini.');
+        }
+
+        $dosenPengampuId = $request->dosen_pengampu_id ?: $request->dosen_id;
+        $dosenId = $request->dosen_id ?: $dosenPengampuId;
+        $mataKuliah = $request->mata_kuliah ?: $request->judul_agenda;
+        $materi = $request->materi_pembelajaran ?? $request->rencana_pembelajaran ?? '';
 
         // Cek Bentrok Laboratorium
         $bentrokLab = Agenda::with(['dosen', 'lab'])
@@ -336,9 +613,9 @@ class AdminController extends Controller
             ])->withInput();
         }
 
-        // Cek Bentrok Dosen
+        // Cek Bentrok Dosen (pengajar di lab)
         $bentrokDosen = Agenda::with('lab')
-            ->where('dosen_id', $request->dosen_id)
+            ->where('dosen_id', $dosenId)
             ->where('tanggal', $request->tanggal)
             ->where('status_agenda', '!=', 'Dibatalkan')
             ->where(function ($query) use ($request) {
@@ -355,12 +632,35 @@ class AdminController extends Controller
             ])->withInput();
         }
 
+        // Kalkulasi Status Agenda Otomatis jika tidak ditentukan atau disetel Otomatis
+        $statusAgenda = $request->status_agenda;
+        if (empty($statusAgenda) || $statusAgenda === 'Otomatis') {
+            $tanggalCarbon = \Carbon\Carbon::parse($request->tanggal);
+            if ($tanggalCarbon->isPast() && !$tanggalCarbon->isToday()) {
+                $statusAgenda = 'Selesai';
+            } elseif ($tanggalCarbon->isFuture() && !$tanggalCarbon->isToday()) {
+                $statusAgenda = 'Akan Datang';
+            } else {
+                $nowTime = now()->format('H:i:s');
+                $mulai = $request->waktu_masuk . (strlen($request->waktu_masuk) == 5 ? ':00' : '');
+                $selesai = $request->waktu_keluar . (strlen($request->waktu_keluar) == 5 ? ':00' : '');
+                if ($nowTime < $mulai) {
+                    $statusAgenda = 'Akan Datang';
+                } elseif ($nowTime >= $mulai && $nowTime <= $selesai) {
+                    $statusAgenda = 'Berlangsung';
+                } else {
+                    $statusAgenda = 'Selesai';
+                }
+            }
+        }
+
         Agenda::create([
-            'dosen_id' => $request->dosen_id,
-            'dosen_pengampu_id' => $request->dosen_pengampu_id,
+            'dosen_id' => $dosenId,
+            'dosen_pengampu_id' => $dosenPengampuId,
             'lab_id' => $request->lab_id,
-            'mata_kuliah' => $request->judul_agenda,
+            'mata_kuliah' => $mataKuliah,
             'program_kuliah' => $request->program_kuliah,
+            'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
             'jenis_pertemuan' => $request->jenis_pertemuan ?? 'Praktikum',
             'kelas' => $request->kelas ?? '',
             'semester' => $request->semester,
@@ -369,8 +669,8 @@ class AdminController extends Controller
             'tanggal' => $request->tanggal,
             'jam_mulai' => $request->waktu_masuk,
             'jam_selesai' => $request->waktu_keluar,
-            'status_agenda' => $request->status_agenda,
-            'catatan' => $request->rencana_pembelajaran ?? '',
+            'status_agenda' => $statusAgenda,
+            'catatan' => $materi,
         ]);
 
         return back()->with('success', 'Agenda berhasil ditambahkan.');
@@ -378,11 +678,18 @@ class AdminController extends Controller
 
     public function updateAgenda(Request $request, $id)
     {
+        $user = Auth::user();
+        $agenda = Agenda::with('lab')->findOrFail($id);
+        if (!$user->canManageLab($agenda->lab)) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah agenda di laboratorium ini.');
+        }
+
         $request->validate([
-            'dosen_id' => 'required|exists:dosen,id',
-            'dosen_pengampu_id' => 'nullable|exists:dosen,id',
+            'dosen_pengampu_id' => 'required_without:dosen_id|nullable|exists:dosen,id',
+            'dosen_id' => 'nullable|exists:dosen,id',
             'lab_id' => 'required|exists:laboratorium,id',
-            'judul_agenda' => 'required|string|max:150',
+            'mata_kuliah' => 'required_without:judul_agenda|nullable|string|max:150',
+            'judul_agenda' => 'nullable|string|max:150',
             'kelas' => 'nullable|string|max:50',
             'program_kuliah' => 'required|in:Reguler,Karyawan',
             'jenis_pertemuan' => 'required|in:Teori,Praktikum',
@@ -392,9 +699,20 @@ class AdminController extends Controller
             'tanggal' => 'required|date',
             'waktu_masuk' => 'required',
             'waktu_keluar' => 'required',
-            'status_agenda' => 'required|in:Akan Datang,Berlangsung,Selesai,Dibatalkan',
+            'status_agenda' => 'nullable|string',
+            'materi_pembelajaran' => 'nullable|string',
             'rencana_pembelajaran' => 'nullable|string',
         ]);
+
+        $targetLab = Laboratorium::findOrFail($request->lab_id);
+        if (!$user->canManageLab($targetLab)) {
+            abort(403, 'Anda tidak memiliki wewenang untuk memindahkan agenda ke laboratorium ini.');
+        }
+
+        $dosenPengampuId = $request->dosen_pengampu_id ?: $request->dosen_id;
+        $dosenId = $request->dosen_id ?: $dosenPengampuId;
+        $mataKuliah = $request->mata_kuliah ?: $request->judul_agenda;
+        $materi = $request->materi_pembelajaran ?? $request->rencana_pembelajaran ?? '';
 
         // Cek Bentrok Laboratorium (kecuali agenda ini sendiri)
         $bentrokLab = Agenda::with(['dosen', 'lab'])
@@ -411,15 +729,17 @@ class AdminController extends Controller
         if ($bentrokLab) {
             $labName = $bentrokLab->lab->nama_lab ?? 'Laboratorium';
             $jamRange = substr($bentrokLab->jam_mulai, 0, 5) . ' - ' . substr($bentrokLab->jam_selesai, 0, 5) . ' WIB';
-            $dosenName = $bentrokLab->dosen->nama ?? 'Dosen Lain';
             return back()->withErrors([
-                'waktu_masuk' => "⛔ BENTROK RUANGAN! {$labName} sudah digunakan pada jam {$jamRange} untuk mata kuliah \"{$bentrokLab->mata_kuliah} (Kelas {$bentrokLab->kelas})\" oleh {$dosenName}. Silakan pilih jam atau lab lain."
+                'waktu_masuk' => "⛔ BENTROK JADWAL LAB! {$labName} sudah digunakan pada jam {$jamRange} (\"{$bentrokLab->mata_kuliah}\")."
             ])->withInput();
         }
 
         // Cek Bentrok Dosen (kecuali agenda ini sendiri)
-        $bentrokDosen = Agenda::with('lab')
-            ->where('dosen_id', $request->dosen_id)
+        $bentrokDosen = Agenda::with(['dosen', 'lab'])
+            ->where(function ($q) use ($dosenId, $dosenPengampuId) {
+                $q->where('dosen_id', $dosenId)
+                  ->orWhere('dosen_pengampu_id', $dosenPengampuId);
+            })
             ->where('id', '!=', $id)
             ->where('tanggal', $request->tanggal)
             ->where('status_agenda', '!=', 'Dibatalkan')
@@ -437,13 +757,36 @@ class AdminController extends Controller
             ])->withInput();
         }
 
+        // Kalkulasi Status Agenda Otomatis jika tidak ditentukan atau disetel Otomatis
+        $statusAgenda = $request->status_agenda;
+        if (empty($statusAgenda) || $statusAgenda === 'Otomatis') {
+            $tanggalCarbon = \Carbon\Carbon::parse($request->tanggal);
+            if ($tanggalCarbon->isPast() && !$tanggalCarbon->isToday()) {
+                $statusAgenda = 'Selesai';
+            } elseif ($tanggalCarbon->isFuture() && !$tanggalCarbon->isToday()) {
+                $statusAgenda = 'Akan Datang';
+            } else {
+                $nowTime = now()->format('H:i:s');
+                $mulai = $request->waktu_masuk . (strlen($request->waktu_masuk) == 5 ? ':00' : '');
+                $selesai = $request->waktu_keluar . (strlen($request->waktu_keluar) == 5 ? ':00' : '');
+                if ($nowTime < $mulai) {
+                    $statusAgenda = 'Akan Datang';
+                } elseif ($nowTime >= $mulai && $nowTime <= $selesai) {
+                    $statusAgenda = 'Berlangsung';
+                } else {
+                    $statusAgenda = 'Selesai';
+                }
+            }
+        }
+
         $agenda = Agenda::findOrFail($id);
         $agenda->update([
-            'dosen_id' => $request->dosen_id,
-            'dosen_pengampu_id' => $request->dosen_pengampu_id,
+            'dosen_id' => $dosenId,
+            'dosen_pengampu_id' => $dosenPengampuId,
             'lab_id' => $request->lab_id,
-            'mata_kuliah' => $request->judul_agenda,
+            'mata_kuliah' => $mataKuliah,
             'program_kuliah' => $request->program_kuliah,
+            'tahun_akademik' => $request->tahun_akademik ?? $agenda->tahun_akademik ?? '2026/2027 Ganjil',
             'jenis_pertemuan' => $request->jenis_pertemuan ?? 'Praktikum',
             'kelas' => $request->kelas ?? '',
             'semester' => $request->semester,
@@ -452,8 +795,8 @@ class AdminController extends Controller
             'tanggal' => $request->tanggal,
             'jam_mulai' => $request->waktu_masuk,
             'jam_selesai' => $request->waktu_keluar,
-            'status_agenda' => $request->status_agenda,
-            'catatan' => $request->rencana_pembelajaran ?? '',
+            'status_agenda' => $statusAgenda,
+            'catatan' => $materi,
         ]);
 
         return back()->with('success', 'Agenda berhasil diperbarui.');
@@ -461,27 +804,50 @@ class AdminController extends Controller
 
     public function deleteAgenda($id)
     {
-        Agenda::destroy($id);
+        $user = Auth::user();
+        $agenda = Agenda::with('lab')->findOrFail($id);
+        if (!$user->canManageLab($agenda->lab)) {
+            abort(403, 'Anda tidak memiliki akses untuk menghapus agenda ini.');
+        }
+        $agenda->delete();
         return back()->with('success', 'Agenda praktikum berhasil dihapus.');
     }
 
     public function bulkDeleteAgendas(Request $request)
     {
+        $user = Auth::user();
         $ids = $request->ids;
         if (!$ids || empty($ids)) {
             return back()->withErrors(['msg' => 'Tidak ada agenda yang dipilih untuk dihapus.']);
         }
 
-        Agenda::whereIn('id', $ids)->delete();
+        $agendas = Agenda::with('lab')->whereIn('id', $ids)->get();
+        $validIds = [];
+        foreach ($agendas as $agenda) {
+            if ($user->canManageLab($agenda->lab)) {
+                $validIds[] = $agenda->id;
+            }
+        }
 
-        return back()->with('success', count($ids) . ' agenda praktikum berhasil dihapus.');
+        if (empty($validIds)) {
+            return back()->withErrors(['msg' => 'Tidak ada agenda yang diizinkan untuk Anda hapus.']);
+        }
+
+        Agenda::whereIn('id', $validIds)->delete();
+
+        return back()->with('success', count($validIds) . ' agenda praktikum berhasil dihapus.');
     }
 
     public function absensi(Request $request)
     {
+        $user = Auth::user();
         $query = Agenda::with(['dosen', 'lab', 'absensi.mahasiswa'])
             ->orderBy('tanggal', 'desc')
             ->orderBy('jam_mulai', 'desc');
+
+        if ($user->isAdminFakultas()) {
+            $query->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -503,9 +869,12 @@ class AdminController extends Controller
 
         $agendas = $query->paginate(10)->withQueryString();
 
-        $uniqueClasses = Agenda::with('dosen')
-            ->orderBy('mata_kuliah')
-            ->get()
+        $uniqueClassesQuery = Agenda::with('dosen')->orderBy('mata_kuliah');
+        if ($user->isAdminFakultas()) {
+            $uniqueClassesQuery->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
+        }
+
+        $uniqueClasses = $uniqueClassesQuery->get()
             ->unique(function ($item) {
                 return $item->mata_kuliah . '-' . $item->kelas . '-' . $item->dosen_id;
             });
@@ -515,9 +884,14 @@ class AdminController extends Controller
 
     public function exportAbsensi(Request $request)
     {
+        $user = Auth::user();
         $query = Agenda::with(['dosen', 'lab', 'absensi.mahasiswa'])
             ->orderBy('tanggal', 'asc')
             ->orderBy('jam_mulai', 'asc');
+
+        if ($user->isAdminFakultas()) {
+            $query->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -544,8 +918,13 @@ class AdminController extends Controller
 
     public function inputAbsensi($id)
     {
+        $user = Auth::user();
         $agenda = Agenda::with(['dosen', 'lab'])->findOrFail($id);
         
+        if ($user->isAdminFakultas() && !$user->canManageLab($agenda->lab)) {
+            abort(403, 'Akses Ditolak: Anda tidak memiliki izin untuk mengelola absensi lab ini.');
+        }
+
         if ($agenda->tanggal > date('Y-m-d')) {
             return redirect()->route('admin.absensi')->withErrors([
                 'msg' => 'Sesi perkuliahan ini belum dimulai (Jadwal: ' . \Carbon\Carbon::parse($agenda->tanggal)->translatedFormat('l, d F Y') . '). Presensi mahasiswa hanya dapat dibuka pada hari H pelaksanaan perkuliahan.'
@@ -623,7 +1002,12 @@ class AdminController extends Controller
             'file_excel.mimes' => 'Format file harus .xlsx atau .xls'
         ]);
 
-        $agenda = Agenda::findOrFail($id);
+        $user = Auth::user();
+        $agenda = Agenda::with('lab')->findOrFail($id);
+
+        if ($user->isAdminFakultas() && !$user->canManageLab($agenda->lab)) {
+            return redirect()->back()->with('error', 'Akses Ditolak: Anda tidak berwenang mengimpor absensi lab ini.');
+        }
 
         if ($agenda->tanggal > date('Y-m-d')) {
             return redirect()->back()->with('error', 'Tidak dapat mengimpor absensi untuk sesi perkuliahan di masa mendatang.');
@@ -649,13 +1033,18 @@ class AdminController extends Controller
         $kelas = $parts[1] ?? '';
         $dosen_id = $parts[2] ?? '';
 
-        $baseAgenda = Agenda::where('mata_kuliah', $mata_kuliah)
+        $baseAgenda = Agenda::with('lab')->where('mata_kuliah', $mata_kuliah)
             ->where('kelas', $kelas)
             ->where('dosen_id', $dosen_id)
             ->first();
 
         if (!$baseAgenda) {
             return redirect()->back()->with('error', 'Data mata kuliah/kelas tidak ditemukan.');
+        }
+
+        $user = Auth::user();
+        if ($user->isAdminFakultas() && !$user->canManageLab($baseAgenda->lab)) {
+            return redirect()->back()->with('error', 'Akses Ditolak: Anda tidak memiliki izin untuk mengimpor absensi kelas di luar fakultas Anda.');
         }
 
         try {
@@ -673,7 +1062,12 @@ class AdminController extends Controller
             'absensi.*' => 'in:Hadir,Izin,Sakit,Alpa,Terlambat'
         ]);
 
-        $agenda = Agenda::findOrFail($id);
+        $user = Auth::user();
+        $agenda = Agenda::with('lab')->findOrFail($id);
+
+        if ($user->isAdminFakultas() && !$user->canManageLab($agenda->lab)) {
+            abort(403, 'Akses Ditolak: Anda tidak memiliki izin untuk menyimpan absensi lab ini.');
+        }
 
         if ($agenda->tanggal > date('Y-m-d')) {
             return redirect()->route('admin.absensi')->withErrors([
@@ -701,27 +1095,43 @@ class AdminController extends Controller
 
     public function pengumuman(Request $request)
     {
+        $user = Auth::user();
         $query = Pengumuman::with(['admin', 'laboratoriums'])->orderBy('created_at', 'desc');
+
+        if ($user->isAdminFakultas()) {
+            $myLabIds = Laboratorium::forUser($user)->pluck('id');
+            $query->where(function($q) use ($user, $myLabIds) {
+                $q->where('admin_id', $user->id)
+                  ->orWhereHas('laboratoriums', function($labQuery) use ($myLabIds) {
+                      $labQuery->whereIn('laboratorium.id', $myLabIds);
+                  });
+            });
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('judul', 'like', "%{$search}%")
+            $query->where(function($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%")
                   ->orWhere('isi_pengumuman', 'like', "%{$search}%");
+            });
         }
 
         $pengumumanList = $query->paginate(10)->withQueryString();
-        $laboratoriums = Laboratorium::all();
+        $laboratoriums = Laboratorium::forUser($user)->get();
 
         return view('admin.pengumuman', compact('pengumumanList', 'laboratoriums'));
     }
 
     public function storeUser(Request $request)
     {
+        $authUser = Auth::user();
+        $allowedRoles = $authUser->isSuperAdmin() ? 'super_admin,admin,dosen,mahasiswa' : 'admin,dosen,mahasiswa';
+
         $rules = [
             'nama_lengkap' => 'required|string|max:100',
             'username_or_nim_nip' => 'required|string|max:50|unique:users,username',
             'password' => 'required|string|min:4',
-            'role' => 'required|in:admin,dosen,mahasiswa',
+            'role' => 'required|in:' . $allowedRoles,
             'kelas' => 'nullable|string|max:50',
             'semester' => 'nullable|integer|min:1|max:8',
             'status' => 'nullable|in:Tetap,Tidak Tetap,Honorer,Cuti',
@@ -733,6 +1143,12 @@ class AdminController extends Controller
         if ($request->role === 'dosen' || $request->role === 'mahasiswa') {
             $rules['fakultas'] = 'required|exists:fakultas,id';
             $rules['jurusan'] = 'required|exists:prodi,id';
+            if ($authUser->isAdminFakultas() && $request->fakultas != $authUser->fakultas_id) {
+                return back()->withErrors(['fakultas' => 'Anda hanya dapat menambahkan pengguna ke fakultas Anda.']);
+            }
+        } elseif ($request->role === 'admin') {
+            $rules['fakultas'] = $authUser->isAdminFakultas() ? 'nullable|exists:fakultas,id' : 'required|exists:fakultas,id';
+            $rules['jurusan'] = 'nullable|exists:prodi,id';
         } else {
             $rules['fakultas'] = 'nullable|exists:fakultas,id';
             $rules['jurusan'] = 'nullable|exists:prodi,id';
@@ -740,11 +1156,19 @@ class AdminController extends Controller
 
         $request->validate($rules);
 
-        DB::transaction(function() use ($request) {
+        DB::transaction(function() use ($request, $authUser) {
+            $fakultasId = null;
+            if ($request->role === 'admin') {
+                $fakultasId = $authUser->isAdminFakultas() ? $authUser->fakultas_id : $request->fakultas;
+            } elseif ($request->role === 'super_admin') {
+                $fakultasId = null;
+            }
+
             $user = User::create([
                 'username' => $request->username_or_nim_nip,
                 'password' => Hash::make($request->password),
                 'role' => $request->role,
+                'fakultas_id' => $fakultasId,
             ]);
 
             if ($request->role === 'dosen') {
@@ -753,7 +1177,7 @@ class AdminController extends Controller
                     'nip' => $request->username_or_nim_nip,
                     'nama' => $request->nama_lengkap,
                     'status' => $request->status ?? 'Tetap',
-                    'id_fakultas' => $request->fakultas,
+                    'id_fakultas' => $authUser->isAdminFakultas() ? $authUser->fakultas_id : $request->fakultas,
                     'id_prodi' => $request->jurusan,
                     'kompetensi' => $request->kompetensi,
                     'jabatan' => $request->jabatan,
@@ -767,7 +1191,7 @@ class AdminController extends Controller
                     'program_kuliah' => $request->program_kuliah ?? 'Reguler',
                     'semester' => $request->semester ?? 1,
                     'status' => $request->status_mahasiswa ?? 'aktif',
-                    'id_fakultas' => $request->fakultas,
+                    'id_fakultas' => $authUser->isAdminFakultas() ? $authUser->fakultas_id : $request->fakultas,
                     'id_prodi' => $request->jurusan,
                 ]);
             }
@@ -778,7 +1202,17 @@ class AdminController extends Controller
 
     public function updateUser(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $authUser = Auth::user();
+        $user = User::with(['dosen', 'mahasiswa'])->findOrFail($id);
+
+        if ($authUser->isAdminFakultas()) {
+            $userFakId = $user->fakultas_id 
+                ?? $user->dosen?->id_fakultas 
+                ?? $user->mahasiswa?->id_fakultas;
+            if ($userFakId != $authUser->fakultas_id || $user->isSuperAdmin()) {
+                abort(403, 'Anda tidak memiliki wewenang untuk mengubah data pengguna ini.');
+            }
+        }
 
         $rules = [
             'nama_lengkap' => 'required|string|max:100',
@@ -802,7 +1236,7 @@ class AdminController extends Controller
 
         $request->validate($rules);
 
-        DB::transaction(function() use ($request, $user) {
+        DB::transaction(function() use ($request, $user, $authUser) {
             $data = [
                 'username' => $request->username_or_nim_nip,
             ];
@@ -811,22 +1245,28 @@ class AdminController extends Controller
                 $data['password'] = Hash::make($request->password);
             }
 
+            if ($user->role === 'admin' && $authUser->isSuperAdmin() && $request->filled('fakultas')) {
+                $data['fakultas_id'] = $request->fakultas;
+            }
+
             $user->update($data);
 
             if ($user->role === 'dosen') {
+                $fakultasVal = $authUser->isAdminFakultas() ? $authUser->fakultas_id : ($request->fakultas ?: $user->dosen?->id_fakultas);
                 $dosen = Dosen::updateOrCreate(
                     ['user_id' => $user->id],
                     [
                         'nip' => $request->username_or_nim_nip,
                         'nama' => $request->nama_lengkap,
                         'status' => $request->status ?? 'Tetap',
-                        'id_fakultas' => $request->fakultas,
+                        'id_fakultas' => $fakultasVal,
                         'id_prodi' => $request->jurusan,
                         'kompetensi' => $request->kompetensi,
                         'jabatan' => $request->jabatan,
                     ]
                 );
             } elseif ($user->role === 'mahasiswa') {
+                $fakultasVal = $authUser->isAdminFakultas() ? $authUser->fakultas_id : ($request->fakultas ?: $user->mahasiswa?->id_fakultas);
                 $mahasiswa = Mahasiswa::updateOrCreate(
                     ['user_id' => $user->id],
                     [
@@ -836,7 +1276,7 @@ class AdminController extends Controller
                         'program_kuliah' => $request->program_kuliah ?? 'Reguler',
                         'semester' => $request->semester ?? 1,
                         'status' => $request->status_mahasiswa ?? 'aktif',
-                        'id_fakultas' => $request->fakultas,
+                        'id_fakultas' => $fakultasVal,
                         'id_prodi' => $request->jurusan,
                     ]
                 );
@@ -848,13 +1288,25 @@ class AdminController extends Controller
 
     public function storeLab(Request $request)
     {
-        $request->validate([
+        $user = Auth::user();
+
+        $rules = [
             'nama_lab' => 'required|string|max:100',
             'lokasi' => 'required|string|max:100',
             'kapasitas' => 'required|integer',
-        ]);
+        ];
+
+        if ($user->isSuperAdmin()) {
+            $rules['fakultas_id'] = 'required|exists:fakultas,id';
+            $fakultasId = $request->fakultas_id;
+        } else {
+            $fakultasId = $user->fakultas_id;
+        }
+
+        $request->validate($rules);
 
         Laboratorium::create([
+            'fakultas_id' => $fakultasId,
             'nama_lab' => $request->nama_lab,
             'lokasi' => $request->lokasi,
             'kapasitas' => $request->kapasitas,
@@ -865,6 +1317,8 @@ class AdminController extends Controller
 
     public function storePengumuman(Request $request)
     {
+        $user = Auth::user();
+
         $request->validate([
             'judul' => 'required|string|max:150',
             'isi_pengumuman' => 'required|string',
@@ -874,6 +1328,15 @@ class AdminController extends Controller
             'laboratorium_ids.*' => 'exists:laboratorium,id',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
         ]);
+
+        if ($user->isAdminFakultas() && $request->has('laboratorium_ids')) {
+            $allowedLabIds = Laboratorium::forUser($user)->pluck('id')->toArray();
+            foreach ($request->laboratorium_ids as $targetLabId) {
+                if (!in_array($targetLabId, $allowedLabIds)) {
+                    return back()->withErrors(['laboratorium_ids' => 'Anda hanya dapat menautkan pengumuman ke laboratorium di bawah naungan fakultas Anda.']);
+                }
+            }
+        }
 
         $fotoUrl = null;
         if ($request->hasFile('foto')) {
@@ -898,6 +1361,8 @@ class AdminController extends Controller
 
     public function updatePengumuman(Request $request, $id)
     {
+        $user = Auth::user();
+
         $request->validate([
             'judul' => 'required|string|max:150',
             'isi_pengumuman' => 'required|string',
@@ -908,7 +1373,26 @@ class AdminController extends Controller
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
         ]);
 
-        $pengumuman = Pengumuman::findOrFail($id);
+        $pengumuman = Pengumuman::with('laboratoriums')->findOrFail($id);
+
+        if ($user->isAdminFakultas()) {
+            if ($pengumuman->admin_id != $user->id) {
+                $allowedLabIds = Laboratorium::forUser($user)->pluck('id')->toArray();
+                $existingLabIds = $pengumuman->laboratoriums->pluck('id')->toArray();
+                if (empty($existingLabIds) || count(array_diff($existingLabIds, $allowedLabIds)) > 0) {
+                    abort(403, 'Akses Ditolak: Anda tidak memiliki wewenang untuk mengubah pengumuman ini.');
+                }
+            }
+
+            if ($request->has('laboratorium_ids')) {
+                $allowedLabIds = Laboratorium::forUser($user)->pluck('id')->toArray();
+                foreach ($request->laboratorium_ids as $targetLabId) {
+                    if (!in_array($targetLabId, $allowedLabIds)) {
+                        return back()->withErrors(['laboratorium_ids' => 'Anda hanya dapat menautkan pengumuman ke laboratorium di bawah naungan fakultas Anda.']);
+                    }
+                }
+            }
+        }
 
         $fotoUrl = $pengumuman->foto_url;
 
@@ -945,8 +1429,19 @@ class AdminController extends Controller
 
     public function deletePengumuman($id)
     {
-        $pengumuman = Pengumuman::find($id);
+        $user = Auth::user();
+        $pengumuman = Pengumuman::with('laboratoriums')->find($id);
         if ($pengumuman) {
+            if ($user->isAdminFakultas()) {
+                if ($pengumuman->admin_id != $user->id) {
+                    $allowedLabIds = Laboratorium::forUser($user)->pluck('id')->toArray();
+                    $existingLabIds = $pengumuman->laboratoriums->pluck('id')->toArray();
+                    if (empty($existingLabIds) || count(array_diff($existingLabIds, $allowedLabIds)) > 0) {
+                        abort(403, 'Akses Ditolak: Anda tidak memiliki wewenang untuk menghapus pengumuman ini.');
+                    }
+                }
+            }
+
             if ($pengumuman->foto_url && Storage::disk('public')->exists($pengumuman->foto_url)) {
                 Storage::disk('public')->delete($pengumuman->foto_url);
             }
@@ -957,8 +1452,9 @@ class AdminController extends Controller
 
     public function promoteSemesters(Request $request)
     {
+        $authUser = Auth::user();
         $action = $request->input('action_type', 'promote'); // 'promote' (+1) or 'revert' (-1)
-        $targetFakultas = $request->input('target_fakultas');
+        $targetFakultas = $authUser->isAdminFakultas() ? $authUser->fakultas_id : $request->input('target_fakultas');
         $targetProdi = $request->input('target_prodi');
         $targetAngkatan = $request->input('target_angkatan');
         $autoGraduate = $request->boolean('auto_graduate'); // If semester >= 8 or 14, mark as 'lulus'
@@ -1021,8 +1517,17 @@ class AdminController extends Controller
         return back()->with('success', $msg);
     }
 
+    private function ensureSuperAdmin()
+    {
+        if (!Auth::user()->isSuperAdmin()) {
+            abort(403, 'Akses Terbatas: Hanya Super Admin yang berhak mengakses dan memodifikasi parameter master akademik.');
+        }
+    }
+
     public function akademik(Request $request)
     {
+        $this->ensureSuperAdmin();
+
         $fakultas = Fakultas::orderBy('nama_fakultas')->get();
         $prodis = Prodi::with('fakultas')->orderBy('nama_prodi')->get();
         $kelas = Kelas::orderBy('nama_kelas')->get();
@@ -1034,6 +1539,7 @@ class AdminController extends Controller
     // Fakultas CRUD
     public function storeFakultas(Request $request)
     {
+        $this->ensureSuperAdmin();
         $request->validate(['nama_fakultas' => 'required|string|max:100']);
         Fakultas::create(['nama_fakultas' => $request->nama_fakultas]);
         return back()->with('success', 'Fakultas berhasil ditambahkan.');
@@ -1041,6 +1547,7 @@ class AdminController extends Controller
 
     public function updateFakultas(Request $request, $id)
     {
+        $this->ensureSuperAdmin();
         $request->validate(['nama_fakultas' => 'required|string|max:100']);
         Fakultas::findOrFail($id)->update(['nama_fakultas' => $request->nama_fakultas]);
         return back()->with('success', 'Fakultas berhasil diperbarui.');
@@ -1048,6 +1555,7 @@ class AdminController extends Controller
 
     public function deleteFakultas($id)
     {
+        $this->ensureSuperAdmin();
         Fakultas::destroy($id);
         return back()->with('success', 'Fakultas berhasil dihapus.');
     }
@@ -1055,6 +1563,7 @@ class AdminController extends Controller
     // Prodi CRUD
     public function storeProdi(Request $request)
     {
+        $this->ensureSuperAdmin();
         $request->validate([
             'nama_prodi' => 'required|string|max:100',
             'fakultas_id' => 'required|exists:fakultas,id'
@@ -1068,6 +1577,7 @@ class AdminController extends Controller
 
     public function updateProdi(Request $request, $id)
     {
+        $this->ensureSuperAdmin();
         $request->validate([
             'nama_prodi' => 'required|string|max:100',
             'fakultas_id' => 'required|exists:fakultas,id'
@@ -1081,6 +1591,7 @@ class AdminController extends Controller
 
     public function deleteProdi($id)
     {
+        $this->ensureSuperAdmin();
         Prodi::destroy($id);
         return back()->with('success', 'Program Studi berhasil dihapus.');
     }
@@ -1088,6 +1599,7 @@ class AdminController extends Controller
     // Kelas CRUD
     public function storeKelas(Request $request)
     {
+        $this->ensureSuperAdmin();
         $request->validate(['nama_kelas' => 'required|string|max:50|unique:kelas,nama_kelas']);
         Kelas::create(['nama_kelas' => $request->nama_kelas]);
         return back()->with('success', 'Kelas baru berhasil ditambahkan.');
@@ -1095,6 +1607,7 @@ class AdminController extends Controller
 
     public function updateKelas(Request $request, $id)
     {
+        $this->ensureSuperAdmin();
         $request->validate(['nama_kelas' => 'required|string|max:50|unique:kelas,nama_kelas,' . $id]);
         Kelas::findOrFail($id)->update(['nama_kelas' => $request->nama_kelas]);
         return back()->with('success', 'Kelas berhasil diperbarui.');
@@ -1102,6 +1615,7 @@ class AdminController extends Controller
 
     public function deleteKelas($id)
     {
+        $this->ensureSuperAdmin();
         Kelas::destroy($id);
         return back()->with('success', 'Kelas berhasil dihapus.');
     }
@@ -1109,14 +1623,17 @@ class AdminController extends Controller
     // Mata Kuliah CRUD
     public function storeMataKuliah(Request $request)
     {
+        $this->ensureSuperAdmin();
         $request->validate([
             'nama_mk' => 'required|string|max:150',
             'kode_mk' => 'nullable|string|max:30',
+            'sks' => 'nullable|integer|min:1|max:10',
             'id_prodi' => 'nullable|exists:prodi,id',
         ]);
         MataKuliah::create([
             'kode_mk' => $request->kode_mk,
             'nama_mk' => $request->nama_mk,
+            'sks' => $request->sks ?: 3,
             'id_prodi' => $request->id_prodi,
         ]);
         return back()->with('success', 'Mata Kuliah berhasil ditambahkan.');
@@ -1124,14 +1641,17 @@ class AdminController extends Controller
 
     public function updateMataKuliah(Request $request, $id)
     {
+        $this->ensureSuperAdmin();
         $request->validate([
             'nama_mk' => 'required|string|max:150',
             'kode_mk' => 'nullable|string|max:30',
+            'sks' => 'nullable|integer|min:1|max:10',
             'id_prodi' => 'nullable|exists:prodi,id',
         ]);
         MataKuliah::findOrFail($id)->update([
             'kode_mk' => $request->kode_mk,
             'nama_mk' => $request->nama_mk,
+            'sks' => $request->sks ?: 3,
             'id_prodi' => $request->id_prodi,
         ]);
         return back()->with('success', 'Mata Kuliah berhasil diperbarui.');
@@ -1139,12 +1659,25 @@ class AdminController extends Controller
 
     public function deleteMataKuliah($id)
     {
+        $this->ensureSuperAdmin();
         MataKuliah::destroy($id);
         return back()->with('success', 'Mata Kuliah berhasil dihapus.');
     }
 
+    public function bulkDeleteMataKuliah(Request $request)
+    {
+        $this->ensureSuperAdmin();
+        $ids = $request->ids;
+        if (!$ids || empty($ids)) {
+            return back()->withErrors(['msg' => 'Tidak ada mata kuliah yang dipilih untuk dihapus.']);
+        }
+        MataKuliah::whereIn('id', $ids)->delete();
+        return back()->with('success', count($ids) . ' mata kuliah berhasil dihapus.');
+    }
+
     public function bulkDeleteKelas(Request $request)
     {
+        $this->ensureSuperAdmin();
         $ids = $request->ids;
         if (!$ids || empty($ids)) {
             return back()->withErrors(['msg' => 'Tidak ada kelas yang dipilih untuk dihapus.']);
@@ -1161,12 +1694,14 @@ class AdminController extends Controller
         ]);
 
         try {
+            $user = Auth::user();
+            $fakultasId = $user->isAdminFakultas() ? $user->fakultas_id : null;
             $file = is_array($request->file('file_excel')) ? $request->file('file_excel')[0] : $request->file('file_excel');
             
             $importId = (string) \Illuminate\Support\Str::uuid();
             $path = $file->storeAs('imports', $importId . '.' . $file->getClientOriginalExtension());
             
-            $import = new \App\Imports\MahasiswaImport($importId);
+            $import = new \App\Imports\MahasiswaImport($importId, $fakultasId);
             $import->queue($path);
             
             if ($request->ajax()) {
@@ -1190,9 +1725,11 @@ class AdminController extends Controller
         ]);
 
         try {
+            $user = Auth::user();
+            $fakultasId = $user->isAdminFakultas() ? $user->fakultas_id : null;
             $files = is_array($request->file('file_excel')) ? $request->file('file_excel') : [$request->file('file_excel')];
             foreach ($files as $file) {
-                Excel::import(new DosenImport, $file);
+                Excel::import(new DosenImport($fakultasId), $file);
             }
             return back()->with('success', count($files) . ' file Dosen berhasil diimpor.');
         } catch (\Exception $e) {
@@ -1207,7 +1744,9 @@ class AdminController extends Controller
         ]);
 
         try {
-            $import = new AgendaImport();
+            $user = Auth::user();
+            $fakultasId = $user->isAdminFakultas() ? $user->fakultas_id : null;
+            $import = new AgendaImport($fakultasId);
             Excel::import($import, $request->file('file_excel'));
             
             if ($import->importedCount === 0) {
@@ -1227,7 +1766,9 @@ class AdminController extends Controller
         ]);
 
         try {
-            Excel::import(new LaboratoriumImport, $request->file('file_excel'));
+            $user = Auth::user();
+            $fakultasId = $user->isAdminFakultas() ? $user->fakultas_id : null;
+            Excel::import(new LaboratoriumImport($fakultasId), $request->file('file_excel'));
             return back()->with('success', 'Data Laboratorium berhasil diimpor.');
         } catch (\Exception $e) {
             return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
@@ -1236,6 +1777,7 @@ class AdminController extends Controller
 
     public function importFakultas(Request $request)
     {
+        $this->ensureSuperAdmin();
         $request->validate([
             'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
@@ -1250,6 +1792,7 @@ class AdminController extends Controller
 
     public function importProdi(Request $request)
     {
+        $this->ensureSuperAdmin();
         $request->validate([
             'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
@@ -1264,6 +1807,7 @@ class AdminController extends Controller
 
     public function importKelas(Request $request)
     {
+        $this->ensureSuperAdmin();
         $request->validate([
             'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
@@ -1278,6 +1822,7 @@ class AdminController extends Controller
 
     public function importMataKuliah(Request $request)
     {
+        $this->ensureSuperAdmin();
         $request->validate([
             'file_excel' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
@@ -1292,50 +1837,141 @@ class AdminController extends Controller
 
     public function aktivitas()
     {
-        $activities = \Spatie\Activitylog\Models\Activity::with(['causer.dosen', 'causer.mahasiswa'])
-            ->latest()
-            ->paginate(50);
+        $user = Auth::user();
+        $query = \Spatie\Activitylog\Models\Activity::with(['causer.dosen', 'causer.mahasiswa'])
+            ->latest();
+
+        if ($user->isAdminFakultas()) {
+            $myFacultyId = $user->fakultas_id;
+            $query->where(function($q) use ($myFacultyId) {
+                $q->whereHasMorph('causer', [\App\Models\User::class], function($uq) use ($myFacultyId) {
+                    $uq->where('fakultas_id', $myFacultyId)
+                       ->orWhereHas('dosen', fn($dq) => $dq->where('id_fakultas', $myFacultyId))
+                       ->orWhereHas('mahasiswa', fn($mq) => $mq->where('id_fakultas', $myFacultyId));
+                });
+            });
+        }
+
+        $activities = $query->paginate(50);
             
         return view('admin.aktivitas', compact('activities'));
     }
 
     public function jadwalPenggunaanLab(Request $request)
     {
-        $labs = Laboratorium::all();
-        $selectedLabId = $request->get('lab_id', $labs->first()->id ?? null);
+        $user = Auth::user();
+        $labs = Laboratorium::with('fakultas')->forUser($user)->orderBy('nama_lab', 'asc')->get();
+
+        $selectedLabId = $request->get('lab_id');
+        if (!$selectedLabId || !$labs->contains('id', $selectedLabId)) {
+            $selectedLabId = $labs->first()->id ?? null;
+        }
+
         $tahunAkademik = $request->get('tahun_akademik', '2026/2027 Ganjil');
 
-        $query = JadwalPenggunaanLab::with(['lab', 'dosen', 'dosenPengampu', 'prodi'])
-            ->when($selectedLabId, function($q) use ($selectedLabId) {
-                $q->where('lab_id', $selectedLabId);
-            })
-            ->when($tahunAkademik, function($q) use ($tahunAkademik) {
-                $q->where('tahun_akademik', $tahunAkademik);
-            });
+        if (!$selectedLabId) {
+            $jadwals = collect();
+        } else {
+            $query = JadwalPenggunaanLab::with(['lab', 'dosen', 'dosenPengampu', 'prodi'])
+                ->where('lab_id', $selectedLabId)
+                ->when($tahunAkademik, function($q) use ($tahunAkademik) {
+                    $q->where('tahun_akademik', $tahunAkademik);
+                });
 
-        $jadwals = $query->orderBy('jam_mulai', 'asc')->get();
+            $jadwals = $query->orderBy('jam_mulai', 'asc')->get();
+        }
 
-        $dosens = Dosen::with('prodi')->orderBy('nama', 'asc')->get();
-        $prodis = Prodi::with('fakultas')->orderBy('nama_prodi', 'asc')->get();
+        $dosensQuery = Dosen::with('prodi')->orderBy('nama', 'asc');
+        $prodisQuery = Prodi::with('fakultas')->orderBy('nama_prodi', 'asc');
+        if ($user->isAdminFakultas() && $user->fakultas_id) {
+            $dosensQuery->where('id_fakultas', $user->fakultas_id);
+            $prodisQuery->where('fakultas_id', $user->fakultas_id);
+        }
+        $dosens = $dosensQuery->get();
+        $prodis = $prodisQuery->get();
         $mataKuliahs = MataKuliah::with('prodi')->orderBy('nama_mk', 'asc')->get();
         $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
+        $fakultas = Fakultas::orderBy('nama_fakultas', 'asc')->get();
 
         $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         $timeSlots = [
             '08.00-09.00', '09.00-10.00', '10.00-11.00', '11.00-12.00',
             '12.00-13.00', '13.00-14.00', '14.00-15.00', '15.00-16.00',
             '16.00-17.00', '17.00-18.00', '18.00-19.00', '19.00-20.00',
-            '20.00-21.00', '21.00-22.00'
+            '20.00-21.00'
         ];
 
         return view('admin.jadwal_penggunaan_lab', compact(
             'labs', 'selectedLabId', 'tahunAkademik', 'jadwals',
-            'dosens', 'prodis', 'mataKuliahs', 'kelas', 'hariList', 'timeSlots'
+            'dosens', 'prodis', 'mataKuliahs', 'kelas', 'hariList', 'timeSlots', 'fakultas'
         ));
+    }
+
+    public function exportJadwalLab(Request $request)
+    {
+        $user = Auth::user();
+        $labId = $request->get('lab_id');
+        $tahunAkademik = $request->get('tahun_akademik', '2026/2027 Ganjil');
+
+        $allowedLabs = Laboratorium::forUser($user)->get();
+        if ($allowedLabs->isEmpty()) {
+            return back()->withErrors(['msg' => 'Fakultas Anda belum memiliki laboratorium untuk diekspor jadwalnya.']);
+        }
+
+        if (!$labId || !$allowedLabs->contains('id', $labId)) {
+            $labId = $allowedLabs->first()->id;
+        }
+
+        $lab = Laboratorium::findOrFail($labId);
+        if (!$user->canManageLab($lab)) {
+            abort(403, 'Anda tidak memiliki akses untuk mengekspor jadwal laboratorium ini.');
+        }
+
+        $export = new JadwalLabExport($labId, $tahunAkademik);
+        return $export->download();
+    }
+
+    public function importJadwalLab(Request $request)
+    {
+        $fileKey = $request->hasFile('file') ? 'file' : 'file_excel';
+
+        $request->validate([
+            $fileKey => 'required|file|mimes:xlsx,xls|max:10240',
+            'lab_id' => 'nullable|exists:laboratorium,id',
+            'tahun_akademik' => 'nullable|string|max:50',
+            'mode' => 'nullable|in:replace,append',
+        ], [
+            "{$fileKey}.required" => 'Silakan pilih berkas Excel jadwal yang valid.',
+            "{$fileKey}.mimes" => 'Berkas harus berformat spreadsheet .xlsx atau .xls.',
+            "{$fileKey}.max" => 'Ukuran berkas maksimal adalah 10 MB.',
+        ]);
+
+        $user = Auth::user();
+        $file = $request->file($fileKey);
+        $explicitLabId = $request->filled('lab_id') ? (int)$request->lab_id : null;
+        $explicitTahunAkademik = $request->tahun_akademik;
+        $mode = $request->get('mode', 'replace');
+
+        try {
+            $importer = new JadwalLabImport();
+            $result = $importer->import(
+                $file,
+                $explicitLabId,
+                $explicitTahunAkademik,
+                $mode,
+                $user
+            );
+
+            return back()->with('success', "Berhasil mengimpor {$result['count']} sesi jadwal perkuliahan untuk {$result['lab_name']} ({$result['tahun_akademik']})!");
+        } catch (\Exception $e) {
+            return back()->withErrors(['msg' => 'Gagal mengimpor jadwal: ' . $e->getMessage()]);
+        }
     }
 
     public function storeJadwalPenggunaanLab(Request $request)
     {
+        $user = Auth::user();
+
         $request->validate([
             'lab_id' => 'required|exists:laboratorium,id',
             'mata_kuliah' => 'required|string|max:150',
@@ -1350,6 +1986,11 @@ class AdminController extends Controller
             'program_kuliah' => 'nullable|in:Reguler,Karyawan',
             'tahun_akademik' => 'nullable|string|max:50',
         ]);
+
+        $lab = Laboratorium::findOrFail($request->lab_id);
+        if (!$user->canManageLab($lab)) {
+            abort(403, 'Anda tidak memiliki akses ke laboratorium ini.');
+        }
 
         JadwalPenggunaanLab::create([
             'lab_id' => $request->lab_id,
@@ -1367,16 +2008,18 @@ class AdminController extends Controller
             'is_aktif' => true,
         ]);
 
-        if ($request->boolean('auto_generate_16')) {
-            $this->generate16Pertemuan($jadwal->id);
-            return back()->with('success', 'Jadwal Penggunaan Lab berhasil ditambahkan dan 16 sesi pertemuan agenda praktikum langsung dibuat!');
-        }
-
         return back()->with('success', 'Jadwal Penggunaan Lab berhasil ditambahkan.');
     }
 
     public function updateJadwalPenggunaanLab(Request $request, $id)
     {
+        $user = Auth::user();
+        $jadwal = JadwalPenggunaanLab::with('lab')->findOrFail($id);
+
+        if (!$user->canManageLab($jadwal->lab)) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah jadwal laboratorium ini.');
+        }
+
         $request->validate([
             'lab_id' => 'required|exists:laboratorium,id',
             'mata_kuliah' => 'required|string|max:150',
@@ -1392,7 +2035,11 @@ class AdminController extends Controller
             'tahun_akademik' => 'nullable|string|max:50',
         ]);
 
-        $jadwal = JadwalPenggunaanLab::findOrFail($id);
+        $newLab = Laboratorium::findOrFail($request->lab_id);
+        if (!$user->canManageLab($newLab)) {
+            abort(403, 'Anda tidak memiliki akses ke laboratorium target.');
+        }
+
         $jadwal->update([
             'lab_id' => $request->lab_id,
             'mata_kuliah' => $request->mata_kuliah,
@@ -1413,7 +2060,14 @@ class AdminController extends Controller
 
     public function deleteJadwalPenggunaanLab($id)
     {
-        JadwalPenggunaanLab::destroy($id);
+        $user = Auth::user();
+        $jadwal = JadwalPenggunaanLab::with('lab')->findOrFail($id);
+
+        if (!$user->canManageLab($jadwal->lab)) {
+            abort(403, 'Anda tidak memiliki akses untuk menghapus jadwal laboratorium ini.');
+        }
+
+        $jadwal->delete();
         return back()->with('success', 'Jadwal Penggunaan Lab berhasil dihapus.');
     }
 

@@ -45,7 +45,7 @@ class AuthController extends Controller
             }
 
             return match ($user->role) {
-                'admin' => redirect()->route('admin.dashboard'),
+                'super_admin', 'admin' => redirect()->route('admin.dashboard'),
                 'dosen' => redirect()->route('dosen.dashboard'),
                 'mahasiswa' => redirect()->route('mahasiswa.dashboard'),
                 default => redirect('/'),
@@ -68,14 +68,16 @@ class AuthController extends Controller
         if ($role === 'dosen') {
             $anggra = User::where('username', '0431088705')->first();
             $user = $anggra ?? User::where('role', 'dosen')->first();
+        } elseif ($role === 'admin' || $role === 'super_admin') {
+            $user = User::whereIn('role', ['super_admin', 'admin'])->first();
         } else {
             $user = User::where('role', $role)->first();
         }
 
         if ($user) {
             Auth::login($user);
-            return match ($role) {
-                'admin' => redirect()->route('admin.dashboard'),
+            return match ($user->role) {
+                'super_admin', 'admin' => redirect()->route('admin.dashboard'),
                 'dosen' => redirect()->route('dosen.dashboard'),
                 'mahasiswa' => redirect()->route('mahasiswa.dashboard'),
                 default => redirect('/'),

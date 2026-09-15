@@ -25,6 +25,28 @@ class Laboratorium extends Model
         return $this->belongsToMany(Pengumuman::class, 'laboratorium_pengumuman', 'laboratorium_id', 'pengumuman_id')->withTimestamps();
     }
 
+    public function fakultas()
+    {
+        return $this->belongsTo(Fakultas::class, 'fakultas_id');
+    }
+
+    public function scopeForUser($query, $user)
+    {
+        if (!$user) {
+            return $query;
+        }
+
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+
+        if ($user->isAdminFakultas() && $user->fakultas_id) {
+            return $query->where('fakultas_id', $user->fakultas_id);
+        }
+
+        return $query;
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

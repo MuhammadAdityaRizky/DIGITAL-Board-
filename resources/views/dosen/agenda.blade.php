@@ -17,39 +17,39 @@
 
     <!-- Sidebar (Desktop Only) -->
     <aside class="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 h-full hidden lg:flex">
-        <div class="p-6 flex items-center gap-3 border-b border-slate-800">
-            <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
-                <i class="fa-solid fa-graduation-cap"></i>
+        <div class="p-5 flex items-center gap-3 border-b border-slate-800 shrink-0">
+            <div class="w-9 h-9 bg-teal-600 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm">
+                <i class="fa-solid fa-graduation-cap text-lg"></i>
             </div>
             <div>
-                <h1 class="font-extrabold text-sm leading-tight text-white">DIGITAL Board</h1>
-                <p class="text-xs font-bold tracking-wide text-teal-300">Smart Lab Management</p>
+                <h1 class="font-bold text-sm leading-tight text-white">DIGITAL Board</h1>
+                <p class="text-[10px] font-semibold text-teal-400 tracking-wider">PORTAL DOSEN</p>
             </div>
         </div>
         
-        <nav class="flex-1 px-3 py-4 space-y-1.5">
-            <a href="{{ route('dosen.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+        <nav class="flex-1 px-3 py-3 space-y-1">
+            <a href="{{ route('dosen.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white font-medium rounded-xl w-full text-xs transition">
                 <i class="fa-solid fa-border-all text-sm"></i>
-                <span class="text-sm font-bold tracking-wide">Dashboard</span>
+                <span>Dashboard</span>
             </a>
-            <a href="{{ route('dosen.agenda') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white rounded-xl w-full font-extrabold shadow-md">
+            <a href="{{ route('dosen.agenda') }}" class="flex items-center gap-3 px-4 py-2.5 bg-teal-800 text-white font-bold shadow-sm rounded-xl w-full text-xs">
                 <i class="fa-solid fa-calendar-alt text-sm"></i>
-                <span class="text-sm font-bold tracking-wide">Agenda Perkuliahan</span>
+                <span>Agenda Perkuliahan</span>
             </a>
-            <a href="{{ route('dosen.jadwal-lab') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+            <a href="{{ route('dosen.jadwal-lab') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white font-medium rounded-xl w-full text-xs transition">
                 <i class="fa-solid fa-calendar-check text-sm"></i>
-                <span class="text-sm font-bold tracking-wide">Ketersediaan Lab</span>
+                <span>Ketersediaan Lab</span>
             </a>
-            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-xl w-full transition">
+            <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white font-medium rounded-xl w-full text-xs transition">
                 <i class="fa-solid fa-gear text-sm"></i>
-                <span class="text-sm font-bold tracking-wide">Pengaturan Akun</span>
+                <span>Pengaturan Akun</span>
             </a>
         </nav>
 
         <!-- Tombol Panduan Dosen di Sidebar -->
         <div class="p-3 border-t border-slate-800 mt-auto">
-            <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-3 px-3.5 py-2.5 bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500/25 hover:text-white rounded-xl w-full transition text-xs font-bold cursor-pointer">
-                <i class="fa-solid fa-book-open-reader text-sm text-amber-400"></i>
+            <button type="button" onclick="openTutorialDosenModal()" class="min-h-[44px] flex items-center gap-3 px-4 py-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 hover:text-white rounded-xl w-full transition text-sm font-bold cursor-pointer">
+                <i class="fa-solid fa-book-open-reader text-base text-amber-400"></i>
                 <span>Panduan Dosen</span>
             </button>
         </div>
@@ -132,52 +132,52 @@
             
             <!-- Alerts -->
             @if(session('success'))
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm mb-4">
-                    <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 text-lg"></i>
+                <div class="bg-emerald-50 border-2 border-emerald-400 text-emerald-950 p-5 rounded-xl text-base flex items-start gap-3 shadow-xs mb-4">
+                    <i class="fa-solid fa-circle-check text-emerald-700 mt-0.5 text-xl flex-shrink-0"></i>
                     <div>
-                        <span class="font-bold">Berhasil!</span>
-                        <p class="mt-0.5">{{ session('success') }}</p>
+                        <span class="font-black">Berhasil!</span>
+                        <p class="mt-0.5 font-semibold">{{ session('success') }}</p>
                     </div>
                 </div>
             @endif
 
-            @if($errors->any())
-                <div class="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm mb-4">
-                    <i class="fa-solid fa-circle-xmark text-red-600 mt-0.5 text-lg"></i>
+            @if(session('error'))
+                <div class="bg-rose-50 border-2 border-rose-300 text-rose-950 p-5 rounded-xl text-base flex items-start gap-3 shadow-xs mb-4">
+                    <i class="fa-solid fa-circle-exclamation text-rose-600 mt-0.5 text-xl flex-shrink-0"></i>
                     <div>
-                        <span class="font-bold">Error!</span>
-                        <p class="mt-0.5">{{ $errors->first() }}</p>
+                        <span class="font-black">Terjadi Kendala:</span>
+                        <p class="mt-0.5 font-semibold">{{ session('error') }}</p>
                     </div>
                 </div>
             @endif
             
             <!-- Filter Bar -->
-            <div class="bg-white border-2 border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
-                <form action="{{ route('dosen.agenda') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end text-xs">
+            <div class="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-xs">
+                <form action="{{ route('dosen.agenda') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end text-sm">
                     <div class="flex-grow w-full">
-                        <label class="block text-slate-800 font-extrabold text-xs uppercase tracking-wider mb-2">Cari Sesi / Mata Kuliah</label>
+                        <label class="block text-slate-900 font-bold text-sm sm:text-base mb-2">Cari Sesi / Mata Kuliah</label>
                         <div class="relative">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Ketik nama mata kuliah, catatan..." class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-teal-700 focus:ring-4 focus:ring-teal-700/20 outline-none text-sm font-semibold text-slate-900 placeholder:text-slate-400">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Ketik nama mata kuliah, catatan..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-4 text-slate-400 text-base"></i>
                         </div>
                     </div>
-                    <div class="w-full md:w-52">
-                        <label class="block text-slate-800 font-extrabold text-xs uppercase tracking-wider mb-2">Tanggal Pelaksanaan</label>
-                        <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-teal-700 focus:ring-4 focus:ring-teal-700/20 outline-none text-sm font-semibold text-slate-900">
+                    <div class="w-full md:w-56">
+                        <label class="block text-slate-900 font-bold text-sm sm:text-base mb-2">Tanggal Pelaksanaan</label>
+                        <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-3 px-3.5 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900">
                     </div>
-                    <div class="w-full md:w-52">
-                        <label class="block text-slate-800 font-extrabold text-xs uppercase tracking-wider mb-2">Urutkan Tanggal</label>
-                        <select name="sort" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-teal-700 focus:ring-4 focus:ring-teal-700/20 outline-none text-sm font-bold text-slate-900">
+                    <div class="w-full md:w-56">
+                        <label class="block text-slate-900 font-bold text-sm sm:text-base mb-2">Urutkan Tanggal</label>
+                        <select name="sort" class="w-full py-3 px-3.5 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900">
                             <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru Lebih Dahulu</option>
                             <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama Lebih Dahulu</option>
                         </select>
                     </div>
-                    <div class="flex gap-2 w-full md:w-auto">
-                        <button type="submit" class="flex-grow md:flex-grow-0 px-6 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-extrabold text-sm uppercase tracking-wider transition-all shadow-sm cursor-pointer">
+                    <div class="flex gap-2.5 w-full md:w-auto">
+                        <button type="submit" class="flex-grow md:flex-grow-0 min-h-[48px] px-7 py-3 bg-slate-900 hover:bg-slate-800 active:scale-98 text-white rounded-xl font-bold text-base transition shadow-xs cursor-pointer">
                             Filter
                         </button>
                         @if(request()->anyFilled(['search', 'tanggal', 'sort']))
-                            <a href="{{ route('dosen.agenda') }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-sm transition-all border border-slate-300 text-center cursor-pointer">
+                            <a href="{{ route('dosen.agenda') }}" class="min-h-[48px] px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-base transition border-2 border-slate-300 flex items-center justify-center cursor-pointer">
                                 Reset
                             </a>
                         @endif
@@ -186,85 +186,40 @@
             </div>
 
             <!-- Agendas List -->
-            <div class="bg-white border-2 border-slate-200 shadow-sm rounded-2xl overflow-hidden">
-                <div class="bg-slate-50/80 border-b border-slate-200 px-6 py-4 flex flex-wrap justify-between items-center gap-3">
+            <div class="bg-white border-2 border-slate-200 shadow-xs rounded-2xl overflow-hidden">
+                <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
                     <div>
-                        <h3 class="font-extrabold text-base text-slate-900">Daftar Agenda Perkuliahan & Pertemuan</h3>
-                        <span class="text-xs bg-teal-50 text-teal-900 border border-teal-300 font-bold px-3 py-1 rounded-full mt-1.5 inline-block">{{ $groupedAgendas->count() }} Mata Kuliah ({{ $agendas->total() }} Sesi Pertemuan)</span>
+                        <h3 class="font-black text-base sm:text-lg text-slate-900">Daftar Agenda Perkuliahan &amp; Pertemuan</h3>
+                        <span class="text-sm bg-white text-slate-800 border border-slate-300 font-bold px-3.5 py-1 rounded-lg mt-1.5 inline-block">{{ $groupedAgendas->count() }} Mata Kuliah ({{ $agendas->total() }} Sesi Pertemuan)</span>
                     </div>
                     
                     <div class="flex items-center gap-2.5 ml-auto flex-wrap">
                         @if($agendas->count() > 0)
-                            <button type="button" onclick="toggleAllCourseAccordions(this)" id="btn-toggle-all-courses" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 text-xs font-extrabold rounded-xl transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka atau tutup semua daftar pertemuan">
-                                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200" id="icon-toggle-all-courses"></i>
+                            <button type="button" onclick="toggleAllCourseAccordions(this)" id="btn-toggle-all-courses" class="min-h-[44px] px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 text-sm font-bold rounded-xl transition flex items-center gap-2 shadow-xs cursor-pointer" title="Buka atau tutup semua daftar pertemuan">
+                                <i class="fa-solid fa-chevron-down text-sm transition-transform duration-200" id="icon-toggle-all-courses"></i>
                                 <span id="text-toggle-all-courses">Buka Semua</span>
                             </button>
-                            <button type="button" id="btn-toggle-select" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 text-xs font-extrabold rounded-xl transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer">
-                                <i class="fa-solid fa-square-check text-slate-600"></i> Pilih Banyak
+                            <button type="button" id="btn-toggle-select" class="min-h-[44px] px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 text-sm font-bold rounded-xl transition flex items-center gap-2 shadow-xs cursor-pointer">
+                                <i class="fa-solid fa-square-check text-slate-600"></i>
+                                <span>Pilih Banyak</span>
                             </button>
                             <div id="container-check-all" class="flex items-center gap-2 mr-2 border-r border-slate-300 pr-3 hidden">
-                                <input type="checkbox" id="check-all" class="rounded text-teal-800 focus:ring-teal-700/30 w-4 h-4 cursor-pointer">
-                                <label for="check-all" class="text-xs text-slate-800 font-bold cursor-pointer select-none">Pilih Semua</label>
+                                <input type="checkbox" id="check-all" class="rounded text-slate-900 focus:ring-0 w-5 h-5 cursor-pointer">
+                                <label for="check-all" class="text-sm text-slate-800 font-bold cursor-pointer select-none">Pilih Semua</label>
                             </div>
-                            <button type="button" onclick="submitBulkDelete()" id="btn-bulk-delete" class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-800 text-xs font-extrabold rounded-xl transition-all hidden flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                            <button type="button" onclick="submitBulkDelete()" id="btn-bulk-delete" class="min-h-[44px] px-4 py-2.5 bg-rose-50 hover:bg-rose-100 border-2 border-rose-300 text-rose-900 text-sm font-bold rounded-xl transition hidden flex items-center gap-2 shadow-xs cursor-pointer">
                                 <i class="fa-solid fa-trash-can"></i> Hapus Terpilih (<span id="selected-count">0</span>)
                             </button>
                         @endif
-                        <a href="{{ route('dosen.jadwal-lab') }}" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-calendar-check"></i> Cek Ketersediaan Lab
+                        <a href="{{ route('dosen.jadwal-lab') }}" class="min-h-[44px] px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 border-2 border-slate-300 text-sm font-bold rounded-xl transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                            <i class="fa-solid fa-calendar-check text-slate-700"></i> Cek Ketersediaan Lab
                         </a>
-                        <button onclick="document.getElementById('modal-import-global').classList.remove('hidden')" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-file-excel"></i> Import Excel Global
+                        <button type="button" onclick="startDosenQRScanner()" class="min-h-[44px] px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                            <i class="fa-solid fa-qrcode text-slate-200"></i> Scan QR
                         </button>
-                        <button type="button" onclick="startDosenQRScanner()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-qrcode"></i> Scan QR
+                        <button type="button" onclick="toggleModal('modal-add-agenda')" class="min-h-[44px] px-5 py-2.5 bg-teal-800 hover:bg-teal-900 active:scale-98 text-white text-sm sm:text-base font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer flex-shrink-0 whitespace-nowrap">
+                            <i class="fa-solid fa-calendar-plus text-base"></i> Buat Agenda Baru
                         </button>
-                        <button type="button" onclick="toggleModal('modal-add-agenda')" class="px-4.5 py-2 bg-teal-800 hover:bg-teal-900 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-calendar-plus"></i> Buat Agenda Baru
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Modal Import Global -->
-                <div id="modal-import-global" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/50 backdrop-blur-sm">
-                    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative">
-                        <button onclick="document.getElementById('modal-import-global').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition">
-                            <i class="fa-solid fa-xmark fa-xl"></i>
-                        </button>
-                        <h3 class="text-lg font-bold text-slate-800 mb-2">Import Absensi Excel (Semua Agenda)</h3>
-                        <p class="text-xs text-slate-500 mb-6">Pilih kelas dan unggah file Excel. Sistem akan memproses seluruh jadwal pertemuan untuk kelas yang Anda pilih.</p>
-                        
-                        <form action="{{ route('dosen.absensi.import-global') }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            <div class="mb-4">
-                                <label class="block text-xs font-bold text-slate-700 mb-2">Pilih Mata Kuliah & Kelas</label>
-                                <select name="mata_kuliah_kelas" required class="w-full text-sm p-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                    <option value="" disabled selected>-- Pilih Kelas --</option>
-                                    @foreach($uniqueClasses as $uc)
-                                        <option value="{{ $uc->mata_kuliah }}|{{ $uc->kelas }}|{{ $uc->dosen_id }}">
-                                            {{ $uc->mata_kuliah }} {{ $uc->kelas ? '('.$uc->kelas.')' : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="mb-4">
-                                <label class="block text-xs font-bold text-slate-700 mb-2">Upload File Excel (.xlsx, .xls)</label>
-                                <input type="file" name="file_excel" accept=".xlsx, .xls" required class="block w-full text-sm text-slate-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-full file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-blue-50 file:text-blue-700
-                                hover:file:bg-blue-100 transition
-                                "/>
-                                <div class="mt-2 text-right">
-                                    <a href="{{ route('template.download', 'absensi') }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline"><i class="fa-solid fa-download mr-1"></i> Unduh Template Excel</a>
-                                </div>
-                            </div>
-                            <div class="flex justify-end gap-2 mt-6">
-                                <button type="button" onclick="document.getElementById('modal-import-global').classList.add('hidden')" class="px-4 py-2 text-sm font-bold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition">Batal</button>
-                                <button type="submit" class="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"><i class="fa-solid fa-cloud-arrow-up mr-2"></i> Import Data</button>
-                            </div>
-                        </form>
                     </div>
                 </div>
                 
@@ -280,10 +235,14 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button type="button" onclick="cancelBulkSelection()" class="px-3.5 py-1.5 bg-white hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition">
+                        <button type="button" onclick="printSelectedDosenAgendasBa()" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Cetak Berita Acara untuk Sesi yang Dicentang">
+                            <i class="fa-regular fa-file-lines text-slate-600"></i>
+                            <span>Cetak BA Terpilih</span>
+                        </button>
+                        <button type="button" onclick="cancelBulkSelection()" class="px-3.5 py-1.5 bg-white hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition cursor-pointer">
                             Batal Pilih
                         </button>
-                        <button type="button" onclick="submitBulkDelete()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <button type="button" onclick="submitBulkDelete()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-trash-can"></i> Hapus Terpilih
                         </button>
                     </div>
@@ -338,31 +297,84 @@
         });
     </script>
 
+    <!-- MODAL CETAK BERITA ACARA PER MK / PILIH PERTEMUAN -->
+    <div id="modal-print-ba" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 text-left">
+            <!-- Header Modal -->
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/75">
+                <div class="min-w-0 pr-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-lg bg-teal-50 text-teal-800 flex items-center justify-center text-xs">
+                            <i class="fa-regular fa-file-lines"></i>
+                        </div>
+                        <h3 class="font-bold text-sm text-slate-800 tracking-tight">Cetak Berita Acara (BA)</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 truncate" id="modal-ba-subtitle">Pilih pertemuan yang ingin dicetak</p>
+                </div>
+                <button type="button" onclick="closePrintBaModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Controls Bar in Modal: Select All & Count Badge -->
+            <div class="px-5 py-2.5 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                <label class="inline-flex items-center gap-2 cursor-pointer font-medium select-none">
+                    <input type="checkbox" id="modal-ba-select-all" onchange="toggleModalBaSelectAll(this)" class="rounded border-slate-300 text-teal-800 focus:ring-teal-700/30 cursor-pointer">
+                    <span>Pilih Semua Pertemuan</span>
+                </label>
+                <span id="modal-ba-count-badge" class="font-medium text-slate-500">0 dipilih</span>
+            </div>
+
+            <!-- Scrollable Meeting List -->
+            <div class="p-5 overflow-y-auto space-y-2 flex-1 divide-y divide-slate-100" id="modal-ba-list">
+                <!-- Dynamically populated rows by JS -->
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="px-5 py-3.5 bg-slate-50/75 border-t border-slate-100 flex items-center justify-between gap-3">
+                <button type="button" onclick="closePrintBaModal()" class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition cursor-pointer">
+                    Batal
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btn-modal-ba-print-all" onclick="printAllBaForGroup()" class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer" title="Cetak seluruh pertemuan pada mata kuliah ini">
+                        <i class="fa-solid fa-print text-slate-400"></i>
+                        <span>Cetak Semua</span>
+                    </button>
+                    <button type="button" id="btn-modal-ba-print-selected" onclick="printSelectedModalBa()" class="px-4 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-print"></i>
+                        <span id="text-modal-ba-print-btn">Cetak Terpilih (0)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Add Agenda (Buat Agenda Mata Kuliah) -->
-    <div id="modal-add-agenda" class="fixed inset-0 z-50 overflow-y-auto hidden text-xs">
+    <div id="modal-add-agenda" class="fixed inset-0 z-50 overflow-y-auto hidden text-sm">
         <!-- Backdrop -->
-        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="toggleModal('modal-add-agenda')"></div>
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('modal-add-agenda')"></div>
         
         <!-- Modal Content -->
         <div class="relative min-h-screen flex items-center justify-center p-4">
-            <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden text-left">
+            <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden text-left border-2 border-slate-200">
                 <!-- Header -->
-                <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center text-slate-800">
-                    <h3 class="font-bold text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-plus text-teal-800"></i> Buat Agenda Mata Kuliah
+                <div class="bg-slate-50 border-b-2 border-slate-200 px-6 py-5 flex justify-between items-center text-slate-900">
+                    <h3 class="font-black text-lg flex items-center gap-2.5">
+                        <i class="fa-solid fa-calendar-plus text-teal-700"></i>
+                        <span>Buat Agenda Mata Kuliah Baru</span>
                     </h3>
-                    <button type="button" onclick="toggleModal('modal-add-agenda')" class="text-slate-400 hover:text-slate-600 text-base">
+                    <button type="button" onclick="toggleModal('modal-add-agenda')" class="w-10 h-10 rounded-xl bg-white border border-slate-300 text-slate-600 hover:text-slate-900 flex items-center justify-center text-xl transition cursor-pointer">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
                 
                 <!-- Body -->
-                <form action="{{ route('dosen.agenda.store') }}" method="POST" class="p-6 space-y-4">
+                <form action="{{ route('dosen.agenda.store') }}" method="POST" class="p-6 space-y-5">
                     @csrf
                     
                     <!-- 1. Combobox Mata Kuliah Berdasarkan Jadwal Lab -->
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Mata Kuliah & Kelas <span class="text-rose-500">*</span></label>
+                        <label class="block text-base font-bold text-slate-900 mb-1.5">Mata Kuliah &amp; Kelas <span class="text-rose-600">*</span></label>
                         @if(isset($jadwalPenggunaanLab) && $jadwalPenggunaanLab->count() > 0)
                             <!-- Hidden input for form submission -->
                             <input type="hidden" name="jadwal_penggunaan_lab_id" id="modal_jadwal_id" required>
@@ -370,7 +382,7 @@
                             <!-- Custom Searchable Combobox Component -->
                             <div class="relative" id="combobox_container_modal">
                                 <div class="relative flex items-center">
-                                    <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-400 text-xs pointer-events-none"></i>
+                                    <i class="fa-solid fa-magnifying-glass absolute left-4 text-slate-400 text-base pointer-events-none"></i>
                                     <input type="text" 
                                            id="combobox_search_modal" 
                                            placeholder="-- Cari / Pilih Mata Kuliah Terjadwal --" 
@@ -378,19 +390,19 @@
                                            onclick="toggleComboboxModal(true)"
                                            onfocus="toggleComboboxModal(true)"
                                            oninput="filterComboboxModal(this.value)"
-                                           class="w-full pl-8 pr-8 py-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-bold text-xs focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition placeholder:font-normal placeholder:text-slate-400 cursor-pointer" />
+                                           class="w-full pl-11 pr-11 py-3 rounded-xl bg-white border-2 border-slate-300 text-slate-900 font-bold text-base focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 cursor-pointer" />
                                     <button type="button" 
                                             onclick="toggleComboboxModal()" 
-                                            class="absolute right-2 text-slate-400 hover:text-slate-600 p-1 focus:outline-none">
-                                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200" id="combobox_arrow_modal"></i>
+                                            class="absolute right-3 text-slate-500 hover:text-slate-700 p-1 focus:outline-none cursor-pointer">
+                                        <i class="fa-solid fa-chevron-down text-sm transition-transform duration-200" id="combobox_arrow_modal"></i>
                                     </button>
                                 </div>
 
                                 <!-- Dropdown Options Menu -->
                                 <div id="combobox_menu_modal" 
-                                     class="hidden absolute z-30 left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl divide-y divide-slate-100">
+                                     class="hidden absolute z-30 left-0 right-0 mt-1 max-h-72 overflow-y-auto bg-white border-2 border-slate-300 rounded-xl shadow-xl divide-y divide-slate-100">
                                     @foreach($jadwalPenggunaanLab as $j)
-                                        <div class="combobox-item p-3 hover:bg-teal-50/80 cursor-pointer transition flex flex-col gap-0.5"
+                                        <div class="combobox-item p-3.5 hover:bg-slate-50 cursor-pointer transition flex flex-col gap-1"
                                              data-id="{{ $j->id }}"
                                              data-title="{{ $j->mata_kuliah }} - {{ $j->kelas }} ({{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }}-{{ substr($j->jam_selesai,0,5) }})"
                                              data-search="{{ strtolower($j->mata_kuliah . ' ' . $j->kelas . ' ' . $j->hari . ' ' . ($j->lab->nama_lab ?? '') . ' ' . ($j->prodi->nama_prodi ?? '')) }}"
@@ -403,35 +415,35 @@
                                              data-jam-mulai="{{ substr($j->jam_mulai, 0, 5) }}"
                                              data-jam-selesai="{{ substr($j->jam_selesai, 0, 5) }}"
                                              onclick="selectComboboxModal(this)">
-                                            <div class="flex items-center justify-between font-bold text-slate-800 text-xs">
-                                                <span class="text-teal-900 font-extrabold">{{ $j->mata_kuliah }}</span>
-                                                <span class="px-2.5 py-0.5 bg-teal-100 text-teal-900 rounded-full text-xs font-bold">Kelas {{ $j->kelas }}</span>
+                                            <div class="flex items-center justify-between font-bold text-slate-900 text-base">
+                                                <span class="font-black text-slate-900">{{ $j->mata_kuliah }}</span>
+                                                <span class="px-2.5 py-0.5 bg-slate-200 text-slate-900 rounded-md text-xs font-bold">Kelas {{ $j->kelas }}</span>
                                             </div>
-                                            <div class="flex items-center justify-between text-xs text-slate-600 font-medium mt-1">
-                                                <span><i class="fa-regular fa-clock mr-1.5 text-slate-400"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }} - {{ substr($j->jam_selesai,0,5) }} WIB</span>
-                                                <span class="text-teal-800 font-bold"><i class="fa-solid fa-door-open mr-1.5"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
+                                            <div class="flex items-center justify-between text-sm text-slate-600 font-semibold mt-0.5">
+                                                <span><i class="fa-regular fa-clock mr-1.5 text-slate-500"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }} - {{ substr($j->jam_selesai,0,5) }} WIB</span>
+                                                <span class="text-slate-900 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-300"><i class="fa-solid fa-door-open mr-1 text-slate-600"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
                                             </div>
                                         </div>
                                     @endforeach
-                                    <div id="combobox_empty_modal" class="hidden p-4 text-center text-slate-400 text-xs italic">
+                                    <div id="combobox_empty_modal" class="hidden p-4 text-center text-slate-500 text-sm italic">
                                         Tidak ada mata kuliah yang cocok dengan kata kunci pencarian.
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Detail Box of Selected Matkul -->
-                            <div id="modal-jadwal-info-box" class="hidden mt-2.5 p-3.5 bg-teal-50 border border-teal-200 rounded-xl space-y-1.5 text-xs">
-                                <div class="flex justify-between items-center font-bold text-teal-900">
-                                    <span id="modal-info-lab"><i class="fa-solid fa-door-open mr-1.5 text-teal-600"></i> Lab</span>
-                                    <span id="modal-info-kelas" class="px-2.5 py-0.5 bg-teal-200 text-teal-900 rounded text-xs font-bold">Kelas</span>
+                            <div id="modal-jadwal-info-box" class="hidden mt-2.5 p-3.5 bg-slate-50 border border-slate-300 rounded-xl space-y-1 text-sm">
+                                <div class="flex justify-between items-center font-bold text-slate-900">
+                                    <span id="modal-info-lab"><i class="fa-solid fa-door-open mr-1.5 text-slate-700"></i> Lab</span>
+                                    <span id="modal-info-kelas" class="px-2.5 py-0.5 bg-slate-200 text-slate-900 rounded text-xs font-bold">Kelas</span>
                                 </div>
-                                <div class="text-slate-700">
+                                <div class="text-slate-700 font-semibold">
                                     <span>Jadwal Rutin: <strong id="modal-info-rutin" class="text-slate-900 font-bold">-</strong></span>
                                 </div>
-                                <div class="text-xs text-slate-600 font-medium" id="modal-info-prodi">-</div>
+                                <div class="text-sm text-slate-600 font-medium" id="modal-info-prodi">-</div>
                             </div>
                         @else
-                            <div class="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs">
+                            <div class="p-4 bg-amber-50 border-2 border-amber-300 text-amber-950 rounded-xl text-sm font-semibold">
                                 Belum ada jadwal mata kuliah yang di-plotting untuk Anda.
                             </div>
                         @endif
@@ -439,50 +451,50 @@
 
                     <!-- 2. Tanggal Pelaksanaan -->
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Tanggal Pertemuan <span class="text-rose-500">*</span></label>
-                        <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" onchange="checkLiveModalClash()" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-semibold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                        <label class="block text-base font-bold text-slate-900 mb-1.5">Tanggal Pertemuan <span class="text-rose-600">*</span></label>
+                        <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" onchange="checkLiveModalClash()" class="w-full py-3 px-3.5 rounded-xl bg-white border-2 border-slate-300 text-slate-900 font-bold text-base focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
                     </div>
 
                     <!-- 3. Jam Mulai & Jam Selesai -->
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-slate-700 font-bold mb-1">Jam Mulai <span class="text-rose-500">*</span></label>
-                            <input type="time" name="waktu_masuk" id="modal_input_waktu_masuk" required value="08:00" onchange="checkLiveModalClash()" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <label class="block text-base font-bold text-slate-900 mb-1.5">Jam Mulai <span class="text-rose-600">*</span></label>
+                            <input type="time" name="waktu_masuk" id="modal_input_waktu_masuk" required value="08:00" onchange="checkLiveModalClash()" class="w-full py-3 px-3.5 rounded-xl bg-white border-2 border-slate-300 text-slate-900 font-mono font-bold text-base focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
                         </div>
                         <div>
-                            <label class="block text-slate-700 font-bold mb-1">Jam Selesai <span class="text-rose-500">*</span></label>
-                            <input type="time" name="waktu_keluar" id="modal_input_waktu_keluar" required value="10:30" onchange="checkLiveModalClash()" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 font-mono font-bold focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                            <label class="block text-base font-bold text-slate-900 mb-1.5">Jam Selesai <span class="text-rose-600">*</span></label>
+                            <input type="time" name="waktu_keluar" id="modal_input_waktu_keluar" required value="10:30" onchange="checkLiveModalClash()" class="w-full py-3 px-3.5 rounded-xl bg-white border-2 border-slate-300 text-slate-900 font-mono font-bold text-base focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
                         </div>
                     </div>
 
                     <!-- Peringatan Otomatis Real-Time Jika Bentrok -->
-                    <div id="modal-live-clash-box" class="hidden p-3 bg-rose-50 border-2 border-rose-300 rounded-xl text-xs font-bold text-rose-900 space-y-1">
-                        <div class="flex items-center gap-1.5 text-rose-900 font-black">
-                            <i class="fa-solid fa-triangle-exclamation text-rose-600 text-sm"></i>
+                    <div id="modal-live-clash-box" class="hidden p-4 bg-rose-50 border-2 border-rose-300 rounded-xl text-sm font-bold text-rose-950 space-y-1">
+                        <div class="flex items-center gap-2 text-rose-950 font-black">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base"></i>
                             <span id="modal-clash-title">Bentrok Ruangan Terdeteksi!</span>
                         </div>
-                        <p id="modal-clash-msg" class="text-rose-700 font-medium"></p>
-                        <a href="{{ route('dosen.jadwal-lab') }}" target="_blank" class="inline-flex items-center gap-1 text-teal-800 hover:text-teal-950 font-black underline text-xs pt-1">
+                        <p id="modal-clash-msg" class="text-rose-800 font-medium"></p>
+                        <a href="{{ route('dosen.jadwal-lab') }}" target="_blank" class="inline-flex items-center gap-1.5 text-teal-800 hover:text-teal-900 hover:underline font-bold text-sm pt-1">
                             <i class="fa-solid fa-calendar-days"></i> Buka Kalender Jam Kosong Lab &rarr;
                         </a>
                     </div>
 
-                    <!-- 4. Rencana Pembelajaran -->
+                    <!-- 4. Materi Praktikum -->
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Rencana Pembelajaran / Materi <span class="text-rose-500">*</span></label>
-                        <textarea name="rencana_pembelajaran" rows="3" required placeholder="Tuliskan materi pembelajaran pada pertemuan ini..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none"></textarea>
+                        <label class="block text-base font-bold text-slate-900 mb-1.5">Materi Praktikum <span class="text-slate-500 font-normal text-xs">(Opsional)</span></label>
+                        <textarea name="materi_pembelajaran" rows="3" placeholder="Tuliskan materi praktikum pada pertemuan ini (Opsional)..." class="w-full p-3.5 rounded-xl bg-white border-2 border-slate-300 text-slate-900 text-base font-medium focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none placeholder:text-slate-400"></textarea>
                     </div>
 
                     <!-- Fallback Collapsible: Pengaturan Ruangan Lain -->
-                    <details class="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden group">
-                        <summary class="px-3.5 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 cursor-pointer flex items-center justify-between select-none">
-                            <span><i class="fa-solid fa-sliders mr-1.5"></i> Pengaturan Tambahan / Ganti Ruang Lab</span>
+                    <details class="bg-slate-50 border border-slate-300 rounded-xl overflow-hidden group">
+                        <summary class="px-4 py-3 text-sm font-bold text-slate-700 hover:text-slate-900 cursor-pointer flex items-center justify-between select-none">
+                            <span><i class="fa-solid fa-sliders mr-1.5 text-slate-600"></i> Pengaturan Tambahan / Ganti Ruang Lab</span>
                             <i class="fa-solid fa-chevron-down group-open:rotate-180 transition-transform"></i>
                         </summary>
-                        <div class="p-3.5 border-t border-slate-200 space-y-3 bg-white">
+                        <div class="p-4 border-t border-slate-200 space-y-3 bg-white">
                             <div>
-                                <label class="block text-slate-700 font-bold mb-1">Ganti Laboratorium (Opsional)</label>
-                                <select name="lab_id" class="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-xs">
+                                <label class="block text-sm font-bold text-slate-900 mb-1">Ganti Laboratorium (Opsional)</label>
+                                <select name="lab_id" class="w-full py-2.5 px-3 rounded-lg bg-white border border-slate-300 text-slate-800 text-sm font-semibold">
                                     <option value="">Gunakan Lab Bawaan Jadwal</option>
                                     @foreach($labs as $lab)
                                         <option value="{{ $lab->id }}">{{ $lab->nama_lab }} ({{ $lab->lokasi }})</option>
@@ -490,8 +502,8 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-slate-700 font-bold mb-1">Dosen Pengampu (Opsional)</label>
-                                <select name="dosen_pengampu_id" class="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-xs">
+                                <label class="block text-sm font-bold text-slate-900 mb-1">Dosen Pengampu (Opsional)</label>
+                                <select name="dosen_pengampu_id" class="w-full py-2.5 px-3 rounded-lg bg-white border border-slate-300 text-slate-800 text-sm font-semibold">
                                     <option value="">Gunakan Pengampu Bawaan Jadwal</option>
                                     @foreach($dosens as $d)
                                         <option value="{{ $d->id }}">{{ $d->nama }} (NIP: {{ $d->nip }})</option>
@@ -501,10 +513,11 @@
                         </div>
                     </details>
 
-                    <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 bg-white">
-                        <button type="button" onclick="toggleModal('modal-add-agenda')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition">Batal</button>
-                        <button type="submit" class="px-5 py-2 bg-teal-800 hover:bg-teal-900 text-white font-bold rounded-lg transition shadow-sm flex items-center gap-1.5">
-                            <i class="fa-solid fa-calendar-check"></i> Buat Agenda
+                    <div class="flex justify-end gap-3 pt-3 border-t border-slate-200 bg-white">
+                        <button type="button" onclick="toggleModal('modal-add-agenda')" class="min-h-[44px] px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-base rounded-xl transition cursor-pointer">Batal</button>
+                        <button type="submit" class="min-h-[44px] px-6 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-98 text-white font-bold text-base rounded-xl transition shadow-xs flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            <span>Buat Agenda</span>
                         </button>
                     </div>
                 </form>
@@ -1373,11 +1386,136 @@
             });
         });
 
-        window.addEventListener('pageshow', function() {
-            if (typeof Swal !== 'undefined' && Swal.isVisible() && Swal.isLoading()) {
-                Swal.close();
+        // ==========================================
+        // BERITA ACARA PRINT (PER MK & BULK SELECT)
+        // ==========================================
+        let currentPrintBaFirstId = null;
+        let currentPrintBaGroupSlug = null;
+
+        function printSelectedDosenAgendasBa() {
+            const checked = document.querySelectorAll('.agenda-checkbox:checked');
+            if (checked.length === 0) {
+                Swal.fire({
+                    title: 'Pilih Agenda Terlebih Dahulu',
+                    text: 'Silakan centang minimal satu sesi agenda untuk mencetak Berita Acara.',
+                    icon: 'info',
+                    confirmButtonColor: '#0f766e',
+                    confirmButtonText: 'Mengerti'
+                });
+                return;
             }
-        });
+            const ids = Array.from(checked).map(cb => cb.value);
+            const firstId = ids[0];
+            const baseUrl = "{{ route('dosen.agenda.berita-acara.cetak', ':id') }}".replace(':id', firstId);
+            window.open(`${baseUrl}?ids=${ids.join(',')}`, '_blank');
+        }
+
+        function openPrintBaModal(groupSlug, courseTitle, className, firstId) {
+            currentPrintBaFirstId = firstId;
+            currentPrintBaGroupSlug = groupSlug;
+
+            const modal = document.getElementById('modal-print-ba');
+            const subtitle = document.getElementById('modal-ba-subtitle');
+            const listContainer = document.getElementById('modal-ba-list');
+            const selectAllCb = document.getElementById('modal-ba-select-all');
+
+            if (subtitle) {
+                subtitle.textContent = `${courseTitle} • Kelas ${className}`;
+            }
+            if (listContainer) {
+                listContainer.innerHTML = '';
+            }
+
+            const rows = document.querySelectorAll(`div.item-${groupSlug}`);
+            if (rows.length === 0) {
+                if (listContainer) {
+                    listContainer.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs">Tidak ada pertemuan pada mata kuliah ini.</div>';
+                }
+            } else {
+                rows.forEach(row => {
+                    const id = row.dataset.agendaId;
+                    const pertemuan = row.dataset.pertemuan;
+                    const tanggal = row.dataset.tanggal;
+                    const jam = row.dataset.jam;
+                    const status = row.dataset.status;
+                    const materi = row.dataset.materi;
+                    const printUrl = row.dataset.printUrl;
+
+                    const isFinished = (status === 'Selesai');
+                    const badgeClass = isFinished 
+                        ? 'bg-slate-100 text-slate-600' 
+                        : (status === 'Berlangsung' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-50 text-slate-500 border border-slate-200');
+
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'py-2.5 flex items-center justify-between gap-3 text-xs';
+                    itemDiv.innerHTML = `
+                        <label class="flex items-start gap-3 cursor-pointer select-none flex-1 min-w-0">
+                            <input type="checkbox" value="${id}" class="modal-ba-item-cb rounded border-slate-300 text-teal-800 focus:ring-teal-700/30 mt-0.5 cursor-pointer" checked onchange="updateModalBaCount()">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="font-bold text-slate-800">Pertemuan ${pertemuan}</span>
+                                    <span class="text-slate-400">•</span>
+                                    <span class="text-slate-600 font-medium">${tanggal}</span>
+                                    <span class="text-slate-400 font-mono text-[11px]">${jam}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-medium ${badgeClass}">${status}</span>
+                                </div>
+                                ${materi && materi !== '-' ? `<div class="text-slate-500 text-[11px] truncate mt-0.5"><span class="font-medium text-slate-600">Materi:</span> ${materi}</div>` : ''}
+                            </div>
+                        </label>
+                        <a href="${printUrl}" target="_blank" class="shrink-0 px-2.5 py-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded text-[11px] font-medium transition inline-flex items-center gap-1 border border-slate-200" title="Cetak Berita Acara Khusus Pertemuan ${pertemuan}">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i> Satuan
+                        </a>
+                    `;
+                    listContainer.appendChild(itemDiv);
+                });
+            }
+
+            if (selectAllCb) selectAllCb.checked = true;
+            updateModalBaCount();
+
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closePrintBaModal() {
+            const modal = document.getElementById('modal-print-ba');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function toggleModalBaSelectAll(masterCb) {
+            const itemCbs = document.querySelectorAll('.modal-ba-item-cb');
+            itemCbs.forEach(cb => cb.checked = masterCb.checked);
+            updateModalBaCount();
+        }
+
+        function updateModalBaCount() {
+            const itemCbs = document.querySelectorAll('.modal-ba-item-cb');
+            const checked = Array.from(itemCbs).filter(cb => cb.checked);
+            const countBadge = document.getElementById('modal-ba-count-badge');
+            const printBtn = document.getElementById('btn-modal-ba-print-selected');
+            const printBtnText = document.getElementById('text-modal-ba-print-btn');
+            const selectAllCb = document.getElementById('modal-ba-select-all');
+
+            if (countBadge) countBadge.textContent = `${checked.length} dari ${itemCbs.length} dipilih`;
+            if (printBtnText) printBtnText.textContent = `Cetak Terpilih (${checked.length})`;
+            if (printBtn) printBtn.disabled = (checked.length === 0);
+            if (selectAllCb) selectAllCb.checked = (checked.length === itemCbs.length && itemCbs.length > 0);
+        }
+
+        function printSelectedModalBa() {
+            const itemCbs = document.querySelectorAll('.modal-ba-item-cb');
+            const checkedIds = Array.from(itemCbs).filter(cb => cb.checked).map(cb => cb.value);
+            if (checkedIds.length === 0) {
+                alert('Silakan pilih minimal 1 pertemuan untuk dicetak.');
+                return;
+            }
+            const baseUrl = "{{ route('dosen.agenda.berita-acara.cetak', ':id') }}".replace(':id', currentPrintBaFirstId);
+            window.open(`${baseUrl}?ids=${checkedIds.join(',')}`, '_blank');
+        }
+
+        function printAllBaForGroup() {
+            const baseUrl = "{{ route('dosen.agenda.berita-acara.cetak', ':id') }}".replace(':id', currentPrintBaFirstId);
+            window.open(`${baseUrl}?all_mk=1`, '_blank');
+        }
     </script>
 
     @include('dosen.partials.modal_tutorial')

@@ -6,7 +6,15 @@
         </div>
         <div>
             <h1 class="font-bold text-sm leading-tight">DIGITAL Board</h1>
-            <p class="text-[10px] font-semibold text-teal-400 tracking-wider">ADMIN CONTROL PANEL</p>
+            <p class="text-[10px] font-semibold text-teal-400 tracking-wider">
+                @if(auth()->user()?->isSuperAdmin())
+                    SUPER ADMIN
+                @elseif(auth()->user()?->isAdminFakultas())
+                    ADMIN {{ strtoupper(auth()->user()->fakultas->nama_fakultas ?? 'FAKULTAS') }}
+                @else
+                    ADMIN CONTROL PANEL
+                @endif
+            </p>
         </div>
     </div>
     
@@ -56,7 +64,7 @@
             <span class="text-xs">Laporan Absensi</span>
         </a>
 
-
+        @if(auth()->user()?->isSuperAdmin())
         <!-- 7. Data Akademik -->
         @php
             $isAkademik = request()->routeIs('admin.akademik*');
@@ -65,6 +73,7 @@
             <i class="fa-solid fa-graduation-cap"></i>
             <span class="text-xs">Data Akademik</span>
         </a>
+        @endif
 
         <!-- 8. Pengumuman Lab -->
         @php

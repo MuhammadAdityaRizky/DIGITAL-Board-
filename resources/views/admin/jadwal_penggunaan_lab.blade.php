@@ -79,11 +79,15 @@
                     <div>
                         <label class="block text-slate-500 font-bold mb-1">Pilih Laboratorium:</label>
                         <select name="lab_id" onchange="this.form.submit()" class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-800 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            @foreach($labs as $l)
-                                <option value="{{ $l->id }}" {{ $selectedLabId == $l->id ? 'selected' : '' }}>
-                                    {{ strtoupper($l->nama_lab) }} ({{ $l->lokasi }})
-                                </option>
-                            @endforeach
+                            @if($labs->isEmpty())
+                                <option value="">-- Belum Ada Lab --</option>
+                            @else
+                                @foreach($labs as $l)
+                                    <option value="{{ $l->id }}" {{ $selectedLabId == $l->id ? 'selected' : '' }}>
+                                        {{ strtoupper($l->nama_lab) }} ({{ $l->lokasi }})
+                                    </option>
+                                @endforeach
+                            @endif
                         </select>
                     </div>
                     <div>
@@ -96,21 +100,40 @@
                 </form>
 
                 <div class="flex items-center gap-2.5">
-                    @if($jadwals->count() > 0)
-                        <form id="form-bulk-generate" action="{{ route('admin.jadwal-lab.bulk-generate-16') }}" method="POST" class="inline">
-                            @csrf
-                            <input type="hidden" name="lab_id" value="{{ $selectedLabId }}">
-                            <button type="button" onclick="confirmBulkGenerate()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="Otomatis buat 16 pertemuan untuk seluruh mata kuliah di lab ini">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i> Generate 16 Sesi Lab Ini
-                            </button>
-                        </form>
+                    @if($labs->isNotEmpty())
+                        <button type="button" onclick="openImportModal()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="Import jadwal dari file template Excel">
+                            <i class="fa-solid fa-file-import"></i> Impor Excel
+                        </button>
+                        <a href="{{ route('admin.jadwal-lab.export', ['lab_id' => $selectedLabId, 'tahun_akademik' => $tahunAkademik]) }}" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="Export format Excel (sesuai template)">
+                            <i class="fa-solid fa-file-excel"></i> Export Excel
+                        </a>
+                        <button type="button" onclick="openAddModal()" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                            <i class="fa-solid fa-plus"></i> Tambah Slot Jadwal
+                        </button>
+                    @else
+                        <a href="{{ route('admin.laboratorium') }}" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                            <i class="fa-solid fa-plus"></i> Tambah Laboratorium Baru
+                        </a>
                     @endif
-                    <button type="button" onclick="openAddModal()" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
-                        <i class="fa-solid fa-plus"></i> Tambah Slot Jadwal
-                    </button>
                 </div>
             </div>
 
+            @if($labs->isEmpty())
+                <div class="bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-xs">
+                    <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200/80 flex items-center justify-center mx-auto mb-4 text-2xl shadow-xs">
+                        <i class="fa-solid fa-flask-vial"></i>
+                    </div>
+                    <h3 class="font-extrabold text-base text-slate-800">Fakultas Anda Belum Memiliki Laboratorium</h3>
+                    <p class="text-xs text-slate-500 max-w-md mx-auto mt-1.5 leading-relaxed">
+                        Saat ini belum ada ruang laboratorium yang terdaftar di bawah naungan fakultas Anda. Silakan tambahkan laboratorium baru terlebih dahulu sebelum mengatur jadwal perkuliahan atau mengimpor file spreadsheet.
+                    </p>
+                    <div class="mt-6">
+                        <a href="{{ route('admin.laboratorium') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-900 text-white font-bold rounded-xl text-xs transition shadow-sm">
+                            <i class="fa-solid fa-plus"></i> Tambah Laboratorium Sekarang
+                        </a>
+                    </div>
+                </div>
+            @else
             <!-- Matriks Visual Tabel Excel Mingguan -->
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                 <div class="bg-slate-800 text-white px-6 py-4 flex flex-wrap justify-between items-center gap-3">
@@ -191,9 +214,6 @@
 
                                                         <!-- Action buttons on hover -->
                                                         <div class="absolute right-1.5 top-1.5 hidden group-hover:flex items-center gap-1 z-20">
-                                                            <button type="button" onclick="confirmSingleGenerate({{ $m->id }}, {{ json_encode($m->mata_kuliah) }})" class="w-6 h-6 rounded bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center text-[10px] shadow-sm cursor-pointer" title="Generate 16 Sesi Agenda 1 Semester">
-                                                                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                                                            </button>
                                                             <button type="button" onclick="openEditModal({{ json_encode($m) }})" class="w-6 h-6 rounded bg-white/30 hover:bg-white/50 text-white flex items-center justify-center text-[10px] shadow-sm cursor-pointer" title="Edit">
                                                                 <i class="fa-solid fa-pen"></i>
                                                             </button>
@@ -237,6 +257,7 @@
                     </div>
                 </div>
             </div>
+            @endif
 
         </div>
     </main>
@@ -687,32 +708,121 @@
                     </div>
                 </div>
 
-                <!-- Options Row -->
-                <div id="modal-add-options" class="p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl">
-                    <label class="flex items-center gap-2.5 cursor-pointer select-none text-xs font-bold text-indigo-950">
-                        <input type="checkbox" name="auto_generate_16" value="1" checked class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                        <span>Otomatis Langsung Generate 16 Sesi Perkuliahan ke Agenda</span>
+                <!-- Footer Buttons -->
+                <div class="pt-4 mt-2 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2.5 font-bold rounded-xl text-xs transition cursor-pointer hover:bg-slate-200" style="background-color: #f1f5f9 !important; color: #334155 !important; border: 1px solid #cbd5e1 !important;">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-6 py-2.5 font-bold rounded-xl text-xs transition shadow-md hover:opacity-95 flex items-center gap-2 cursor-pointer" style="background-color: #0f766e !important; color: #ffffff !important;">
+                        <i class="fa-solid fa-floppy-disk" style="color: #ffffff !important;"></i>
+                        <span style="color: #ffffff !important;">Simpan Jadwal</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Import Excel Matriks Jadwal Lab -->
+    <div id="modal-import-jadwal-lab" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-teal-950 text-white px-6 py-5 flex items-center justify-between border-b border-slate-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400">
+                        <i class="fa-solid fa-file-excel text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base text-white">Impor Matriks Jadwal Lab</h3>
+                        <p class="text-xs text-slate-300">Format matriks mingguan (.xlsx / .xls)</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeImportModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Form -->
+            <form id="form-import-jadwal" action="{{ route('admin.jadwal-lab.import') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4 text-xs" onsubmit="handleImportSubmit(event)">
+                @csrf
+
+                <!-- Lab Destination -->
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1.5">
+                        Laboratorium Target <span class="text-rose-500">*</span>
                     </label>
-                    <p class="text-[10px] text-indigo-700 mt-1 ml-6 font-medium">Sistem akan otomatis mengalokasikan 16 pertemuan kuliah/praktikum 1 semester di menu Agenda</p>
+                    <select name="lab_id" id="import_lab_id" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-800 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                        @foreach($labs as $l)
+                            <option value="{{ $l->id }}" {{ $selectedLabId == $l->id ? 'selected' : '' }}>
+                                {{ strtoupper($l->nama_lab) }} ({{ $l->lokasi }}) {{ $l->fakultas ? '— ' . $l->fakultas->nama_fakultas : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Tahun Akademik -->
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1.5">
+                        Tahun Akademik Target <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" name="tahun_akademik" id="import_tahun_akademik" value="{{ $tahunAkademik }}" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-medium text-slate-800 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none" placeholder="Contoh: 2026/2027 Ganjil">
+                </div>
+
+                <!-- Mode Impor -->
+                <div>
+                    <label class="block text-slate-700 font-bold mb-2">Metode Impor Jadwal:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <label class="relative flex items-start gap-2.5 p-3 rounded-xl border border-teal-300 bg-teal-50/50 cursor-pointer hover:bg-teal-50 transition">
+                            <input type="radio" name="mode" value="replace" checked class="mt-0.5 text-teal-700 focus:ring-teal-700">
+                            <div>
+                                <span class="font-bold text-slate-800 block text-xs">Ganti Seluruhnya</span>
+                                <span class="text-[11px] text-slate-500 leading-tight block mt-0.5">Bersihkan jadwal lama lab ini, lalu isi dengan data baru.</span>
+                            </div>
+                        </label>
+                        <label class="relative flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50 transition">
+                            <input type="radio" name="mode" value="append" class="mt-0.5 text-teal-700 focus:ring-teal-700">
+                            <div>
+                                <span class="font-bold text-slate-800 block text-xs">Tambahkan (Append)</span>
+                                <span class="text-[11px] text-slate-500 leading-tight block mt-0.5">Sisipkan jadwal baru jika jam tidak bentrok.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- File Dropzone -->
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1.5">
+                        Pilih Berkas Excel (.xlsx, .xls) <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="border-2 border-dashed border-slate-300 hover:border-teal-600 rounded-2xl p-5 text-center bg-slate-50/60 transition cursor-pointer" onclick="document.getElementById('excel_import_file').click()">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-teal-600 mb-2"></i>
+                        <p class="text-xs font-bold text-slate-700" id="import_file_label">Klik untuk memilih file spreadsheet</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5" id="import_file_sublabel">Format .xlsx atau .xls (Maks 10MB)</p>
+                        <input type="file" name="file" id="excel_import_file" accept=".xlsx,.xls" required class="hidden" onchange="handleImportFileSelect(this)">
+                    </div>
+                </div>
+
+                <!-- Help & Download Template Box -->
+                <div class="bg-blue-50/80 border border-blue-200/80 rounded-xl p-3 flex items-start gap-2.5 text-[11px] text-blue-900 leading-relaxed">
+                    <i class="fa-solid fa-circle-info text-blue-600 mt-0.5 text-sm shrink-0"></i>
+                    <div>
+                        <span>File harus berformat matriks mingguan (Senin s/d Sabtu, Jam Mulai - Selesai per baris, dan warna background sesuai Prodi).</span>
+                        <div class="mt-1.5">
+                            <a href="{{ route('admin.jadwal-lab.export', ['lab_id' => $selectedLabId, 'tahun_akademik' => $tahunAkademik]) }}" class="inline-flex items-center gap-1.5 font-bold text-blue-700 hover:text-blue-900 hover:underline">
+                                <i class="fa-solid fa-download"></i> Unduh Contoh Format Excel Matriks
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Footer Buttons -->
-                <div class="pt-4 mt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5">
-                    <div id="modal-edit-actions" class="hidden">
-                        <button type="button" onclick="generateFromModalCurrent()" class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
-                            <span>Generate 16 Pertemuan</span>
-                        </button>
-                    </div>
-                    <div class="flex items-center gap-2.5 ml-auto">
-                        <button type="button" onclick="closeModal()" class="px-5 py-2.5 font-bold rounded-xl text-xs transition cursor-pointer hover:bg-slate-200" style="background-color: #f1f5f9 !important; color: #334155 !important; border: 1px solid #cbd5e1 !important;">
-                            Batal
-                        </button>
-                        <button type="submit" class="px-6 py-2.5 font-bold rounded-xl text-xs transition shadow-md hover:opacity-95 flex items-center gap-2 cursor-pointer" style="background-color: #0f766e !important; color: #ffffff !important;">
-                            <i class="fa-solid fa-floppy-disk" style="color: #ffffff !important;"></i>
-                            <span style="color: #ffffff !important;">Simpan Jadwal</span>
-                        </button>
-                    </div>
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                    <button type="button" onclick="closeImportModal()" class="px-5 py-2.5 font-bold rounded-xl text-xs transition cursor-pointer hover:bg-slate-200" style="background-color: #f1f5f9 !important; color: #334155 !important; border: 1px solid #cbd5e1 !important;">
+                        Batal
+                    </button>
+                    <button type="submit" id="btn-submit-import" class="px-6 py-2.5 font-bold rounded-xl text-xs transition shadow-md hover:opacity-95 flex items-center gap-2 cursor-pointer bg-teal-700 hover:bg-teal-800 text-white">
+                        <i class="fa-solid fa-file-import"></i>
+                        <span>Mulai Impor Data</span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -723,6 +833,41 @@
         const form = document.getElementById('form-jadwal');
         const title = document.getElementById('modal-jadwal-title');
         const methodField = document.getElementById('method-field');
+        const modalImport = document.getElementById('modal-import-jadwal-lab');
+
+        function openImportModal() {
+            if (modalImport) {
+                modalImport.classList.remove('hidden');
+            }
+        }
+
+        function closeImportModal() {
+            if (modalImport) {
+                modalImport.classList.add('hidden');
+            }
+        }
+
+        function handleImportFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                document.getElementById('import_file_label').textContent = file.name;
+                document.getElementById('import_file_sublabel').textContent = (file.size / 1024).toFixed(1) + ' KB - Siap diimpor';
+            }
+        }
+
+        function handleImportSubmit(e) {
+            const btn = document.getElementById('btn-submit-import');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Mengimpor Data...</span>';
+            Swal.fire({
+                title: 'Sedang Mengimpor Jadwal...',
+                text: 'Mohon tunggu sebentar, sistem sedang membaca dan memetakan matriks jadwal excel ke database.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
 
         // Helper: Close All Combobox Dropdowns
         function closeAllDropdowns() {
@@ -1169,6 +1314,8 @@
                     closeKelasDropdown();
                 } else if (modal && !modal.classList.contains('hidden')) {
                     closeModal();
+                } else if (modalImport && !modalImport.classList.contains('hidden')) {
+                    closeImportModal();
                 }
             }
         });
@@ -1177,75 +1324,6 @@
         // MODAL OPEN / CLOSE CONTROLLERS
         // ==========================================
         let currentEditingJadwal = null;
-
-        function confirmBulkGenerate() {
-            Swal.fire({
-                title: 'Generate 16 Sesi Lab Ini?',
-                text: 'Sistem akan otomatis membuat 16 sesi agenda pertemuan perkuliahan 1 semester untuk SEMUA mata kuliah yang terjadwal di lab ini.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#4f46e5',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: '<i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Ya, Generate 16 Sesi!',
-                cancelButtonText: 'Batal',
-                customClass: {
-                    popup: 'rounded-3xl p-6 shadow-2xl',
-                    title: 'text-lg font-extrabold text-slate-800',
-                    htmlContainer: 'text-xs text-slate-600 font-medium',
-                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
-                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Sedang Membuat 16 Sesi Pertemuan...',
-                        text: 'Mohon tunggu, sistem sedang membuat jadwal praktikum di database.',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-                    document.getElementById('form-bulk-generate').submit();
-                }
-            });
-        }
-
-        function confirmSingleGenerate(jadwalId, matkulName) {
-            Swal.fire({
-                title: 'Generate 16 Pertemuan?',
-                text: 'Otomatis buat 16 sesi agenda praktikum 1 semester untuk ' + matkulName + '?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#4f46e5',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: '<i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Ya, Generate!',
-                cancelButtonText: 'Batal',
-                customClass: {
-                    popup: 'rounded-3xl p-6 shadow-2xl',
-                    title: 'text-lg font-extrabold text-slate-800',
-                    htmlContainer: 'text-xs text-slate-600 font-medium',
-                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
-                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Sedang Membuat Sesi...',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '{{ url("admin/jadwal-lab") }}/' + jadwalId + '/generate-16';
-                    form.innerHTML = '@csrf';
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            });
-        }
 
         function confirmDeleteJadwal(jadwalId, matkulName) {
             Swal.fire({
@@ -1276,18 +1354,8 @@
             });
         }
 
-        function generateFromModalCurrent() {
-            if (currentEditingJadwal) {
-                confirmSingleGenerate(currentEditingJadwal.id, currentEditingJadwal.mata_kuliah);
-            }
-        }
-
         function openAddModal() {
             currentEditingJadwal = null;
-            const editActions = document.getElementById('modal-edit-actions');
-            const addOptions = document.getElementById('modal-add-options');
-            if (editActions) editActions.classList.add('hidden');
-            if (addOptions) addOptions.classList.remove('hidden');
 
             title.textContent = 'Tambah Slot Jadwal Penggunaan Lab';
             form.action = "{{ route('admin.jadwal-lab.store') }}";
@@ -1325,10 +1393,6 @@
 
         function openEditModal(jadwal) {
             currentEditingJadwal = jadwal;
-            const editActions = document.getElementById('modal-edit-actions');
-            const addOptions = document.getElementById('modal-add-options');
-            if (editActions) editActions.classList.remove('hidden');
-            if (addOptions) addOptions.classList.add('hidden');
 
             title.textContent = 'Edit Slot Jadwal Penggunaan Lab';
             form.action = "{{ url('admin/jadwal-lab') }}/" + jadwal.id;

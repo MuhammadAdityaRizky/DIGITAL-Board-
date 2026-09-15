@@ -40,7 +40,7 @@
                 <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1 rounded-xl hover:bg-slate-50 transition">
                     <div class="text-right hidden sm:block">
                         <p class="font-bold text-xs text-slate-800 group-hover:text-teal-700 transition">{{ auth()->user()->username }}</p>
-                        <p class="text-[9px] font-semibold tracking-wider text-slate-500 uppercase">SUPER ADMIN</p>
+                        <p class="text-[9px] font-semibold tracking-wider text-slate-500 uppercase">{{ auth()->user()->isSuperAdmin() ? 'SUPER ADMIN' : 'ADMIN FAKULTAS' }}</p>
                     </div>
                     <div class="w-9 h-9 rounded-full bg-teal-100 group-hover:bg-teal-200 text-teal-900 border border-teal-200 flex items-center justify-center font-bold text-xs transition transform group-hover:scale-105 shadow-xs">
                         {{ strtoupper(substr(auth()->user()->username ?? 'AD', 0, 2)) }}
@@ -53,7 +53,7 @@
                     <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
                         <p class="text-xs font-bold text-slate-800 truncate">{{ auth()->user()->username ?? 'Administrator' }}</p>
                         <span class="inline-block mt-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/60 rounded-md text-[9px] font-bold uppercase tracking-wider">
-                            Super Admin
+                            {{ auth()->user()->isSuperAdmin() ? 'Super Admin' : (auth()->user()->fakultas?->nama_fakultas ?? 'Admin Fakultas') }}
                         </span>
                     </div>
 
@@ -86,11 +86,27 @@
                                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
                             </div>
                         </div>
+                        @if(auth()->user()->isSuperAdmin())
+                            <div class="w-full sm:w-56">
+                                <label class="block text-slate-700 font-bold mb-1.5">Fakultas</label>
+                                <select name="fakultas_id" onchange="this.form.submit()" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none cursor-pointer font-medium">
+                                    <option value="">Semua Fakultas</option>
+                                    @foreach($fakultas as $f)
+                                        <option value="{{ $f->id }}" {{ request('fakultas_id') == $f->id ? 'selected' : '' }}>
+                                            {{ $f->nama_fakultas }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
                         <div class="w-full sm:w-48">
                             <label class="block text-slate-700 font-bold mb-1.5">Role Akun</label>
                             <select name="role" onchange="this.form.submit()" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none cursor-pointer">
                                 <option value="">Semua Role</option>
-                                <option value="admin" {{ strtolower(request('role')) === 'admin' ? 'selected' : '' }}>Admin</option>
+                                @if(auth()->user()->isSuperAdmin())
+                                    <option value="super_admin" {{ strtolower(request('role')) === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                                @endif
+                                <option value="admin" {{ strtolower(request('role')) === 'admin' ? 'selected' : '' }}>Admin Fakultas</option>
                                 <option value="dosen" {{ strtolower(request('role')) === 'dosen' ? 'selected' : '' }}>Dosen</option>
                                 <option value="mahasiswa" {{ strtolower(request('role')) === 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
                             </select>
@@ -152,19 +168,25 @@
 
             <!-- Main Data Table -->
             <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden max-w-4xl">
-                <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-                    <h3 class="font-bold text-sm text-slate-800">Daftar Pengguna Sistem</h3>
+                <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex flex-wrap justify-between items-center gap-3">
                     <div class="flex items-center gap-2">
-                        <button type="button" onclick="toggleModal('modal-promote-semester')" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <h3 class="font-bold text-sm text-slate-800">Daftar Pengguna Sistem</h3>
+                        <span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-[11px] font-bold">{{ $users->total() }} User</span>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button type="button" onclick="toggleModal('modal-fitur-auto')" class="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300/80 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Pelajari Cara Kerja Fitur Otomatis">
+                            <i class="fa-solid fa-circle-question text-teal-700"></i> Panduan Fitur
+                        </button>
+                        <button type="button" onclick="toggleModal('modal-promote-semester')" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-arrow-up-right-dots"></i> Naik Semester
                         </button>
-                        <button onclick="toggleModal('modal-import-dosen')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm hidden sm:flex">
+                        <button type="button" onclick="toggleModal('modal-import-dosen')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm hidden sm:flex cursor-pointer">
                             <i class="fa-solid fa-file-import"></i> Import Dosen
                         </button>
-                        <button onclick="toggleModal('modal-import-mahasiswa')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm hidden sm:flex">
+                        <button type="button" onclick="toggleModal('modal-import-mahasiswa')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm hidden sm:flex cursor-pointer">
                             <i class="fa-solid fa-file-import"></i> Import Mhs
                         </button>
-                        <button onclick="openAddUserModal()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <button type="button" onclick="openAddUserModal()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-plus"></i> Tambah User Baru
                         </button>
                     </div>
@@ -242,8 +264,12 @@
                                                 @endif
                                             </td>
                                             <td class="p-4">
-                                                @if($u->role === 'admin')
-                                                    <span class="px-2.5 py-1 bg-amber-50 text-amber-750 border border-amber-100 rounded-lg text-[10px] font-bold uppercase tracking-wider">Admin</span>
+                                                @if($u->role === 'super_admin')
+                                                    <span class="px-2.5 py-1 bg-purple-50 text-purple-750 border border-purple-200 rounded-lg text-[10px] font-bold uppercase tracking-wider">Super Admin</span>
+                                                @elseif($u->role === 'admin')
+                                                    <span class="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                                                        Admin {{ $u->fakultas?->nama_fakultas ? '('.$u->fakultas->nama_fakultas.')' : 'Fakultas' }}
+                                                    </span>
                                                 @elseif($u->role === 'dosen')
                                                     <span class="px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-100 rounded-lg text-[10px] font-bold uppercase tracking-wider">Dosen</span>
                                                 @else
@@ -311,8 +337,27 @@
                     <select name="role" id="user-role" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                         <option value="dosen">Dosen</option>
                         <option value="mahasiswa">Mahasiswa</option>
-                        <option value="admin">Admin</option>
+                        <option value="admin">Admin Fakultas</option>
+                        @if(auth()->user()->isSuperAdmin())
+                            <option value="super_admin">Super Admin (Akses Penuh)</option>
+                        @endif
                     </select>
+                </div>
+                <div id="admin-fields" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Fakultas Naungan Admin <span class="text-rose-500">*</span></label>
+                        @if(auth()->user()->isSuperAdmin())
+                            <select name="fakultas_admin" id="user-fakultas_admin" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
+                                <option value="">-- Pilih Fakultas --</option>
+                                @foreach($fakultas as $f)
+                                    <option value="{{ $f->id }}">{{ $f->nama_fakultas }}</option>
+                                @endforeach
+                            </select>
+                        @else
+                            <input type="hidden" name="fakultas_admin" value="{{ auth()->user()->fakultas_id }}">
+                            <input type="text" readonly disabled value="{{ auth()->user()->fakultas?->nama_fakultas ?? 'Fakultas Anda' }}" class="w-full p-2.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-500 font-bold cursor-not-allowed">
+                        @endif
+                    </div>
                 </div>
                 <div id="mahasiswa-fields" class="hidden space-y-4">
                     <div class="grid grid-cols-2 gap-3">
@@ -387,6 +432,269 @@
                     <button type="submit" class="flex-1 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg font-bold shadow-sm">Simpan</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL PANDUAN FITUR OTOMATIS (UI/UX REDESIGNED) -->
+    <div id="modal-fitur-auto" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-3xl w-full max-h-[88vh] flex flex-col overflow-hidden text-left animate-in fade-in zoom-in duration-150">
+            
+            <!-- Header Modal -->
+            <div class="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 text-white px-6 py-4.5 flex justify-between items-center flex-shrink-0 border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 text-base shadow-inner">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-base tracking-tight text-white">Panduan Fitur Otomatisasi Sistem</h3>
+                        <p class="text-xs text-teal-300/90 font-medium">Otomatisasi Manajemen Mahasiswa, Dosen & Akademik</p>
+                    </div>
+                </div>
+                <button type="button" onclick="toggleModal('modal-fitur-auto')" class="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-rose-500 text-slate-300 hover:text-white flex items-center justify-center text-sm transition cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Segmented Pill Control (Tanpa Scrollbar, 3 Kolom Simetris) -->
+            <div class="px-6 pt-4 pb-1 bg-slate-50/70 border-b border-slate-200/80 flex-shrink-0">
+                <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-200/80 rounded-2xl text-xs">
+                    <button type="button" onclick="switchAutoFiturTab('tab-auto-semester')" id="btn-tab-auto-semester" class="tab-btn-fitur-auto py-2.5 px-3 rounded-xl font-bold transition flex items-center justify-center gap-2 bg-white text-teal-950 shadow-xs cursor-pointer">
+                        <i class="fa-solid fa-arrow-up-right-dots text-indigo-600"></i>
+                        <span class="truncate">1. Kelola Semester</span>
+                    </button>
+                    <button type="button" onclick="switchAutoFiturTab('tab-auto-import')" id="btn-tab-auto-import" class="tab-btn-fitur-auto py-2.5 px-3 rounded-xl font-medium text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                        <span class="truncate">2. Auto-Akun & Excel</span>
+                    </button>
+                    <button type="button" onclick="switchAutoFiturTab('tab-auto-security')" id="btn-tab-auto-security" class="tab-btn-fitur-auto py-2.5 px-3 rounded-xl font-medium text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-shield-halved text-teal-600"></i>
+                        <span class="truncate">3. Keamanan & DO</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Contents (2-Column Bento Grid - Nyaman & Ringkas) -->
+            <div class="p-6 overflow-y-auto space-y-4 text-xs flex-1 bg-white">
+                
+                <!-- TAB 1: NAIK & KELOLA SEMESTER -->
+                <div id="tab-auto-semester" class="tab-content-fitur-auto space-y-3.5">
+                    <!-- Ringkasan Singkat -->
+                    <div class="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-2xl flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 text-xs">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                        <p class="text-indigo-950 font-medium text-xs leading-snug">
+                            Semua fitur di bawah terintegrasi pada tombol <strong class="text-indigo-900 font-bold">"Naik Semester"</strong> untuk memperbarui data mahasiswa massal dalam hitungan detik.
+                        </p>
+                    </div>
+
+                    <!-- 2 Kolom Kartu Fitur -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Card 1 -->
+                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 hover:border-slate-300 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs">
+                                    <i class="fa-solid fa-arrow-up"></i>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-100/70 text-indigo-800 border border-indigo-200/60">+1 Semester</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs">Kenaikan Semester (+1) Massal</h4>
+                                <p class="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                    Menaikkan semester seluruh mahasiswa aktif serentak per periode akademik (Ganjil: 1 Sep / Genap: 1 Feb). Bisa difilter per Fakultas, Prodi, atau Angkatan.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 hover:border-slate-300 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
+                                    <i class="fa-solid fa-user-graduate"></i>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100/70 text-blue-800 border border-blue-200/60">Auto Lulus</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs">Otomatisasi Kelulusan (>S8)</h4>
+                                <p class="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                    Mahasiswa aktif yang naik melewati batas <strong>Semester 8</strong> otomatis berubah status menjadi <b>Lulus</b> dan semesternya dikunci di semester 8.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 hover:border-slate-300 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs">
+                                    <i class="fa-solid fa-user-clock"></i>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100/70 text-amber-800 border border-amber-200/60">Auto Skip</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs">Proteksi Status Cuti & Drop Out</h4>
+                                <p class="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                    Mahasiswa berstatus <b>Cuti</b> atau <b>Drop Out (DO)</b> secara otomatis dilewati (*auto-exclude*), sehingga data semester mereka tidak akan terpengaruh.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Card 4 -->
+                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 hover:border-slate-300 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="w-8 h-8 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200 text-slate-700 border border-slate-300/60">-1 Rollback</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs">Rollback / Pembatalan (-1)</h4>
+                                <p class="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                    Jika ada kesalahan klik periode, admin dapat memilih <em>"Turunkan (-1)"</em>. Mahasiswa yang sempat auto-lulus otomatis dikembalikan ke status <b>Aktif</b>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: AUTO GENERATE AKUN & IMPORT EXCEL -->
+                <div id="tab-auto-import" class="tab-content-fitur-auto hidden space-y-3.5">
+                    <!-- Ringkasan Singkat -->
+                    <div class="p-3.5 bg-emerald-50/70 border border-emerald-100 rounded-2xl flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 text-xs">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <p class="text-emerald-950 font-medium text-xs leading-snug">
+                            Fitur impor membaca file Excel/CSV dan melakukan registrasi otomatis ribuan akun pengguna secara aman tanpa entri manual.
+                        </p>
+                    </div>
+
+                    <!-- 2 Kolom Kartu Fitur -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Card 1 -->
+                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 hover:border-slate-300 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
+                                    <i class="fa-solid fa-key"></i>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100/70 text-emerald-800 border border-emerald-200/60">Akun Instan</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs">Auto-Generate Akun & Password</h4>
+                                <p class="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                    Username & password awal otomatis diset sama dengan <strong>NIM</strong> (Mahasiswa) atau <strong>NIP/NIDN</strong> (Dosen) dengan enkripsi bcrypt aman.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 hover:border-slate-300 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs">
+                                    <i class="fa-solid fa-calculator"></i>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-teal-100/70 text-teal-800 border border-teal-200/60">Rumus Angkatan</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs">Auto-Hitung Semester Berjalan</h4>
+                                <p class="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                    Jika kolom semester di Excel kosong, sistem otomatis menghitung semester berjalan berdasarkan tahun angkatan dan kalender akademik saat ini.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 hover:border-slate-300 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs">
+                                    <i class="fa-solid fa-filter"></i>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100/70 text-amber-800 border border-amber-200/60">Auto Parse</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs">Deteksi Program & Kelas Otomatis</h4>
+                                <p class="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                    Teks kelas seperti <em>"Karyawan A"</em> atau <em>"Reguler B"</em> otomatis diurai menjadi Program Kuliah (Reguler/Karyawan) dan Kode Kelas (A/B/C/D).
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Card 4 -->
+                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 hover:border-slate-300 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="w-8 h-8 rounded-xl bg-sky-100 text-sky-800 flex items-center justify-center font-bold text-xs">
+                                    <i class="fa-solid fa-spinner"></i>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-100/70 text-sky-800 border border-sky-200/60">Live Progress</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs">Live Real-Time Progress Bar</h4>
+                                <p class="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                    Proses impor berjalan di background (chunking 50 baris) dengan indikator progress bar live sehingga browser tidak timeout atau freeze.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: MULTI-TENANT & KEAMANAN -->
+                <div id="tab-auto-security" class="tab-content-fitur-auto hidden space-y-3.5">
+                    <!-- Ringkasan Singkat -->
+                    <div class="p-3.5 bg-teal-50/70 border border-teal-100 rounded-2xl flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-teal-700 text-white flex items-center justify-center shrink-0 text-xs">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <p class="text-teal-950 font-medium text-xs leading-snug">
+                            Perlindungan hak akses dan isolasi data antar-fakultas bekerja secara otomatis untuk menjamin privasi dan keamanan sistem.
+                        </p>
+                    </div>
+
+                    <!-- 2 Kolom Kartu Fitur -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Card 1 -->
+                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 hover:border-slate-300 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="w-8 h-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-xs">
+                                    <i class="fa-solid fa-building-columns"></i>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-teal-100/70 text-teal-800 border border-teal-200/60">Multi-Tenant</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs">Isolasi Fakultas Otomatis (Admin FK)</h4>
+                                <p class="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                    Admin Fakultas (misal Admin FTS / FKIP) otomatis terkunci hanya dapat melihat, menambah, mengimpor, dan mengelola mahasiswa fakultasnya sendiri.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 hover:border-slate-300 transition">
+                            <div class="flex items-center justify-between">
+                                <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-800 flex items-center justify-center font-bold text-xs">
+                                    <i class="fa-solid fa-ban"></i>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100/70 text-rose-800 border border-rose-200/60">Auto-Block</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-xs">Pemblokiran Login Mahasiswa DO</h4>
+                                <p class="text-slate-600 text-[11px] mt-1 leading-relaxed">
+                                    Mahasiswa yang berstatus <strong>Drop Out (DO)</strong> otomatis ditolak saat mencoba login ke portal Digital Board demi keamanan data akademik.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer Modal -->
+            <div class="bg-slate-50/90 border-t border-slate-200 px-6 py-3.5 flex items-center justify-between flex-shrink-0">
+                <span class="text-[11px] text-slate-500 font-medium flex items-center gap-1.5 hidden sm:flex">
+                    <i class="fa-solid fa-circle-check text-emerald-600"></i> Seluruh sistem otomatisasi aktif berjalan di background.
+                </span>
+                <button type="button" onclick="toggleModal('modal-fitur-auto')" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs transition shadow-sm cursor-pointer ml-auto">
+                    Tutup Panduan
+                </button>
+            </div>
         </div>
     </div>
 
@@ -718,12 +1026,38 @@
         function updateRequiredFields(role) {
             const fakultasSelect = document.getElementById('user-fakultas');
             const prodiSelect = document.getElementById('user-jurusan');
-            if (role === 'dosen' || role === 'mahasiswa') {
-                fakultasSelect.required = true;
-                prodiSelect.required = true;
+            const fakultasAdminSelect = document.getElementById('user-fakultas_admin');
+            
+            if (role === 'admin') {
+                if (fakultasAdminSelect) {
+                    fakultasAdminSelect.name = 'fakultas';
+                    fakultasAdminSelect.required = true;
+                }
+                if (fakultasSelect) {
+                    fakultasSelect.name = 'fakultas_mhs';
+                    fakultasSelect.required = false;
+                }
+                if (prodiSelect) prodiSelect.required = false;
+            } else if (role === 'dosen' || role === 'mahasiswa') {
+                if (fakultasAdminSelect) {
+                    fakultasAdminSelect.name = 'fakultas_admin';
+                    fakultasAdminSelect.required = false;
+                }
+                if (fakultasSelect) {
+                    fakultasSelect.name = 'fakultas';
+                    fakultasSelect.required = true;
+                }
+                if (prodiSelect) prodiSelect.required = true;
             } else {
-                fakultasSelect.required = false;
-                prodiSelect.required = false;
+                if (fakultasAdminSelect) {
+                    fakultasAdminSelect.name = 'fakultas_admin';
+                    fakultasAdminSelect.required = false;
+                }
+                if (fakultasSelect) {
+                    fakultasSelect.name = 'fakultas';
+                    fakultasSelect.required = false;
+                }
+                if (prodiSelect) prodiSelect.required = false;
             }
         }
 
@@ -731,6 +1065,7 @@
             const extraFields = document.getElementById('mahasiswa-fields');
             const classField = document.getElementById('class-container');
             const dosenFields = document.getElementById('dosen-fields');
+            const adminFields = document.getElementById('admin-fields');
             
             updateRequiredFields(this.value);
 
@@ -738,13 +1073,20 @@
                 extraFields.classList.remove('hidden');
                 classField.classList.remove('hidden');
                 dosenFields.classList.add('hidden');
+                if (adminFields) adminFields.classList.add('hidden');
             } else if (this.value === 'dosen') {
                 extraFields.classList.remove('hidden');
                 classField.classList.add('hidden');
                 dosenFields.classList.remove('hidden');
+                if (adminFields) adminFields.classList.add('hidden');
+            } else if (this.value === 'admin') {
+                extraFields.classList.add('hidden');
+                dosenFields.classList.add('hidden');
+                if (adminFields) adminFields.classList.remove('hidden');
             } else {
                 extraFields.classList.add('hidden');
                 dosenFields.classList.add('hidden');
+                if (adminFields) adminFields.classList.add('hidden');
             }
         });
 
@@ -764,6 +1106,11 @@
             document.getElementById('role-container').classList.remove('hidden');
             document.getElementById('mahasiswa-fields').classList.add('hidden');
             document.getElementById('dosen-fields').classList.add('hidden');
+            const adminFields = document.getElementById('admin-fields');
+            if (adminFields) adminFields.classList.add('hidden');
+            const fakAdmin = document.getElementById('user-fakultas_admin');
+            if (fakAdmin) fakAdmin.value = "";
+
             document.getElementById('user-role').value = "dosen";
             document.getElementById('user-fakultas').value = "";
             document.getElementById('user-jurusan').value = "";
@@ -809,6 +1156,7 @@
             
             updateRequiredFields(user.role);
 
+            const adminFields = document.getElementById('admin-fields');
             if (user.role === 'dosen') {
                 if (user.dosen) {
                     nama = user.dosen.nama;
@@ -820,6 +1168,7 @@
                 document.getElementById('mahasiswa-fields').classList.remove('hidden');
                 document.getElementById('class-container').classList.add('hidden');
                 document.getElementById('dosen-fields').classList.remove('hidden');
+                if (adminFields) adminFields.classList.add('hidden');
             } else if (user.role === 'mahasiswa') {
                 if (user.mahasiswa) {
                     nama = user.mahasiswa.nama_lengkap;
@@ -833,9 +1182,19 @@
                 document.getElementById('mahasiswa-fields').classList.remove('hidden');
                 document.getElementById('class-container').classList.remove('hidden');
                 document.getElementById('dosen-fields').classList.add('hidden');
+                if (adminFields) adminFields.classList.add('hidden');
+            } else if (user.role === 'admin') {
+                document.getElementById('mahasiswa-fields').classList.add('hidden');
+                document.getElementById('dosen-fields').classList.add('hidden');
+                if (adminFields) {
+                    adminFields.classList.remove('hidden');
+                    const fakAdmin = document.getElementById('user-fakultas_admin');
+                    if (fakAdmin) fakAdmin.value = user.fakultas_id || "";
+                }
             } else {
                 document.getElementById('mahasiswa-fields').classList.add('hidden');
                 document.getElementById('dosen-fields').classList.add('hidden');
+                if (adminFields) adminFields.classList.add('hidden');
             }
             
             document.getElementById('user-nama_lengkap').value = nama;
@@ -849,6 +1208,21 @@
             document.getElementById('user-kompetensi').value = kompetensi;
             
             toggleModal('modal-user');
+        }
+
+        function switchAutoFiturTab(tabId) {
+            document.querySelectorAll('.tab-content-fitur-auto').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn-fitur-auto').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-teal-950', 'font-bold', 'shadow-xs');
+                btn.classList.add('text-slate-600', 'font-medium');
+            });
+            const target = document.getElementById(tabId);
+            if (target) target.classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-600', 'font-medium');
+                activeBtn.classList.add('bg-white', 'text-teal-950', 'font-bold', 'shadow-xs');
+            }
         }
     </script>
 

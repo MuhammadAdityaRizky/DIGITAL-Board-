@@ -11,6 +11,12 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 class AgendaImport implements ToCollection
 {
     public int $importedCount = 0;
+    protected ?int $defaultFakultasId;
+
+    public function __construct(?int $defaultFakultasId = null)
+    {
+        $this->defaultFakultasId = $defaultFakultasId;
+    }
 
     public function collection(Collection $rows): void
     {
@@ -81,11 +87,19 @@ class AgendaImport implements ToCollection
 
         $defaultLabId = null;
         if (isset($metaLab)) {
-            $l = Laboratorium::where('nama_lab', 'like', '%' . $metaLab . '%')->first();
+            $labQuery = Laboratorium::where('nama_lab', 'like', '%' . $metaLab . '%');
+            if ($this->defaultFakultasId) {
+                $labQuery->where('fakultas_id', $this->defaultFakultasId);
+            }
+            $l = $labQuery->first();
             if ($l) $defaultLabId = $l->id;
         }
         if (!$defaultLabId) {
-            $defaultLabId = Laboratorium::first()?->id;
+            $fallbackQuery = Laboratorium::query();
+            if ($this->defaultFakultasId) {
+                $fallbackQuery->where('fakultas_id', $this->defaultFakultasId);
+            }
+            $defaultLabId = $fallbackQuery->first()?->id;
         }
 
         // 2. Identify Column Indexes or Heading Row
@@ -234,8 +248,20 @@ class AgendaImport implements ToCollection
             // Match Lab
             $labId = $defaultLabId;
             if ($valLab) {
-                $l = Laboratorium::where('nama_lab', 'like', '%' . trim($valLab) . '%')->first();
-                if ($l) $labId = $l->id;
+                $labQuery = Laboratorium::where('nama_lab', 'like', '%' . trim($valLab) . '%');
+                if ($this->defaultFakultasId) {
+                    $labQuery->where('fakultas_id', $this->defaultFakultasId);
+                }
+                $l = $labQuery->first();
+                if ($l) {
+                    $labId = $l->id;
+                } elseif ($this->defaultFakultasId) {
+                    // Check if lab exists but in another faculty
+                    $crossLab = Laboratorium::where('nama_lab', 'like', '%' . trim($valLab) . '%')->first();
+                    if ($crossLab && $crossLab->fakultas_id != $this->defaultFakultasId) {
+                        throw new \Exception("Baris " . ($i + 1) . ": Laboratorium '{$crossLab->nama_lab}' bukan bagian dari fakultas Anda.");
+                    }
+                }
             }
 
             if (!$dosenId) {

@@ -137,8 +137,8 @@ class DosenController extends Controller
                 'jadwal_penggunaan_lab_id' => 'required|exists:jadwal_penggunaan_lab,id',
                 'tanggal' => 'required|date',
                 'waktu_masuk' => 'required',
-                'waktu_keluar' => 'required',
-                'rencana_pembelajaran' => 'required|string',
+                'materi_pembelajaran' => 'nullable|string',
+                'rencana_pembelajaran' => 'nullable|string',
             ]);
 
             $jadwal = \App\Models\JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu'])->findOrFail($request->jadwal_penggunaan_lab_id);
@@ -192,6 +192,7 @@ class DosenController extends Controller
                 'lab_id' => $jadwal->lab_id ?? 5,
                 'mata_kuliah' => $jadwal->mata_kuliah,
                 'program_kuliah' => $jadwal->program_kuliah ?? 'Reguler',
+                'tahun_akademik' => $jadwal->tahun_akademik ?? '2026/2027 Ganjil',
                 'jenis_pertemuan' => 'Praktikum',
                 'kelas' => $jadwal->kelas ?? 'Reg A',
                 'semester' => $jadwal->semester ?? '1',
@@ -201,7 +202,7 @@ class DosenController extends Controller
                 'jam_mulai' => $request->waktu_masuk,
                 'jam_selesai' => $request->waktu_keluar,
                 'status_agenda' => 'Akan Datang',
-                'catatan' => $request->rencana_pembelajaran,
+                'catatan' => $request->materi_pembelajaran ?? $request->rencana_pembelajaran ?? '',
             ]);
 
             return back()->with('success', 'Agenda pembelajaran untuk ' . $jadwal->mata_kuliah . ' (' . $jadwal->kelas . ') berhasil dibuat.');
@@ -210,7 +211,8 @@ class DosenController extends Controller
         $request->validate([
             'dosen_pengampu_id' => 'nullable|exists:dosen,id',
             'lab_id' => 'required|exists:laboratorium,id',
-            'judul_agenda' => 'required|string|max:150',
+            'judul_agenda' => 'required_without:mata_kuliah|nullable|string|max:150',
+            'mata_kuliah' => 'nullable|string|max:150',
             'kelas' => 'nullable|string|max:50',
             'program_kuliah' => 'required|in:Reguler,Karyawan',
             'jenis_pertemuan' => 'nullable|in:Teori,Praktikum',
@@ -220,7 +222,8 @@ class DosenController extends Controller
             'tanggal' => 'required|date',
             'waktu_masuk' => 'required',
             'waktu_keluar' => 'required',
-            'rencana_pembelajaran' => 'required|string',
+            'materi_pembelajaran' => 'nullable|string',
+            'rencana_pembelajaran' => 'nullable|string',
         ]);
 
         // 1. Cek Bentrok Ruang Laboratorium
@@ -262,12 +265,32 @@ class DosenController extends Controller
             ])->withInput();
         }
 
+        // Hitung status agenda secara otomatis berdasarkan tanggal dan waktu
+        $tanggalCarbon = \Carbon\Carbon::parse($request->tanggal);
+        if ($tanggalCarbon->isPast() && !$tanggalCarbon->isToday()) {
+            $statusAgenda = 'Selesai';
+        } elseif ($tanggalCarbon->isFuture() && !$tanggalCarbon->isToday()) {
+            $statusAgenda = 'Akan Datang';
+        } else {
+            $nowTime = now()->format('H:i:s');
+            $mulai = $request->waktu_masuk . (strlen($request->waktu_masuk) == 5 ? ':00' : '');
+            $selesai = $request->waktu_keluar . (strlen($request->waktu_keluar) == 5 ? ':00' : '');
+            if ($nowTime < $mulai) {
+                $statusAgenda = 'Akan Datang';
+            } elseif ($nowTime >= $mulai && $nowTime <= $selesai) {
+                $statusAgenda = 'Berlangsung';
+            } else {
+                $statusAgenda = 'Selesai';
+            }
+        }
+
         Agenda::create([
             'dosen_id' => $dosen->id,
-            'dosen_pengampu_id' => $request->dosen_pengampu_id,
+            'dosen_pengampu_id' => $request->dosen_pengampu_id ?: $dosen->id,
             'lab_id' => $request->lab_id,
-            'mata_kuliah' => $request->judul_agenda,
+            'mata_kuliah' => $request->mata_kuliah ?: $request->judul_agenda,
             'program_kuliah' => $request->program_kuliah,
+            'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
             'jenis_pertemuan' => $request->jenis_pertemuan ?? 'Praktikum',
             'kelas' => $request->kelas ?? '',
             'semester' => $request->semester,
@@ -276,8 +299,8 @@ class DosenController extends Controller
             'tanggal' => $request->tanggal,
             'jam_mulai' => $request->waktu_masuk,
             'jam_selesai' => $request->waktu_keluar,
-            'status_agenda' => 'Akan Datang',
-            'catatan' => $request->rencana_pembelajaran,
+            'status_agenda' => $statusAgenda,
+            'catatan' => $request->materi_pembelajaran ?? $request->rencana_pembelajaran ?? '',
         ]);
 
         return back()->with('success', 'Agenda pembelajaran berhasil dibuat.');
@@ -288,7 +311,8 @@ class DosenController extends Controller
         $request->validate([
             'dosen_pengampu_id' => 'nullable|exists:dosen,id',
             'lab_id' => 'required|exists:laboratorium,id',
-            'judul_agenda' => 'required|string|max:150',
+            'judul_agenda' => 'required_without:mata_kuliah|nullable|string|max:150',
+            'mata_kuliah' => 'nullable|string|max:150',
             'kelas' => 'nullable|string|max:50',
             'program_kuliah' => 'required|in:Reguler,Karyawan',
             'jenis_pertemuan' => 'nullable|in:Teori,Praktikum',
@@ -298,7 +322,8 @@ class DosenController extends Controller
             'tanggal' => 'required|date',
             'waktu_masuk' => 'required',
             'waktu_keluar' => 'required',
-            'rencana_pembelajaran' => 'required|string',
+            'materi_pembelajaran' => 'nullable|string',
+            'rencana_pembelajaran' => 'nullable|string',
         ]);
 
         $agenda = Agenda::findOrFail($id);
@@ -344,10 +369,32 @@ class DosenController extends Controller
             ])->withInput();
         }
 
+        // Hitung status agenda secara otomatis jika tidak dibatalkan
+        $statusAgenda = $agenda->status_agenda;
+        if ($statusAgenda !== 'Dibatalkan') {
+            $tanggalCarbon = \Carbon\Carbon::parse($request->tanggal);
+            if ($tanggalCarbon->isPast() && !$tanggalCarbon->isToday()) {
+                $statusAgenda = 'Selesai';
+            } elseif ($tanggalCarbon->isFuture() && !$tanggalCarbon->isToday()) {
+                $statusAgenda = 'Akan Datang';
+            } else {
+                $nowTime = now()->format('H:i:s');
+                $mulai = $request->waktu_masuk . (strlen($request->waktu_masuk) == 5 ? ':00' : '');
+                $selesai = $request->waktu_keluar . (strlen($request->waktu_keluar) == 5 ? ':00' : '');
+                if ($nowTime < $mulai) {
+                    $statusAgenda = 'Akan Datang';
+                } elseif ($nowTime >= $mulai && $nowTime <= $selesai) {
+                    $statusAgenda = 'Berlangsung';
+                } else {
+                    $statusAgenda = 'Selesai';
+                }
+            }
+        }
+
         $agenda->update([
-            'dosen_pengampu_id' => $request->dosen_pengampu_id,
+            'dosen_pengampu_id' => $request->dosen_pengampu_id ?: $agenda->dosen_pengampu_id,
             'lab_id' => $request->lab_id,
-            'mata_kuliah' => $request->judul_agenda,
+            'mata_kuliah' => $request->mata_kuliah ?: ($request->judul_agenda ?: $agenda->mata_kuliah),
             'program_kuliah' => $request->program_kuliah,
             'jenis_pertemuan' => $request->jenis_pertemuan ?? 'Praktikum',
             'kelas' => $request->kelas ?? '',
@@ -357,7 +404,8 @@ class DosenController extends Controller
             'tanggal' => $request->tanggal,
             'jam_mulai' => $request->waktu_masuk,
             'jam_selesai' => $request->waktu_keluar,
-            'catatan' => $request->rencana_pembelajaran,
+            'status_agenda' => $statusAgenda,
+            'catatan' => $request->materi_pembelajaran ?? ($request->rencana_pembelajaran ?? $agenda->catatan),
         ]);
 
         return back()->with('success', 'Agenda pembelajaran berhasil diperbarui.');
@@ -393,7 +441,13 @@ class DosenController extends Controller
     public function updateBeritaAcara(Request $request, $id)
     {
         $request->validate([
-            'berita_acara' => 'required|string',
+            'materi' => 'nullable|string',
+            'berita_acara' => 'nullable|string',
+            'catatan' => 'nullable|string',
+            'laboran' => 'nullable|string|max:150',
+            'asisten' => 'nullable|string|max:150',
+            'dosen' => 'nullable|string|max:150',
+            'tahun_ajaran' => 'nullable|string|max:50',
         ]);
 
         $agenda = Agenda::findOrFail($id);
@@ -402,11 +456,193 @@ class DosenController extends Controller
             return back()->withErrors(['berita_acara' => 'Berita Acara belum dapat diisi untuk sesi yang belum dimulai.']);
         }
 
-        $agenda->update([
-            'berita_acara' => $request->berita_acara,
-        ]);
+        $materi = $request->filled('materi') ? $request->materi : ($agenda->materi_realisasi ?: $agenda->catatan);
+        $catatan = $request->filled('catatan') ? $request->catatan : ($request->filled('berita_acara') ? $request->berita_acara : '');
 
-        return back()->with('success', 'Berita Acara berhasil disimpan.');
+        // Lock metadata to schedule and institutional data
+        $details = $agenda->berita_acara_details;
+        $laboran = $details['laboran'];
+        $asisten = $details['asisten'];
+        $dosenNama = $details['dosen'];
+        $tahunAjaran = $details['tahun_ajaran'];
+
+        $payload = [
+            'materi' => $materi,
+            'catatan' => $catatan,
+            'laboran' => $laboran,
+            'asisten' => $asisten,
+            'dosen' => $dosenNama,
+            'tahun_ajaran' => $tahunAjaran,
+            'updated_at' => now()->toDateTimeString(),
+        ];
+
+        $updateData = [
+            'berita_acara' => json_encode($payload, JSON_UNESCAPED_UNICODE),
+        ];
+
+        if ($request->filled('materi')) {
+            $updateData['materi_realisasi'] = $request->materi;
+        }
+
+        $agenda->update($updateData);
+
+        return back()->with('success', 'Berita Acara resmi praktikum berhasil disimpan.');
+    }
+
+    public function cetakBeritaAcara(Request $request, $id)
+    {
+        $user = auth()->user();
+        $baseAgenda = Agenda::with(['dosen', 'dosenPengampu', 'lab'])->findOrFail($id);
+
+        if ($user->role === 'dosen') {
+            $dosen = Dosen::where('user_id', $user->id)->first();
+            if ($dosen && $baseAgenda->dosen_id !== $dosen->id && $baseAgenda->dosen_pengampu_id !== $dosen->id) {
+                abort(403, 'Anda tidak memiliki akses ke Berita Acara ini.');
+            }
+        }
+
+        // Cek apakah cetak banyak (pilih beberapa pertemuan atau seluruh pertemuan pada MK)
+        if ($request->filled('ids')) {
+            $rawIds = is_array($request->ids) ? $request->ids : explode(',', $request->ids);
+            $ids = array_filter(array_map('intval', $rawIds));
+
+            $agendas = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'absensi.mahasiswa'])
+                ->whereIn('id', $ids)
+                ->orderBy('tanggal', 'asc')
+                ->orderBy('jam_mulai', 'asc')
+                ->get();
+        } elseif ($request->boolean('all_mk') || $request->get('mode') === 'all') {
+            $query = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'absensi.mahasiswa']);
+            if ($baseAgenda->jadwal_penggunaan_lab_id) {
+                $query->where('jadwal_penggunaan_lab_id', $baseAgenda->jadwal_penggunaan_lab_id);
+            } else {
+                $query->where('mata_kuliah', $baseAgenda->mata_kuliah)
+                      ->where('kelas', $baseAgenda->kelas)
+                      ->where('dosen_id', $baseAgenda->dosen_id);
+            }
+            $agendas = $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc')->get();
+        } else {
+            $agendas = collect([$baseAgenda]);
+            $baseAgenda->load('absensi.mahasiswa');
+        }
+
+        if ($agendas->isEmpty()) {
+            abort(404, 'Agenda pertemuan tidak ditemukan.');
+        }
+
+        $items = $agendas->map(function($ag) {
+            return [
+                'agenda' => $ag,
+                'details' => $ag->berita_acara_details,
+            ];
+        });
+
+        $agenda = $agendas->first();
+        $details = $items->first()['details'] ?? [];
+        $totalItems = $items->count();
+
+        return view('dosen.cetak_berita_acara', compact('items', 'agenda', 'details', 'totalItems'));
+    }
+
+    public function cetakRealisasiPraktikum($id)
+    {
+        $user = auth()->user();
+        $agenda = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'jadwalPenggunaanLab.prodi'])->findOrFail($id);
+
+        if ($user->role === 'dosen') {
+            $dosen = Dosen::where('user_id', $user->id)->first();
+            if ($dosen && $agenda->dosen_id !== $dosen->id && $agenda->dosen_pengampu_id !== $dosen->id) {
+                abort(403, 'Anda tidak memiliki akses ke dokumen Realisasi Praktikum ini.');
+            }
+        }
+
+        // Ambil seluruh sesi pertemuan untuk mata kuliah & kelas ini
+        $query = Agenda::with(['dosen', 'dosenPengampu', 'lab']);
+        if ($agenda->jadwal_penggunaan_lab_id) {
+            $query->where('jadwal_penggunaan_lab_id', $agenda->jadwal_penggunaan_lab_id);
+        } else {
+            $query->where('mata_kuliah', $agenda->mata_kuliah)
+                  ->where('kelas', $agenda->kelas)
+                  ->where('dosen_id', $agenda->dosen_id);
+        }
+        $agendas = $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc')->get();
+
+        // Format Dosen / Dosen Pengampu
+        $dosenUtama = $agenda->dosenPengampu->nama ?? $agenda->dosen->nama ?? 'Zulkarnaen Noor Syarif, S.Kom., M.Kom';
+        $dosenPendamping = null;
+        if ($agenda->dosen_pengampu_id && $agenda->dosen_pengampu_id != $agenda->dosen_id && $agenda->dosen) {
+            $dosenUtama = $agenda->dosenPengampu->nama;
+            $dosenPendamping = $agenda->dosen->nama;
+        } elseif ($agenda->dosen && str_contains($agenda->dosen->nama, 'Anggra')) {
+            $dosenUtama = 'Zulkarnaen Noor Syarif, S.Kom., M.Kom';
+            $dosenPendamping = $agenda->dosen->nama;
+        }
+        $dosenDisplay = $dosenPendamping ? "{$dosenUtama} / {$dosenPendamping}" : $dosenUtama;
+
+        // Prodi
+        $prodi = strtoupper($agenda->jurusan ?: ($agenda->jadwalPenggunaanLab?->prodi?->nama_prodi ?: 'SISTEM INFORMASI'));
+
+        // Program Kuliah & Kelas (Reguler vs Karyawan)
+        $programKuliah = $agenda->program_kuliah 
+            ?? $agenda->jadwalPenggunaanLab?->program_kuliah 
+            ?? 'Reguler';
+            
+        $kelasRaw = trim($agenda->kelas ?? ($agenda->jadwalPenggunaanLab?->kelas ?? ''));
+
+        $isKaryawan = stripos($programKuliah, 'karyawan') !== false 
+            || stripos($kelasRaw, 'karyawan') !== false 
+            || stripos($kelasRaw, 'kar') !== false;
+
+        if ($isKaryawan) {
+            $suffix = trim(preg_replace('/karyawan|kar|\s+/i', ' ', $kelasRaw));
+            $kelasFormatted = $suffix ? "Karyawan {$suffix}" : "Karyawan";
+        } else {
+            // Reguler
+            $suffix = trim(preg_replace('/reguler|reg|\s+/i', ' ', $kelasRaw));
+            $kelasFormatted = $suffix ? "Reg {$suffix}" : "Reg";
+        }
+
+        // Semester & Kelas (misal "II / Reg A" atau "II / Reg")
+        $romanMap = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII'];
+        $semRaw = (int) $agenda->semester;
+        $semesterRomawi = $romanMap[$semRaw] ?? ($agenda->semester ?: 'II');
+        $semesterKelas = "{$semesterRomawi} / {$kelasFormatted}";
+
+        // Tahun Akademik & Teks Semester (SEMESTER GENAP / SEMESTER GANJIL)
+        $tahunAkademikRaw = $agenda->tahun_akademik ?? ($agenda->jadwalPenggunaanLab?->tahun_akademik ?? '2025/2026 Genap');
+        $isGenap = stripos($tahunAkademikRaw, 'genap') !== false || ($semRaw > 0 && $semRaw % 2 === 0);
+        $semesterTeks = $isGenap ? 'SEMESTER GENAP' : 'SEMESTER GANJIL';
+
+        $tahunAjaran = '2025 / 2026';
+        if (preg_match('/(\d{4})\/(\d{4})/', $tahunAkademikRaw, $m)) {
+            $tahunAjaran = "{$m[1]} / {$m[2]}";
+        } elseif (preg_match('/(\d{4})/', $tahunAkademikRaw, $m)) {
+            $tahunAjaran = $m[1] . ' / ' . ((int)$m[1] + 1);
+        }
+
+        // Kode Mata Kuliah & SKS diambil dinamis dari Master Data Mata Kuliah
+        $masterMk = \App\Models\MataKuliah::where('nama_mk', $agenda->mata_kuliah)->first()
+            ?? \App\Models\MataKuliah::where('nama_mk', 'LIKE', '%' . trim($agenda->mata_kuliah) . '%')->first();
+
+        $kodeMatkul = $masterMk?->kode_mk;
+        if (!$kodeMatkul && preg_match('/^([A-Z0-9]{4,10})\s*[-:]\s*(.+)/', $agenda->mata_kuliah, $m)) {
+            $kodeMatkul = $m[1];
+        }
+        $kodeMatkul = $kodeMatkul ?: '-';
+
+        $sks = $masterMk?->sks ?: 1;
+
+        return view('dosen.cetak_realisasi_praktikum', compact(
+            'agenda',
+            'agendas',
+            'dosenDisplay',
+            'prodi',
+            'semesterKelas',
+            'semesterTeks',
+            'tahunAjaran',
+            'kodeMatkul',
+            'sks'
+        ));
     }
 
     public function submitAttendance(Request $request)
@@ -511,6 +747,7 @@ class DosenController extends Controller
                     'fakultas' => $jadwal->prodi->fakultas->nama_fakultas ?? 'Teknik',
                     'jurusan' => $jadwal->prodi->nama_prodi ?? $jadwal->jurusan ?? 'Sistem Informasi',
                     'program_kuliah' => $jadwal->program_kuliah ?? 'Reguler',
+                    'tahun_akademik' => $jadwal->tahun_akademik ?? '2026/2027 Ganjil',
                     'jenis_pertemuan' => $jadwal->jenis_pertemuan ?? 'Praktikum',
                     'kelas' => $jadwal->kelas,
                     'semester' => $jadwal->semester ?? '1',

@@ -11,15 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Table perizinan is actively required by Mahasiswa module and AutoAlphaMiddleware.
-        // Prevent accidental dropping.
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
         if (!Schema::hasTable('perizinan')) {
             Schema::create('perizinan', function (Blueprint $table) {
                 $table->id();
@@ -32,5 +23,13 @@ return new class extends Migration
                 $table->timestamp('created_at')->useCurrent();
             });
         }
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('perizinan');
     }
 };

@@ -21,10 +21,12 @@ class MahasiswaImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunk
     use Importable;
 
     public $importId;
+    public ?int $defaultFakultasId;
 
-    public function __construct($importId)
+    public function __construct($importId, ?int $defaultFakultasId = null)
     {
         $this->importId = $importId;
+        $this->defaultFakultasId = $defaultFakultasId;
     }
 
     public function chunkSize(): int
@@ -56,13 +58,24 @@ class MahasiswaImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunk
         }
 
         $id_prodi = $row['id_prodi'] ?? null;
-        $id_fakultas = $row['id_fakultas'] ?? null;
+        $id_fakultas = $this->defaultFakultasId ?: ($row['id_fakultas'] ?? null);
 
         if (empty($id_prodi) && !empty($row['prodi'])) {
-            $prodi = \App\Models\Prodi::where('nama_prodi', 'like', '%' . $row['prodi'] . '%')->first();
+            $prodiQuery = \App\Models\Prodi::where('nama_prodi', 'like', '%' . $row['prodi'] . '%');
+            if ($this->defaultFakultasId) {
+                $prodiQuery->where('fakultas_id', $this->defaultFakultasId);
+            }
+            $prodi = $prodiQuery->first();
             if ($prodi) {
                 $id_prodi = $prodi->id;
-                $id_fakultas = $prodi->fakultas_id;
+                $id_fakultas = $prodi->fakultas_id ?? $id_fakultas;
+            }
+        }
+
+        if (empty($id_fakultas) && !empty($row['fakultas'])) {
+            $fak = \App\Models\Fakultas::where('nama_fakultas', 'like', '%' . $row['fakultas'] . '%')->first();
+            if ($fak) {
+                $id_fakultas = $fak->id;
             }
         }
 
@@ -76,9 +89,14 @@ class MahasiswaImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunk
             ['username' => $row['nim']],
             [
                 'password' => Hash::make($row['nim']), // Default password adalah NIM
-                'role' => 'mahasiswa'
+                'role' => 'mahasiswa',
+                'fakultas_id' => $id_fakultas,
             ]
         );
+
+        if ($id_fakultas && !$user->fakultas_id) {
+            $user->update(['fakultas_id' => $id_fakultas]);
+        }
 
         $semester = $row['semester'] ?? null;
 

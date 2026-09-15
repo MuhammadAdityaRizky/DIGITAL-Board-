@@ -291,7 +291,7 @@
                                     
                                     @if($ag->materi_realisasi)
                                         <div class="p-3 bg-white border border-slate-150 rounded-lg text-[11px]">
-                                            <span class="font-bold text-slate-700 block mb-0.5">Materi Pembelajaran / Realisasi:</span>
+                                            <span class="font-bold text-slate-700 block mb-0.5">Materi Praktikum / Realisasi:</span>
                                             <p class="text-slate-600 font-medium leading-relaxed">{{ $ag->materi_realisasi }}</p>
                                         </div>
                                     @endif

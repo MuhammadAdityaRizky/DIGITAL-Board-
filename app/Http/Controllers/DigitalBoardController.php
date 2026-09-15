@@ -14,11 +14,11 @@ class DigitalBoardController extends Controller
         }
 
         if (!$lab_id) {
-            $labs = \App\Models\Laboratorium::orderBy('nama_lab')->get();
+            $labs = \App\Models\Laboratorium::with('fakultas')->orderBy('nama_lab')->get();
             return view('board_portal', compact('labs'));
         }
 
-        $activeLab = \App\Models\Laboratorium::findOrFail($lab_id);
+        $activeLab = \App\Models\Laboratorium::with('fakultas')->findOrFail($lab_id);
 
         $agendas = Agenda::with(['dosen.user', 'lab'])
             ->where('lab_id', $lab_id)
@@ -26,7 +26,12 @@ class DigitalBoardController extends Controller
             ->orderBy('jam_mulai')
             ->get();
 
-        $pengumuman = Pengumuman::orderByDesc('created_at')->limit(5)->get();
+        $pengumuman = Pengumuman::where(function($q) use ($lab_id) {
+            $q->whereDoesntHave('laboratoriums')
+              ->orWhereHas('laboratoriums', function($lq) use ($lab_id) {
+                  $lq->where('laboratorium.id', $lab_id);
+              });
+        })->orderByDesc('created_at')->limit(5)->get();
 
         if (request()->ajax()) {
             $html = view('welcome_partial', compact('agendas', 'pengumuman', 'activeLab'))->render();

@@ -15,8 +15,8 @@ class MataKuliahTemplateExport implements FromArray, WithHeadings, WithEvents, W
     public function array(): array
     {
         return [
-            ['IF201', 'Pemrograman Web', 'Teknik Informatika'],
-            ['SI302', 'Basis Data Lanjut', 'Sistem Informasi'],
+            ['IF201', 'Pemrograman Web', 3, 'Teknik Informatika'],
+            ['SI302', 'Praktikum Basis Data', 1, 'Sistem Informasi'],
         ];
     }
 
@@ -25,6 +25,7 @@ class MataKuliahTemplateExport implements FromArray, WithHeadings, WithEvents, W
         return [
             'kode_mk',
             'nama_mk',
+            'sks',
             'nama_prodi',
         ];
     }
