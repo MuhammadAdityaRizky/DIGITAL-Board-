@@ -34,11 +34,11 @@
                 <h2 class="font-bold text-base text-slate-800 hidden lg:block">Pusat Jadwal & Perkuliahan</h2>
                 <!-- Tab Switching Navigation (Analyst Recommendation #4) -->
                 <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
-                    <a href="{{ route('admin.jadwal-lab') }}" class="px-3 py-1 text-slate-500 hover:text-slate-800 font-semibold rounded-lg transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-table-cells"></i> Matriks Jadwal Lab
+                    <a href="{{ route('admin.jadwal-lab') }}" class="px-3.5 py-1.5 text-slate-600 hover:text-slate-900 font-medium rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-table-cells text-slate-400"></i> Matriks Jadwal Lab
                     </a>
-                    <a href="{{ route('admin.agenda') }}" class="px-3 py-1 bg-white text-teal-900 font-bold rounded-lg shadow-2xs flex items-center gap-1.5">
-                        <i class="fa-solid fa-calendar-days text-teal-700"></i> Agenda & Realisasi
+                    <a href="{{ route('admin.agenda') }}" class="px-3.5 py-1.5 bg-teal-800 text-white font-bold rounded-lg shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-days text-teal-300"></i> Agenda & Realisasi
                     </a>
                 </div>
             </div>
@@ -85,7 +85,7 @@
 
             <!-- Alerts -->
             @if(session('success'))
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm max-w-5xl">
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm w-full">
                     <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 text-lg"></i>
                     <div>
                         <span class="font-bold">Berhasil!</span>
@@ -95,35 +95,86 @@
             @endif
 
             <!-- Search & Filter Bar -->
-            <div class="bg-white border border-slate-200/80 rounded-xl p-4 shadow-xs max-w-5xl">
-                <form action="{{ route('admin.agenda') }}" method="GET" class="flex flex-col sm:flex-row gap-3 items-end text-xs">
-                    <div class="flex-grow w-full">
-                        <label class="block text-slate-600 font-semibold mb-1">Cari Agenda / Dosen</label>
-                        <div class="relative">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari mata kuliah, nama dosen..." class="w-full pl-8 pr-3 py-2 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition placeholder:text-slate-400">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            <div class="bg-white border border-slate-200/80 rounded-xl p-4 shadow-xs w-full">
+                <form action="{{ route('admin.agenda') }}" method="GET" class="space-y-3 text-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+                        <!-- Search (col-span-4) -->
+                        <div class="lg:col-span-4">
+                            <label class="block text-slate-600 font-semibold mb-1">Cari Agenda / Dosen</label>
+                            <div class="relative">
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari mata kuliah, nama dosen..." class="w-full pl-8 pr-3 py-2 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition placeholder:text-slate-400">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                            </div>
+                        </div>
+
+                        <!-- Ruang Lab (col-span-3) -->
+                        <div class="lg:col-span-3">
+                            <label class="block text-slate-600 font-semibold mb-1">Ruang Lab</label>
+                            <select name="lab_id" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
+                                <option value="">-- Semua Ruang Lab --</option>
+                                @foreach($labs as $l)
+                                    <option value="{{ $l->id }}" {{ request('lab_id') == $l->id ? 'selected' : '' }}>
+                                        {{ strtoupper($l->nama_lab) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Fakultas / Prodi (col-span-3) -->
+                        <div class="lg:col-span-3">
+                            <label class="block text-slate-600 font-semibold mb-1">Fakultas / Prodi</label>
+                            <select name="prodi_id" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
+                                <option value="">-- Semua Prodi --</option>
+                                @foreach($prodis as $p)
+                                    <option value="{{ $p->id }}" {{ request('prodi_id') == $p->id ? 'selected' : '' }}>
+                                        {{ $p->nama_prodi }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Filter & Reset Buttons (col-span-2) -->
+                        <div class="lg:col-span-2 flex items-center gap-2">
+                            <button type="submit" class="flex-1 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg font-semibold transition-all shadow-xs flex items-center justify-center gap-1 cursor-pointer">
+                                <i class="fa-solid fa-filter text-xs"></i> Filter
+                            </button>
+                            @if(request()->anyFilled(['search', 'lab_id', 'prodi_id', 'pertemuan', 'tanggal', 'sort']))
+                                <a href="{{ route('admin.agenda') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition-all border border-slate-200 text-center flex items-center justify-center" title="Reset Filter">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </a>
+                            @endif
                         </div>
                     </div>
-                    <div class="w-full sm:w-44">
-                        <label class="block text-slate-600 font-semibold mb-1">Tanggal</label>
-                        <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
-                    </div>
-                    <div class="w-full sm:w-44">
-                        <label class="block text-slate-600 font-semibold mb-1">Urutan</label>
-                        <select name="sort" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
-                            <option value="terlama" {{ request('sort', 'terlama') != 'terbaru' ? 'selected' : '' }}>Pertemuan 1 - 16</option>
-                            <option value="terbaru" {{ request('sort') == 'terbaru' ? 'selected' : '' }}>Pertemuan 16 - 1</option>
-                        </select>
-                    </div>
-                    <div class="flex gap-2 w-full sm:w-auto">
-                        <button type="submit" class="flex-grow sm:flex-grow-0 px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg font-semibold transition-all shadow-xs">
-                            Filter
-                        </button>
-                        @if(request()->anyFilled(['search', 'tanggal', 'sort']))
-                            <a href="{{ route('admin.agenda') }}" class="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-lg font-semibold transition-all border border-slate-200 text-center">
-                                Reset
-                            </a>
-                        @endif
+
+                    <!-- Row 2 Filters: Pertemuan, Tanggal, Urutan -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-12 gap-3 items-end pt-2 border-t border-slate-100">
+                        <!-- Filter Pertemuan (col-span-4) -->
+                        <div class="lg:col-span-4">
+                            <label class="block text-slate-600 font-semibold mb-1">Pertemuan Sesi</label>
+                            <select name="pertemuan" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
+                                <option value="">Semua Pertemuan (Pertemuan 1 - 16)</option>
+                                @for($i = 1; $i <= 16; $i++)
+                                    <option value="{{ $i }}" {{ request('pertemuan') == $i ? 'selected' : '' }}>
+                                        Pertemuan {{ $i }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
+
+                        <!-- Tanggal (col-span-4) -->
+                        <div class="lg:col-span-4">
+                            <label class="block text-slate-600 font-semibold mb-1">Tanggal Praktikum</label>
+                            <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
+                        </div>
+
+                        <!-- Urutan (col-span-4) -->
+                        <div class="lg:col-span-4">
+                            <label class="block text-slate-600 font-semibold mb-1">Urutan Tampilan</label>
+                            <select name="sort" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
+                                <option value="terlama" {{ request('sort', 'terlama') != 'terbaru' ? 'selected' : '' }}>Urut Terlama (Pertemuan 1 → 16)</option>
+                                <option value="terbaru" {{ request('sort') == 'terbaru' ? 'selected' : '' }}>Urut Terbaru (Pertemuan 16 → 1)</option>
+                            </select>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -144,31 +195,49 @@
                 });
             @endphp
 
-            <div class="space-y-4 max-w-5xl">
+            <div class="space-y-4 w-full">
+                <!-- Header Card & Data Creation Buttons -->
                 <div class="bg-white border border-slate-200/80 rounded-xl px-5 py-3.5 shadow-xs flex flex-wrap justify-between items-center gap-3">
                     <div>
-                        <h3 class="font-bold text-sm text-slate-900 tracking-tight">Daftar Agenda Perkuliahan</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">{{ $groupedAgendas->count() }} Mata Kuliah • {{ $allAgendas->count() }} Total Sesi</p>
+                        <h3 class="font-bold text-sm text-slate-900 tracking-tight flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-teal-700"></i>
+                            <span>Daftar Agenda Perkuliahan</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">{{ $groupedAgendas->count() }} Mata Kuliah • {{ $allAgendas->count() }} Total Sesi Terjadwal</p>
                     </div>
+
+                    <!-- Creation & Import Actions (Separated from list controls) -->
                     <div class="flex items-center gap-2 flex-wrap">
-                        <button type="button" onclick="toggleExpandAll(this)" id="btn-toggle-expand-all" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Buka atau Tutup Semua Sesi">
-                            <i class="fa-solid fa-chevron-down text-slate-400 text-[10px] transition-transform duration-200" id="icon-toggle-expand-all"></i>
-                            <span id="text-toggle-expand-all">Buka Semua</span>
-                        </button>
-                        <button type="button" onclick="toggleSelectAllAgendas(this)" id="btn-select-all-global" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Pilih Seluruh Sesi">
-                            <i class="fa-regular fa-square-check text-slate-400 text-xs"></i>
-                            <span>Pilih Semua</span>
-                        </button>
-                        <button onclick="toggleModal('modal-import-agenda')" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-xs cursor-pointer">
-                            <i class="fa-solid fa-arrow-up-from-bracket text-slate-400 text-xs"></i>
-                            <span>Import</span>
+                        <button onclick="toggleModal('modal-import-agenda')" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                            <i class="fa-solid fa-file-import text-teal-700"></i>
+                            <span>Impor Excel</span>
                         </button>
                         <button onclick="openAddModal()" class="px-3.5 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
                             <i class="fa-solid fa-plus text-xs"></i>
-                            <span>Tambah Agenda</span>
+                            <span>+ Tambah Agenda</span>
                         </button>
                     </div>
                 </div>
+
+                <!-- Dedicated List Controls Bar (Expand / Select All) -->
+                @if($groupedAgendas->count() > 0)
+                <div class="bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-500 font-semibold text-[11px] uppercase tracking-wider mr-1">Kontrol Daftar:</span>
+                        <button type="button" onclick="toggleExpandAll(this)" id="btn-toggle-expand-all" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka atau Tutup Semua Accordion Sesi">
+                            <i class="fa-solid fa-chevron-down text-slate-500 text-[10px] transition-transform duration-200" id="icon-toggle-expand-all"></i>
+                            <span id="text-toggle-expand-all">Buka Semua</span>
+                        </button>
+                        <button type="button" onclick="toggleSelectAllAgendas(this)" id="btn-select-all-global" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Pilih Seluruh Sesi untuk Aksi Massal">
+                            <i class="fa-regular fa-square-check text-teal-700 text-xs"></i>
+                            <span>Pilih Semua Sesi</span>
+                        </button>
+                    </div>
+                    <div class="text-[11px] text-slate-400 font-medium hidden sm:block">
+                        Klik judul mata kuliah untuk membuka/menutup sesi pertemuan
+                    </div>
+                </div>
+                @endif
 
                 @if($groupedAgendas->count() > 0)
                     <div id="btn-bulk-delete" class="hidden p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between shadow-sm sticky top-4 z-40">
@@ -424,9 +493,28 @@
                         </div>
                     @endforeach
                 @else
-                    <div class="bg-white border border-slate-200 rounded-2xl p-10 text-center">
-                        <i class="fa-solid fa-calendar-xmark text-3xl text-slate-300 block mb-3"></i>
-                        <p class="text-sm font-bold text-slate-500">Jadwal agenda praktikum tidak ditemukan.</p>
+                    <div class="bg-white border border-slate-200/90 rounded-2xl p-12 text-center shadow-xs w-full my-4">
+                        <div class="w-16 h-16 rounded-2xl bg-teal-50 text-teal-800 border border-teal-200/80 flex items-center justify-center mx-auto mb-4 text-2xl shadow-xs">
+                            <i class="fa-solid fa-calendar-xmark"></i>
+                        </div>
+                        <h3 class="font-extrabold text-base text-slate-800">Jadwal Agenda Praktikum Tidak Ditemukan</h3>
+                        <p class="text-xs text-slate-500 max-w-md mx-auto mt-1.5 leading-relaxed">
+                            @if(request()->anyFilled(['search', 'lab_id', 'prodi_id', 'pertemuan', 'tanggal', 'sort']))
+                                Tidak ada data agenda praktikum yang sesuai dengan filter pilihan Anda. Coba reset filter pencarian atau buat jadwal baru.
+                            @else
+                                Belum ada data agenda praktikum yang terdaftar di sistem. Silakan tambahkan jadwal agenda baru atau impor dari file spreadsheet Excel.
+                            @endif
+                        </p>
+                        <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+                            @if(request()->anyFilled(['search', 'lab_id', 'prodi_id', 'pertemuan', 'tanggal', 'sort']))
+                                <a href="{{ route('admin.agenda') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition border border-slate-200">
+                                    <i class="fa-solid fa-rotate-left"></i> Reset Filter Pencarian
+                                </a>
+                            @endif
+                            <button type="button" onclick="openAddModal()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-800 hover:bg-teal-900 text-white font-bold rounded-xl text-xs transition shadow-sm cursor-pointer">
+                                <i class="fa-solid fa-plus"></i> + Buat Agenda Baru
+                            </button>
+                        </div>
                     </div>
                 @endif
             </div>

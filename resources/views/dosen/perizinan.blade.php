@@ -40,7 +40,7 @@
                 <i class="fa-solid fa-users"></i>
                 <span class="text-xs font-semibold tracking-wide">Daftar Mahasiswa</span>
             </a>
-            <a href="{{ route('dosen.perizinan') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-850 text-white rounded-xl w-full">
+            <a href="{{ route('dosen.perizinan') }}" class="flex items-center gap-3 px-4 py-3 bg-teal-800 text-white rounded-xl w-full">
                 <i class="fa-solid fa-file-signature"></i>
                 <span class="text-xs font-semibold tracking-wide">Verifikasi Perizinan</span>
             </a>
@@ -192,7 +192,7 @@
                 <!-- Tab Buttons -->
                 <div class="flex border-b border-slate-200 text-xs font-bold uppercase tracking-wider">
                     <button @click="activeTab = 'pending'" 
-                            :class="activeTab === 'pending' ? 'border-teal-700 text-teal-850 border-b-2' : 'text-slate-400 hover:text-slate-700'"
+                            :class="activeTab === 'pending' ? 'border-teal-700 text-teal-800 border-b-2' : 'text-slate-400 hover:text-slate-700'"
                             class="px-5 py-3 transition focus:outline-none flex items-center gap-2">
                         <i class="fa-solid fa-clock-rotate-left"></i>
                         Menunggu Persetujuan
@@ -201,7 +201,7 @@
                         </span>
                     </button>
                     <button @click="activeTab = 'history'" 
-                            :class="activeTab === 'history' ? 'border-teal-700 text-teal-850 border-b-2' : 'text-slate-400 hover:text-slate-700'"
+                            :class="activeTab === 'history' ? 'border-teal-700 text-teal-800 border-b-2' : 'text-slate-400 hover:text-slate-700'"
                             class="px-5 py-3 transition focus:outline-none flex items-center gap-2">
                         <i class="fa-solid fa-history"></i>
                         Riwayat Perizinan

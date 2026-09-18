@@ -72,9 +72,9 @@
 
             <div class="flex items-center gap-2.5">
                 <!-- Tombol Panduan / Tutorial Dosen -->
-                <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
+                <button type="button" onclick="openTutorialDosenModal()" class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
                     <i class="fa-solid fa-circle-question text-amber-600 text-sm"></i>
-                    <span class="hidden sm:inline">Panduan Sistem</span>
+                    <span>Panduan Sistem</span>
                 </button>
 
                 <!-- Profile Avatar & Dropdown Menu -->
@@ -258,25 +258,7 @@
     </main>
 
     <!-- Bottom Navigation Bar (Mobile Only - Symmetrical Layout with Center QR) -->
-    <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t-2 border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-xl">
-        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-600 hover:text-slate-900">
-            <i class="fa-solid fa-border-all text-lg"></i>
-            <span class="text-xs font-bold">Dashboard</span>
-        </a>
-        <a href="{{ route('dosen.agenda') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-600 hover:text-slate-900">
-            <i class="fa-solid fa-calendar-alt text-lg"></i>
-            <span class="text-xs font-bold">Agenda</span>
-        </a>
-        <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-800 text-white rounded-2xl shadow-xl border-4 border-white">
-            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white bg-teal-800 rounded-xl hover:bg-teal-900 transition-all cursor-pointer" title="Scan QR Presensi">
-                <i class="fa-solid fa-qrcode text-2xl text-white"></i>
-            </button>
-        </div>
-        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-extrabold">
-            <i class="fa-solid fa-gear text-lg"></i>
-            <span class="text-xs font-extrabold">Pengaturan</span>
-        </a>
-    </nav>
+    @include('dosen.partials.bottom_nav')
 
     <!-- Script Password Toggle -->
     <script>

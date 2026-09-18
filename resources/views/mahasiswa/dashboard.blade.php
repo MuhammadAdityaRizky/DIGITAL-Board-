@@ -316,63 +316,7 @@
                         </div>
                     </div>
 
-                    <!-- Permission History -->
-                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                        <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4">
-                            <h3 class="font-bold text-sm text-slate-800">Status Pengajuan Izin Anda</h3>
-                        </div>
-                        <div class="p-6">
-                            @if(count($perizinans) > 0)
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-xs text-left text-slate-600">
-                                        <thead class="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider">
-                                            <tr>
-                                                <th class="p-3">Mata Kuliah / Praktikum</th>
-                                                <th class="p-3">Alasan</th>
-                                                <th class="p-3">Bukti</th>
-                                                <th class="p-3">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-slate-100">
-                                            @foreach($perizinans as $p)
-                                                <tr class="hover:bg-slate-50/50 transition">
-                                                    <td class="p-3 font-bold text-slate-800">
-                                                        {{ $p->agenda->mata_kuliah }}
-                                                        <span class="block text-[10px] text-slate-400 font-normal mt-0.5">Dosen: {{ $p->agenda->dosen->nama }}</span>
-                                                        <span class="block text-[9px] text-slate-400 font-mono">{{ date('d M Y', strtotime($p->agenda->tanggal)) }}</span>
-                                                    </td>
-                                                    <td class="p-3 italic">"{{ $p->alasan }}"</td>
-                                                    <td class="p-3">
-                                                        @if($p->bukti_url)
-                                                            <a href="{{ asset($p->bukti_url) }}" target="_blank" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1">
-                                                                <i class="fa-solid fa-file-pdf"></i> Bukti
-                                                            </a>
-                                                        @else
-                                                            <span class="text-slate-400 italic">None</span>
-                                                        @endif
-                                                    </td>
-                                                    <td class="p-3">
-                                                        @if(strtolower($p->status_persetujuan) === 'pending')
-                                                            <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-bold rounded">PENDING</span>
-                                                        @elseif(strtolower($p->status_persetujuan) === 'disetujui')
-                                                            <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold rounded">DISETUJUI</span>
-                                                        @elseif(strtolower($p->status_persetujuan) === 'ditolak')
-                                                            <span class="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-100 text-[10px] font-bold rounded">DITOLAK</span>
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @else
-                                <div class="text-center py-6 text-slate-400 text-xs">
-                                    <i class="fa-solid fa-file-signature text-lg block mb-2"></i>
-                                    Belum ada pengajuan izin yang dibuat.
-                                </div>
-                            @endif
-                        </div>
-                    </div>
+
                 </div>
 
         </main>

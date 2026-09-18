@@ -71,9 +71,9 @@
 
             <div class="flex items-center gap-2.5">
                 <!-- Tombol Panduan / Tutorial Dosen -->
-                <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
+                <button type="button" onclick="openTutorialDosenModal()" class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
                     <i class="fa-solid fa-circle-question text-amber-600 text-sm"></i>
-                    <span class="hidden sm:inline">Panduan Sistem</span>
+                    <span>Panduan Sistem</span>
                 </button>
 
                 <!-- Profile Avatar & Dropdown Menu -->

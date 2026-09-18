@@ -36,7 +36,10 @@ Route::middleware('auth')->group(function () {
 
         // New Admin sub-pages
         Route::get('/pengguna', [AdminController::class, 'pengguna'])->name('pengguna');
+        Route::delete('/pengguna/bulk-delete', [AdminController::class, 'bulkDeleteUsers'])->name('pengguna.bulk-delete');
         Route::delete('/pengguna/{id}', [AdminController::class, 'deleteUser'])->name('pengguna.delete');
+        Route::post('/pengguna/{id}/reset-password', [AdminController::class, 'resetPasswordUser'])->name('pengguna.reset-password');
+        Route::post('/pengguna/{id}/toggle-status', [AdminController::class, 'toggleStatusUser'])->name('pengguna.toggle-status');
         Route::post('/pengguna/import/mahasiswa', [AdminController::class, 'importMahasiswa'])->name('pengguna.import-mahasiswa');
         Route::post('/pengguna/import/dosen', [AdminController::class, 'importDosen'])->name('pengguna.import-dosen');
         

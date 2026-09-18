@@ -72,9 +72,9 @@
 
             <div class="flex items-center gap-2.5">
                 <!-- Tombol Panduan / Tutorial Dosen -->
-                <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
+                <button type="button" onclick="openTutorialDosenModal()" class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
                     <i class="fa-solid fa-circle-question text-amber-600 text-sm"></i>
-                    <span class="hidden sm:inline">Panduan Sistem</span>
+                    <span>Panduan Sistem</span>
                 </button>
 
                 <!-- Single Global Scan QR Button for Desktop -->
@@ -165,10 +165,11 @@
                             <span>Sudah Check-in ({{ date('H:i', strtotime($activeOrNextAgenda->dosen_waktu_masuk)) }} WIB)</span>
                         </div>
                     @else
-                        <div class="px-5 py-2.5 bg-rose-50 border-2 border-rose-400 text-rose-950 rounded-xl text-base font-black flex items-center gap-2.5 shadow-xs">
-                            <span class="w-3 h-3 bg-rose-600 rounded-full inline-block"></span>
+                        <button type="button" onclick="startDosenQRScanner()" class="px-5 py-2.5 bg-rose-50 hover:bg-rose-100 border-2 border-rose-400 text-rose-950 hover:text-rose-900 rounded-xl text-base font-black flex items-center gap-2.5 shadow-xs transition transform hover:scale-102 cursor-pointer" title="Klik untuk Pindai QR Code Check-in Hari Ini">
+                            <span class="w-3 h-3 bg-rose-600 rounded-full inline-block animate-pulse"></span>
                             <span>Belum Check-in Hari Ini</span>
-                        </div>
+                            <i class="fa-solid fa-qrcode text-rose-700 ml-1 text-sm"></i>
+                        </button>
                     @endif
                 </div>
             </div>
@@ -224,15 +225,20 @@
 
             <!-- Announcements -->
             @if(isset($pengumuman) && $pengumuman->count() > 0)
-            <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 sm:p-6 shadow-xs">
-                <h3 class="font-black text-amber-950 text-base sm:text-lg flex items-center gap-2">
-                    <i class="fa-solid fa-bullhorn text-amber-700"></i>
-                    <span>Pengumuman Resmi Laboratorium</span>
-                    <span class="text-sm font-bold text-amber-800">({{ date('d M Y', strtotime($pengumuman->first()->created_at)) }})</span>
-                </h3>
-                <p class="text-amber-950 text-base mt-2 font-medium leading-relaxed">
-                    <strong class="font-bold">{{ $pengumuman->first()->judul }}:</strong> {{ $pengumuman->first()->isi_pengumuman }}
-                </p>
+            <div id="dosen-announcement-banner" class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 sm:p-6 shadow-xs relative transition-all duration-300">
+                <button type="button" onclick="document.getElementById('dosen-announcement-banner').style.display='none'" class="absolute top-4 right-4 text-amber-800 hover:text-amber-950 p-1.5 rounded-lg hover:bg-amber-200/50 transition cursor-pointer text-lg font-bold" title="Tutup Pengumuman">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="pr-8">
+                    <h3 class="font-black text-amber-950 text-base sm:text-lg flex items-center gap-2 flex-wrap">
+                        <i class="fa-solid fa-bullhorn text-amber-700"></i>
+                        <span>Pengumuman Resmi Laboratorium</span>
+                        <span class="text-sm font-bold text-amber-800">({{ date('d M Y', strtotime($pengumuman->first()->created_at)) }})</span>
+                    </h3>
+                    <p class="text-amber-950 text-base mt-2 font-medium leading-relaxed">
+                        <strong class="font-bold">{{ $pengumuman->first()->judul }}:</strong> {{ $pengumuman->first()->isi_pengumuman }}
+                    </p>
+                </div>
             </div>
             @endif
 
@@ -272,9 +278,13 @@
                             <h3 class="font-black text-lg sm:text-xl text-slate-900">Mulai Sesi Mengajar / Praktikum Hari Ini</h3>
                             <p class="text-sm sm:text-base text-slate-600 font-medium mt-0.5 leading-relaxed">Pilih jadwal Anda untuk mengaktifkan info di Digital Board Lab & membuka presensi mahasiswa</p>
                         </div>
-                        <span class="px-3 py-1.5 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-lg text-sm font-bold hidden sm:inline-flex items-center gap-1.5">
-                            <i class="fa-solid fa-tv text-emerald-700"></i> Terkoneksi ke Board Lab
-                        </span>
+                        <div id="board_connection_status_badge" class="px-3 py-1.5 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-lg text-sm font-bold hidden sm:inline-flex items-center gap-1.5 shadow-2xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span id="board_connection_text">Terkoneksi ke Board Lab</span>
+                            <button type="button" onclick="reconnectBoardLab()" class="text-xs text-emerald-700 hover:text-emerald-950 underline ml-1 font-extrabold cursor-pointer" title="Uji Sambungan Ulang">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <form action="{{ route('dosen.agenda.store') }}" method="POST" class="space-y-4">
@@ -372,7 +382,7 @@
                             <!-- 2. Materi Praktikum -->
                             <div class="space-y-2">
                                 <label class="block text-slate-900 font-bold text-sm sm:text-base">Materi Praktikum <span class="text-slate-500 font-normal text-xs">(Opsional)</span></label>
-                                <textarea name="materi_pembelajaran" rows="3" placeholder="Contoh: Pengenalan Sintaks C++, Variabel & Tipe Data... (Opsional)" class="w-full p-3 rounded-xl bg-white border-2 border-slate-300 text-slate-900 text-base font-medium focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none resize-none placeholder:text-slate-400"></textarea>
+                                <textarea name="materi_pembelajaran" id="input_materi_pembelajaran" rows="3" placeholder="Contoh: Pengenalan Sintaks C++, Variabel & Tipe Data... (Opsional)" disabled class="w-full p-3 rounded-xl bg-slate-100 border-2 border-slate-300 text-slate-900 text-base font-medium focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none resize-none placeholder:text-slate-400 disabled:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 transition"></textarea>
                             </div>
                         </div>
 
@@ -380,18 +390,18 @@
                         <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end pt-2">
                             <div>
                                 <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Tanggal Pertemuan <span class="text-rose-600">*</span></label>
-                                <input type="date" name="tanggal" required value="{{ date('Y-m-d') }}" class="w-full py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 text-slate-900 text-base font-bold focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
+                                <input type="date" name="tanggal" id="input_tanggal" required value="{{ date('Y-m-d') }}" disabled class="w-full py-2.5 px-3 rounded-xl bg-slate-100 border-2 border-slate-300 text-slate-900 text-base font-bold focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none disabled:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 transition">
                             </div>
                             <div>
                                 <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Jam Masuk <span class="text-rose-600">*</span></label>
-                                <input type="time" name="waktu_masuk" id="input_waktu_masuk" required value="08:00" class="w-full py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 text-slate-900 text-base font-mono font-bold focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
+                                <input type="time" name="waktu_masuk" id="input_waktu_masuk" required value="08:00" disabled class="w-full py-2.5 px-3 rounded-xl bg-slate-100 border-2 border-slate-300 text-slate-900 text-base font-mono font-bold focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none disabled:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 transition">
                             </div>
                             <div>
                                 <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Jam Selesai <span class="text-rose-600">*</span></label>
-                                <input type="time" name="waktu_keluar" id="input_waktu_keluar" required value="10:30" class="w-full py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 text-slate-900 text-base font-mono font-bold focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none">
+                                <input type="time" name="waktu_keluar" id="input_waktu_keluar" required value="10:30" disabled class="w-full py-2.5 px-3 rounded-xl bg-slate-100 border-2 border-slate-300 text-slate-900 text-base font-mono font-bold focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none disabled:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 transition">
                             </div>
                             <div>
-                                <button type="submit" class="w-full min-h-[48px] py-2.5 px-5 bg-slate-900 hover:bg-slate-800 active:scale-98 text-white text-base font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer">
+                                <button type="submit" id="btn_submit_buka_sesi" disabled class="w-full min-h-[48px] py-2.5 px-5 bg-teal-800 hover:bg-teal-900 active:scale-98 text-white text-base font-extrabold rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:bg-slate-200 disabled:text-slate-400 disabled:border-2 disabled:border-slate-300 disabled:cursor-not-allowed disabled:shadow-none disabled:opacity-60">
                                     <i class="fa-solid fa-play text-sm"></i>
                                     <span>Buka Sesi & Presensi</span>
                                 </button>
@@ -1090,6 +1100,44 @@
                         }
                     }
 
+                    function enableDashboardFormInputs() {
+                        const formInputIds = ['input_materi_pembelajaran', 'input_tanggal', 'input_waktu_masuk', 'input_waktu_keluar', 'btn_submit_buka_sesi'];
+                        formInputIds.forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                el.removeAttribute('disabled');
+                                el.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
+                                if (id !== 'btn_submit_buka_sesi') {
+                                    el.classList.add('bg-white');
+                                }
+                            }
+                        });
+                    }
+
+                    function reconnectBoardLab() {
+                        const badge = document.getElementById('board_connection_status_badge');
+                        const text = document.getElementById('board_connection_text');
+                        if (!badge || !text) return;
+
+                        text.innerText = 'Menghubungkan ulang...';
+                        badge.className = 'px-3 py-1.5 bg-amber-50 text-amber-900 border border-amber-300 rounded-lg text-sm font-bold hidden sm:inline-flex items-center gap-1.5 shadow-2xs';
+
+                        setTimeout(() => {
+                            text.innerText = 'Terkoneksi ke Board Lab';
+                            badge.className = 'px-3 py-1.5 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-lg text-sm font-bold hidden sm:inline-flex items-center gap-1.5 shadow-2xs';
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'success',
+                                    title: 'Sambungan Digital Board Lab Berhasil Terhubung!',
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                });
+                            }
+                        }, 800);
+                    }
+
                     function selectComboboxDashboard(itemEl) {
                         const hiddenInput = document.getElementById('dashboard_jadwal_id');
                         const searchInput = document.getElementById('combobox_search_dashboard');
@@ -1128,6 +1176,8 @@
                         const inKeluar = document.getElementById('input_waktu_keluar');
                         if (inMasuk && jamMulai) inMasuk.value = jamMulai;
                         if (inKeluar && jamSelesai) inKeluar.value = jamSelesai;
+
+                        enableDashboardFormInputs();
 
                         toggleComboboxDashboard(false);
                     }
@@ -1437,25 +1487,7 @@
     </script>
 
     <!-- Bottom Navigation Bar (Mobile Only - Symmetrical Layout with Center QR) -->
-    <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t-2 border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-xl">
-        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-extrabold">
-            <i class="fa-solid fa-border-all text-lg"></i>
-            <span class="text-xs font-extrabold">Dashboard</span>
-        </a>
-        <a href="{{ route('dosen.agenda') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-600 hover:text-slate-900">
-            <i class="fa-solid fa-calendar-alt text-lg"></i>
-            <span class="text-xs font-bold">Agenda</span>
-        </a>
-        <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-800 text-white rounded-2xl shadow-xl border-4 border-white">
-            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white bg-teal-800 rounded-xl hover:bg-teal-900 transition-all cursor-pointer" title="Scan QR Presensi">
-                <i class="fa-solid fa-qrcode text-2xl text-white"></i>
-            </button>
-        </div>
-        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-600 hover:text-slate-900">
-            <i class="fa-solid fa-gear text-lg"></i>
-            <span class="text-xs font-bold">Pengaturan</span>
-        </a>
-    </nav>
+    @include('dosen.partials.bottom_nav')
 
     <!-- SweetAlert2 Automatic Alerts & Loading Handler -->
     <script>

@@ -76,9 +76,9 @@
 
             <div class="flex items-center gap-2.5">
                 <!-- Tombol Panduan / Tutorial Dosen -->
-                <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
+                <button type="button" onclick="openTutorialDosenModal()" class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
                     <i class="fa-solid fa-circle-question text-amber-600 text-sm"></i>
-                    <span class="hidden sm:inline">Panduan Sistem</span>
+                    <span>Panduan Sistem</span>
                 </button>
 
                 <!-- Profile Avatar & Dropdown Menu -->
@@ -513,25 +513,8 @@
         </div>
     </div>
 
-    <!-- Mobile Bottom Navigation Bar -->
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-2 flex justify-between items-center z-40 shadow-lg">
-        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-800">
-            <i class="fa-solid fa-border-all text-base"></i>
-            <span class="text-xs font-bold">Dashboard</span>
-        </a>
-        <a href="{{ route('dosen.agenda') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-800">
-            <i class="fa-solid fa-calendar-alt text-base"></i>
-            <span class="text-xs font-bold">Agenda</span>
-        </a>
-        <a href="{{ route('dosen.jadwal-lab') }}" class="flex flex-col items-center gap-1 text-teal-800 font-extrabold">
-            <i class="fa-solid fa-calendar-check text-base"></i>
-            <span class="text-xs font-extrabold">Lab</span>
-        </a>
-        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col items-center gap-1 text-slate-500 hover:text-teal-800">
-            <i class="fa-solid fa-gear text-base"></i>
-            <span class="text-xs font-bold">Akun</span>
-        </a>
-    </div>
+    <!-- Bottom Navigation Bar (Mobile Only - Symmetrical Layout with Center QR) -->
+    @include('dosen.partials.bottom_nav')
 
     <!-- JavaScript Handlers -->
     <script>

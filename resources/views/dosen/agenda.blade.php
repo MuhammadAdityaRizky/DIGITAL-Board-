@@ -46,13 +46,8 @@
             </a>
         </nav>
 
-        <!-- Tombol Panduan Dosen di Sidebar -->
-        <div class="p-3 border-t border-slate-800 mt-auto">
-            <button type="button" onclick="openTutorialDosenModal()" class="min-h-[44px] flex items-center gap-3 px-4 py-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 hover:text-white rounded-xl w-full transition text-sm font-bold cursor-pointer">
-                <i class="fa-solid fa-book-open-reader text-base text-amber-400"></i>
-                <span>Panduan Dosen</span>
-            </button>
-        </div>
+        <!-- Nav Links -->
+        </nav>
     </aside>
 
     <!-- Main Content -->
@@ -71,10 +66,22 @@
             </div>
 
             <div class="flex items-center gap-2.5">
+                <!-- Scan QR Board Button in Header -->
+                <button type="button" onclick="startDosenQRScanner()" class="hidden md:flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer" title="Scan QR Code di Layar Digital Board Lab">
+                    <i class="fa-solid fa-qrcode text-teal-400"></i>
+                    <span>Scan QR Board</span>
+                </button>
+
+                <!-- Cek Ketersediaan Lab Button in Header -->
+                <a href="{{ route('dosen.jadwal-lab') }}" class="hidden sm:flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer" title="Lihat Ketersediaan & Plotting Ruang Lab">
+                    <i class="fa-solid fa-calendar-check text-teal-700"></i>
+                    <span>Cek Ketersediaan Lab</span>
+                </a>
+
                 <!-- Tombol Panduan / Tutorial Dosen -->
-                <button type="button" onclick="openTutorialDosenModal()" class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
+                <button type="button" onclick="openTutorialDosenModal()" class="hidden md:flex items-center gap-2 px-3 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
                     <i class="fa-solid fa-circle-question text-amber-600 text-sm"></i>
-                    <span class="hidden sm:inline">Panduan Sistem</span>
+                    <span>Panduan Sistem</span>
                 </button>
 
                 <!-- Profile Avatar & Dropdown Menu -->
@@ -151,36 +158,84 @@
                 </div>
             @endif
             
-            <!-- Filter Bar -->
+            <!-- Comprehensive Multi-Parameter Filter Bar -->
             <div class="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-xs">
-                <form action="{{ route('dosen.agenda') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-end text-sm">
-                    <div class="flex-grow w-full">
-                        <label class="block text-slate-900 font-bold text-sm sm:text-base mb-2">Cari Sesi / Mata Kuliah</label>
-                        <div class="relative">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Ketik nama mata kuliah, catatan..." class="w-full pl-11 pr-4 py-3 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal">
-                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-4 text-slate-400 text-base"></i>
+                <form action="{{ route('dosen.agenda') }}" method="GET" class="space-y-4 text-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                        <!-- 1. Search Query -->
+                        <div class="md:col-span-5 w-full">
+                            <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Cari Sesi / Mata Kuliah</label>
+                            <div class="relative">
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Ketik nama mata kuliah, kelas, catatan..." class="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal">
+                                <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400 text-base"></i>
+                            </div>
+                        </div>
+
+                        <!-- 2. Tanggal Pelaksanaan -->
+                        <div class="md:col-span-3 w-full">
+                            <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Tanggal Pelaksanaan</label>
+                            <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900">
+                        </div>
+
+                        <!-- 3. Status Sesi -->
+                        <div class="md:col-span-4 w-full">
+                            <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Status Sesi Agenda</label>
+                            <select name="status_agenda" class="w-full py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900 cursor-pointer">
+                                <option value="">Semua Status Sesi</option>
+                                <option value="Berlangsung" {{ request('status_agenda') == 'Berlangsung' ? 'selected' : '' }}>● Berlangsung</option>
+                                <option value="Selesai" {{ request('status_agenda') == 'Selesai' ? 'selected' : '' }}>● Selesai</option>
+                                <option value="Akan Datang" {{ request('status_agenda') == 'Akan Datang' ? 'selected' : '' }}>○ Mendatang / Akan Datang</option>
+                                <option value="Dibatalkan" {{ request('status_agenda') == 'Dibatalkan' ? 'selected' : '' }}>✕ Dibatalkan</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="w-full md:w-56">
-                        <label class="block text-slate-900 font-bold text-sm sm:text-base mb-2">Tanggal Pelaksanaan</label>
-                        <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-3 px-3.5 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900">
-                    </div>
-                    <div class="w-full md:w-56">
-                        <label class="block text-slate-900 font-bold text-sm sm:text-base mb-2">Urutkan Tanggal</label>
-                        <select name="sort" class="w-full py-3 px-3.5 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900">
-                            <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru Lebih Dahulu</option>
-                            <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama Lebih Dahulu</option>
-                        </select>
-                    </div>
-                    <div class="flex gap-2.5 w-full md:w-auto">
-                        <button type="submit" class="flex-grow md:flex-grow-0 min-h-[48px] px-7 py-3 bg-slate-900 hover:bg-slate-800 active:scale-98 text-white rounded-xl font-bold text-base transition shadow-xs cursor-pointer">
-                            Filter
-                        </button>
-                        @if(request()->anyFilled(['search', 'tanggal', 'sort']))
-                            <a href="{{ route('dosen.agenda') }}" class="min-h-[48px] px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-base transition border-2 border-slate-300 flex items-center justify-center cursor-pointer">
-                                Reset
-                            </a>
-                        @endif
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end pt-1">
+                        <!-- 4. Filter Ruang Lab -->
+                        <div class="md:col-span-4 w-full">
+                            <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Ruang Laboratorium</label>
+                            <select name="lab_id" class="w-full py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900 cursor-pointer">
+                                <option value="">Semua Ruang Lab</option>
+                                @foreach($labs as $l)
+                                    <option value="{{ $l->id }}" {{ request('lab_id') == $l->id ? 'selected' : '' }}>{{ $l->nama_lab }} (Fakultas {{ $l->fakultas->nama_fakultas ?? 'FTS' }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- 5. Filter Kelas -->
+                        <div class="md:col-span-4 w-full">
+                            <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Filter Kelas / Peminatan</label>
+                            <select name="kelas" class="w-full py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900 cursor-pointer">
+                                <option value="">Semua Kelas</option>
+                                @foreach($uniqueClasses as $uc)
+                                    @if($uc->kelas)
+                                        <option value="{{ $uc->kelas }}" {{ request('kelas') == $uc->kelas ? 'selected' : '' }}>Kelas {{ $uc->kelas }} ({{ $uc->mata_kuliah }})</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- 6. Urutkan Tanggal (Suffcient min-width to avoid truncation) -->
+                        <div class="md:col-span-4 w-full flex items-end gap-2.5">
+                            <div class="flex-1 min-w-[180px]">
+                                <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Urutkan Tanggal</label>
+                                <select name="sort" class="w-full min-w-[180px] py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900 cursor-pointer">
+                                    <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru Lebih Dahulu</option>
+                                    <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama Lebih Dahulu</option>
+                                </select>
+                            </div>
+
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button type="submit" class="min-h-[46px] px-6 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-98 text-white rounded-xl font-bold text-base transition shadow-xs cursor-pointer">
+                                    Filter
+                                </button>
+                                @if(request()->anyFilled(['search', 'tanggal', 'sort', 'lab_id', 'status_agenda', 'kelas']))
+                                    <a href="{{ route('dosen.agenda') }}" class="min-h-[46px] px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-base transition border-2 border-slate-300 flex items-center justify-center cursor-pointer" title="Reset Semua Filter">
+                                        Reset
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -211,12 +266,6 @@
                                 <i class="fa-solid fa-trash-can"></i> Hapus Terpilih (<span id="selected-count">0</span>)
                             </button>
                         @endif
-                        <a href="{{ route('dosen.jadwal-lab') }}" class="min-h-[44px] px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 border-2 border-slate-300 text-sm font-bold rounded-xl transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                            <i class="fa-solid fa-calendar-check text-slate-700"></i> Cek Ketersediaan Lab
-                        </a>
-                        <button type="button" onclick="startDosenQRScanner()" class="min-h-[44px] px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                            <i class="fa-solid fa-qrcode text-slate-200"></i> Scan QR
-                        </button>
                         <button type="button" onclick="toggleModal('modal-add-agenda')" class="min-h-[44px] px-5 py-2.5 bg-teal-800 hover:bg-teal-900 active:scale-98 text-white text-sm sm:text-base font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer flex-shrink-0 whitespace-nowrap">
                             <i class="fa-solid fa-calendar-plus text-base"></i> Buat Agenda Baru
                         </button>
@@ -258,25 +307,7 @@
     </main>
 
     <!-- Bottom Navigation Bar (Mobile Only - Symmetrical Layout with Center QR) -->
-    <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t-2 border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-xl">
-        <a href="{{ route('dosen.dashboard') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-600 hover:text-slate-900">
-            <i class="fa-solid fa-border-all text-lg"></i>
-            <span class="text-xs font-bold">Dashboard</span>
-        </a>
-        <a href="{{ route('dosen.agenda') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-teal-800 font-extrabold">
-            <i class="fa-solid fa-calendar-alt text-lg"></i>
-            <span class="text-xs font-extrabold">Agenda</span>
-        </a>
-        <div class="relative w-14 h-14 -mt-6 flex justify-center items-center bg-teal-800 text-white rounded-2xl shadow-xl border-4 border-white">
-            <button type="button" onclick="startDosenQRScanner()" class="flex items-center justify-center w-full h-full text-white bg-teal-800 rounded-xl hover:bg-teal-900 transition-all cursor-pointer" title="Scan QR Presensi">
-                <i class="fa-solid fa-qrcode text-2xl text-white"></i>
-            </button>
-        </div>
-        <a href="{{ route('dosen.pengaturan') }}" class="flex flex-col justify-center items-center gap-1 flex-1 py-2 text-slate-600 hover:text-slate-900">
-            <i class="fa-solid fa-gear text-lg"></i>
-            <span class="text-xs font-bold">Pengaturan</span>
-        </a>
-    </nav>
+    @include('dosen.partials.bottom_nav')
 
     <!-- Profile Dropdown Handler -->
     <script>

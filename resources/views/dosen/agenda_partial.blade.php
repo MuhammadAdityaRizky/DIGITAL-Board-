@@ -813,7 +813,13 @@
         </div>
         <h4 class="text-xl font-black text-slate-900">Tidak Ada Agenda Ditemukan</h4>
         <p class="text-base text-slate-700 max-w-md mx-auto mt-2 leading-relaxed font-medium">
-            Belum ada jadwal pertemuan praktikum. Klik tombol "Buat Agenda" di atas untuk menambahkan sesi praktikum dari jadwal lab Anda.
+            Belum ada jadwal pertemuan praktikum yang sesuai dengan filter atau kata kunci pencarian.
         </p>
+        <div class="mt-6 flex justify-center">
+            <button type="button" onclick="toggleModal('modal-buat-agenda')" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-base shadow-md hover:shadow-lg transition flex items-center gap-2">
+                <i class="fa-solid fa-circle-plus"></i>
+                <span>+ Buat Agenda Baru</span>
+            </button>
+        </div>
     </div>
 @endif

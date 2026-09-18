@@ -221,14 +221,16 @@ class AdminController extends Controller
         $query = User::with(['fakultas', 'dosen.fakultas', 'dosen.prodi', 'mahasiswa.fakultas', 'mahasiswa.prodi'])->orderBy('created_at', 'desc');
 
         if ($authUser->isAdminFakultas()) {
-            $fakId = $authUser->fakultas_id;
+            $fakId = (int) $authUser->fakultas_id;
             $query->where(function($q) use ($fakId) {
                 $q->where('fakultas_id', $fakId)
                   ->orWhereHas('dosen', function($qd) use ($fakId) {
-                      $qd->where('id_fakultas', $fakId);
+                      $qd->where('id_fakultas', $fakId)
+                        ->orWhereHas('prodi', fn($qp) => $qp->where('fakultas_id', $fakId));
                   })
                   ->orWhereHas('mahasiswa', function($qm) use ($fakId) {
-                      $qm->where('id_fakultas', $fakId);
+                      $qm->where('id_fakultas', $fakId)
+                        ->orWhereHas('prodi', fn($qp) => $qp->where('fakultas_id', $fakId));
                   });
             });
         }
@@ -249,59 +251,259 @@ class AdminController extends Controller
         }
 
         if ($authUser->isSuperAdmin() && $request->filled('fakultas_id')) {
-            $fakId = $request->fakultas_id;
+            $fakId = (int) $request->fakultas_id;
             $query->where(function($q) use ($fakId) {
                 $q->where('fakultas_id', $fakId)
-                  ->orWhereHas('dosen', fn($qd) => $qd->where('id_fakultas', $fakId))
-                  ->orWhereHas('mahasiswa', fn($qm) => $qm->where('id_fakultas', $fakId));
+                  ->orWhereHas('dosen', function($qd) use ($fakId) {
+                      $qd->where('id_fakultas', $fakId)
+                        ->orWhereHas('prodi', fn($qp) => $qp->where('fakultas_id', $fakId));
+                  })
+                  ->orWhereHas('mahasiswa', function($qm) use ($fakId) {
+                      $qm->where('id_fakultas', $fakId)
+                        ->orWhereHas('prodi', fn($qp) => $qp->where('fakultas_id', $fakId));
+                  });
             });
         }
 
-        if ($request->filled('role')) {
-            $role = strtolower(trim($request->role));
-            $query->where('role', $role);
+        $selectedRole = strtolower(trim($request->role ?? ''));
+        if (!empty($selectedRole)) {
+            $query->where('role', $selectedRole);
         }
 
-        if ($request->filled('program_kuliah')) {
-            $program = $request->program_kuliah;
+        $isMahasiswaContext = empty($selectedRole) || $selectedRole === 'mahasiswa';
+
+        if ($isMahasiswaContext && $request->filled('program_kuliah')) {
+            $program = trim($request->program_kuliah);
             $query->whereHas('mahasiswa', function($q) use ($program) {
-                $q->where('program_kuliah', $program);
+                if (in_array(strtolower($program), ['reguler', 'reg'])) {
+                    $q->where(function($sq) {
+                        $sq->where('program_kuliah', 'like', 'Reg%')
+                          ->orWhere('program_kuliah', 'Reguler')
+                          ->orWhere('program_kuliah', 'reguler');
+                    });
+                } elseif (strtolower($program) === 'karyawan') {
+                    $q->where(function($sq) {
+                        $sq->where('program_kuliah', 'like', 'Karyawan%')
+                          ->orWhere('program_kuliah', 'karyawan');
+                    });
+                } else {
+                    $q->where('program_kuliah', $program);
+                }
             });
         }
 
-        if ($request->filled('semester')) {
+        if ($isMahasiswaContext && $request->filled('semester')) {
             $semester = $request->semester;
             $query->whereHas('mahasiswa', function($q) use ($semester) {
                 $q->where('semester', $semester);
             });
         }
 
-        if ($request->filled('kelas')) {
-            $kelas = $request->kelas;
-            $query->whereHas('mahasiswa', function($q) use ($kelas) {
-                $q->where('kelas', $kelas);
+        if ($isMahasiswaContext && $request->filled('kelas')) {
+            $kelasReq = strtoupper(trim($request->kelas));
+            $query->whereHas('mahasiswa', function($q) use ($kelasReq) {
+                if ($kelasReq === 'KAR') {
+                    $q->where(function($sq) {
+                        $sq->where('kelas', 'KAR')
+                          ->orWhere('program_kuliah', 'like', 'Karyawan%');
+                    });
+                } elseif (in_array($kelasReq, ['KAR A', 'KAR-A', 'KARYAWAN A'])) {
+                    $q->where(function($sq) {
+                        $sq->whereIn('kelas', ['Kar A', 'KAR A', 'A'])
+                          ->orWhere('kelas', 'like', '%A');
+                    })->where('program_kuliah', 'like', 'Karyawan%');
+                } elseif (in_array($kelasReq, ['KAR B', 'KAR-B', 'KARYAWAN B'])) {
+                    $q->where(function($sq) {
+                        $sq->whereIn('kelas', ['Kar B', 'KAR B', 'B'])
+                          ->orWhere('kelas', 'like', '%B');
+                    })->where('program_kuliah', 'like', 'Karyawan%');
+                } elseif ($kelasReq === 'REG') {
+                    $q->where(function($sq) {
+                        $sq->where('kelas', 'REG')
+                          ->orWhere('kelas', 'XI-RR')
+                          ->orWhere(function($ssq) {
+                              $ssq->where('program_kuliah', 'like', 'Reg%')
+                                 ->whereNotIn('kelas', ['A', 'B', 'Reg A', 'Reg B', 'REG A', 'REG B', 'IF-3A', 'IF-3B']);
+                          });
+                    });
+                } elseif (in_array($kelasReq, ['REG A', 'REG-A', 'A'])) {
+                    $q->where(function($sq) {
+                        $sq->whereIn('kelas', ['A', 'Reg A', 'REG A', 'IF-3A'])
+                          ->orWhere('kelas', 'like', '%A')
+                          ->orWhere('kelas', 'like', '%-A')
+                          ->orWhere('kelas', 'like', '%3A');
+                    });
+                } elseif (in_array($kelasReq, ['REG B', 'REG-B', 'B'])) {
+                    $q->where(function($sq) {
+                        $sq->whereIn('kelas', ['B', 'Reg B', 'REG B', 'IF-3B'])
+                          ->orWhere('kelas', 'like', '%B')
+                          ->orWhere('kelas', 'like', '%-B')
+                          ->orWhere('kelas', 'like', '%3B');
+                    });
+                } elseif (in_array($kelasReq, ['REG C', 'REG-C', 'C'])) {
+                    $q->where(function($sq) {
+                        $sq->whereIn('kelas', ['C', 'Reg C', 'REG C', 'IF-3C'])
+                          ->orWhere('kelas', 'like', '%C')
+                          ->orWhere('kelas', 'like', '%-C')
+                          ->orWhere('kelas', 'like', '%3C');
+                    });
+                } else {
+                    $q->where('kelas', $kelasReq)
+                      ->orWhere('kelas', 'like', "%{$kelasReq}%");
+                }
             });
         }
 
-        if ($request->filled('status_mahasiswa')) {
+        if ($isMahasiswaContext && $request->filled('status_mahasiswa')) {
             $statusMhs = strtolower($request->status_mahasiswa);
             $query->whereHas('mahasiswa', function($q) use ($statusMhs) {
                 $q->where('status', $statusMhs);
             });
         }
 
-        $users = $query->paginate(50)->withQueryString();
+        // Dynamic Column Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = strtolower($request->get('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if ($sortBy === 'role') {
+            $query->orderBy('role', $sortOrder);
+        } elseif ($sortBy === 'status') {
+            $query->orderBy('users.status', $sortOrder);
+        } elseif ($sortBy === 'nama') {
+            $query->leftJoin('dosen', 'users.id', '=', 'dosen.user_id')
+                  ->leftJoin('mahasiswa', 'users.id', '=', 'mahasiswa.user_id')
+                  ->select('users.*')
+                  ->orderByRaw("COALESCE(dosen.nama, mahasiswa.nama_lengkap, users.username) {$sortOrder}");
+        } elseif ($sortBy === 'nim_nip') {
+            $query->leftJoin('dosen', 'users.id', '=', 'dosen.user_id')
+                  ->leftJoin('mahasiswa', 'users.id', '=', 'mahasiswa.user_id')
+                  ->select('users.*')
+                  ->orderByRaw("COALESCE(dosen.nip, mahasiswa.nim, '') {$sortOrder}");
+        } else {
+            $query->orderBy('users.created_at', 'desc');
+        }
+
+        // Configurable Pagination Per Page
+        $perPage = (int) $request->get('per_page', 25);
+        if (!in_array($perPage, [10, 25, 50, 100])) {
+            $perPage = 25;
+        }
+
+        $users = $query->paginate($perPage)->withQueryString();
 
         if ($authUser->isAdminFakultas()) {
             $fakultas = Fakultas::where('id', $authUser->fakultas_id)->get();
             $prodis = Prodi::where('fakultas_id', $authUser->fakultas_id)->get();
+            $selectedFakId = (int) $authUser->fakultas_id;
         } else {
             $fakultas = Fakultas::all();
             $prodis = Prodi::all();
+            $selectedFakId = $request->filled('fakultas_id') ? (int) $request->fakultas_id : null;
         }
-        $kelases = Kelas::all();
 
-        return view('admin.pengguna', compact('users', 'fakultas', 'prodis', 'kelases'));
+        // Base Mahasiswa query for populating dynamic dependent dropdown options
+        $mhsOptQuery = Mahasiswa::query();
+        if ($selectedFakId) {
+            $mhsOptQuery->where(function($q) use ($selectedFakId) {
+                $q->where('id_fakultas', $selectedFakId)
+                  ->orWhereHas('prodi', fn($qp) => $qp->where('fakultas_id', $selectedFakId));
+            });
+        }
+
+        // 1. Dynamic Available Programs (Reguler / Karyawan)
+        $dbPrograms = (clone $mhsOptQuery)
+            ->whereNotNull('program_kuliah')
+            ->where('program_kuliah', '!=', '')
+            ->distinct()
+            ->pluck('program_kuliah')
+            ->toArray();
+        $availablePrograms = array_values(array_unique(array_merge(['Reguler', 'Karyawan'], $dbPrograms)));
+        sort($availablePrograms);
+
+        // 2. Available Semesters (Always display all semesters 1-8+ regardless of program_kuliah selection)
+        $dbSemesters = (clone $mhsOptQuery)
+            ->whereNotNull('semester')
+            ->where('semester', '>', 0)
+            ->distinct()
+            ->pluck('semester')
+            ->toArray();
+        $availableSemesters = array_values(array_unique(array_merge(range(1, 8), $dbSemesters)));
+        sort($availableSemesters, SORT_NUMERIC);
+
+        // 3. Dynamic Available Kelases based on Fakultas, Program Kuliah, and Semester
+        $klsQuery = clone $mhsOptQuery;
+        if ($request->filled('program_kuliah')) {
+            $progReq = trim($request->program_kuliah);
+            $klsQuery->where(function($q) use ($progReq) {
+                if (in_array(strtolower($progReq), ['reguler', 'reg'])) {
+                    $q->where('program_kuliah', 'like', 'Reg%');
+                } elseif (strtolower($progReq) === 'karyawan') {
+                    $q->where('program_kuliah', 'like', 'Karyawan%');
+                } else {
+                    $q->where('program_kuliah', $progReq);
+                }
+            });
+        }
+        if ($request->filled('semester')) {
+            $klsQuery->where('semester', $request->semester);
+        }
+
+        $rawDbKelases = $klsQuery
+            ->whereNotNull('kelas')
+            ->where('kelas', '!=', '')
+            ->pluck('kelas')
+            ->toArray();
+
+        $formattedKelases = [];
+        $progReqLower = strtolower(trim($request->program_kuliah ?? ''));
+
+        foreach ($rawDbKelases as $rk) {
+            $rkUpper = strtoupper(trim($rk));
+            $isKar = ($progReqLower === 'karyawan' || str_contains($rkUpper, 'KAR') || str_contains($rkUpper, 'KARYAWAN'));
+
+            if ($isKar) {
+                if (str_contains($rkUpper, 'KAR A') || $rkUpper === 'A' || str_ends_with($rkUpper, '3A') || str_ends_with($rkUpper, '-A')) {
+                    $formattedKelases[] = 'Kar A';
+                } elseif (str_contains($rkUpper, 'KAR B') || $rkUpper === 'B' || str_ends_with($rkUpper, '3B') || str_ends_with($rkUpper, '-B')) {
+                    $formattedKelases[] = 'Kar B';
+                } elseif (str_contains($rkUpper, 'KAR C') || $rkUpper === 'C' || str_ends_with($rkUpper, '3C') || str_ends_with($rkUpper, '-C')) {
+                    $formattedKelases[] = 'Kar C';
+                } else {
+                    $formattedKelases[] = 'KAR';
+                }
+            } else {
+                if (str_contains($rkUpper, 'REG A') || $rkUpper === 'A' || str_ends_with($rkUpper, '3A') || str_ends_with($rkUpper, '-A')) {
+                    $formattedKelases[] = 'Reg A';
+                } elseif (str_contains($rkUpper, 'REG B') || $rkUpper === 'B' || str_ends_with($rkUpper, '3B') || str_ends_with($rkUpper, '-B')) {
+                    $formattedKelases[] = 'Reg B';
+                } elseif (str_contains($rkUpper, 'REG C') || $rkUpper === 'C' || str_ends_with($rkUpper, '3C') || str_ends_with($rkUpper, '-C')) {
+                    $formattedKelases[] = 'Reg C';
+                } elseif ($rkUpper === 'REG' || $rkUpper === 'XI-RR') {
+                    $formattedKelases[] = 'REG';
+                } else {
+                    $formattedKelases[] = $rk;
+                }
+            }
+        }
+
+        if (empty($formattedKelases)) {
+            if ($progReqLower === 'karyawan') {
+                $formattedKelases = ['Kar A', 'Kar B', 'KAR'];
+            } elseif (in_array($progReqLower, ['reguler', 'reg'])) {
+                $formattedKelases = ['Reg A', 'Reg B', 'REG'];
+            } else {
+                $formattedKelases = ['Reg A', 'Reg B', 'REG', 'Kar A', 'Kar B', 'KAR'];
+            }
+        } else {
+            $formattedKelases = array_values(array_unique($formattedKelases));
+            sort($formattedKelases);
+        }
+        $kelases = $formattedKelases;
+
+        return view('admin.pengguna', compact(
+            'users', 'fakultas', 'prodis', 'kelases', 
+            'availablePrograms', 'availableSemesters'
+        ));
     }
 
     public function deleteUser($id)
@@ -333,7 +535,6 @@ class AdminController extends Controller
             return back()->withErrors(['msg' => 'Tidak ada pengguna yang dipilih untuk dihapus.']);
         }
 
-        // Prevent admin from deleting themselves in bulk
         $ids = array_diff($ids, [$authUser->id]);
 
         if (empty($ids)) {
@@ -365,10 +566,57 @@ class AdminController extends Controller
         return back()->with('success', count($validIds) . ' akun pengguna berhasil dihapus.');
     }
 
+    public function resetPasswordUser($id)
+    {
+        $authUser = Auth::user();
+        $user = User::with(['dosen', 'mahasiswa'])->findOrFail($id);
+
+        if ($authUser->isAdminFakultas()) {
+            $userFakId = $user->fakultas_id ?? $user->dosen?->id_fakultas ?? $user->mahasiswa?->id_fakultas;
+            if ($userFakId != $authUser->fakultas_id || $user->isSuperAdmin()) {
+                return back()->withErrors(['msg' => 'Anda tidak memiliki izin untuk mengedit pengguna ini.']);
+            }
+        }
+
+        $user->password = \Illuminate\Support\Facades\Hash::make('password');
+        $user->save();
+
+        return back()->with('success', "Password akun '{$user->username}' berhasil di-reset menjadi 'password'.");
+    }
+
+    public function toggleStatusUser($id)
+    {
+        $authUser = Auth::user();
+        if ($authUser->id == $id) {
+            return back()->withErrors(['msg' => 'Anda tidak dapat mengubah status akun Anda sendiri.']);
+        }
+
+        $user = User::with(['dosen', 'mahasiswa'])->findOrFail($id);
+
+        if ($authUser->isAdminFakultas()) {
+            $userFakId = $user->fakultas_id ?? $user->dosen?->id_fakultas ?? $user->mahasiswa?->id_fakultas;
+            if ($userFakId != $authUser->fakultas_id || $user->isSuperAdmin()) {
+                return back()->withErrors(['msg' => 'Anda tidak memiliki izin untuk mengedit pengguna ini.']);
+            }
+        }
+
+        $newStatus = strtolower($user->status ?? 'aktif') === 'aktif' ? 'nonaktif' : 'aktif';
+        $user->status = $newStatus;
+        $user->save();
+
+        $statusText = $newStatus === 'aktif' ? 'diaktifkan kembali' : 'dinonaktifkan (suspended)';
+        return back()->with('success', "Akun '{$user->username}' berhasil {$statusText}.");
+    }
+
     public function laboratorium(Request $request)
     {
         $user = Auth::user();
-        $query = Laboratorium::with('fakultas')->forUser($user)->orderBy('nama_lab', 'asc');
+        $nowDate = \Carbon\Carbon::today()->format('Y-m-d');
+        $nowTime = now()->format('H:i:s');
+
+        $query = Laboratorium::with(['fakultas', 'agendas' => function($q) use ($nowDate) {
+            $q->whereDate('tanggal', $nowDate)->with(['dosen', 'dosenPengampu']);
+        }])->forUser($user)->orderBy('nama_lab', 'asc');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -382,7 +630,61 @@ class AdminController extends Controller
             $query->where('fakultas_id', $request->fakultas_id);
         }
 
-        $labs = $query->paginate(10)->withQueryString();
+        if ($request->filled('kapasitas')) {
+            $cap = $request->kapasitas;
+            if ($cap === 'small') {
+                $query->where('kapasitas', '<', 30);
+            } elseif ($cap === 'medium') {
+                $query->whereBetween('kapasitas', [30, 50]);
+            } elseif ($cap === 'large') {
+                $query->where('kapasitas', '>', 50);
+            }
+        }
+
+        if ($request->filled('status')) {
+            $st = strtolower($request->status);
+            if ($st === 'sedang dipakai') {
+                $query->whereHas('agendas', function($q) use ($nowDate, $nowTime) {
+                    $q->whereDate('tanggal', $nowDate)
+                      ->where('jam_mulai', '<=', $nowTime)
+                      ->where('jam_selesai', '>=', $nowTime);
+                });
+            } elseif ($st === 'maintenance') {
+                $query->where(function($q) {
+                    $q->where('nama_lab', 'like', '%maintenance%')
+                      ->orWhere('lokasi', 'like', '%maintenance%');
+                });
+            } elseif ($st === 'tersedia') {
+                $query->whereDoesntHave('agendas', function($q) use ($nowDate, $nowTime) {
+                    $q->whereDate('tanggal', $nowDate)
+                      ->where('jam_mulai', '<=', $nowTime)
+                      ->where('jam_selesai', '>=', $nowTime);
+                })->where('nama_lab', 'not like', '%maintenance%')
+                  ->where('lokasi', 'not like', '%maintenance%');
+            }
+        }
+
+        $labs = $query->paginate(12)->withQueryString();
+
+        $labs->getCollection()->transform(function($lab) use ($nowTime) {
+            $activeAgenda = $lab->agendas->first(function($agenda) use ($nowTime) {
+                return $agenda->jam_mulai <= $nowTime && $agenda->jam_selesai >= $nowTime;
+            });
+
+            if (str_contains(strtolower($lab->nama_lab . ' ' . $lab->lokasi), 'maintenance')) {
+                $lab->computed_status = 'Maintenance';
+            } elseif ($activeAgenda) {
+                $lab->computed_status = 'Sedang Dipakai';
+                $lab->active_agenda = $activeAgenda;
+            } else {
+                $lab->computed_status = 'Tersedia';
+            }
+
+            $lab->today_agendas = $lab->agendas->sortBy('jam_mulai')->values();
+
+            return $lab;
+        });
+
         $fakultas = Fakultas::orderBy('nama_fakultas', 'asc')->get();
 
         return view('admin.laboratorium', compact('labs', 'fakultas'));
@@ -530,6 +832,32 @@ class AdminController extends Controller
             });
         }
 
+        if ($request->filled('lab_id')) {
+            $query->where('lab_id', $request->lab_id);
+        }
+
+        if ($request->filled('prodi_id')) {
+            $prodiObj = Prodi::find($request->prodi_id);
+            if ($prodiObj) {
+                $prodiName = $prodiObj->nama_prodi;
+                $query->where(function($q) use ($prodiName, $request) {
+                    $q->where('jurusan', 'like', "%{$prodiName}%")
+                      ->orWhereHas('dosen', fn($qd) => $qd->where('id_prodi', $request->prodi_id))
+                      ->orWhereHas('dosenPengampu', fn($qd) => $qd->where('id_prodi', $request->prodi_id));
+                });
+            }
+        }
+
+        if ($request->filled('pertemuan')) {
+            $pertNum = (int)$request->pertemuan;
+            $query->where(function($q) use ($pertNum) {
+                $q->where('catatan', 'like', "%Pertemuan {$pertNum}%")
+                  ->orWhere('catatan', 'like', "%Pertemuan ke-{$pertNum}%")
+                  ->orWhere('catatan', 'like', "%Pertemuan {$pertNum} %")
+                  ->orWhere('catatan', 'like', "%Pertemuan ke-{$pertNum} %");
+            });
+        }
+
         if ($request->filled('tanggal')) {
             $query->where('tanggal', $request->tanggal);
         }
@@ -654,26 +982,32 @@ class AdminController extends Controller
             }
         }
 
-        Agenda::create([
-            'dosen_id' => $dosenId,
-            'dosen_pengampu_id' => $dosenPengampuId,
-            'lab_id' => $request->lab_id,
-            'mata_kuliah' => $mataKuliah,
-            'program_kuliah' => $request->program_kuliah,
-            'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
-            'jenis_pertemuan' => $request->jenis_pertemuan ?? 'Praktikum',
-            'kelas' => $request->kelas ?? '',
-            'semester' => $request->semester,
-            'jurusan' => $request->jurusan,
-            'fakultas' => $request->fakultas,
-            'tanggal' => $request->tanggal,
-            'jam_mulai' => $request->waktu_masuk,
-            'jam_selesai' => $request->waktu_keluar,
-            'status_agenda' => $statusAgenda,
-            'catatan' => $materi,
-        ]);
+        $startDateCarbon = \Carbon\Carbon::parse($request->tanggal);
+        for ($i = 0; $i < 16; $i++) {
+            $meetDate = $startDateCarbon->copy()->addWeeks($i)->format('Y-m-d');
+            $statusAg = $meetDate < date('Y-m-d') ? 'Selesai' : ($meetDate === date('Y-m-d') ? 'Berlangsung' : 'Akan Datang');
 
-        return back()->with('success', 'Agenda berhasil ditambahkan.');
+            Agenda::create([
+                'dosen_id' => $dosenId,
+                'dosen_pengampu_id' => $dosenPengampuId,
+                'lab_id' => $request->lab_id,
+                'mata_kuliah' => $mataKuliah,
+                'program_kuliah' => $request->program_kuliah,
+                'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
+                'jenis_pertemuan' => $request->jenis_pertemuan ?? 'Praktikum',
+                'kelas' => $request->kelas ?? '',
+                'semester' => $request->semester,
+                'jurusan' => $request->jurusan,
+                'fakultas' => $request->fakultas,
+                'tanggal' => $meetDate,
+                'jam_mulai' => $request->waktu_masuk,
+                'jam_selesai' => $request->waktu_keluar,
+                'status_agenda' => $statusAg,
+                'catatan' => "Pertemuan ke-" . ($i + 1) . ($materi ? ": {$materi}" : ": {$mataKuliah}"),
+            ]);
+        }
+
+        return back()->with('success', "Berhasil membuat 16 sesi pertemuan perkuliahan secara otomatis untuk mata kuliah {$mataKuliah}.");
     }
 
     public function updateAgenda(Request $request, $id)
@@ -842,50 +1176,7 @@ class AdminController extends Controller
     {
         $user = Auth::user();
         $query = Agenda::with(['dosen', 'lab', 'absensi.mahasiswa'])
-            ->orderBy('tanggal', 'desc')
-            ->orderBy('jam_mulai', 'desc');
-
-        if ($user->isAdminFakultas()) {
-            $query->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('mata_kuliah', 'like', "%{$search}%")
-                  ->orWhereHas('dosen', function($qd) use ($search) {
-                      $qd->where('nama', 'like', "%{$search}%");
-                  });
-            });
-        }
-
-        if ($request->filled('tanggal')) {
-            $query->where('tanggal', $request->tanggal);
-        }
-
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('tanggal', [$request->start_date, $request->end_date]);
-        }
-
-        $agendas = $query->paginate(10)->withQueryString();
-
-        $uniqueClassesQuery = Agenda::with('dosen')->orderBy('mata_kuliah');
-        if ($user->isAdminFakultas()) {
-            $uniqueClassesQuery->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
-        }
-
-        $uniqueClasses = $uniqueClassesQuery->get()
-            ->unique(function ($item) {
-                return $item->mata_kuliah . '-' . $item->kelas . '-' . $item->dosen_id;
-            });
-
-        return view('admin.absensi', compact('agendas', 'uniqueClasses'));
-    }
-
-    public function exportAbsensi(Request $request)
-    {
-        $user = Auth::user();
-        $query = Agenda::with(['dosen', 'lab', 'absensi.mahasiswa'])
+            ->orderBy('mata_kuliah', 'asc')
             ->orderBy('tanggal', 'asc')
             ->orderBy('jam_mulai', 'asc');
 
@@ -911,9 +1202,124 @@ class AdminController extends Controller
             $query->whereBetween('tanggal', [$request->start_date, $request->end_date]);
         }
 
-        $agendas = $query->get();
+        $allAgendas = $query->get();
 
-        return view('admin.export_absensi', compact('agendas'));
+        // Group agendas by Mata Kuliah + Kelas + Dosen ID
+        $groupedAgendas = $allAgendas->groupBy(function($item) {
+            return $item->mata_kuliah . '___' . ($item->kelas ?: 'General') . '___' . ($item->dosen_id ?: 0);
+        });
+
+        $agendas = $allAgendas;
+
+        $uniqueClasses = $allAgendas->unique(function ($item) {
+            return $item->mata_kuliah . '-' . $item->kelas . '-' . $item->dosen_id;
+        });
+
+        return view('admin.absensi', compact('agendas', 'groupedAgendas', 'uniqueClasses'));
+    }
+
+    public function exportAbsensi(Request $request)
+    {
+        $user = Auth::user();
+        
+        $selectedAgendaIds = $request->input('agenda_ids', []);
+        if ($request->filled('agenda_id')) {
+            $selectedAgendaIds[] = $request->agenda_id;
+        }
+        $selectedAgendaIds = array_filter(array_unique($selectedAgendaIds));
+
+        $query = Agenda::with(['dosen', 'lab', 'absensi.mahasiswa'])
+            ->orderBy('tanggal', 'asc')
+            ->orderBy('jam_mulai', 'asc');
+
+        if ($user->isAdminFakultas()) {
+            $query->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
+        }
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('tanggal', [$request->start_date, $request->end_date]);
+        }
+
+        $allAgendas = $query->get();
+
+        // Group agendas by Mata Kuliah + Kelas + Dosen
+        $groupedAgendas = $allAgendas->groupBy(function($item) {
+            return $item->mata_kuliah . '___' . ($item->kelas ?: '-') . '___' . $item->dosen_id;
+        });
+
+        // Filter groups if specific agenda IDs were checked
+        if (!empty($selectedAgendaIds)) {
+            $groupedAgendas = $groupedAgendas->filter(function($group) use ($selectedAgendaIds) {
+                return $group->pluck('id')->intersect($selectedAgendaIds)->isNotEmpty();
+            });
+        }
+
+        $courseReports = [];
+
+        foreach ($groupedAgendas as $groupKey => $agendasInGroup) {
+            $mainAgenda = $agendasInGroup->first();
+            $mataKuliah = $mainAgenda->mata_kuliah;
+            $kelas = $mainAgenda->kelas;
+
+            // Retrieve students from Mahasiswa table matching class or from existing absensi records
+            $studentsFromClass = collect();
+            if ($kelas) {
+                $studentsFromClass = Mahasiswa::with('user')->where('kelas', $kelas)->orderBy('nim')->get();
+            }
+            
+            $studentsFromAbsensi = collect();
+            foreach ($agendasInGroup as $ag) {
+                foreach ($ag->absensi as $abs) {
+                    if ($abs->mahasiswa) {
+                        $studentsFromAbsensi->push($abs->mahasiswa);
+                    }
+                }
+            }
+
+            $students = $studentsFromClass->concat($studentsFromAbsensi)
+                ->unique('id')
+                ->sortBy('nim')
+                ->values();
+
+            // 16 Meeting slots
+            $sessions = [];
+            for ($i = 1; $i <= 16; $i++) {
+                $ag = $agendasInGroup->get($i - 1);
+                $sessions[$i] = [
+                    'pertemuan' => $i,
+                    'agenda' => $ag,
+                    'tanggal' => $ag ? $ag->tanggal : null,
+                    'is_uts' => ($i == 8),
+                    'is_uas' => ($i == 16),
+                ];
+            }
+
+            // 2D attendance matrix
+            $matrix = [];
+            foreach ($students as $mhs) {
+                $matrix[$mhs->id] = [];
+                for ($i = 1; $i <= 16; $i++) {
+                    $ag = $sessions[$i]['agenda'];
+                    $record = null;
+                    if ($ag) {
+                        $record = $ag->absensi->firstWhere('mahasiswa_id', $mhs->id);
+                    }
+                    $matrix[$mhs->id][$i] = $record;
+                }
+            }
+
+            $courseReports[] = [
+                'mainAgenda' => $mainAgenda,
+                'mataKuliah' => $mataKuliah,
+                'kelas' => $kelas,
+                'agendas' => $agendasInGroup,
+                'students' => $students,
+                'sessions' => $sessions,
+                'matrix' => $matrix,
+            ];
+        }
+
+        return view('admin.export_absensi', compact('courseReports'));
     }
 
     public function inputAbsensi($id)
@@ -1096,7 +1502,9 @@ class AdminController extends Controller
     public function pengumuman(Request $request)
     {
         $user = Auth::user();
-        $query = Pengumuman::with(['admin', 'laboratoriums'])->orderBy('created_at', 'desc');
+        $query = Pengumuman::with(['admin', 'laboratoriums'])
+            ->orderBy('is_pinned', 'desc')
+            ->orderBy('created_at', 'desc');
 
         if ($user->isAdminFakultas()) {
             $myLabIds = Laboratorium::forUser($user)->pluck('id');
@@ -1114,6 +1522,35 @@ class AdminController extends Controller
                 $q->where('judul', 'like', "%{$search}%")
                   ->orWhere('isi_pengumuman', 'like', "%{$search}%");
             });
+        }
+
+        if ($request->filled('lab_id')) {
+            $labIdFilter = $request->lab_id;
+            if ($labIdFilter === 'umum') {
+                $query->whereDoesntHave('laboratoriums');
+            } else {
+                $query->whereHas('laboratoriums', function($lq) use ($labIdFilter) {
+                    $lq->where('laboratorium.id', $labIdFilter);
+                });
+            }
+        }
+
+        if ($request->filled('status')) {
+            $st = $request->status;
+            $today = date('Y-m-d H:i:s');
+            if ($st === 'aktif') {
+                $query->where(function($q) use ($today) {
+                    $q->whereNull('tanggal_mulai')->orWhere('tanggal_mulai', '<=', $today);
+                })->where(function($q) use ($today) {
+                    $q->whereNull('tanggal_selesai')->orWhere('tanggal_selesai', '>=', $today);
+                });
+            } elseif ($st === 'dijadwalkan') {
+                $query->where('tanggal_mulai', '>', $today);
+            } elseif ($st === 'kedaluwarsa') {
+                $query->where('tanggal_selesai', '<', $today);
+            } elseif ($st === 'penting') {
+                $query->whereIn('prioritas', ['Penting', 'Urgen']);
+            }
         }
 
         $pengumumanList = $query->paginate(10)->withQueryString();
@@ -1327,6 +1764,8 @@ class AdminController extends Controller
             'laboratorium_ids' => 'nullable|array',
             'laboratorium_ids.*' => 'exists:laboratorium,id',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
+            'prioritas' => 'nullable|string|in:Normal,Penting,Urgen',
+            'is_pinned' => 'nullable|boolean',
         ]);
 
         if ($user->isAdminFakultas() && $request->has('laboratorium_ids')) {
@@ -1350,6 +1789,8 @@ class AdminController extends Controller
             'tanggal_mulai' => $request->tanggal_mulai,
             'tanggal_selesai' => $request->tanggal_selesai,
             'foto_url' => $fotoUrl,
+            'prioritas' => $request->prioritas ?: 'Normal',
+            'is_pinned' => $request->boolean('is_pinned'),
         ]);
 
         if ($request->has('laboratorium_ids')) {
@@ -1371,6 +1812,8 @@ class AdminController extends Controller
             'laboratorium_ids' => 'nullable|array',
             'laboratorium_ids.*' => 'exists:laboratorium,id',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:5120',
+            'prioritas' => 'nullable|string|in:Normal,Penting,Urgen',
+            'is_pinned' => 'nullable|boolean',
         ]);
 
         $pengumuman = Pengumuman::with('laboratoriums')->findOrFail($id);
@@ -1416,6 +1859,8 @@ class AdminController extends Controller
             'tanggal_mulai' => $request->tanggal_mulai,
             'tanggal_selesai' => $request->tanggal_selesai,
             'foto_url' => $fotoUrl,
+            'prioritas' => $request->prioritas ?: 'Normal',
+            'is_pinned' => $request->boolean('is_pinned'),
         ]);
 
         if ($request->has('laboratorium_ids')) {
@@ -1628,12 +2073,16 @@ class AdminController extends Controller
             'nama_mk' => 'required|string|max:150',
             'kode_mk' => 'nullable|string|max:30',
             'sks' => 'nullable|integer|min:1|max:10',
+            'semester' => 'nullable|integer|min:1|max:8',
+            'kategori' => 'nullable|string|in:Wajib,Pilihan,Praktikum Lab,Teori & Praktikum',
             'id_prodi' => 'nullable|exists:prodi,id',
         ]);
         MataKuliah::create([
             'kode_mk' => $request->kode_mk,
             'nama_mk' => $request->nama_mk,
             'sks' => $request->sks ?: 3,
+            'semester' => $request->semester ?: 1,
+            'kategori' => $request->kategori ?: 'Wajib',
             'id_prodi' => $request->id_prodi,
         ]);
         return back()->with('success', 'Mata Kuliah berhasil ditambahkan.');
@@ -1646,12 +2095,16 @@ class AdminController extends Controller
             'nama_mk' => 'required|string|max:150',
             'kode_mk' => 'nullable|string|max:30',
             'sks' => 'nullable|integer|min:1|max:10',
+            'semester' => 'nullable|integer|min:1|max:8',
+            'kategori' => 'nullable|string|in:Wajib,Pilihan,Praktikum Lab,Teori & Praktikum',
             'id_prodi' => 'nullable|exists:prodi,id',
         ]);
         MataKuliah::findOrFail($id)->update([
             'kode_mk' => $request->kode_mk,
             'nama_mk' => $request->nama_mk,
             'sks' => $request->sks ?: 3,
+            'semester' => $request->semester ?: 1,
+            'kategori' => $request->kategori ?: 'Wajib',
             'id_prodi' => $request->id_prodi,
         ]);
         return back()->with('success', 'Mata Kuliah berhasil diperbarui.');

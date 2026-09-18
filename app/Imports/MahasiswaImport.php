@@ -116,19 +116,36 @@ class MahasiswaImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunk
         }
 
         $programKuliah = 'Reguler';
-        $kelasAsli = 'A';
-        
-        if (isset($row['kelas'])) {
-            $k = strtoupper(trim($row['kelas']));
-            if (str_contains($k, 'KARYAWAN')) {
+        if (isset($row['program_kuliah']) && !empty($row['program_kuliah'])) {
+            $pk = strtoupper(trim($row['program_kuliah']));
+            if (str_contains($pk, 'KARYAWAN') || str_contains($pk, 'KAR')) {
                 $programKuliah = 'Karyawan';
-            } elseif (str_contains($k, 'REGULER')) {
+            } else {
                 $programKuliah = 'Reguler';
             }
-            
-            // Extract class letter if exists (e.g., Karyawan A)
-            if (preg_match('/(A|B|C|D)/', $k, $matches)) {
-                $kelasAsli = $matches[1];
+        } elseif (isset($row['kelas'])) {
+            $rawK = strtoupper(trim($row['kelas']));
+            if (str_contains($rawK, 'KARYAWAN') || str_contains($rawK, 'KAR')) {
+                $programKuliah = 'Karyawan';
+            }
+        }
+
+        $kelasAsli = 'REG';
+        if ($programKuliah === 'Karyawan') {
+            $kelasAsli = 'KAR';
+        } elseif (isset($row['kelas']) && !empty($row['kelas'])) {
+            $rawK = strtoupper(trim($row['kelas']));
+            if (str_contains($rawK, 'REG A') || $rawK === 'A' || str_ends_with($rawK, '3A') || str_ends_with($rawK, '-A')) {
+                $kelasAsli = 'Reg A';
+            } elseif (str_contains($rawK, 'REG B') || $rawK === 'B' || str_ends_with($rawK, '3B') || str_ends_with($rawK, '-B')) {
+                $kelasAsli = 'Reg B';
+            } elseif (str_contains($rawK, 'REG C') || $rawK === 'C' || str_ends_with($rawK, '3C') || str_ends_with($rawK, '-C')) {
+                $kelasAsli = 'Reg C';
+            } elseif ($rawK === 'KAR' || str_contains($rawK, 'KARYAWAN')) {
+                $kelasAsli = 'KAR';
+            } else {
+                $cleaned = trim(preg_replace('/^(REGULER|KARYAWAN|REG|KAR)\s*/i', '', trim($row['kelas'])));
+                $kelasAsli = !empty($cleaned) ? $cleaned : trim($row['kelas']);
             }
         }
 

@@ -34,11 +34,11 @@
                 <h2 class="font-bold text-base text-slate-800">Pusat Jadwal & Perkuliahan</h2>
                 <!-- Tab Switching Navigation (Analyst Recommendation #4) -->
                 <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
-                    <a href="{{ route('admin.jadwal-lab') }}" class="px-3 py-1 bg-white text-teal-900 font-bold rounded-lg shadow-2xs flex items-center gap-1.5">
-                        <i class="fa-solid fa-table-cells text-teal-700"></i> Matriks Jadwal Lab
+                    <a href="{{ route('admin.jadwal-lab') }}" class="px-3.5 py-1.5 bg-teal-800 text-white font-bold rounded-lg shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-table-cells text-teal-300"></i> Matriks Jadwal Lab
                     </a>
-                    <a href="{{ route('admin.agenda') }}" class="px-3 py-1 text-slate-500 hover:text-slate-800 font-semibold rounded-lg transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-calendar-days"></i> Agenda & Realisasi
+                    <a href="{{ route('admin.agenda') }}" class="px-3.5 py-1.5 text-slate-600 hover:text-slate-900 font-medium rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-days text-slate-400"></i> Agenda & Realisasi
                     </a>
                 </div>
             </div>

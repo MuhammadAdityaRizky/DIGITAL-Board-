@@ -141,62 +141,13 @@
                 </div>
             </div>
 
-            <!-- Statistics Bento Cards -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                    <div class="p-3 bg-emerald-50 text-emerald-700 rounded-xl"><i class="fa-solid fa-circle-check text-lg"></i></div>
-                    <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Hadir</p>
-                        <p class="text-xl font-bold text-slate-800">{{ $hadirCount }} Sesi</p>
-                    </div>
-                </div>
 
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                    <div class="p-3 bg-blue-50 text-blue-700 rounded-xl"><i class="fa-solid fa-file-signature text-lg"></i></div>
-                    <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Izin</p>
-                        <p class="text-xl font-bold text-slate-800">{{ $izinCount }} Sesi</p>
-                    </div>
-                </div>
 
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                    <div class="p-3 bg-rose-50 text-rose-700 rounded-xl"><i class="fa-solid fa-circle-xmark text-lg"></i></div>
-                    <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Alpa</p>
-                        <p class="text-xl font-bold text-slate-800">{{ $alpaCount }} Sesi</p>
-                    </div>
-                </div>
-
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                    <div class="p-3 bg-teal-50 text-teal-800 rounded-xl"><i class="fa-solid fa-chart-pie text-lg"></i></div>
-                    <div>
-                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Persentase</p>
-                        <p class="text-xl font-bold text-slate-800">{{ $attendancePercentage }}%</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6" x-data="{ activeTab: 'attendance' }">
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 <!-- Left Details List -->
                 <div class="xl:col-span-2 space-y-4">
-                    <!-- Tab Buttons -->
-                    <div class="flex border-b border-slate-200 text-xs font-bold uppercase tracking-wider bg-white px-4 pt-2 rounded-t-xl border-x">
-                        <button @click="activeTab = 'attendance'" 
-                                :class="activeTab === 'attendance' ? 'border-teal-700 text-teal-850 border-b-2' : 'text-slate-400 hover:text-slate-700'"
-                                class="px-5 py-3 transition focus:outline-none flex items-center gap-2">
-                            <i class="fa-solid fa-calendar-days"></i>
-                            Presensi Kehadiran
-                        </button>
-                        <button @click="activeTab = 'permissions'" 
-                                :class="activeTab === 'permissions' ? 'border-teal-700 text-teal-850 border-b-2' : 'text-slate-400 hover:text-slate-700'"
-                                class="px-5 py-3 transition focus:outline-none flex items-center gap-2">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
-                            Status Pengajuan Izin
-                        </button>
-                    </div>
-
                     <!-- Attendance Log -->
-                    <div x-show="activeTab === 'attendance'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-4">
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden p-6 space-y-4">
                         <div class="flex justify-between items-center text-xs">
                             <h3 class="font-bold text-sm text-slate-800">Daftar Kehadiran Praktikum</h3>
                             <form action="{{ route('mahasiswa.riwayat') }}" method="GET" class="relative">
@@ -269,60 +220,6 @@
                             <div class="text-center py-10 text-slate-400 italic">
                                 <i class="fa-solid fa-calendar-xmark text-xl block mb-2"></i>
                                 Tidak ada log kehadiran tercatat.
-                            </div>
-                        @endif
-                    </div>
-
-                    <!-- Permissions Log -->
-                    <div x-show="activeTab === 'permissions'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-4" style="display: none;">
-                        <h3 class="font-bold text-sm text-slate-800">Status Permohonan Perizinan</h3>
-                        
-                        @if($perizinans->count() > 0)
-                            <div class="overflow-x-auto border border-slate-100 rounded-xl">
-                                <table class="w-full text-xs text-left text-slate-600">
-                                    <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
-                                        <tr>
-                                            <th class="p-3.5">Praktikum</th>
-                                            <th class="p-3.5">Alasan</th>
-                                            <th class="p-3.5">Bukti Dokumen</th>
-                                            <th class="p-3.5">Tanggal Pengajuan</th>
-                                            <th class="p-3.5">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100">
-                                        @foreach($perizinans as $p)
-                                            <tr class="hover:bg-slate-50/50 transition">
-                                                <td class="p-3.5">
-                                                    <span class="font-bold text-slate-800 block text-sm">{{ $p->agenda->mata_kuliah }}</span>
-                                                    <span class="text-[10px] text-slate-450 uppercase font-semibold">Dosen: {{ $p->agenda->dosen->nama }}</span>
-                                                </td>
-                                                <td class="p-3.5 italic">"{{ $p->alasan }}"</td>
-                                                <td class="p-3.5">
-                                                    @if($p->bukti_url)
-                                                        <a href="{{ asset($p->bukti_url) }}" target="_blank" class="text-teal-700 hover:underline font-semibold flex items-center gap-1"><i class="fa-solid fa-file-pdf"></i> Lihat File</a>
-                                                    @else
-                                                        <span class="text-slate-400 italic">None</span>
-                                                    @endif
-                                                </td>
-                                                <td class="p-3.5 font-mono text-slate-500">{{ $p->created_at }}</td>
-                                                <td class="p-3.5">
-                                                    @if(strtolower($p->status_persetujuan) === 'pending')
-                                                        <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-100 font-bold rounded-lg text-[9px] uppercase tracking-wider">Pending</span>
-                                                    @elseif(strtolower($p->status_persetujuan) === 'disetujui')
-                                                        <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold rounded-lg text-[9px] uppercase tracking-wider">Disetujui</span>
-                                                    @else
-                                                        <span class="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-100 font-bold rounded-lg text-[9px] uppercase tracking-wider">Ditolak</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <div class="text-center py-10 text-slate-400 italic">
-                                <i class="fa-solid fa-file-signature text-xl block mb-2"></i>
-                                Belum ada pengajuan izin dibuat.
                             </div>
                         @endif
                     </div>

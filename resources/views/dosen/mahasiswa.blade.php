@@ -203,7 +203,7 @@
                     </div>
 
                     <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                        <button type="submit" class="px-4 py-2 bg-teal-850 hover:bg-teal-900 text-white rounded-xl font-bold transition flex items-center gap-1.5 shadow-sm text-xs">
+                        <button type="submit" class="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition flex items-center gap-1.5 shadow-sm text-xs cursor-pointer">
                             <i class="fa-solid fa-filter"></i> Terapkan Filter
                         </button>
                     </div>

@@ -784,12 +784,25 @@ class DosenController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('mata_kuliah', 'like', "%{$search}%")
-                  ->orWhere('catatan', 'like', "%{$search}%");
+                  ->orWhere('catatan', 'like', "%{$search}%")
+                  ->orWhere('kelas', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('tanggal')) {
             $query->where('tanggal', $request->tanggal);
+        }
+
+        if ($request->filled('lab_id')) {
+            $query->where('lab_id', $request->lab_id);
+        }
+
+        if ($request->filled('status_agenda')) {
+            $query->where('status_agenda', $request->status_agenda);
+        }
+
+        if ($request->filled('kelas')) {
+            $query->where('kelas', $request->kelas);
         }
 
         if ($request->get('sort') === 'terlama') {

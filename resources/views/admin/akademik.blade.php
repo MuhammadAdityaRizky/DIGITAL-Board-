@@ -73,12 +73,12 @@
         </header>
 
         <!-- Content Area -->
-        <div class="flex-grow overflow-auto p-6 space-y-6">
+        <div class="flex-grow overflow-auto p-6 space-y-6 w-full">
 
             <!-- Alerts -->
             @if(session('success'))
-                <div class="bg-emerald-50 border border-emerald-200 text-emerald-850 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm max-w-5xl">
-                    <i class="fa-solid fa-circle-check class-emerald-600 mt-0.5 text-lg"></i>
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-850 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm w-full">
+                    <i class="fa-solid fa-circle-check text-emerald-600 mt-0.5 text-lg"></i>
                     <div>
                         <span class="font-bold">Berhasil!</span>
                         <p class="mt-0.5">{{ session('success') }}</p>
@@ -87,7 +87,7 @@
             @endif
 
             @if($errors->any())
-                <div class="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm max-w-5xl">
+                <div class="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm w-full">
                     <i class="fa-solid fa-circle-xmark text-rose-600 mt-0.5 text-lg"></i>
                     <div>
                         <span class="font-bold">Gagal memproses data:</span>
@@ -97,27 +97,27 @@
             @endif
 
             <!-- Tabs selector -->
-            <div class="flex border-b border-slate-200 text-xs font-bold uppercase tracking-wider bg-white px-4 pt-2 rounded-t-xl border-x max-w-5xl">
+            <div class="flex border-b border-slate-200 text-xs font-bold uppercase tracking-wider bg-white px-4 pt-2 rounded-t-xl border-x w-full">
                 <button @click="activeTab = 'fakultas'; window.location.hash = 'fakultas'" 
-                        :class="activeTab === 'fakultas' ? 'border-teal-700 text-teal-850 border-b-2' : 'text-slate-400 hover:text-slate-700'"
+                        :class="activeTab === 'fakultas' ? 'border-teal-700 text-teal-800 border-b-2' : 'text-slate-400 hover:text-slate-700'"
                         class="px-5 py-3 transition focus:outline-none flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-building"></i>
                     Fakultas
                 </button>
                 <button @click="activeTab = 'prodi'; window.location.hash = 'prodi'" 
-                        :class="activeTab === 'prodi' ? 'border-teal-700 text-teal-850 border-b-2' : 'text-slate-400 hover:text-slate-700'"
+                        :class="activeTab === 'prodi' ? 'border-teal-700 text-teal-800 border-b-2' : 'text-slate-400 hover:text-slate-700'"
                         class="px-5 py-3 transition focus:outline-none flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-graduation-cap"></i>
                     Program Studi
                 </button>
                 <button @click="activeTab = 'kelas'; window.location.hash = 'kelas'" 
-                        :class="activeTab === 'kelas' ? 'border-teal-700 text-teal-850 border-b-2' : 'text-slate-400 hover:text-slate-700'"
+                        :class="activeTab === 'kelas' ? 'border-teal-700 text-teal-800 border-b-2' : 'text-slate-400 hover:text-slate-700'"
                         class="px-5 py-3 transition focus:outline-none flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-chalkboard-user"></i>
                     Kelas
                 </button>
                 <button @click="activeTab = 'matkul'; window.location.hash = 'matkul'" 
-                        :class="activeTab === 'matkul' ? 'border-teal-700 text-teal-850 border-b-2' : 'text-slate-400 hover:text-slate-700'"
+                        :class="activeTab === 'matkul' ? 'border-teal-700 text-teal-800 border-b-2' : 'text-slate-400 hover:text-slate-700'"
                         class="px-5 py-3 transition focus:outline-none flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-book"></i>
                     Mata Kuliah
@@ -125,14 +125,14 @@
             </div>
 
             <!-- Tab Content: FAKULTAS -->
-            <div x-show="activeTab === 'fakultas'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-6 max-w-5xl">
+            <div x-show="activeTab === 'fakultas'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-6 w-full">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-sm text-slate-800">Daftar Fakultas</h3>
                     <div class="flex items-center gap-2">
-                        <button onclick="openModal('modal-import-fakultas')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <button onclick="openModal('modal-import-fakultas')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-file-import"></i> Import Fakultas
                         </button>
-                        <button onclick="openModal('modal-add-fakultas')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <button onclick="openModal('modal-add-fakultas')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-plus"></i> Tambah Fakultas
                         </button>
                     </div>
@@ -153,11 +153,11 @@
                                 <td class="p-3 font-bold text-slate-800 text-sm">{{ $fak->nama_fakultas }}</td>
                                 <td class="p-3 text-center">
                                     <div class="flex items-center justify-center gap-3">
-                                        <button onclick="openEditFakultasModal({{ $fak->id }}, '{{ addslashes($fak->nama_fakultas) }}')" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                                        <button onclick="openEditFakultasModal({{ $fak->id }}, '{{ addslashes($fak->nama_fakultas) }}')" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
                                         <form action="{{ route('admin.akademik.fakultas.delete', $fak->id) }}" method="POST" onsubmit="return confirmAction(event, 'Semua Prodi dan User terkait akan terpengaruh.', 'Hapus Fakultas?')" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+                                            <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-trash-can"></i> Hapus</button>
                                         </form>
                                     </div>
                                 </td>
@@ -169,14 +169,14 @@
             </div>
 
             <!-- Tab Content: PRODI -->
-            <div x-show="activeTab === 'prodi'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-6 max-w-5xl" style="display: none;">
+            <div x-show="activeTab === 'prodi'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-6 w-full" style="display: none;">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-sm text-slate-800">Daftar Program Studi / Jurusan</h3>
                     <div class="flex items-center gap-2">
-                        <button onclick="openModal('modal-import-prodi')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <button onclick="openModal('modal-import-prodi')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-file-import"></i> Import Prodi
                         </button>
-                        <button onclick="openModal('modal-add-prodi')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <button onclick="openModal('modal-add-prodi')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-plus"></i> Tambah Prodi
                         </button>
                     </div>
@@ -199,11 +199,11 @@
                                 <td class="p-3 text-slate-500 font-medium">{{ $prod->fakultas->nama_fakultas ?? '-' }}</td>
                                 <td class="p-3 text-center">
                                     <div class="flex items-center justify-center gap-3">
-                                        <button onclick="openEditProdiModal({{ $prod->id }}, '{{ addslashes($prod->nama_prodi) }}', {{ $prod->fakultas_id }})" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                                        <button onclick="openEditProdiModal({{ $prod->id }}, '{{ addslashes($prod->nama_prodi) }}', {{ $prod->fakultas_id }})" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
                                         <form action="{{ route('admin.akademik.prodi.delete', $prod->id) }}" method="POST" onsubmit="return confirmAction(event, 'Apakah Anda yakin ingin menghapus Prodi ini?', 'Hapus Prodi?')" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+                                            <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-trash-can"></i> Hapus</button>
                                         </form>
                                     </div>
                                 </td>
@@ -215,17 +215,17 @@
             </div>
 
             <!-- Tab Content: KELAS -->
-            <div x-show="activeTab === 'kelas'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-6 max-w-5xl" style="display: none;">
+            <div x-show="activeTab === 'kelas'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-6 w-full" style="display: none;">
                 <div class="flex justify-between items-center">
                     <h3 class="font-bold text-sm text-slate-800">Daftar Kelas</h3>
                     <div class="flex items-center gap-2">
-                        <button type="button" onclick="submitBulkDeleteKelas()" id="btn-bulk-delete-kelas" class="px-3.5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm hidden">
+                        <button type="button" onclick="submitBulkDeleteKelas()" id="btn-bulk-delete-kelas" class="px-3.5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm hidden cursor-pointer">
                             <i class="fa-solid fa-trash-can"></i> Hapus Terpilih (<span id="bulk-delete-count-kelas">0</span>)
                         </button>
-                        <button onclick="openModal('modal-import-kelas')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <button onclick="openModal('modal-import-kelas')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-file-import"></i> Import Kelas
                         </button>
-                        <button onclick="openModal('modal-add-kelas')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                        <button onclick="openModal('modal-add-kelas')" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-plus"></i> Tambah Kelas
                         </button>
                     </div>
@@ -238,7 +238,7 @@
                             <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                                 <tr>
                                     <th class="p-3 w-10 text-center">
-                                        <input type="checkbox" id="select-all-kelas" class="rounded border-slate-300 text-teal-700 focus:ring-teal-700">
+                                        <input type="checkbox" id="select-all-kelas" class="rounded border-slate-300 text-teal-700 focus:ring-teal-700 cursor-pointer">
                                     </th>
                                     <th class="p-3">ID</th>
                                     <th class="p-3">Nama Kelas</th>
@@ -249,17 +249,17 @@
                                 @foreach($kelas as $k)
                                 <tr class="hover:bg-slate-50/50 transition">
                                     <td class="p-3 text-center">
-                                        <input type="checkbox" name="ids[]" value="{{ $k->id }}" class="checkbox-kelas rounded border-slate-300 text-teal-700 focus:ring-teal-700">
+                                        <input type="checkbox" name="ids[]" value="{{ $k->id }}" class="checkbox-kelas rounded border-slate-300 text-teal-700 focus:ring-teal-700 cursor-pointer">
                                     </td>
                                     <td class="p-3 font-mono text-slate-400">{{ $k->id }}</td>
                                     <td class="p-3 font-bold text-slate-800 text-sm">{{ $k->nama_kelas }}</td>
                                     <td class="p-3 text-center">
                                         <div class="flex items-center justify-center gap-3">
-                                            <button type="button" onclick="openEditKelasModal({{ $k->id }}, '{{ addslashes($k->nama_kelas) }}')" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                                            <button type="button" onclick="openEditKelasModal({{ $k->id }}, '{{ addslashes($k->nama_kelas) }}')" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
                                             <form id="delete-kelas-{{ $k->id }}" action="{{ url('admin/akademik/kelas') }}/{{ $k->id }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button" onclick="confirmAction(event, 'Apakah Anda yakin ingin menghapus Kelas ini?', 'Hapus Kelas?')" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+                                                <button type="button" onclick="confirmAction(event, 'Apakah Anda yakin ingin menghapus Kelas ini?', 'Hapus Kelas?')" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-trash-can"></i> Hapus</button>
                                             </form>
                                         </div>
                                     </td>
@@ -269,12 +269,6 @@
                         </table>
                     </div>
                 </form>
-                @foreach($kelas as $k)
-                <form id="delete-kelas-{{ $k->id }}" action="{{ route('admin.akademik.kelas.delete', $k->id) }}" method="POST" class="hidden">
-                    @csrf
-                    @method('DELETE')
-                </form>
-                @endforeach
             </div>
 
     @php
@@ -284,16 +278,13 @@
     @endphp
 
             <!-- Tab Content: MATA KULIAH -->
-            <div x-show="activeTab === 'matkul'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-4 max-w-5xl">
+            <div x-show="activeTab === 'matkul'" class="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-hidden p-6 space-y-4 w-full">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <h3 class="font-bold text-sm text-slate-800">Daftar Mata Kuliah</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Kelola daftar mata kuliah dan pemetaan program studi.</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Kelola daftar mata kuliah, bobot SKS, pemetaan semester, dan kategori kurikulum.</p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button type="button" onclick="submitBulkDeleteMatkul()" id="btn-bulk-delete-matkul" class="px-3.5 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm hidden cursor-pointer">
-                            <i class="fa-solid fa-trash-can"></i> Hapus Terpilih (<span id="bulk-delete-count-matkul">0</span>)
-                        </button>
                         <button onclick="openModal('modal-import-matkul')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-file-import"></i> Import Mata Kuliah
                         </button>
@@ -308,9 +299,9 @@
                     @method('DELETE')
                 </form>
 
-                <!-- Minimalist Search & Filter Bar -->
-                <div class="flex flex-col sm:flex-row items-center gap-2 pt-1">
-                    <div class="relative flex-1 w-full">
+                <!-- Multi-Parameter Search & Filter Bar -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 pt-1">
+                    <div class="relative lg:col-span-4 w-full">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </div>
@@ -320,7 +311,7 @@
                                placeholder="Cari nama mata kuliah atau kode..." 
                                class="w-full pl-8 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 text-slate-800 transition">
                     </div>
-                    <div class="w-full sm:w-64">
+                    <div class="lg:col-span-3 w-full">
                         <select id="filter_matkul_prodi" onchange="filterMatkulTable()" class="w-full py-2 px-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 text-slate-700 transition cursor-pointer">
                             <option value="">Semua Program Studi</option>
                             <option value="umum">Semua Prodi (Mata Kuliah Umum)</option>
@@ -333,15 +324,34 @@
                             @endforeach
                         </select>
                     </div>
-                    <button type="button" 
-                            id="btn_reset_matkul" 
-                            onclick="resetMatkulFilter()" 
-                            class="hidden px-3 py-2 text-xs text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition font-medium cursor-pointer">
-                        Reset
-                    </button>
+                    <div class="lg:col-span-2 w-full">
+                        <select id="filter_matkul_semester" onchange="filterMatkulTable()" class="w-full py-2 px-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 text-slate-700 transition cursor-pointer">
+                            <option value="">Semua Semester</option>
+                            @for($s=1; $s<=8; $s++)
+                                <option value="{{ $s }}">Semester {{ $s }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="lg:col-span-2 w-full">
+                        <select id="filter_matkul_kategori" onchange="filterMatkulTable()" class="w-full py-2 px-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 text-slate-700 transition cursor-pointer">
+                            <option value="">Semua Kategori</option>
+                            <option value="wajib">Wajib</option>
+                            <option value="pilihan">Pilihan</option>
+                            <option value="praktikum lab">Praktikum Lab</option>
+                            <option value="teori & praktikum">Teori & Praktikum</option>
+                        </select>
+                    </div>
+                    <div class="lg:col-span-1 w-full flex items-center justify-end">
+                        <button type="button" 
+                                id="btn_reset_matkul" 
+                                onclick="resetMatkulFilter()" 
+                                class="hidden w-full py-2 px-3 text-xs text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition font-bold cursor-pointer text-center">
+                            Reset
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Clean Table -->
+                <!-- Clean & Comprehensive Table -->
                 <div class="overflow-x-auto rounded-xl border border-slate-100 text-xs">
                     <table class="w-full text-left text-slate-650">
                         <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
@@ -351,24 +361,56 @@
                                 </th>
                                 <th class="p-3 w-28">Kode MK</th>
                                 <th class="p-3">Nama Mata Kuliah</th>
+                                <th class="p-3 text-center w-28">Semester</th>
+                                <th class="p-3 text-center w-36">Kategori</th>
                                 <th class="p-3">Program Studi</th>
-                                <th class="p-3 text-center w-24 whitespace-nowrap">SKS</th>
+                                <th class="p-3 text-center w-20 whitespace-nowrap">SKS</th>
                                 <th class="p-3 text-center w-28">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-slate-100" id="matkul_table_body">
                             @if(isset($mataKuliahs) && count($mataKuliahs) > 0)
                                 @foreach($mataKuliahs as $mk)
+                                @php
+                                    $kat = $mk->kategori ?: 'Wajib';
+                                @endphp
                                 <tr class="matkul-row hover:bg-slate-50/50 transition"
                                     data-nama="{{ strtolower($mk->nama_mk) }}"
                                     data-kode="{{ strtolower($mk->kode_mk ?? '') }}"
                                     data-prodi-id="{{ $mk->id_prodi ?? 'umum' }}"
-                                    data-prodi-name="{{ strtolower(($mk->prodi->nama_prodi ?? 'semua umum') . ' ' . ($mk->prodi->fakultas->nama_fakultas ?? '')) }}">
+                                    data-prodi-name="{{ strtolower(($mk->prodi->nama_prodi ?? 'semua umum') . ' ' . ($mk->prodi->fakultas->nama_fakultas ?? '')) }}"
+                                    data-semester="{{ $mk->semester ?: 1 }}"
+                                    data-sks="{{ $mk->sks ?: 3 }}"
+                                    data-kategori="{{ strtolower($kat) }}">
                                     <td class="p-3 text-center">
-                                        <input type="checkbox" value="{{ $mk->id }}" class="checkbox-matkul rounded border-slate-300 text-teal-700 focus:ring-teal-700 cursor-pointer">
+                                        <input type="checkbox" value="{{ $mk->id }}" class="checkbox-matkul rounded border-slate-300 text-teal-700 focus:ring-teal-700 cursor-pointer" data-name="{{ $mk->nama_mk }}">
                                     </td>
                                     <td class="p-3 font-mono text-slate-400 font-bold">{{ $mk->kode_mk ?: '-' }}</td>
                                     <td class="p-3 font-bold text-slate-800 text-sm">{{ $mk->nama_mk }}</td>
+                                    <td class="p-3 text-center whitespace-nowrap">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-bold rounded-md">
+                                            <i class="fa-solid fa-graduation-cap text-[9px] text-slate-400"></i> Sem {{ $mk->semester ?: 1 }}
+                                        </span>
+                                    </td>
+                                    <td class="p-3 text-center whitespace-nowrap">
+                                        @if($kat === 'Praktikum Lab')
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-bold rounded-md">
+                                                <i class="fa-solid fa-flask text-[9px]"></i> Praktikum Lab
+                                            </span>
+                                        @elseif($kat === 'Pilihan')
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold rounded-md">
+                                                <i class="fa-solid fa-star text-[9px]"></i> Pilihan
+                                            </span>
+                                        @elseif($kat === 'Teori & Praktikum')
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-cyan-50 border border-cyan-200 text-cyan-800 text-[10px] font-bold rounded-md">
+                                                <i class="fa-solid fa-laptop-code text-[9px]"></i> Teori & Lab
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold rounded-md">
+                                                <i class="fa-solid fa-book-bookmark text-[9px]"></i> Wajib
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="p-3">
                                         @if($mk->prodi)
                                             <span class="text-slate-800 font-medium">{{ $mk->prodi->nama_prodi }}</span>
@@ -380,13 +422,13 @@
                                         @endif
                                     </td>
                                     <td class="p-3 text-center whitespace-nowrap">
-                                        <span class="font-bold text-slate-700 text-xs">{{ $mk->sks ?? 3 }}</span>
+                                        <span class="font-bold text-slate-800 text-xs">{{ $mk->sks ?? 3 }}</span>
                                         <span class="text-slate-400 text-[11px] font-medium ml-0.5">SKS</span>
                                     </td>
                                     <td class="p-3 text-center">
                                         <div class="flex items-center justify-center gap-3">
                                             <button type="button" 
-                                                    onclick="openEditMatkulModal({{ $mk->id }}, '{{ addslashes($mk->nama_mk) }}', '{{ addslashes($mk->kode_mk ?? '') }}', '{{ $mk->id_prodi ?? '' }}', {{ $mk->sks ?? 3 }})" 
+                                                    onclick="openEditMatkulModal({{ $mk->id }}, '{{ addslashes($mk->nama_mk) }}', '{{ addslashes($mk->kode_mk ?? '') }}', '{{ $mk->id_prodi ?? '' }}', {{ $mk->sks ?? 3 }}, {{ $mk->semester ?? 1 }}, '{{ addslashes($kat) }}')" 
                                                     class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer">
                                                 <i class="fa-solid fa-pen-to-square"></i> Edit
                                             </button>
@@ -403,21 +445,58 @@
                                 </tr>
                                 @endforeach
                                 <tr id="matkul_empty_state" style="display: none;">
-                                    <td colspan="6" class="p-6 text-center text-slate-400 italic">
+                                    <td colspan="8" class="p-8 text-center text-slate-400 italic">
                                         Tidak ada mata kuliah yang cocok dengan filter pencarian.
                                     </td>
                                 </tr>
                             @else
                                 <tr>
-                                    <td colspan="6" class="p-8 text-center text-slate-400 italic">Belum ada data mata kuliah.</td>
+                                    <td colspan="8" class="p-8 text-center text-slate-400 italic">Belum ada data mata kuliah.</td>
                                 </tr>
                             @endif
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Pagination & Info Total Data -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 text-xs border-t border-slate-100" id="matkul_pagination_wrapper">
+                    <div class="flex items-center gap-3 text-slate-500">
+                        <span>Tampilkan</span>
+                        <select id="matkul_per_page" onchange="changeMatkulPerPage()" class="py-1 px-2 border border-slate-200 rounded-lg bg-slate-50 text-xs font-bold text-slate-700 outline-none cursor-pointer">
+                            <option value="10">10 Baris</option>
+                            <option value="25">25 Baris</option>
+                            <option value="50">50 Baris</option>
+                            <option value="all">Semua</option>
+                        </select>
+                        <span id="matkul_info_text" class="font-medium text-slate-600">Menampilkan 0 dari 0 data</span>
+                    </div>
+
+                    <div class="flex items-center gap-1" id="matkul_pagination_buttons">
+                        <!-- Dynamic pagination buttons rendered by JS -->
+                    </div>
+                </div>
             </div>
 
-        </div>
+            <!-- FLOATING BULK ACTION TOOLBAR FOR MATA KULIAH -->
+            <div id="floating-bulk-matkul" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 bg-slate-900/90 backdrop-blur-md border border-slate-800 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 transition-all duration-300 opacity-0 translate-y-10 pointer-events-none">
+                <div class="flex items-center gap-2 pr-3 border-r border-slate-700">
+                    <div class="w-6 h-6 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-xs">
+                        <i class="fa-solid fa-check-double"></i>
+                    </div>
+                    <span class="text-xs font-bold text-slate-100"><span id="bulk-matkul-count-badge">0</span> Terpilih</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="exportSelectedMatkul()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-teal-400 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-file-excel"></i> Export Terpilih
+                    </button>
+                    <button type="button" onclick="submitBulkDeleteMatkul()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                        <i class="fa-solid fa-trash-can"></i> Hapus Terpilih
+                    </button>
+                    <button type="button" onclick="deselectAllMatkul()" class="p-1.5 text-slate-400 hover:text-white transition cursor-pointer text-xs ml-1" title="Batal Pilih">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
     </main>
 
     <!-- Bottom Navigation Bar (Mobile Only) -->
@@ -659,9 +738,28 @@
                     <label class="block text-slate-700 font-bold mb-1">Nama Mata Kuliah <span class="text-rose-500">*</span></label>
                     <input type="text" name="nama_mk" required placeholder="Contoh: Pemrograman Web" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
                 </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Bobot SKS <span class="text-rose-500">*</span></label>
+                        <input type="number" name="sks" min="1" max="10" value="3" required placeholder="3" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Semester <span class="text-rose-500">*</span></label>
+                        <select name="semester" required class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition cursor-pointer">
+                            @for($s=1; $s<=8; $s++)
+                                <option value="{{ $s }}">Semester {{ $s }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
                 <div>
-                    <label class="block text-slate-700 font-bold mb-1">Bobot SKS <span class="text-rose-500">*</span></label>
-                    <input type="number" name="sks" min="1" max="10" value="3" required placeholder="Contoh: 1, 2, atau 3" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
+                    <label class="block text-slate-700 font-bold mb-1">Kategori Kurikulum <span class="text-rose-500">*</span></label>
+                    <select name="kategori" required class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition cursor-pointer">
+                        <option value="Wajib">Wajib (Mata Kuliah Utama)</option>
+                        <option value="Praktikum Lab">Praktikum Lab (Praktikum Laboratorium)</option>
+                        <option value="Teori & Praktikum">Teori & Praktikum</option>
+                        <option value="Pilihan">Pilihan (Mata Kuliah Peminatan)</option>
+                    </select>
                 </div>
                 <div class="relative" id="add_prodi_combobox_wrapper">
                     <label class="block text-slate-700 font-bold mb-1">Program Studi</label>
@@ -752,9 +850,28 @@
                     <label class="block text-slate-700 font-bold mb-1">Nama Mata Kuliah <span class="text-rose-500">*</span></label>
                     <input type="text" id="edit-matkul-nama" name="nama_mk" required class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
                 </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Bobot SKS <span class="text-rose-500">*</span></label>
+                        <input type="number" id="edit-matkul-sks" name="sks" min="1" max="10" required placeholder="Contoh: 3" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Semester <span class="text-rose-500">*</span></label>
+                        <select id="edit-matkul-semester" name="semester" required class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition cursor-pointer">
+                            @for($s=1; $s<=8; $s++)
+                                <option value="{{ $s }}">Semester {{ $s }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
                 <div>
-                    <label class="block text-slate-700 font-bold mb-1">Bobot SKS <span class="text-rose-500">*</span></label>
-                    <input type="number" id="edit-matkul-sks" name="sks" min="1" max="10" required placeholder="Contoh: 1, 2, atau 3" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
+                    <label class="block text-slate-700 font-bold mb-1">Kategori Kurikulum <span class="text-rose-500">*</span></label>
+                    <select id="edit-matkul-kategori" name="kategori" required class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition cursor-pointer">
+                        <option value="Wajib">Wajib (Mata Kuliah Utama)</option>
+                        <option value="Praktikum Lab">Praktikum Lab (Praktikum Laboratorium)</option>
+                        <option value="Teori & Praktikum">Teori & Praktikum</option>
+                        <option value="Pilihan">Pilihan (Mata Kuliah Peminatan)</option>
+                    </select>
                 </div>
                 <div class="relative" id="edit_prodi_combobox_wrapper">
                     <label class="block text-slate-700 font-bold mb-1">Program Studi</label>
@@ -863,11 +980,13 @@
             openModal('modal-edit-kelas');
         }
 
-        function openEditMatkulModal(id, nama, kode, prodiId, sks) {
+        function openEditMatkulModal(id, nama, kode, prodiId, sks, semester, kategori) {
             document.getElementById('edit-matkul-form').action = `/admin/akademik/matkul/${id}`;
             document.getElementById('edit-matkul-nama').value = nama;
             document.getElementById('edit-matkul-kode').value = kode;
             document.getElementById('edit-matkul-sks').value = sks || 3;
+            document.getElementById('edit-matkul-semester').value = semester || 1;
+            document.getElementById('edit-matkul-kategori').value = kategori || 'Wajib';
             document.getElementById('edit-matkul-prodi').value = prodiId || '';
             
             const matchedOption = document.querySelector(`.edit-prodi-item-option[data-id="${prodiId}"]`);
@@ -1077,22 +1196,53 @@
         }
 
         // ==========================================
-        // BULK DELETE LOGIC FOR MATA KULIAH
+        // BULK ACTION TOOLBAR & LOGIC FOR MATA KULIAH
         // ==========================================
         const selectAllMatkul = document.getElementById('select-all-matkul');
-        const btnBulkDeleteMatkul = document.getElementById('btn-bulk-delete-matkul');
-        const bulkDeleteCountMatkul = document.getElementById('bulk-delete-count-matkul');
+        const floatingMatkulBar = document.getElementById('floating-bulk-matkul');
+        const bulkMatkulBadge = document.getElementById('bulk-matkul-count-badge');
 
         function updateBulkDeleteBtnMatkul() {
-            const checkedCount = document.querySelectorAll('.checkbox-matkul:checked').length;
-            if (btnBulkDeleteMatkul && bulkDeleteCountMatkul) {
+            const checkedBoxes = document.querySelectorAll('.checkbox-matkul:checked');
+            const checkedCount = checkedBoxes.length;
+
+            if (floatingMatkulBar && bulkMatkulBadge) {
+                bulkMatkulBadge.innerText = checkedCount;
                 if (checkedCount > 0) {
-                    btnBulkDeleteMatkul.classList.remove('hidden');
-                    bulkDeleteCountMatkul.innerText = checkedCount;
+                    floatingMatkulBar.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+                    floatingMatkulBar.classList.add('opacity-100', 'translate-y-0');
                 } else {
-                    btnBulkDeleteMatkul.classList.add('hidden');
+                    floatingMatkulBar.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+                    floatingMatkulBar.classList.remove('opacity-100', 'translate-y-0');
                 }
             }
+        }
+
+        function deselectAllMatkul() {
+            document.querySelectorAll('.checkbox-matkul').forEach(cb => cb.checked = false);
+            if (selectAllMatkul) selectAllMatkul.checked = false;
+            updateBulkDeleteBtnMatkul();
+        }
+
+        function exportSelectedMatkul() {
+            const checkedBoxes = document.querySelectorAll('.checkbox-matkul:checked');
+            if (checkedBoxes.length === 0) return;
+
+            let csvContent = "data:text/csv;charset=utf-8,ID,Kode MK,Nama Mata Kuliah\n";
+            checkedBoxes.forEach(cb => {
+                const row = cb.closest('tr');
+                const kode = row?.children[1]?.innerText?.trim() || '-';
+                const nama = cb.getAttribute('data-name') || row?.children[2]?.innerText?.trim() || '';
+                csvContent += `"${cb.value}","${kode}","${nama.replace(/"/g, '""')}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `export_mata_kuliah_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         if (selectAllMatkul) {
@@ -1173,54 +1323,153 @@
         }
 
         // ==========================================
-        // REALTIME FILTER & SEARCH FOR MATA KULIAH
+        // REALTIME FILTER & PAGINATION FOR MATA KULIAH
         // ==========================================
+        let matkulCurrentPage = 1;
+        let matkulPerPage = 10;
+        let filteredMatkulRows = [];
+
         function filterMatkulTable() {
             const search = (document.getElementById('filter_matkul_search')?.value || '').toLowerCase().trim();
             const prodi = document.getElementById('filter_matkul_prodi')?.value || '';
-            
-            const rows = document.querySelectorAll('.matkul-row');
+            const semester = document.getElementById('filter_matkul_semester')?.value || '';
+            const kategori = (document.getElementById('filter_matkul_kategori')?.value || '').toLowerCase();
+
+            const rows = Array.from(document.querySelectorAll('.matkul-row'));
             const emptyState = document.getElementById('matkul_empty_state');
             const resetBtn = document.getElementById('btn_reset_matkul');
-            
-            let visibleCount = 0;
-            
-            rows.forEach(row => {
+
+            filteredMatkulRows = rows.filter(row => {
                 const rowNama = row.getAttribute('data-nama') || '';
                 const rowKode = row.getAttribute('data-kode') || '';
                 const rowProdiId = row.getAttribute('data-prodi-id') || '';
                 const rowProdiName = row.getAttribute('data-prodi-name') || '';
-                
+                const rowSemester = row.getAttribute('data-semester') || '1';
+                const rowKategori = row.getAttribute('data-kategori') || 'wajib';
+
                 const matchSearch = !search || rowNama.includes(search) || rowKode.includes(search) || rowProdiName.includes(search);
                 const matchProdi = !prodi || (prodi === 'umum' ? rowProdiId === 'umum' : rowProdiId === prodi);
-                
-                if (matchSearch && matchProdi) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
+                const matchSemester = !semester || rowSemester === semester;
+                const matchKategori = !kategori || rowKategori === kategori;
+
+                return matchSearch && matchProdi && matchSemester && matchKategori;
             });
-            
-            if (emptyState) emptyState.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
-            
+
+            // Hide all rows initially
+            rows.forEach(r => r.style.display = 'none');
+
+            if (emptyState) {
+                emptyState.style.display = (filteredMatkulRows.length === 0 && rows.length > 0) ? '' : 'none';
+            }
+
             if (resetBtn) {
-                if (search || prodi) {
+                if (search || prodi || semester || kategori) {
                     resetBtn.classList.remove('hidden');
                 } else {
                     resetBtn.classList.add('hidden');
                 }
             }
 
-            const visibleCheckboxes = Array.from(document.querySelectorAll('.matkul-row'))
-                .filter(r => r.style.display !== 'none')
-                .map(r => r.querySelector('.checkbox-matkul'))
-                .filter(Boolean);
+            matkulCurrentPage = 1;
+            renderMatkulPagination();
+        }
+
+        function changeMatkulPerPage() {
+            const val = document.getElementById('matkul_per_page')?.value || '10';
+            matkulPerPage = (val === 'all') ? 999999 : parseInt(val);
+            matkulCurrentPage = 1;
+            renderMatkulPagination();
+        }
+
+        function renderMatkulPagination() {
+            const total = filteredMatkulRows.length;
+            const perPage = matkulPerPage;
+            const totalPages = Math.ceil(total / perPage) || 1;
+
+            if (matkulCurrentPage > totalPages) matkulCurrentPage = totalPages;
+
+            const startIdx = (matkulCurrentPage - 1) * perPage;
+            const endIdx = (perPage === 999999) ? total : Math.min(startIdx + perPage, total);
+
+            // Hide all rows, show slice
+            const allRows = document.querySelectorAll('.matkul-row');
+            allRows.forEach(r => r.style.display = 'none');
+
+            for (let i = startIdx; i < endIdx; i++) {
+                if (filteredMatkulRows[i]) {
+                    filteredMatkulRows[i].style.display = '';
+                }
+            }
+
+            // Update Info Text
+            const infoText = document.getElementById('matkul_info_text');
+            if (infoText) {
+                if (total === 0) {
+                    infoText.innerText = 'Menampilkan 0 dari 0 data mata kuliah';
+                } else {
+                    infoText.innerText = `Menampilkan ${startIdx + 1} - ${endIdx} dari ${total} data mata kuliah`;
+                }
+            }
+
+            // Render Pagination Buttons
+            const btnContainer = document.getElementById('matkul_pagination_buttons');
+            if (btnContainer) {
+                btnContainer.innerHTML = '';
+                if (totalPages <= 1) return;
+
+                // Prev Button
+                const prevBtn = document.createElement('button');
+                prevBtn.type = 'button';
+                prevBtn.className = `px-2.5 py-1 text-xs font-bold rounded-lg border transition ${matkulCurrentPage === 1 ? 'text-slate-300 border-slate-200 cursor-not-allowed' : 'text-slate-700 hover:bg-slate-100 border-slate-200 cursor-pointer'}`;
+                prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left text-[10px]"></i>';
+                prevBtn.disabled = (matkulCurrentPage === 1);
+                prevBtn.onclick = () => { if (matkulCurrentPage > 1) { matkulCurrentPage--; renderMatkulPagination(); } };
+                btnContainer.appendChild(prevBtn);
+
+                // Page numbers
+                for (let p = 1; p <= totalPages; p++) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.type = 'button';
+                    pageBtn.className = `px-2.5 py-1 text-xs font-bold rounded-lg border transition ${p === matkulCurrentPage ? 'bg-teal-800 text-white border-teal-800 shadow-xs' : 'text-slate-700 hover:bg-slate-100 border-slate-200 cursor-pointer'}`;
+                    pageBtn.innerText = p;
+                    pageBtn.onclick = () => { matkulCurrentPage = p; renderMatkulPagination(); };
+                    btnContainer.appendChild(pageBtn);
+                }
+
+                // Next Button
+                const nextBtn = document.createElement('button');
+                nextBtn.type = 'button';
+                nextBtn.className = `px-2.5 py-1 text-xs font-bold rounded-lg border transition ${matkulCurrentPage === totalPages ? 'text-slate-300 border-slate-200 cursor-not-allowed' : 'text-slate-700 hover:bg-slate-100 border-slate-200 cursor-pointer'}`;
+                nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right text-[10px]"></i>';
+                nextBtn.disabled = (matkulCurrentPage === totalPages);
+                nextBtn.onclick = () => { if (matkulCurrentPage < totalPages) { matkulCurrentPage++; renderMatkulPagination(); } };
+                btnContainer.appendChild(nextBtn);
+            }
+
+            // Sync select-all checkbox
+            const visibleCheckboxes = filteredMatkulRows.slice(startIdx, endIdx).map(r => r.querySelector('.checkbox-matkul')).filter(Boolean);
             if (selectAllMatkul) {
                 selectAllMatkul.checked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
             }
             updateBulkDeleteBtnMatkul();
         }
+
+        function resetMatkulFilter() {
+            const search = document.getElementById('filter_matkul_search');
+            const prodi = document.getElementById('filter_matkul_prodi');
+            const semester = document.getElementById('filter_matkul_semester');
+            const kategori = document.getElementById('filter_matkul_kategori');
+            if (search) search.value = '';
+            if (prodi) prodi.value = '';
+            if (semester) semester.value = '';
+            if (kategori) kategori.value = '';
+            filterMatkulTable();
+        }
+
+        // Initialize table filtering & pagination on DOM load
+        document.addEventListener('DOMContentLoaded', function() {
+            filterMatkulTable();
+        });
 
         function resetMatkulFilter() {
             const search = document.getElementById('filter_matkul_search');
