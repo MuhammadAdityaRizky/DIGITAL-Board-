@@ -2521,7 +2521,28 @@ class AdminController extends Controller
         }
 
         $jadwal->delete();
-        return back()->with('success', 'Jadwal Penggunaan Lab berhasil dihapus.');
+        return redirect()->back()->with('success', 'Slot jadwal berhasil dihapus.');
+    }
+
+    public function bulkDeleteJadwalLab(Request $request)
+    {
+        $ids = $request->input('ids');
+        if (empty($ids)) {
+            return redirect()->back()->with('error', 'Tidak ada jadwal yang dipilih untuk dihapus.');
+        }
+
+        $user = Auth::user();
+        $jadwals = JadwalPenggunaanLab::with('lab')->whereIn('id', $ids)->get();
+
+        foreach ($jadwals as $jadwal) {
+            if (!$user->canManageLab($jadwal->lab)) {
+                abort(403, 'Anda tidak memiliki akses untuk menghapus beberapa jadwal laboratorium ini.');
+            }
+        }
+
+        JadwalPenggunaanLab::whereIn('id', $ids)->delete();
+
+        return redirect()->back()->with('success', count($ids) . ' slot jadwal berhasil dihapus.');
     }
 
     public function bulkGenerate16Pertemuan(Request $request)

@@ -107,6 +107,9 @@
                         <a href="{{ route('admin.jadwal-lab.export', ['lab_id' => $selectedLabId, 'tahun_akademik' => $tahunAkademik]) }}" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="Export format Excel (sesuai template)">
                             <i class="fa-solid fa-file-excel"></i> Export Excel
                         </a>
+                        <button type="button" id="btn-bulk-delete" onclick="confirmBulkDelete()" class="hidden px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition items-center gap-1.5 shadow-sm cursor-pointer">
+                            <i class="fa-solid fa-trash"></i> Hapus Terpilih (<span id="bulk-delete-count">0</span>)
+                        </button>
                         <button type="button" onclick="openAddModal()" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                             <i class="fa-solid fa-plus"></i> Tambah Slot Jadwal
                         </button>
@@ -200,7 +203,7 @@
                                                             $bgColor = 'bg-rose-800 text-white border-rose-900'; // Merah
                                                         }
                                                     @endphp
-                                                    <div class="p-2 rounded-lg border {{ $bgColor }} shadow-xs mb-1 text-[11px] leading-tight relative group">
+                                                    <div class="p-2 rounded-lg border {{ $bgColor }} shadow-xs mb-1 text-[11px] leading-tight relative group jadwal-card cursor-pointer" onmousedown="startDragSelect(event, {{ $m->id }})" onmouseenter="enterDragSelect(event, {{ $m->id }})">
                                                         <div class="font-extrabold line-clamp-2">{{ $m->mata_kuliah }}</div>
                                                         <div class="text-[10px] text-teal-200 mt-1 font-semibold">
                                                             Kelas {{ $m->kelas ?: 'A' }} @if($m->program_kuliah)• {{ $m->program_kuliah }}@endif @if($m->semester)• Sem {{ $m->semester }}@endif
@@ -213,7 +216,8 @@
                                                         </div>
 
                                                         <!-- Action buttons on hover -->
-                                                        <div class="absolute right-1.5 top-1.5 hidden group-hover:flex items-center gap-1 z-20">
+                                                        <div class="absolute right-1.5 top-1.5 flex items-center gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity" id="jadwal_actions_{{ $m->id }}">
+                                                            <input type="checkbox" value="{{ $m->id }}" class="jadwal-checkbox w-4 h-4 rounded border-white/40 bg-white/20 text-rose-500 focus:ring-rose-500 focus:ring-1 cursor-pointer shadow-sm" onchange="toggleBulkDeleteButton(this, {{ $m->id }})" title="Pilih untuk hapus massal">
                                                             <button type="button" onclick="openEditModal({{ json_encode($m) }})" class="w-6 h-6 rounded bg-white/30 hover:bg-white/50 text-white flex items-center justify-center text-[10px] shadow-sm cursor-pointer" title="Edit">
                                                                 <i class="fa-solid fa-pen"></i>
                                                             </button>
@@ -291,7 +295,7 @@
                 <input type="hidden" name="tahun_akademik" value="{{ $tahunAkademik }}">
 
                 <!-- Row 1: Lab & Hari -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 relative" style="z-index: 50;">
                     <div>
                         <label class="block text-slate-700 font-bold mb-1.5 flex items-center gap-1.5">
                             <i class="fa-solid fa-door-open text-teal-600 text-[11px]"></i>
@@ -323,9 +327,9 @@
                 </div>
 
                 <!-- Row 2: Program Studi (Pilih Dulu) & Semester -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 relative" style="z-index: 40;">
                     <!-- Program Studi Combobox -->
-                    <div class="relative z-30" id="prodi_combobox_wrapper">
+                    <div class="relative" id="prodi_combobox_wrapper">
                         <label class="block text-slate-700 font-bold mb-1.5 flex items-center justify-between">
                             <span class="flex items-center gap-1.5">
                                 <i class="fa-solid fa-building-columns text-teal-600 text-[11px]"></i>
@@ -425,7 +429,7 @@
                 </div>
 
                 <!-- Row 3: Mata Kuliah Combobox (Filtered by Selected Prodi) -->
-                <div class="relative z-20" id="matkul_combobox_wrapper">
+                <div class="relative" id="matkul_combobox_wrapper" style="z-index: 30;">
                     <label class="block text-slate-700 font-bold mb-1.5 flex items-center justify-between">
                         <span class="flex items-center gap-1.5">
                             <i class="fa-solid fa-book-bookmark text-teal-600 text-[11px]"></i>
@@ -520,7 +524,7 @@
                 </div>
 
                 <!-- Row 4: Dosen Pengajar Combobox (Filtered by Selected Prodi) -->
-                <div class="relative z-10" id="dosen_combobox_wrapper">
+                <div class="relative" id="dosen_combobox_wrapper" style="z-index: 20;">
                     <label class="block text-slate-700 font-bold mb-1.5 flex items-center justify-between">
                         <span class="flex items-center gap-1.5">
                             <i class="fa-solid fa-user-tie text-teal-600 text-[11px]"></i>
@@ -604,9 +608,9 @@
                 </div>
 
                 <!-- Row 5: Kelas Combobox & Program Kuliah -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 relative" style="z-index: 10;">
                     <!-- Kelas Combobox (Database Aligned: A, B, C) -->
-                    <div class="relative z-10" id="kelas_combobox_wrapper">
+                    <div class="relative" id="kelas_combobox_wrapper">
                         <label class="block text-slate-700 font-bold mb-1.5 flex items-center gap-1.5">
                             <i class="fa-solid fa-users text-teal-600 text-[11px]"></i>
                             <span>Kelas <span class="text-rose-500">*</span></span>
@@ -691,7 +695,7 @@
                 </div>
 
                 <!-- Row 6: Waktu Jam Mulai & Selesai -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 relative" style="z-index: 5;">
                     <div>
                         <label class="block text-slate-700 font-bold mb-1.5 flex items-center gap-1.5">
                             <i class="fa-solid fa-clock text-teal-600 text-[11px]"></i>
@@ -1353,6 +1357,113 @@
                 }
             });
         }
+
+        function toggleBulkDeleteButton(checkbox, id) {
+            const actionsDiv = document.getElementById('jadwal_actions_' + id);
+            if (checkbox.checked) {
+                actionsDiv.classList.remove('opacity-0', 'group-hover:opacity-100');
+                actionsDiv.classList.add('opacity-100');
+            } else {
+                actionsDiv.classList.remove('opacity-100');
+                actionsDiv.classList.add('opacity-0', 'group-hover:opacity-100');
+            }
+
+            const checkedBoxes = document.querySelectorAll('.jadwal-checkbox:checked');
+            const btnBulkDelete = document.getElementById('btn-bulk-delete');
+            const bulkDeleteCount = document.getElementById('bulk-delete-count');
+            
+            if (checkedBoxes.length > 0) {
+                btnBulkDelete.classList.remove('hidden');
+                btnBulkDelete.classList.add('flex');
+                bulkDeleteCount.textContent = checkedBoxes.length;
+            } else {
+                btnBulkDelete.classList.add('hidden');
+                btnBulkDelete.classList.remove('flex');
+            }
+        }
+
+        function confirmBulkDelete() {
+            const checkedBoxes = document.querySelectorAll('.jadwal-checkbox:checked');
+            if (checkedBoxes.length === 0) return;
+
+            const ids = Array.from(checkedBoxes).map(cb => cb.value);
+
+            Swal.fire({
+                title: 'Hapus ' + ids.length + ' Jadwal Lab?',
+                text: 'Apakah Anda yakin ingin menghapus slot jadwal yang dipilih? Tindakan ini tidak dapat dibatalkan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Hapus Semua!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-lg font-extrabold text-slate-800',
+                    htmlContainer: 'text-xs text-slate-600 font-medium',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{{ route("admin.jadwal-lab.bulk-delete") }}';
+                    form.innerHTML = '@csrf @method("DELETE")';
+                    
+                    ids.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'ids[]';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
+
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+
+        // ==========================================
+        // DRAG TO SELECT (BLOCK MULTIPLE)
+        // ==========================================
+        let isDragging = false;
+        let dragSelectState = false;
+
+        function startDragSelect(e, id) {
+            // Ignore if clicking on a button
+            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+
+            isDragging = true;
+            const checkbox = document.querySelector(`.jadwal-checkbox[value="${id}"]`);
+            if (checkbox) {
+                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+                    // Checkbox clicked: it will toggle itself, so we capture the FUTURE state
+                    dragSelectState = !checkbox.checked; 
+                } else {
+                    // Card clicked: we toggle the checkbox manually
+                    checkbox.checked = !checkbox.checked;
+                    toggleBulkDeleteButton(checkbox, id);
+                    dragSelectState = checkbox.checked;
+                    // Prevent text selection while dragging
+                    e.preventDefault();
+                }
+            }
+        }
+
+        function enterDragSelect(e, id) {
+            if (!isDragging) return;
+            const checkbox = document.querySelector(`.jadwal-checkbox[value="${id}"]`);
+            if (checkbox && checkbox.checked !== dragSelectState) {
+                checkbox.checked = dragSelectState;
+                toggleBulkDeleteButton(checkbox, id);
+            }
+        }
+
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
 
         function openAddModal() {
             currentEditingJadwal = null;

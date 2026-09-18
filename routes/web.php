@@ -72,6 +72,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/jadwal-lab/import', [AdminController::class, 'importJadwalLab'])->name('jadwal-lab.import');
         Route::post('/jadwal-lab', [AdminController::class, 'storeJadwalPenggunaanLab'])->name('jadwal-lab.store');
         Route::put('/jadwal-lab/{id}', [AdminController::class, 'updateJadwalPenggunaanLab'])->name('jadwal-lab.update');
+        Route::delete('/jadwal-lab/bulk-delete', [AdminController::class, 'bulkDeleteJadwalLab'])->name('jadwal-lab.bulk-delete');
         Route::delete('/jadwal-lab/{id}', [AdminController::class, 'deleteJadwalPenggunaanLab'])->name('jadwal-lab.delete');
         
         Route::get('/akademik', [AdminController::class, 'akademik'])->name('akademik');
