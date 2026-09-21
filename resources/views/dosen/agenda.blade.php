@@ -159,28 +159,28 @@
             @endif
             
             <!-- Comprehensive Multi-Parameter Filter Bar -->
-            <div class="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-xs">
-                <form action="{{ route('dosen.agenda') }}" method="GET" class="space-y-4 text-sm">
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs">
+                <form action="{{ route('dosen.agenda') }}" method="GET" class="space-y-3.5 text-xs">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 items-end">
                         <!-- 1. Search Query -->
                         <div class="md:col-span-5 w-full">
-                            <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Cari Sesi / Mata Kuliah</label>
+                            <label class="block text-slate-700 font-bold text-xs mb-1">Cari Sesi / Mata Kuliah</label>
                             <div class="relative">
-                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Ketik nama mata kuliah, kelas, catatan..." class="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal">
-                                <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400 text-base"></i>
+                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Ketik nama mata kuliah, kelas, catatan..." class="w-full pl-9 pr-3.5 py-2 rounded-xl bg-white border border-slate-300 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs sm:text-sm"></i>
                             </div>
                         </div>
 
                         <!-- 2. Tanggal Pelaksanaan -->
                         <div class="md:col-span-3 w-full">
-                            <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Tanggal Pelaksanaan</label>
-                            <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900">
+                            <label class="block text-slate-700 font-bold text-xs mb-1">Tanggal Pelaksanaan</label>
+                            <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2 px-3 rounded-xl bg-white border border-slate-300 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none text-xs sm:text-sm font-semibold text-slate-800">
                         </div>
 
                         <!-- 3. Status Sesi -->
                         <div class="md:col-span-4 w-full">
-                            <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Status Sesi Agenda</label>
-                            <select name="status_agenda" class="w-full py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900 cursor-pointer">
+                            <label class="block text-slate-700 font-bold text-xs mb-1">Status Sesi Agenda</label>
+                            <select name="status_agenda" class="w-full py-2 px-3 rounded-xl bg-white border border-slate-300 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer">
                                 <option value="">Semua Status Sesi</option>
                                 <option value="Berlangsung" {{ request('status_agenda') == 'Berlangsung' ? 'selected' : '' }}>● Berlangsung</option>
                                 <option value="Selesai" {{ request('status_agenda') == 'Selesai' ? 'selected' : '' }}>● Selesai</option>
@@ -190,11 +190,11 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end pt-1">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 sm:gap-4 items-end pt-0.5">
                         <!-- 4. Filter Ruang Lab -->
                         <div class="md:col-span-4 w-full">
-                            <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Ruang Laboratorium</label>
-                            <select name="lab_id" class="w-full py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900 cursor-pointer">
+                            <label class="block text-slate-700 font-bold text-xs mb-1">Ruang Laboratorium</label>
+                            <select name="lab_id" class="w-full py-2 px-3 rounded-xl bg-white border border-slate-300 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer">
                                 <option value="">Semua Ruang Lab</option>
                                 @foreach($labs as $l)
                                     <option value="{{ $l->id }}" {{ request('lab_id') == $l->id ? 'selected' : '' }}>{{ $l->nama_lab }} (Fakultas {{ $l->fakultas->nama_fakultas ?? 'FTS' }})</option>
@@ -204,8 +204,8 @@
 
                         <!-- 5. Filter Kelas -->
                         <div class="md:col-span-4 w-full">
-                            <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Filter Kelas / Peminatan</label>
-                            <select name="kelas" class="w-full py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900 cursor-pointer">
+                            <label class="block text-slate-700 font-bold text-xs mb-1">Filter Kelas / Peminatan</label>
+                            <select name="kelas" class="w-full py-2 px-3 rounded-xl bg-white border border-slate-300 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer">
                                 <option value="">Semua Kelas</option>
                                 @foreach($uniqueClasses as $uc)
                                     @if($uc->kelas)
@@ -215,22 +215,22 @@
                             </select>
                         </div>
 
-                        <!-- 6. Urutkan Tanggal (Suffcient min-width to avoid truncation) -->
-                        <div class="md:col-span-4 w-full flex items-end gap-2.5">
-                            <div class="flex-1 min-w-[180px]">
-                                <label class="block text-slate-900 font-bold text-sm sm:text-base mb-1.5">Urutkan Tanggal</label>
-                                <select name="sort" class="w-full min-w-[180px] py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-base font-bold text-slate-900 cursor-pointer">
+                        <!-- 6. Urutkan Tanggal -->
+                        <div class="md:col-span-4 w-full flex items-end gap-2">
+                            <div class="flex-1 min-w-[160px]">
+                                <label class="block text-slate-700 font-bold text-xs mb-1">Urutkan Tanggal</label>
+                                <select name="sort" class="w-full min-w-[160px] py-2 px-3 rounded-xl bg-white border border-slate-300 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none text-xs sm:text-sm font-semibold text-slate-800 cursor-pointer">
                                     <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru Lebih Dahulu</option>
                                     <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama Lebih Dahulu</option>
                                 </select>
                             </div>
 
-                            <div class="flex items-center gap-2 shrink-0">
-                                <button type="submit" class="min-h-[46px] px-6 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-98 text-white rounded-xl font-bold text-base transition shadow-xs cursor-pointer">
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button type="submit" class="h-[38px] px-4 sm:px-5 bg-slate-900 hover:bg-slate-800 active:scale-98 text-white rounded-xl font-bold text-xs sm:text-sm transition shadow-2xs cursor-pointer flex items-center justify-center">
                                     Filter
                                 </button>
                                 @if(request()->anyFilled(['search', 'tanggal', 'sort', 'lab_id', 'status_agenda', 'kelas']))
-                                    <a href="{{ route('dosen.agenda') }}" class="min-h-[46px] px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-base transition border-2 border-slate-300 flex items-center justify-center cursor-pointer" title="Reset Semua Filter">
+                                    <a href="{{ route('dosen.agenda') }}" class="h-[38px] px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs sm:text-sm transition border border-slate-300 flex items-center justify-center cursor-pointer" title="Reset Semua Filter">
                                         Reset
                                     </a>
                                 @endif
@@ -241,33 +241,33 @@
             </div>
 
             <!-- Agendas List -->
-            <div class="bg-white border-2 border-slate-200 shadow-xs rounded-2xl overflow-hidden">
-                <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="bg-white border border-slate-200 shadow-2xs rounded-2xl overflow-hidden">
+                <div class="bg-slate-50 border-b border-slate-200 px-5 py-3.5 flex flex-wrap justify-between items-center gap-3">
                     <div>
-                        <h3 class="font-black text-base sm:text-lg text-slate-900">Daftar Agenda Perkuliahan &amp; Pertemuan</h3>
-                        <span class="text-sm bg-white text-slate-800 border border-slate-300 font-bold px-3.5 py-1 rounded-lg mt-1.5 inline-block">{{ $groupedAgendas->count() }} Mata Kuliah ({{ $agendas->total() }} Sesi Pertemuan)</span>
+                        <h3 class="font-extrabold text-sm sm:text-base text-slate-900">Daftar Agenda Perkuliahan &amp; Pertemuan</h3>
+                        <span class="text-xs bg-white text-slate-700 border border-slate-300 font-bold px-2.5 py-0.5 rounded-lg mt-1 inline-block">{{ $groupedAgendas->count() }} Mata Kuliah ({{ $agendas->total() }} Sesi Pertemuan)</span>
                     </div>
                     
-                    <div class="flex items-center gap-2.5 ml-auto flex-wrap">
+                    <div class="flex items-center gap-2 ml-auto flex-wrap">
                         @if($agendas->count() > 0)
-                            <button type="button" onclick="toggleAllCourseAccordions(this)" id="btn-toggle-all-courses" class="min-h-[44px] px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 text-sm font-bold rounded-xl transition flex items-center gap-2 shadow-xs cursor-pointer" title="Buka atau tutup semua daftar pertemuan">
-                                <i class="fa-solid fa-chevron-down text-sm transition-transform duration-200" id="icon-toggle-all-courses"></i>
+                            <button type="button" onclick="toggleAllCourseAccordions(this)" id="btn-toggle-all-courses" class="h-[36px] px-3.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka atau tutup semua daftar pertemuan">
+                                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200" id="icon-toggle-all-courses"></i>
                                 <span id="text-toggle-all-courses">Buka Semua</span>
                             </button>
-                            <button type="button" id="btn-toggle-select" class="min-h-[44px] px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 text-sm font-bold rounded-xl transition flex items-center gap-2 shadow-xs cursor-pointer">
+                            <button type="button" id="btn-toggle-select" class="h-[36px] px-3.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
                                 <i class="fa-solid fa-square-check text-slate-600"></i>
                                 <span>Pilih Banyak</span>
                             </button>
-                            <div id="container-check-all" class="flex items-center gap-2 mr-2 border-r border-slate-300 pr-3 hidden">
-                                <input type="checkbox" id="check-all" class="rounded text-slate-900 focus:ring-0 w-5 h-5 cursor-pointer">
-                                <label for="check-all" class="text-sm text-slate-800 font-bold cursor-pointer select-none">Pilih Semua</label>
+                            <div id="container-check-all" class="flex items-center gap-2 mr-1 border-r border-slate-300 pr-3 hidden">
+                                <input type="checkbox" id="check-all" class="rounded text-slate-900 focus:ring-0 w-4 h-4 cursor-pointer">
+                                <label for="check-all" class="text-xs text-slate-800 font-bold cursor-pointer select-none">Pilih Semua</label>
                             </div>
-                            <button type="button" onclick="submitBulkDelete()" id="btn-bulk-delete" class="min-h-[44px] px-4 py-2.5 bg-rose-50 hover:bg-rose-100 border-2 border-rose-300 text-rose-900 text-sm font-bold rounded-xl transition hidden flex items-center gap-2 shadow-xs cursor-pointer">
+                            <button type="button" onclick="submitBulkDelete()" id="btn-bulk-delete" class="h-[36px] px-3.5 bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-900 text-xs font-bold rounded-xl transition hidden flex items-center gap-1.5 shadow-2xs cursor-pointer">
                                 <i class="fa-solid fa-trash-can"></i> Hapus Terpilih (<span id="selected-count">0</span>)
                             </button>
                         @endif
-                        <button type="button" onclick="toggleModal('modal-add-agenda')" class="min-h-[44px] px-5 py-2.5 bg-teal-800 hover:bg-teal-900 active:scale-98 text-white text-sm sm:text-base font-bold rounded-xl shadow-xs transition flex items-center gap-2 cursor-pointer flex-shrink-0 whitespace-nowrap">
-                            <i class="fa-solid fa-calendar-plus text-base"></i> Buat Agenda Baru
+                        <button type="button" onclick="toggleModal('modal-add-agenda')" class="h-[36px] px-4 bg-teal-800 hover:bg-teal-900 active:scale-98 text-white text-xs sm:text-sm font-bold rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer flex-shrink-0 whitespace-nowrap">
+                            <i class="fa-solid fa-calendar-plus text-xs"></i> Buat Agenda Baru
                         </button>
                     </div>
                 </div>
