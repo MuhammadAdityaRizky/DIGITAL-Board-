@@ -155,54 +155,165 @@
         </div>
 
         <!-- Important Info Panel -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col gap-4">
-            <!-- Header -->
-            <div class="flex items-center gap-2 text-slate-800 font-bold text-sm tracking-wider uppercase border-b border-slate-150 pb-3">
-                <i class="fa-solid fa-bullhorn text-[#0c4ea6] text-base"></i>
-                <span>Informasi Penting</span>
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col gap-4 relative overflow-hidden">
+            <!-- Header with Slide Controls -->
+            <div class="flex items-center justify-between border-b border-slate-150 pb-3">
+                <div class="flex items-center gap-2 text-slate-800 font-bold text-sm tracking-wider uppercase">
+                    <i class="fa-solid fa-bullhorn text-[#0c4ea6] text-base"></i>
+                    <span>Informasi Penting</span>
+                    @if(isset($pengumuman) && count($pengumuman) > 0)
+                        <span class="ml-2 px-2 py-0.5 bg-blue-50 text-[#0c4ea6] text-[10px] font-extrabold rounded-full border border-blue-200">
+                            {{ count($pengumuman) }} Berita
+                        </span>
+                    @endif
+                </div>
+
+                @if(isset($pengumuman) && count($pengumuman) > 1)
+                    <!-- Controls (Prev / Next & Dots) -->
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1 mr-1">
+                            @foreach($pengumuman as $index => $item)
+                                <button type="button" onclick="goToAnnouncementSlide({{ $index }})" 
+                                        id="announcement-dot-{{ $index }}"
+                                        class="h-2 rounded-full transition-all duration-300 cursor-pointer {{ $index === 0 ? 'bg-[#0c4ea6] w-4' : 'bg-slate-300 w-2' }}" 
+                                        title="Slide {{ $index + 1 }}"></button>
+                            @endforeach
+                        </div>
+                        <button type="button" onclick="prevAnnouncementSlide()" 
+                                class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs" title="Sebelumnya">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button type="button" onclick="nextAnnouncementSlide()" 
+                                class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs" title="Berikutnya">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                @endif
             </div>
 
-            <!-- Info Box -->
-            <div class="border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-white shadow-sm">
-                <!-- Photo box or UIKA Logo box on the left -->
-                <div class="w-20 h-20 md:w-28 md:h-28 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-xs">
-                    @if($latestAnnouncement && $latestAnnouncement->foto_url)
-                        <img src="{{ asset('storage/' . $latestAnnouncement->foto_url) }}" 
-                             alt="Foto Pengumuman" 
-                             class="w-full h-full object-cover rounded-lg">
-                    @else
+            <!-- Slides Container -->
+            @if(isset($pengumuman) && count($pengumuman) > 0)
+                @foreach($pengumuman as $index => $p)
+                    @php
+                        \Carbon\Carbon::setLocale('id');
+                        $tglIndo = \Carbon\Carbon::parse($p->created_at)->locale('id')->isoFormat('dddd, D MMMM Y');
+                    @endphp
+                    <div id="announcement-slide-{{ $index }}" 
+                         class="announcement-slide-item border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-slate-50/50 shadow-xs transition-all duration-300 {{ $index === 0 ? 'block' : 'hidden' }}">
+                        
+                        <!-- Photo box or UIKA Logo -->
+                        <div class="w-20 h-20 md:w-28 md:h-28 bg-white border border-slate-200 rounded-xl flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-xs">
+                            @if($p->foto_url)
+                                <img src="{{ asset('storage/' . $p->foto_url) }}" 
+                                     alt="Foto Pengumuman" 
+                                     class="w-full h-full object-cover rounded-lg">
+                            @else
+                                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
+                                     alt="UIKA Logo Box" 
+                                     class="w-full h-full object-contain p-1">
+                            @endif
+                        </div>
+                        
+                        <!-- Content on the right -->
+                        <div class="flex-grow min-w-0 space-y-1.5">
+                            <div class="flex items-center gap-2">
+                                @if($p->is_pinned || in_array($p->prioritas, ['Penting', 'Urgen']))
+                                    <span class="px-2 py-0.5 bg-rose-100 text-rose-800 text-[10px] font-extrabold rounded-md uppercase tracking-wider inline-flex items-center gap-1 border border-rose-200">
+                                        <i class="fa-solid fa-thumbtack text-[9px]"></i> {{ $p->prioritas ?: 'PENTING' }}
+                                    </span>
+                                @endif
+                                <span class="text-[10px] md:text-xs font-bold text-slate-400">
+                                    {{ $tglIndo }}
+                                </span>
+                            </div>
+
+                            <h3 class="font-extrabold text-sm md:text-base text-slate-850 leading-snug">
+                                {{ $p->judul }}
+                            </h3>
+                            
+                            <p class="text-xs md:text-sm text-slate-600 leading-relaxed whitespace-pre-line line-clamp-3">
+                                {{ $p->isi_pengumuman }}
+                            </p>
+                        </div>
+                    </div>
+                @endforeach
+            @else
+                <!-- Fallback if DB has no announcements -->
+                <div class="border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-slate-50/50 shadow-xs">
+                    <div class="w-20 h-20 md:w-28 md:h-28 bg-white border border-slate-200 rounded-xl flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-xs">
                         <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
                              alt="UIKA Logo Box" 
                              class="w-full h-full object-contain p-1">
-                    @endif
-                </div>
-                
-                <!-- Content on the right -->
-                <div class="flex-grow min-w-0">
-                    @if($latestAnnouncement)
+                    </div>
+                    <div class="flex-grow min-w-0">
                         <h3 class="font-extrabold text-sm md:text-base text-slate-850">
-                            {{ $latestAnnouncement->judul }}
+                            Jadwal Ujian Tengah Semester (UTS)
                         </h3>
                         <p class="text-[10px] md:text-xs font-bold text-slate-400 mt-0.5">
-                            {{ \Carbon\Carbon::parse($latestAnnouncement->created_at)->isoFormat('dddd, D MMMM Y') }}
-                        </p>
-                        <p class="text-xs md:text-sm text-slate-600 mt-2 leading-relaxed">
-                            {{ $latestAnnouncement->isi_pengumuman }}
-                        </p>
-                    @else
-                        <h3 class="font-extrabold text-sm md:text-base text-slate-855">
-                            Jadwal Ujian Tengah Semester
-                        </h3>
-                        <p class="text-[10px] md:text-xs font-bold text-slate-400 mt-0.5">
-                            Senin, 17 Agustus 2026
+                            {{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y') }}
                         </p>
                         <p class="text-xs md:text-sm text-slate-600 mt-2 leading-relaxed">
                             Pelaksanaan UTS ganjil akan dimulai pada minggu pertama bulan ini. Mohon persiapkan berkas pendaftaran Anda.
                         </p>
-                    @endif
+                    </div>
                 </div>
-            </div>
+            @endif
         </div>
+
+        <script>
+            if (typeof window.announcementTotalSlides === 'undefined') {
+                window.currentAnnouncementSlide = 0;
+            }
+            window.announcementTotalSlides = {{ isset($pengumuman) ? count($pengumuman) : 0 }};
+
+            function showAnnouncementSlide(index) {
+                if (window.announcementTotalSlides <= 0) return;
+                window.currentAnnouncementSlide = (index + window.announcementTotalSlides) % window.announcementTotalSlides;
+
+                document.querySelectorAll('.announcement-slide-item').forEach((slide, idx) => {
+                    if (idx === window.currentAnnouncementSlide) {
+                        slide.classList.remove('hidden');
+                        slide.classList.add('block');
+                    } else {
+                        slide.classList.remove('block');
+                        slide.classList.add('hidden');
+                    }
+                });
+
+                for (let i = 0; i < window.announcementTotalSlides; i++) {
+                    const dot = document.getElementById('announcement-dot-' + i);
+                    if (dot) {
+                        if (i === window.currentAnnouncementSlide) {
+                            dot.className = "h-2 rounded-full transition-all duration-300 cursor-pointer bg-[#0c4ea6] w-4";
+                        } else {
+                            dot.className = "h-2 rounded-full transition-all duration-300 cursor-pointer bg-slate-300 w-2";
+                        }
+                    }
+                }
+            }
+
+            function nextAnnouncementSlide() {
+                showAnnouncementSlide(window.currentAnnouncementSlide + 1);
+            }
+
+            function prevAnnouncementSlide() {
+                showAnnouncementSlide(window.currentAnnouncementSlide - 1);
+            }
+
+            function goToAnnouncementSlide(index) {
+                showAnnouncementSlide(index);
+            }
+
+            if (window.announcementInterval) {
+                clearInterval(window.announcementInterval);
+            }
+
+            if (window.announcementTotalSlides > 1) {
+                window.announcementInterval = setInterval(() => {
+                    nextAnnouncementSlide();
+                }, 6000);
+            }
+        </script>
 
     </div>
 
