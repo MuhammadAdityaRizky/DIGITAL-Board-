@@ -26,9 +26,11 @@ Route::middleware('auth')->group(function () {
     // Admin Routes
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/users', fn () => redirect()->route('admin.pengguna'));
         Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
         Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
         Route::post('/users/promote', [AdminController::class, 'promoteSemesters'])->name('users.promote');
+        Route::get('/labs', fn () => redirect()->route('admin.laboratorium'));
         Route::post('/labs', [AdminController::class, 'storeLab'])->name('labs.store');
         Route::post('/pengumuman', [AdminController::class, 'storePengumuman'])->name('pengumuman.store');
         Route::put('/pengumuman/{id}', [AdminController::class, 'updatePengumuman'])->name('pengumuman.update');
