@@ -32,6 +32,10 @@ class LaboratoriumImport implements ToModel, WithHeadingRow
             $fakultasId = (int)$row['fakultas_id'];
         }
 
+        if (!$fakultasId) {
+            $fakultasId = Fakultas::first()?->id;
+        }
+
         // Avoid duplicates
         $existing = Laboratorium::where('nama_lab', $row['nama_lab'])->first();
         if ($existing) {

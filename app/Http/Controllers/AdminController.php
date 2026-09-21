@@ -2143,30 +2143,40 @@ class AdminController extends Controller
     {
         $request->validate([
             'file_excel' => 'required',
-            'file_excel.*' => 'mimes:xlsx,xls,csv|max:10240',
         ]);
 
         try {
             $user = Auth::user();
             $fakultasId = $user->isAdminFakultas() ? $user->fakultas_id : null;
-            $file = is_array($request->file('file_excel')) ? $request->file('file_excel')[0] : $request->file('file_excel');
-            
             $importId = (string) \Illuminate\Support\Str::uuid();
-            $path = $file->storeAs('imports', $importId . '.' . $file->getClientOriginalExtension());
-            
-            $import = new \App\Imports\MahasiswaImport($importId, $fakultasId);
-            $import->queue($path);
-            
-            if ($request->ajax()) {
-                return response()->json(['import_id' => $importId]);
+            $files = is_array($request->file('file_excel')) ? $request->file('file_excel') : [$request->file('file_excel')];
+            $totalImported = 0;
+
+            foreach ($files as $file) {
+                if ($file) {
+                    $import = new \App\Imports\MahasiswaImport($importId, $fakultasId);
+                    Excel::import($import, $file);
+                    $totalImported += $import->importedCount;
+                }
+            }
+
+            if ($totalImported === 0) {
+                if ($request->ajax()) {
+                    return response()->json(['error' => 'Gagal mengimpor data Mahasiswa. Tidak ada data yang terbaca dari file Excel.'], 422);
+                }
+                return back()->with('error', 'Gagal Impor Data! Tidak ada baris data Mahasiswa yang berhasil terbaca dari file Excel. Harap periksa format nama kolom (nim, nama, kelas, semester, angkatan, prodi).');
             }
             
-            return back()->with('success', 'Proses impor data Mahasiswa sedang berjalan di latar belakang.');
+            if ($request->ajax()) {
+                return response()->json(['import_id' => $importId, 'status' => 'completed', 'count' => $totalImported]);
+            }
+            
+            return redirect()->route('admin.pengguna', ['role' => 'mahasiswa'])->with('success', "Berhasil! {$totalImported} data Mahasiswa berhasil diimpor dan terdaftar di sistem.");
         } catch (\Exception $e) {
             if ($request->ajax()) {
                 return response()->json(['error' => $e->getMessage()], 500);
             }
-            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+            return back()->with('error', 'Gagal mengimpor data: ' . $e->getMessage());
         }
     }
 
@@ -2174,19 +2184,29 @@ class AdminController extends Controller
     {
         $request->validate([
             'file_excel' => 'required',
-            'file_excel.*' => 'mimes:xlsx,xls,csv|max:10240',
         ]);
 
         try {
             $user = Auth::user();
             $fakultasId = $user->isAdminFakultas() ? $user->fakultas_id : null;
             $files = is_array($request->file('file_excel')) ? $request->file('file_excel') : [$request->file('file_excel')];
+            $totalImported = 0;
+
             foreach ($files as $file) {
-                Excel::import(new DosenImport($fakultasId), $file);
+                if ($file) {
+                    $import = new DosenImport($fakultasId);
+                    Excel::import($import, $file);
+                    $totalImported += $import->importedCount;
+                }
             }
-            return back()->with('success', count($files) . ' file Dosen berhasil diimpor.');
+
+            if ($totalImported === 0) {
+                return back()->with('error', 'Gagal Impor Data! Tidak ada baris data Dosen yang berhasil terbaca dari file Excel. Harap periksa format nama kolom (nip, nama, status, jabatan, prodi).');
+            }
+
+            return redirect()->route('admin.pengguna', ['role' => 'dosen'])->with('success', "Berhasil! {$totalImported} data Dosen berhasil diimpor ke sistem.");
         } catch (\Exception $e) {
-            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+            return back()->with('error', 'Gagal mengimpor data: ' . $e->getMessage());
         }
     }
 

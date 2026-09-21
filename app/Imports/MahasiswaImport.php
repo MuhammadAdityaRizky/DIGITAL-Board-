@@ -4,164 +4,286 @@ namespace App\Imports;
 
 use App\Models\Mahasiswa;
 use App\Models\User;
+use App\Models\Fakultas;
+use App\Models\Prodi;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
-use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\Importable;
-use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Events\BeforeImport;
-use Maatwebsite\Excel\Events\AfterImport;
-use Illuminate\Support\Facades\Cache;
 
-class MahasiswaImport implements ToModel, WithHeadingRow, ShouldQueue, WithChunkReading, WithEvents
+class MahasiswaImport implements ToCollection
 {
     use Importable;
 
     public $importId;
     public ?int $defaultFakultasId;
+    public int $importedCount = 0;
 
-    public function __construct($importId, ?int $defaultFakultasId = null)
+    public function __construct($importId = null, ?int $defaultFakultasId = null)
     {
         $this->importId = $importId;
         $this->defaultFakultasId = $defaultFakultasId;
     }
 
-    public function chunkSize(): int
+    public function collection(Collection $rows): void
     {
-        return 50; 
-    }
-
-    public function registerEvents(): array
-    {
-        return [
-            BeforeImport::class => function (BeforeImport $event) {
-                $totalRows = $event->reader->getTotalRows();
-                $total = !empty($totalRows) ? array_values($totalRows)[0] : 0;
-                Cache::put('import_total_' . $this->importId, $total, now()->addHours(1));
-                Cache::put('import_progress_' . $this->importId, 0, now()->addHours(1));
-                Cache::put('import_status_' . $this->importId, 'processing', now()->addHours(1));
-            },
-            AfterImport::class => function (AfterImport $event) {
-                Cache::put('import_status_' . $this->importId, 'completed', now()->addHours(1));
-            },
-        ];
-    }
-
-    public function model(array $row): \Illuminate\Database\Eloquent\Model|array|null
-    {
-        // Pastikan NIM ada dan belum terdaftar di tabel mahasiswa
-        if (!isset($row['nim'])) {
-            return null;
+        $rowsArray = $rows->toArray();
+        if (empty($rowsArray)) {
+            return;
         }
 
-        $id_prodi = $row['id_prodi'] ?? null;
-        $id_fakultas = $this->defaultFakultasId ?: ($row['id_fakultas'] ?? null);
+        $headerRowIndex = null;
+        $headers = [];
 
-        if (empty($id_prodi) && !empty($row['prodi'])) {
-            $prodiQuery = \App\Models\Prodi::where('nama_prodi', 'like', '%' . $row['prodi'] . '%');
-            if ($this->defaultFakultasId) {
-                $prodiQuery->where('fakultas_id', $this->defaultFakultasId);
-            }
-            $prodi = $prodiQuery->first();
-            if ($prodi) {
-                $id_prodi = $prodi->id;
-                $id_fakultas = $prodi->fakultas_id ?? $id_fakultas;
+        // 1. Scan for Header Row dynamically across rows 0 to 15
+        foreach ($rowsArray as $idx => $row) {
+            if ($idx > 15) break;
+            foreach ($row as $cell) {
+                $cellVal = strtolower(trim(preg_replace('/[^a-zA-Z0-9]/', '', (string)$cell)));
+                if (in_array($cellVal, ['nim', 'npm', 'noinduk', 'nimmahasiswa', 'nonim', 'nimnpm'])) {
+                    $headerRowIndex = $idx;
+                    $headers = $row;
+                    break 2;
+                }
             }
         }
 
-        if (empty($id_fakultas) && !empty($row['fakultas'])) {
-            $fak = \App\Models\Fakultas::where('nama_fakultas', 'like', '%' . $row['fakultas'] . '%')->first();
-            if ($fak) {
-                $id_fakultas = $fak->id;
+        // If no explicit header row found, assume Row 0 is header
+        if ($headerRowIndex === null) {
+            $headerRowIndex = 0;
+            $headers = $rowsArray[0] ?? [];
+        }
+
+        // Map column index -> clean key name
+        $colMap = [];
+        foreach ($headers as $colIdx => $headerName) {
+            $clean = strtolower(trim(preg_replace('/[^a-zA-Z0-9]/', '', (string)$headerName)));
+            if (!empty($clean)) {
+                $colMap[$colIdx] = $clean;
             }
         }
 
-        $existingMahasiswa = Mahasiswa::where('nim', $row['nim'])->first();
-        if ($existingMahasiswa) {
-            return null; // Skip jika sudah ada
-        }
+        $dataRows = array_slice($rowsArray, $headerRowIndex + 1);
 
-        // Cek atau buat User
-        $user = User::firstOrCreate(
-            ['username' => $row['nim']],
-            [
-                'password' => Hash::make($row['nim']), // Default password adalah NIM
-                'role' => 'mahasiswa',
-                'fakultas_id' => $id_fakultas,
-            ]
-        );
-
-        if ($id_fakultas && !$user->fakultas_id) {
-            $user->update(['fakultas_id' => $id_fakultas]);
-        }
-
-        $semester = $row['semester'] ?? null;
-
-        if (empty($semester) && !empty($row['angkatan'])) {
-            $angkatan = (int) $row['angkatan'];
-            $currentYear = (int) date('Y');
-            $currentMonth = (int) date('m');
-            
-            // Rumus semester: ((Tahun Sekarang - Tahun Masuk) * 2) + (Bulan >= 8 ? 1 : 0)
-            // Semester ganjil biasanya dimulai bulan Agustus/September
-            $semester = (($currentYear - $angkatan) * 2) + ($currentMonth >= 8 ? 1 : 0);
-            
-            // Jika hasil kurang dari 1, set minimal 1
-            if ($semester < 1) {
-                $semester = 1;
+        foreach ($dataRows as $row) {
+            $rowAssoc = [];
+            foreach ($colMap as $cIdx => $keyName) {
+                $rowAssoc[$keyName] = $row[$cIdx] ?? null;
             }
-        }
 
-        $programKuliah = 'Reguler';
-        if (isset($row['program_kuliah']) && !empty($row['program_kuliah'])) {
-            $pk = strtoupper(trim($row['program_kuliah']));
-            if (str_contains($pk, 'KARYAWAN') || str_contains($pk, 'KAR')) {
-                $programKuliah = 'Karyawan';
-            } else {
-                $programKuliah = 'Reguler';
+            // 1. Resolve NIM
+            $nimRaw = null;
+            foreach (['nim', 'npm', 'noinduk', 'nimmahasiswa', 'nonim', 'nimnpm', 'username', 'no'] as $k) {
+                if (!empty($rowAssoc[$k])) {
+                    $nimRaw = trim((string)$rowAssoc[$k]);
+                    break;
+                }
             }
-        } elseif (isset($row['kelas'])) {
-            $rawK = strtoupper(trim($row['kelas']));
-            if (str_contains($rawK, 'KARYAWAN') || str_contains($rawK, 'KAR')) {
-                $programKuliah = 'Karyawan';
-            }
-        }
 
-        $kelasAsli = 'REG';
-        if ($programKuliah === 'Karyawan') {
-            $kelasAsli = 'KAR';
-        } elseif (isset($row['kelas']) && !empty($row['kelas'])) {
-            $rawK = strtoupper(trim($row['kelas']));
-            if (str_contains($rawK, 'REG A') || $rawK === 'A' || str_ends_with($rawK, '3A') || str_ends_with($rawK, '-A')) {
-                $kelasAsli = 'Reg A';
-            } elseif (str_contains($rawK, 'REG B') || $rawK === 'B' || str_ends_with($rawK, '3B') || str_ends_with($rawK, '-B')) {
-                $kelasAsli = 'Reg B';
-            } elseif (str_contains($rawK, 'REG C') || $rawK === 'C' || str_ends_with($rawK, '3C') || str_ends_with($rawK, '-C')) {
-                $kelasAsli = 'Reg C';
-            } elseif ($rawK === 'KAR' || str_contains($rawK, 'KARYAWAN')) {
+            if (!$nimRaw && isset($row[1]) && !empty(trim((string)$row[1]))) {
+                $nimRaw = trim((string)$row[1]);
+            }
+
+            if (!$nimRaw || in_array(strtolower($nimRaw), ['nim', 'npm', 'no', 'username', 'no_induk', 'nim_mahasiswa', 'nim/npm', 'no.'])) {
+                continue;
+            }
+            $nim = preg_replace('/[^0-9a-zA-Z]/', '', $nimRaw);
+            if (empty($nim)) {
+                continue;
+            }
+
+            // 2. Resolve Nama
+            $namaMhs = null;
+            foreach (['namamahasiswa', 'namalengkap', 'nama', 'namamhs', 'namasiswa'] as $k) {
+                if (!empty($rowAssoc[$k])) {
+                    $namaMhs = trim((string)$rowAssoc[$k]);
+                    break;
+                }
+            }
+            if (!$namaMhs && isset($row[2]) && !empty(trim((string)$row[2]))) {
+                $namaMhs = trim((string)$row[2]);
+            }
+            if (!$namaMhs) {
+                $namaMhs = 'Mahasiswa Baru';
+            }
+
+            // 3. Resolve Fakultas & Prodi
+            $prodiName = null;
+            foreach (['programstudi', 'prodi', 'jurusan', 'namaprodi', 'namajurusan', 'progstudi'] as $k) {
+                if (!empty($rowAssoc[$k])) {
+                    $prodiName = trim((string)$rowAssoc[$k]);
+                    break;
+                }
+            }
+
+            $id_prodi = null;
+            $id_fakultas = $this->defaultFakultasId;
+
+            if (!empty($prodiName)) {
+                $prodiQuery = Prodi::where('nama_prodi', 'like', '%' . trim($prodiName) . '%');
+                if ($this->defaultFakultasId) {
+                    $prodiQuery->where('fakultas_id', $this->defaultFakultasId);
+                }
+                $prodi = $prodiQuery->first();
+                if ($prodi) {
+                    $id_prodi = $prodi->id;
+                    $id_fakultas = $prodi->fakultas_id ?? $id_fakultas;
+                }
+            }
+
+            $fakultasName = null;
+            foreach (['fakultas', 'namafakultas', 'fakultasnaungan'] as $k) {
+                if (!empty($rowAssoc[$k])) {
+                    $fakultasName = trim((string)$rowAssoc[$k]);
+                    break;
+                }
+            }
+            if (empty($id_fakultas) && !empty($fakultasName)) {
+                $fak = Fakultas::where('nama_fakultas', 'like', '%' . trim($fakultasName) . '%')->first();
+                if ($fak) {
+                    $id_fakultas = $fak->id;
+                }
+            }
+
+            if (!$id_fakultas) {
+                $id_fakultas = Fakultas::first()?->id;
+            }
+
+            if (!$id_prodi && $id_fakultas) {
+                $id_prodi = Prodi::where('fakultas_id', $id_fakultas)->first()?->id ?? Prodi::first()?->id;
+            }
+
+            // 4. Resolve Semester & Angkatan
+            $semesterRaw = null;
+            foreach (['semester', 'sem', 'smt', 'semesteraktif'] as $k) {
+                if (!empty($rowAssoc[$k])) {
+                    $semesterRaw = trim((string)$rowAssoc[$k]);
+                    break;
+                }
+            }
+
+            $semester = 1;
+            if (!empty($semesterRaw)) {
+                preg_match('/\d+/', $semesterRaw, $matches);
+                if (isset($matches[0])) {
+                    $semester = (int)$matches[0];
+                }
+            }
+
+            $angkatanRaw = null;
+            foreach (['angkatan', 'tahunangkatan', 'tahunmasuk', 'thnangkatan'] as $k) {
+                if (!empty($rowAssoc[$k])) {
+                    $angkatanRaw = trim((string)$rowAssoc[$k]);
+                    break;
+                }
+            }
+
+            if ($semester === 1 && !empty($angkatanRaw)) {
+                $angkatan = (int) $angkatanRaw;
+                $currentYear = (int) date('Y');
+                $currentMonth = (int) date('m');
+                $calcSemester = (($currentYear - $angkatan) * 2) + ($currentMonth >= 8 ? 1 : 0);
+                if ($calcSemester >= 1) {
+                    $semester = $calcSemester;
+                }
+            }
+
+            // 5. Resolve Program Kuliah & Kelas
+            $rawKelasInput = null;
+            foreach (['kelas', 'kelasmahasiswa', 'rombel', 'kelasmhs'] as $k) {
+                if (!empty($rowAssoc[$k])) {
+                    $rawKelasInput = trim((string)$rowAssoc[$k]);
+                    break;
+                }
+            }
+
+            $programKuliahInput = null;
+            foreach (['programkuliah', 'program'] as $k) {
+                if (!empty($rowAssoc[$k])) {
+                    $programKuliahInput = trim((string)$rowAssoc[$k]);
+                    break;
+                }
+            }
+
+            $programKuliah = 'Reguler';
+            if (!empty($programKuliahInput)) {
+                $pk = strtoupper(trim($programKuliahInput));
+                if (str_contains($pk, 'KARYAWAN') || str_contains($pk, 'KAR')) {
+                    $programKuliah = 'Karyawan';
+                }
+            } elseif (!empty($rawKelasInput)) {
+                $rawK = strtoupper(trim($rawKelasInput));
+                if (str_contains($rawK, 'KARYAWAN') || str_contains($rawK, 'KAR')) {
+                    $programKuliah = 'Karyawan';
+                }
+            }
+
+            $kelasAsli = 'REG';
+            if ($programKuliah === 'Karyawan') {
                 $kelasAsli = 'KAR';
-            } else {
-                $cleaned = trim(preg_replace('/^(REGULER|KARYAWAN|REG|KAR)\s*/i', '', trim($row['kelas'])));
-                $kelasAsli = !empty($cleaned) ? $cleaned : trim($row['kelas']);
+            } elseif (!empty($rawKelasInput)) {
+                $rawK = strtoupper(trim($rawKelasInput));
+                if (str_contains($rawK, 'REG A') || str_ends_with($rawK, 'REG A') || str_ends_with($rawK, 'A')) {
+                    $kelasAsli = 'Reg A';
+                } elseif (str_contains($rawK, 'REG B') || str_ends_with($rawK, 'REG B') || str_ends_with($rawK, 'B')) {
+                    $kelasAsli = 'Reg B';
+                } elseif (str_contains($rawK, 'REG C') || str_ends_with($rawK, 'REG C') || str_ends_with($rawK, 'C')) {
+                    $kelasAsli = 'Reg C';
+                } elseif (str_contains($rawK, 'KAR') || str_contains($rawK, 'KARYAWAN')) {
+                    $kelasAsli = 'KAR';
+                } else {
+                    $cleaned = trim(preg_replace('/^(REGULER|KARYAWAN|REG|KAR|\d+)\s*/i', '', trim($rawKelasInput)));
+                    $kelasAsli = !empty($cleaned) ? $cleaned : trim($rawKelasInput);
+                }
             }
+
+            // 6. User Account (Create or Update)
+            $user = User::where('username', $nim)->first();
+            if (!$user) {
+                $user = User::create([
+                    'username' => $nim,
+                    'password' => Hash::make($nim),
+                    'role' => 'mahasiswa',
+                    'status' => 'aktif',
+                    'fakultas_id' => $id_fakultas,
+                ]);
+            } else {
+                $user->update([
+                    'role' => 'mahasiswa',
+                    'status' => 'aktif',
+                    'fakultas_id' => $id_fakultas ?: $user->fakultas_id,
+                ]);
+            }
+
+            // 7. Upsert Mahasiswa record
+            $existingMahasiswa = Mahasiswa::where('nim', $nim)->orWhere('user_id', $user->id)->first();
+            if ($existingMahasiswa) {
+                $existingMahasiswa->update([
+                    'user_id' => $user->id,
+                    'nim' => $nim,
+                    'nama_lengkap' => $namaMhs,
+                    'id_fakultas' => $id_fakultas,
+                    'id_prodi' => $id_prodi,
+                    'program_kuliah' => $programKuliah,
+                    'kelas' => $kelasAsli,
+                    'semester' => $semester,
+                    'status' => 'aktif',
+                ]);
+            } else {
+                Mahasiswa::create([
+                    'user_id' => $user->id,
+                    'nim' => $nim,
+                    'nama_lengkap' => $namaMhs,
+                    'id_fakultas' => $id_fakultas,
+                    'id_prodi' => $id_prodi,
+                    'program_kuliah' => $programKuliah,
+                    'kelas' => $kelasAsli,
+                    'semester' => $semester,
+                    'status' => 'aktif',
+                ]);
+            }
+
+            $this->importedCount++;
         }
-
-        $model = new Mahasiswa([
-            'user_id' => $user->id,
-            'nim' => $row['nim'],
-            'nama_lengkap' => $row['nama_lengkap'] ?? $row['nama'],
-            'id_fakultas' => $id_fakultas,
-            'id_prodi' => $id_prodi,
-            'program_kuliah' => $programKuliah,
-            'kelas' => $kelasAsli,
-            'semester' => $semester ?? 1,
-        ]);
-
-        Cache::increment('import_progress_' . $this->importId);
-
-        return $model;
     }
 }

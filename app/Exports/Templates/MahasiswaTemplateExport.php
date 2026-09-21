@@ -16,8 +16,10 @@ class MahasiswaTemplateExport implements FromArray, WithHeadings, WithEvents, Wi
 {
     public function array(): array
     {
+        $sampleProdi = Prodi::first()?->nama_prodi ?? 'Teknik Informatika';
+
         return [
-            ['10101010', 'Budi Santoso', '2023', '2', Prodi::first()->nama_prodi ?? 'Teknik Informatika'],
+            ['10101010', 'Budi Santoso', 'Reg A', 2, 2024, $sampleProdi],
         ];
     }
 
@@ -26,8 +28,9 @@ class MahasiswaTemplateExport implements FromArray, WithHeadings, WithEvents, Wi
         return [
             'nim',
             'nama',
-            'angkatan',
+            'kelas',
             'semester',
+            'angkatan',
             'prodi',
         ];
     }
@@ -35,7 +38,10 @@ class MahasiswaTemplateExport implements FromArray, WithHeadings, WithEvents, Wi
     public function styles(Worksheet $sheet): array
     {
         return [
-            1 => ['font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']], 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '0F766E']]],
+            1 => [
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']], 
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '0F766E']]
+            ],
         ];
     }
 
@@ -43,11 +49,13 @@ class MahasiswaTemplateExport implements FromArray, WithHeadings, WithEvents, Wi
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                // Dropdown for Prodi
+                $sheet = $event->sheet->getDelegate();
+
+                // Dropdown for Prodi dynamically from Database
                 $prodis = Prodi::pluck('nama_prodi')->toArray();
                 if (!empty($prodis)) {
                     $prodiList = '"' . implode(',', $prodis) . '"';
-                    $validation = $event->sheet->getDelegate()->getCell('E2')->getDataValidation();
+                    $validation = $sheet->getCell('F2')->getDataValidation();
                     $validation->setType(DataValidation::TYPE_LIST);
                     $validation->setErrorStyle(DataValidation::STYLE_INFORMATION);
                     $validation->setAllowBlank(false);
@@ -55,17 +63,21 @@ class MahasiswaTemplateExport implements FromArray, WithHeadings, WithEvents, Wi
                     $validation->setShowErrorMessage(true);
                     $validation->setShowDropDown(true);
                     $validation->setErrorTitle('Prodi tidak valid');
-                    $validation->setError('Harap pilih Prodi dari daftar dropdown.');
-                    $validation->setPromptTitle('Pilih Prodi');
-                    $validation->setPrompt('Pilih nama Prodi dari daftar.');
+                    $validation->setError('Harap pilih Program Studi dari daftar dropdown.');
+                    $validation->setPromptTitle('Pilih Program Studi');
+                    $validation->setPrompt('Pilih nama Program Studi dari daftar.');
                     $validation->setFormula1($prodiList);
 
-                    $event->sheet->getDelegate()->setDataValidation('E2:E1000', $validation);
+                    $sheet->setDataValidation('F2:F1000', $validation);
                 }
 
-                // Add note to header
-                $event->sheet->getDelegate()->getComment('A1')->getText()->createTextRun("Isi dengan angka unik (NIM mahasiswa). Wajib diisi.");
-                $event->sheet->getDelegate()->getComment('C1')->getText()->createTextRun("Tahun masuk mahasiswa (contoh: 2023).");
+                // Add header guidance comments
+                $sheet->getComment('A1')->getText()->createTextRun("NIM Mahasiswa. Wajib diisi & unik.");
+                $sheet->getComment('B1')->getText()->createTextRun("Nama lengkap mahasiswa.");
+                $sheet->getComment('C1')->getText()->createTextRun("Kelas mahasiswa (contoh: Reg A, Reg B, KAR A).");
+                $sheet->getComment('D1')->getText()->createTextRun("Semester aktif mahasiswa (contoh: 1, 2, 3...).");
+                $sheet->getComment('E1')->getText()->createTextRun("Tahun angkatan mahasiswa (contoh: 2024).");
+                $sheet->getComment('F1')->getText()->createTextRun("Program Studi (Dinamis dari database).");
             },
         ];
     }
