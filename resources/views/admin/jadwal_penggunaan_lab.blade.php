@@ -798,8 +798,8 @@
                         Pilih / Tarik Berkas Excel (.xlsx, .xls) <span class="text-rose-500">*</span>
                     </label>
                     <div id="dropzone_import" class="border-2 border-dashed border-slate-300 hover:border-teal-600 rounded-2xl p-5 text-center bg-slate-50/60 hover:bg-teal-50/40 transition cursor-pointer group" onclick="document.getElementById('excel_import_file').click()">
-                        <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 group-hover:scale-110 group-hover:bg-teal-100 flex items-center justify-center mx-auto mb-2.5 transition transform shadow-xs">
-                            <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                        <div id="import_icon_container" class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 group-hover:scale-110 group-hover:bg-teal-100 flex items-center justify-center mx-auto mb-2.5 transition transform shadow-xs">
+                            <i id="import_file_icon" class="fa-solid fa-cloud-arrow-up text-2xl"></i>
                         </div>
                         <p class="text-xs font-bold text-slate-700 group-hover:text-teal-800 transition" id="import_file_label">Klik atau Tarik (Drag & Drop) file Excel ke sini</p>
                         <p class="text-[11px] text-slate-400 mt-1" id="import_file_sublabel">Format .xlsx atau .xls (Maksimal 10MB)</p>
@@ -841,29 +841,83 @@
         const methodField = document.getElementById('method-field');
         const modalImport = document.getElementById('modal-import-jadwal-lab');
 
+        function resetImportDropzone() {
+            const dropzone = document.getElementById('dropzone_import');
+            const iconContainer = document.getElementById('import_icon_container');
+            const icon = document.getElementById('import_file_icon');
+            const label = document.getElementById('import_file_label');
+            const sublabel = document.getElementById('import_file_sublabel');
+            const fileInput = document.getElementById('excel_import_file');
+
+            if (fileInput) fileInput.value = "";
+            if (dropzone) {
+                dropzone.className = "border-2 border-dashed border-slate-300 hover:border-teal-600 rounded-2xl p-5 text-center bg-slate-50/60 hover:bg-teal-50/40 transition cursor-pointer group";
+            }
+            if (iconContainer) {
+                iconContainer.className = "w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 group-hover:scale-110 group-hover:bg-teal-100 flex items-center justify-center mx-auto mb-2.5 transition transform shadow-xs";
+            }
+            if (icon) {
+                icon.className = "fa-solid fa-cloud-arrow-up text-2xl";
+            }
+            if (label) {
+                label.textContent = "Klik atau Tarik (Drag & Drop) file Excel ke sini";
+                label.className = "text-xs font-bold text-slate-700 group-hover:text-teal-800 transition";
+            }
+            if (sublabel) {
+                sublabel.textContent = "Format .xlsx atau .xls (Maksimal 10MB)";
+                sublabel.className = "text-[11px] text-slate-400 mt-1";
+            }
+        }
+
         function openImportModal() {
+            resetImportDropzone();
             if (modalImport) {
                 modalImport.classList.remove('hidden');
             }
         }
 
         function closeImportModal() {
+            resetImportDropzone();
             if (modalImport) {
                 modalImport.classList.add('hidden');
             }
         }
 
         function handleImportFileSelect(input) {
+            const dropzone = document.getElementById('dropzone_import');
+            const iconContainer = document.getElementById('import_icon_container');
+            const icon = document.getElementById('import_file_icon');
+            const label = document.getElementById('import_file_label');
+            const sublabel = document.getElementById('import_file_sublabel');
+
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                document.getElementById('import_file_label').textContent = file.name;
-                document.getElementById('import_file_sublabel').textContent = (file.size / 1024).toFixed(1) + ' KB - Siap diimpor';
+                
+                // Active / Success Dropzone Styling
+                if (dropzone) {
+                    dropzone.className = "border-2 border-solid border-emerald-500 rounded-2xl p-5 text-center bg-emerald-50/90 transition cursor-pointer shadow-sm";
+                }
+                if (iconContainer) {
+                    iconContainer.className = "w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-2.5 transition transform shadow-xs";
+                }
+                if (icon) {
+                    icon.className = "fa-solid fa-file-circle-check text-2xl text-emerald-600";
+                }
+                if (label) {
+                    label.textContent = file.name;
+                    label.className = "text-xs font-extrabold text-emerald-950 truncate block max-w-full px-2";
+                }
+                if (sublabel) {
+                    const size = (file.size / 1024).toFixed(1) + ' KB';
+                    sublabel.innerHTML = `<span class="inline-flex items-center gap-1 font-bold text-emerald-800 bg-emerald-200/70 px-2.5 py-1 rounded-lg mt-1 text-[11px]"><i class="fa-solid fa-circle-check text-emerald-600"></i> ${size} • Berkas Terpasang & Siap Diimpor</span> <span class="block text-[10px] text-slate-500 mt-1">(Klik di sini jika ingin mengganti berkas)</span>`;
+                }
             }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             const dropzone = document.getElementById('dropzone_import');
             const fileInput = document.getElementById('excel_import_file');
+            const label = document.getElementById('import_file_label');
 
             if (dropzone && fileInput) {
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -875,13 +929,22 @@
 
                 ['dragenter', 'dragover'].forEach(eventName => {
                     dropzone.addEventListener(eventName, function() {
-                        dropzone.classList.add('border-teal-600', 'bg-teal-50/80');
+                        if (!fileInput.files || !fileInput.files.length) {
+                            dropzone.classList.add('border-teal-500', 'bg-teal-50', 'scale-[1.02]', 'shadow-md');
+                            dropzone.classList.remove('border-slate-300', 'bg-slate-50/60');
+                            if (label) label.textContent = "Lepaskan berkas Excel di sini...";
+                        }
                     }, false);
                 });
 
                 ['dragleave', 'drop'].forEach(eventName => {
                     dropzone.addEventListener(eventName, function() {
-                        dropzone.classList.remove('border-teal-600', 'bg-teal-50/80');
+                        if (!fileInput.files || !fileInput.files.length) {
+                            dropzone.classList.remove('border-teal-500', 'scale-[1.02]', 'shadow-md');
+                            dropzone.classList.add('border-slate-300', 'bg-slate-50/60');
+                            dropzone.classList.remove('bg-teal-50');
+                            if (label) label.textContent = "Klik atau Tarik (Drag & Drop) file Excel ke sini";
+                        }
                     }, false);
                 });
 
