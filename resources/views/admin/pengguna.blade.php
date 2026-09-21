@@ -190,10 +190,6 @@
                         <!-- Action Controls Row -->
                         <div class="flex items-center justify-between pt-2">
                             <div class="flex items-center gap-2">
-                                <button type="submit" class="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-extrabold transition shadow-sm flex items-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-filter text-xs"></i> Terapkan Filter
-                                </button>
-                                
                                 @if(request()->hasAny(['search', 'role', 'program_kuliah', 'semester', 'kelas', 'status_mahasiswa', 'fakultas_id']))
                                     <a href="{{ route('admin.pengguna') }}" class="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 rounded-xl font-bold transition text-center flex items-center gap-1.5 cursor-pointer shadow-xs">
                                         <i class="fa-solid fa-rotate-left"></i> Reset Filter
@@ -202,7 +198,7 @@
                             </div>
 
                             <p class="text-[11px] text-slate-500 font-medium hidden sm:block">
-                                <i class="fa-solid fa-info-circle text-teal-700 mr-1"></i> Filter Role otomatis menyesuaikan opsi akademik yang tersedia.
+                                <i class="fa-solid fa-info-circle text-teal-700 mr-1"></i> Filter otomatis diterapkan saat opsi dipilih.
                             </p>
                         </div>
                     </form>
