@@ -2190,6 +2190,15 @@ class AdminController extends Controller
         }
     }
 
+    public function exportPengguna(Request $request)
+    {
+        $authUser = Auth::user();
+        $role = strtolower(trim($request->get('role', 'all')));
+        
+        $export = new \App\Exports\PenggunaExport($authUser, $role, $request->all());
+        return $export->download();
+    }
+
     public function importAgenda(Request $request)
     {
         $request->validate([

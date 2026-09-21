@@ -265,11 +265,11 @@
                             <button type="button" onclick="toggleModal('modal-promote-semester')" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                                 <i class="fa-solid fa-arrow-up-right-dots"></i> Naik Semester
                             </button>
-                            <button type="button" onclick="toggleModal('modal-import-dosen')" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition items-center gap-1.5 shadow-xs hidden sm:flex cursor-pointer">
-                                <i class="fa-solid fa-file-import text-teal-700"></i> Import Dosen
+                            <button type="button" onclick="openImportModal()" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                                <i class="fa-solid fa-file-import text-teal-700"></i> Import Data
                             </button>
-                            <button type="button" onclick="toggleModal('modal-import-mahasiswa')" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition items-center gap-1.5 shadow-xs hidden sm:flex cursor-pointer">
-                                <i class="fa-solid fa-file-import text-teal-700"></i> Import Mhs
+                            <button type="button" onclick="openExportModal()" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                                <i class="fa-solid fa-file-export text-emerald-700"></i> Export Data
                             </button>
                             <button type="button" onclick="openAddUserModal()" class="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
                                 <i class="fa-solid fa-plus text-xs"></i> Tambah User Baru
@@ -734,49 +734,136 @@
         </div>
     </div>
 
-    <!-- MODAL IMPORT DOSEN -->
-    <div id="modal-import-dosen" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-sm w-full p-6 space-y-5">
+    <!-- MODAL IMPORT PENGGUNA (GABUNGAN MAHASISWA & DOSEN) -->
+    <div id="modal-import-user" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5">
             <div class="flex justify-between items-center pb-3 border-b border-slate-100">
-                <h3 class="font-bold text-base text-slate-800">Import Data Dosen</h3>
-                <button onclick="toggleModal('modal-import-dosen')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-800 border border-teal-200 flex items-center justify-center font-bold text-sm">
+                        <i class="fa-solid fa-file-import"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-base text-slate-800">Import Data Pengguna</h3>
+                        <p class="text-[11px] text-slate-500 font-medium">Impor data Mahasiswa atau Dosen via file Excel/CSV.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="toggleModal('modal-import-user')" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center text-sm transition cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
-            <form action="{{ route('admin.pengguna.import-dosen') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+
+            <!-- Role Selector Segmented Tabs -->
+            <div>
+                <label class="block text-slate-700 font-extrabold mb-1.5 text-xs">Pilih Tipe Data Pengguna</label>
+                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-2xl text-xs font-bold">
+                    <button type="button" id="import-type-mhs" onclick="setImportType('mahasiswa')" class="py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 bg-white text-teal-900 shadow-xs cursor-pointer">
+                        <i class="fa-solid fa-user-graduate text-teal-700"></i> Mahasiswa
+                    </button>
+                    <button type="button" id="import-type-dosen" onclick="setImportType('dosen')" class="py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer">
+                        <i class="fa-solid fa-user-tie text-indigo-600"></i> Dosen
+                    </button>
+                </div>
+            </div>
+
+            <form id="form-import-user" action="{{ route('admin.pengguna.import-mahasiswa') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
                 @csrf
                 <div>
-                    <label class="block text-slate-700 font-bold mb-1">File Excel/CSV Dosen</label>
-                    <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <label class="block text-slate-700 font-bold mb-1">Unggah File Excel/CSV (<span id="import-target-label" class="font-bold text-teal-700">Mahasiswa</span>)</label>
+                    <div class="relative border-2 border-dashed border-slate-200 rounded-2xl p-4 text-center hover:border-teal-500 bg-slate-50/50 transition">
+                        <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10" onchange="updateFileName(this)">
+                        <div class="space-y-1">
+                            <i class="fa-solid fa-cloud-arrow-up text-2xl text-teal-700"></i>
+                            <p class="font-extrabold text-slate-700 text-xs" id="file-name-display">Klik atau seret file Excel (.xlsx, .xls, .csv) di sini</p>
+                            <p class="text-[10px] text-slate-400">Ukuran maksimal file: 10MB</p>
+                        </div>
+                    </div>
                     <div class="mt-2 text-right">
-                        <a href="{{ route('template.download', 'dosen') }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline"><i class="fa-solid fa-download mr-1"></i> Unduh Template Dosen</a>
+                        <a id="download-template-link" href="{{ route('template.download', 'mahasiswa') }}" class="text-xs text-teal-700 hover:text-teal-900 font-extrabold inline-flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-download"></i> Unduh Template Excel (<span id="template-role-name">Mahasiswa</span>)
+                        </a>
                     </div>
                 </div>
                 <div class="flex gap-2.5 pt-3 border-t border-slate-100">
-                    <button type="button" onclick="toggleModal('modal-import-dosen')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg font-bold shadow-sm">Import</button>
+                    <button type="button" onclick="toggleModal('modal-import-user')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition">Batal</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-extrabold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-file-import"></i> Import Sekarang
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- MODAL IMPORT MAHASISWA -->
-    <div id="modal-import-mahasiswa" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-sm w-full p-6 space-y-5">
+    <!-- MODAL EXPORT PENGGUNA (MAHASISWA, DOSEN, ADMIN, SEMUA) -->
+    <div id="modal-export-user" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5">
             <div class="flex justify-between items-center pb-3 border-b border-slate-100">
-                <h3 class="font-bold text-base text-slate-800">Import Data Mahasiswa</h3>
-                <button onclick="toggleModal('modal-import-mahasiswa')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
-            </div>
-            <form action="{{ route('admin.pengguna.import-mahasiswa') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
-                @csrf
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">File Excel/CSV Mahasiswa</label>
-                    <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-                    <div class="mt-2 text-right">
-                        <a href="{{ route('template.download', 'mahasiswa') }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline"><i class="fa-solid fa-download mr-1"></i> Unduh Template Mahasiswa</a>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold text-sm">
+                        <i class="fa-solid fa-file-export"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-base text-slate-800">Export Data Pengguna</h3>
+                        <p class="text-[11px] text-slate-500 font-medium">Ekspor data pengguna ke format Excel (.xlsx)</p>
                     </div>
                 </div>
+                <button type="button" onclick="toggleModal('modal-export-user')" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 flex items-center justify-center text-sm transition cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.pengguna.export') }}" method="GET" class="space-y-4 text-xs">
+                <div>
+                    <label class="block text-slate-700 font-extrabold mb-1.5">Pilih Tipe / Role Pengguna</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="relative flex items-center p-3 rounded-2xl border border-slate-200 hover:border-emerald-500 bg-slate-50 cursor-pointer transition">
+                            <input type="radio" name="role" value="mahasiswa" checked class="text-emerald-600 focus:ring-emerald-500 mr-2.5">
+                            <div>
+                                <p class="font-extrabold text-slate-800 text-xs">Mahasiswa</p>
+                                <p class="text-[10px] text-slate-500">Export data mahasiswa</p>
+                            </div>
+                        </label>
+                        <label class="relative flex items-center p-3 rounded-2xl border border-slate-200 hover:border-emerald-500 bg-slate-50 cursor-pointer transition">
+                            <input type="radio" name="role" value="dosen" class="text-emerald-600 focus:ring-emerald-500 mr-2.5">
+                            <div>
+                                <p class="font-extrabold text-slate-800 text-xs">Dosen</p>
+                                <p class="text-[10px] text-slate-500">Export data dosen</p>
+                            </div>
+                        </label>
+                        <label class="relative flex items-center p-3 rounded-2xl border border-slate-200 hover:border-emerald-500 bg-slate-50 cursor-pointer transition">
+                            <input type="radio" name="role" value="admin" class="text-emerald-600 focus:ring-emerald-500 mr-2.5">
+                            <div>
+                                <p class="font-extrabold text-slate-800 text-xs">Admin</p>
+                                <p class="text-[10px] text-slate-500">Export akun admin</p>
+                            </div>
+                        </label>
+                        <label class="relative flex items-center p-3 rounded-2xl border border-slate-200 hover:border-emerald-500 bg-slate-50 cursor-pointer transition">
+                            <input type="radio" name="role" value="all" class="text-emerald-600 focus:ring-emerald-500 mr-2.5">
+                            <div>
+                                <p class="font-extrabold text-slate-800 text-xs">Semua Role</p>
+                                <p class="text-[10px] text-slate-500">Semua pengguna</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Include current active filter values as hidden fields -->
+                <input type="hidden" name="search" value="{{ request('search') }}">
+                <input type="hidden" name="fakultas_id" value="{{ request('fakultas_id') }}">
+                <input type="hidden" name="program_kuliah" value="{{ request('program_kuliah') }}">
+                <input type="hidden" name="semester" value="{{ request('semester') }}">
+                <input type="hidden" name="kelas" value="{{ request('kelas') }}">
+                <input type="hidden" name="status_mahasiswa" value="{{ request('status_mahasiswa') }}">
+
+                <div class="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl flex items-center gap-2.5 text-emerald-900">
+                    <i class="fa-solid fa-circle-info text-emerald-600 text-sm"></i>
+                    <p class="text-[11px] font-medium leading-tight">File Excel yang di-export akan otomatis menerapkan filter pencarian &amp; fakultas yang aktif.</p>
+                </div>
+
                 <div class="flex gap-2.5 pt-3 border-t border-slate-100">
-                    <button type="button" onclick="toggleModal('modal-import-mahasiswa')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
-                    <button type="submit" class="flex-1 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg font-bold shadow-sm">Import</button>
+                    <button type="button" onclick="toggleModal('modal-export-user')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition">Batal</button>
+                    <button type="submit" onclick="setTimeout(() => toggleModal('modal-export-user'), 1000)" class="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-extrabold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-file-excel"></i> Export Excel
+                    </button>
                 </div>
             </form>
         </div>
@@ -1061,6 +1148,55 @@
             if (activeBtn) {
                 activeBtn.classList.remove('text-slate-600', 'font-medium');
                 activeBtn.classList.add('bg-white', 'text-teal-950', 'font-bold', 'shadow-xs');
+            }
+        }
+
+        function setImportType(type) {
+            const form = document.getElementById('form-import-user');
+            const label = document.getElementById('import-target-label');
+            const templateLink = document.getElementById('download-template-link');
+            const templateRoleName = document.getElementById('template-role-name');
+            const btnMhs = document.getElementById('import-type-mhs');
+            const btnDosen = document.getElementById('import-type-dosen');
+
+            if (type === 'dosen') {
+                form.action = "{{ route('admin.pengguna.import-dosen') }}";
+                label.innerText = "Dosen";
+                templateRoleName.innerText = "Dosen";
+                templateLink.href = "{{ route('template.download', 'dosen') }}";
+
+                btnDosen.classList.add('bg-white', 'text-indigo-900', 'shadow-xs');
+                btnDosen.classList.remove('text-slate-600');
+                btnMhs.classList.remove('bg-white', 'text-teal-900', 'shadow-xs');
+                btnMhs.classList.add('text-slate-600');
+            } else {
+                form.action = "{{ route('admin.pengguna.import-mahasiswa') }}";
+                label.innerText = "Mahasiswa";
+                templateRoleName.innerText = "Mahasiswa";
+                templateLink.href = "{{ route('template.download', 'mahasiswa') }}";
+
+                btnMhs.classList.add('bg-white', 'text-teal-900', 'shadow-xs');
+                btnMhs.classList.remove('text-slate-600');
+                btnDosen.classList.remove('bg-white', 'text-indigo-900', 'shadow-xs');
+                btnDosen.classList.add('text-slate-600');
+            }
+        }
+
+        function openImportModal() {
+            setImportType('mahasiswa');
+            toggleModal('modal-import-user');
+        }
+
+        function openExportModal() {
+            toggleModal('modal-export-user');
+        }
+
+        function updateFileName(input) {
+            const fileNameDisplay = document.getElementById('file-name-display');
+            if (input.files && input.files[0]) {
+                fileNameDisplay.innerText = "File terpilih: " + input.files[0].name;
+            } else {
+                fileNameDisplay.innerText = "Klik atau seret file Excel (.xlsx, .xls, .csv) di sini";
             }
         }
     </script>

@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/pengguna/{id}', [AdminController::class, 'deleteUser'])->name('pengguna.delete');
         Route::post('/pengguna/{id}/reset-password', [AdminController::class, 'resetPasswordUser'])->name('pengguna.reset-password');
         Route::post('/pengguna/{id}/toggle-status', [AdminController::class, 'toggleStatusUser'])->name('pengguna.toggle-status');
+        Route::get('/pengguna/export', [AdminController::class, 'exportPengguna'])->name('pengguna.export');
         Route::post('/pengguna/import/mahasiswa', [AdminController::class, 'importMahasiswa'])->name('pengguna.import-mahasiswa');
         Route::post('/pengguna/import/dosen', [AdminController::class, 'importDosen'])->name('pengguna.import-dosen');
         
