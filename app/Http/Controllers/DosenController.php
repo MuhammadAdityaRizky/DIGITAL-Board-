@@ -919,7 +919,7 @@ class DosenController extends Controller
             ->orderBy('nama_lengkap', 'asc')
             ->get();
 
-        // 2. Jika 0, coba match prodi + semester
+        // 2. Jika 0, coba match prodi + semester (tanpa mempedulikan kelas, jaga-jaga typo)
         if ($students->isEmpty() && $agenda->semester) {
             $semNum = preg_replace('/[^0-9]/', '', $agenda->semester);
             if ($semNum) {
@@ -927,20 +927,8 @@ class DosenController extends Controller
             }
         }
 
-        // 3. Jika 0, coba match prodi + program_kuliah
-        if ($students->isEmpty() && $agenda->program_kuliah) {
-            $students = (clone $baseQuery)->where('program_kuliah', $agenda->program_kuliah)->orderBy('nama_lengkap', 'asc')->get();
-        }
-
-        // 4. Jika masih 0, ambil seluruh mahasiswa di prodi tersebut
-        if ($students->isEmpty() && $agenda->jurusan) {
-            $students = (clone $baseQuery)->orderBy('nama_lengkap', 'asc')->get();
-        }
-
-        // 5. Fallback utama: jika masih 0, tampilkan seluruh mahasiswa aktif yang terdaftar di database
-        if ($students->isEmpty()) {
-            $students = \App\Models\Mahasiswa::orderBy('nama_lengkap', 'asc')->get();
-        }
+        // Hapus fallback 3, 4, 5 karena jika data semester tersebut memang belum ada,
+        // menampilkan data mahasiswa semester lain justru menyebabkan bug (data tidak relevan).
 
         // Gabungkan mahasiswa yang sudah memiliki data absensi di agenda ini agar tidak pernah terlewat
         if (!empty($existingAbsensiIds)) {

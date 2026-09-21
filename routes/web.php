@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/agenda', [AdminController::class, 'agenda'])->name('agenda');
         Route::get('/agenda/{id}/berita-acara/cetak', [DosenController::class, 'cetakBeritaAcara'])->name('agenda.berita-acara.cetak');
         Route::get('/agenda/{id}/realisasi-praktikum/cetak', [DosenController::class, 'cetakRealisasiPraktikum'])->name('agenda.realisasi-praktikum.cetak');
+        Route::post('/agenda/{id}/absen-dosen', [AdminController::class, 'absenDosen'])->name('agenda.absen-dosen');
         Route::post('/agenda', [AdminController::class, 'storeAgenda'])->name('agenda.store');
         Route::put('/agenda/{id}', [AdminController::class, 'updateAgenda'])->name('agenda.update');
         Route::delete('/agenda/bulk-delete', [AdminController::class, 'bulkDeleteAgendas'])->name('agenda.bulk-delete');

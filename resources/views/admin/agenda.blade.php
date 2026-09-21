@@ -467,6 +467,23 @@
                                                     </td>
                                                     <td class="p-3.5 text-right pr-5">
                                                         <div class="inline-flex items-center gap-1.5 justify-end">
+                                                            @if(!$ag->dosen_waktu_masuk)
+                                                            <form action="{{ route('admin.agenda.absen-dosen', $ag->id) }}" method="POST" class="inline m-0 p-0">
+                                                                @csrf
+                                                                <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1 text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 border border-emerald-200 rounded-md font-medium transition text-xs" title="Tandai Dosen Hadir">
+                                                                    <i class="fa-solid fa-user-check text-emerald-500 mr-0.5"></i> Dosen
+                                                                </button>
+                                                            </form>
+                                                            @else
+                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md font-medium text-xs cursor-default" title="Dosen Sudah Hadir">
+                                                                <i class="fa-solid fa-check-circle text-emerald-600 mr-0.5"></i> Dosen
+                                                            </span>
+                                                            @endif
+                                                            <a href="{{ route('admin.absensi.input', $ag->id) }}" 
+                                                               class="inline-flex items-center gap-1 px-2.5 py-1 text-teal-600 hover:text-teal-900 hover:bg-teal-50 border border-teal-200 rounded-md font-medium transition text-xs" 
+                                                               title="Input Absensi Mahasiswa">
+                                                                <i class="fa-solid fa-clipboard-user text-teal-500 mr-0.5"></i> Absensi
+                                                            </a>
                                                             <a href="{{ route('admin.agenda.berita-acara.cetak', $ag->id) }}" target="_blank" 
                                                                class="inline-flex items-center gap-1 px-2.5 py-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 rounded-md font-medium transition text-xs" 
                                                                title="Cetak Berita Acara Pertemuan {{ $pertemuanNum }}">

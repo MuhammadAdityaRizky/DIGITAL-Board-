@@ -1010,6 +1010,24 @@ class AdminController extends Controller
         return back()->with('success', "Berhasil membuat 16 sesi pertemuan perkuliahan secara otomatis untuk mata kuliah {$mataKuliah}.");
     }
 
+    public function absenDosen($id)
+    {
+        $user = Auth::user();
+        $agenda = Agenda::with('lab')->findOrFail($id);
+
+        if ($user->isAdminFakultas() && !$user->canManageLab($agenda->lab)) {
+            return back()->withErrors(['msg' => 'Akses Ditolak: Anda tidak memiliki izin untuk mengedit agenda di lab ini.']);
+        }
+
+        if ($agenda->tanggal > date('Y-m-d')) {
+            return back()->withErrors(['msg' => 'Agenda belum bisa diabsen (sesi perkuliahan belum dimulai).']);
+        }
+
+        $agenda->update(['dosen_waktu_masuk' => now()]);
+
+        return back()->with('success', 'Kehadiran dosen berhasil ditandai (Hadir).');
+    }
+
     public function updateAgenda(Request $request, $id)
     {
         $user = Auth::user();
@@ -1367,7 +1385,7 @@ class AdminController extends Controller
             ->orderBy('nama_lengkap', 'asc')
             ->get();
 
-        // 2. Jika 0, coba match prodi + semester
+        // 2. Jika 0, coba match prodi + semester (tanpa mempedulikan kelas, jaga-jaga typo)
         if ($students->isEmpty() && $agenda->semester) {
             $semNum = preg_replace('/[^0-9]/', '', $agenda->semester);
             if ($semNum) {
@@ -1375,20 +1393,8 @@ class AdminController extends Controller
             }
         }
 
-        // 3. Jika 0, coba match prodi + program_kuliah
-        if ($students->isEmpty() && $agenda->program_kuliah) {
-            $students = (clone $baseQuery)->where('program_kuliah', $agenda->program_kuliah)->orderBy('nama_lengkap', 'asc')->get();
-        }
-
-        // 4. Jika masih 0, ambil seluruh mahasiswa di prodi tersebut
-        if ($students->isEmpty() && $agenda->jurusan) {
-            $students = (clone $baseQuery)->orderBy('nama_lengkap', 'asc')->get();
-        }
-
-        // 5. Fallback utama: jika masih 0, tampilkan seluruh mahasiswa aktif yang terdaftar di database
-        if ($students->isEmpty()) {
-            $students = \App\Models\Mahasiswa::orderBy('nama_lengkap', 'asc')->get();
-        }
+        // Hapus fallback 3, 4, 5 karena jika data semester tersebut memang belum ada,
+        // menampilkan data mahasiswa semester lain justru menyebabkan bug (data tidak relevan).
 
         // Gabungkan mahasiswa yang sudah memiliki data absensi di agenda ini agar tidak pernah terlewat
         if (!empty($existingAbsensiIds)) {
@@ -2609,5 +2615,7 @@ class AdminController extends Controller
 
         return back()->with('success', "Berhasil membuat {$totalCreated} sesi pertemuan perkuliahan 1 semester secara otomatis untuk seluruh jadwal lab!");
     }
+
 }
+
 

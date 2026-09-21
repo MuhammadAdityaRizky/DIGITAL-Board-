@@ -35,6 +35,15 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
+            if (strtolower($user->status ?? 'aktif') === 'nonaktif') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors([
+                    'username_or_nim_nip' => 'Akun Anda telah dinonaktifkan (suspended). Silakan hubungi Administrator.',
+                ])->withInput();
+            }
+
             if ($user->role === 'mahasiswa' && $user->mahasiswa && $user->mahasiswa->status === 'do') {
                 Auth::logout();
                 $request->session()->invalidate();
