@@ -1,6 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logo-uika.png') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riwayat Agenda Dosen - Digital Board</title>
@@ -18,9 +20,7 @@
     <!-- Sidebar (Desktop Only) -->
     <aside class="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 h-full hidden lg:flex">
         <div class="p-5 flex items-center gap-3 border-b border-slate-800 shrink-0">
-            <div class="w-9 h-9 bg-teal-600 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm">
-                <i class="fa-solid fa-graduation-cap text-lg"></i>
-            </div>
+            <img src="{{ asset('images/logo-uika.png') }}" alt="Logo UIKA" class="w-10 h-10 object-contain shrink-0">
             <div>
                 <h1 class="font-bold text-sm leading-tight text-white">DIGITAL Board</h1>
                 <p class="text-[10px] font-semibold text-teal-400 tracking-wider">PORTAL DOSEN</p>
@@ -56,9 +56,8 @@
         <!-- Top Navbar -->
         <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0 shadow-xs">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-teal-800 text-white rounded-xl flex lg:hidden items-center justify-center font-bold shadow-xs">
-                    <i class="fa-solid fa-graduation-cap text-base"></i>
-                </div>
+                <img src="{{ asset('images/logo-uika.png') }}" alt="Logo UIKA" class="w-9 h-9 object-contain flex lg:hidden shrink-0">
+
                 <div>
                     <h2 class="font-extrabold text-base text-slate-800 lg:hidden">DIGITAL Board</h2>
                     <h2 class="font-extrabold text-lg text-slate-900 hidden lg:block">Riwayat Agenda Perkuliahan</h2>

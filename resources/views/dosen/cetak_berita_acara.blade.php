@@ -1,10 +1,12 @@
-@php
+﻿@php
     $items = $items ?? collect([['agenda' => $agenda, 'details' => $details]]);
     $totalItems = $totalItems ?? $items->count();
 @endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logo-uika.png') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Berita Acara Praktikum - {{ $agenda->mata_kuliah }} {{ $totalItems > 1 ? "({$totalItems} Pertemuan)" : '' }}</title>
@@ -474,7 +476,7 @@
                     <!-- Kop Surat Resmi -->
                     <div class="header-kop">
                         <div class="header-left">
-                            <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
+                            <img src="{{ asset('images/logo-uika.png') }}" 
                                  alt="Logo UIKA" 
                                  class="logo-uika"
                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">

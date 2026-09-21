@@ -1,4 +1,4 @@
-@if(isset($groupedAgendas) && $groupedAgendas->count() > 0)
+﻿@if(isset($groupedAgendas) && $groupedAgendas->count() > 0)
     <div class="space-y-6">
         @php
             $hasActiveAnywhere = false;
@@ -608,7 +608,7 @@
                                                             <!-- Mini Kop Surat -->
                                                             <div class="flex justify-between items-start border-b border-slate-300 pb-2 relative z-10">
                                                                 <div class="flex items-center gap-2.5">
-                                                                    <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
+                                                                    <img src="{{ asset('images/logo-uika.png') }}" 
                                                                          alt="UIKA" class="w-9 h-9 object-contain">
                                                                     <div>
                                                                         <p class="font-extrabold text-[10px] text-teal-900 leading-tight">FAKULTAS TEKNIK &amp; SAINS</p>

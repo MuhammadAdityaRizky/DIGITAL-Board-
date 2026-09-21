@@ -1,6 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logo-uika.png') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal Display Laboratorium - UIKA Smart Lab</title>
@@ -38,7 +40,7 @@
     <header class="w-full max-w-6xl mx-auto bg-white border border-slate-200 rounded-2xl p-4 sm:px-6 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
         <!-- Logo & Campus Info -->
         <div class="flex items-center gap-3.5">
-            <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
+            <img src="{{ asset('images/logo-uika.png') }}" 
                  alt="Logo UIKA" 
                  style="width: 48px; height: 48px; min-width: 48px; min-height: 48px; object-fit: contain;" 
                  class="w-12 h-12 object-contain shrink-0">

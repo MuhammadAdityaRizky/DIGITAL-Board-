@@ -1,9 +1,7 @@
 <!-- Sidebar Admin -->
 <aside class="w-64 bg-slate-900 text-white flex flex-col shrink-0 h-screen sticky top-0 hidden lg:flex">
-    <div class="p-5 flex items-center gap-3 border-b border-slate-800 shrink-0">
-        <div class="w-9 h-9 bg-teal-600 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm">
-            <i class="fa-solid fa-user-shield text-lg"></i>
-        </div>
+    <div class="p-4 flex items-center gap-3 border-b border-slate-800 shrink-0">
+        <img src="{{ asset('images/logo-uika.png') }}" alt="Logo UIKA" class="w-10 h-10 object-contain shrink-0 drop-shadow-sm">
         <div>
             <h1 class="font-bold text-sm leading-tight">DIGITAL Board</h1>
             <p class="text-[10px] font-semibold text-teal-400 tracking-wider">

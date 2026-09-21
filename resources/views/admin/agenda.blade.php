@@ -1,6 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logo-uika.png') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoring Agenda - Digital Board</title>
@@ -28,9 +30,7 @@
         <!-- Header -->
         <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-teal-800 text-white rounded-lg flex lg:hidden items-center justify-center font-bold">
-                    <i class="fa-solid fa-user-shield text-sm"></i>
-                </div>
+                <img src="{{ asset('images/logo-uika.png') }}" alt="Logo UIKA" class="w-8 h-8 object-contain flex lg:hidden shrink-0">
                 <h2 class="font-bold text-base text-slate-800 hidden lg:block">Pusat Jadwal & Perkuliahan</h2>
                 <!-- Tab Switching Navigation (Analyst Recommendation #4) -->
                 <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">

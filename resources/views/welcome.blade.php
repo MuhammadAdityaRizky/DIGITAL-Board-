@@ -1,4 +1,4 @@
-@php
+﻿@php
     // Find active agenda (current time falls between start and end time today)
     $currentTime = now()->format('H:i:s');
     
@@ -27,6 +27,8 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logo-uika.png') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>INFORMATION UIKA BOARD - Smart Lab</title>
@@ -52,7 +54,7 @@
     <header class="flex flex-col md:flex-row justify-between items-center bg-[#0c4ea6] border-2 border-[#1e60b8] rounded-2xl p-4 md:px-8 gap-4 shadow-md text-white">
         <!-- Logo & Campus Name -->
         <div class="flex items-center gap-4">
-            <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
+            <img src="{{ asset('images/logo-uika.png') }}" 
                  alt="Logo UIKA" 
                  class="w-14 h-14 md:w-16 md:h-16 object-contain shrink-0">
             <div class="text-[11px] md:text-xs font-black tracking-wider leading-tight text-slate-100 uppercase">

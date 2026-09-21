@@ -1,6 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logo-uika.png') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ISI PRESENSI MAHASISWA - UNIVERSITAS IBN KHALDUN BOGOR</title>
@@ -215,7 +217,7 @@
                         <tr style="border: none;">
                             <!-- KOLOM KIRI: LOGO UIKA (60px) -->
                             <td style="width: 65px; vertical-align: top; border: none; padding: 0; text-align: left;">
-                                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
+                                <img src="{{ asset('images/logo-uika.png') }}" 
                                      alt="Logo UIKA" 
                                      style="width: 55px; height: 55px; object-fit: contain;" 
                                      onerror="this.onerror=null; this.src='https://uika-bogor.ac.id/media/gambar/uika_logo.png'; this.onerror=function(){ this.style.display='none'; this.nextElementSibling.style.display='block'; };">

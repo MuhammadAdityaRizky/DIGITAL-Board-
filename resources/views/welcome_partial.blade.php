@@ -1,4 +1,4 @@
-@php
+﻿@php
     // Find active agenda (current time falls between start and end time today)
     $currentTime = now()->format('H:i:s');
     
@@ -208,7 +208,7 @@
                                      alt="Foto Pengumuman" 
                                      class="w-full h-full object-cover rounded-lg">
                             @else
-                                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
+                                <img src="{{ asset('images/logo-uika.png') }}" 
                                      alt="UIKA Logo Box" 
                                      class="w-full h-full object-contain p-1">
                             @endif
@@ -241,7 +241,7 @@
                 <!-- Fallback if DB has no announcements -->
                 <div class="border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-slate-50/50 shadow-xs">
                     <div class="w-20 h-20 md:w-28 md:h-28 bg-white border border-slate-200 rounded-xl flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-xs">
-                        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
+                        <img src="{{ asset('images/logo-uika.png') }}" 
                              alt="UIKA Logo Box" 
                              class="w-full h-full object-contain p-1">
                     </div>

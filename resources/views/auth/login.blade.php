@@ -1,6 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logo-uika.png') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UIKA Login Portal - Sistem Digital Information Board</title>
@@ -76,7 +78,7 @@
                         <!-- Logo Box -->
                         <div class="inline-flex items-center justify-center p-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-sm border border-white/40 shrink-0">
                             <a href="{{ route('board') }}" title="Ke Halaman Display Board" class="transition transform hover:scale-105">
-                                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
+                                <img src="{{ asset('images/logo-uika.png') }}" 
                                      alt="Logo UIKA" 
                                      class="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 object-contain">
                             </a>
