@@ -622,7 +622,8 @@ class AdminController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('nama_lab', 'like', "%{$search}%")
-                  ->orWhere('lokasi', 'like', "%{$search}%");
+                  ->orWhere('lokasi', 'like', "%{$search}%")
+                  ->orWhere('nama_laboran', 'like', "%{$search}%");
             });
         }
 
@@ -690,6 +691,37 @@ class AdminController extends Controller
         return view('admin.laboratorium', compact('labs', 'fakultas'));
     }
 
+    public function storeLab(Request $request)
+    {
+        $user = Auth::user();
+
+        $rules = [
+            'nama_lab' => 'required|string|max:100',
+            'lokasi' => 'required|string|max:100',
+            'kapasitas' => 'required|integer',
+            'nama_laboran' => 'nullable|string|max:100',
+        ];
+
+        if ($user->isSuperAdmin()) {
+            $rules['fakultas_id'] = 'required|exists:fakultas,id';
+            $fakultasId = $request->fakultas_id;
+        } else {
+            $fakultasId = $user->fakultas_id;
+        }
+
+        $request->validate($rules);
+
+        Laboratorium::create([
+            'fakultas_id' => $fakultasId,
+            'nama_lab' => $request->nama_lab,
+            'lokasi' => $request->lokasi,
+            'kapasitas' => $request->kapasitas,
+            'nama_laboran' => $request->nama_laboran,
+        ]);
+
+        return back()->with('success', 'Laboratorium baru berhasil ditambahkan.');
+    }
+
     public function updateLab(Request $request, $id)
     {
         $user = Auth::user();
@@ -703,6 +735,7 @@ class AdminController extends Controller
             'nama_lab' => 'required|string|max:100',
             'lokasi' => 'required|string|max:100',
             'kapasitas' => 'required|integer',
+            'nama_laboran' => 'nullable|string|max:100',
         ];
 
         if ($user->isSuperAdmin()) {
@@ -719,6 +752,7 @@ class AdminController extends Controller
             'nama_lab' => $request->nama_lab,
             'lokasi' => $request->lokasi,
             'kapasitas' => $request->kapasitas,
+            'nama_laboran' => $request->nama_laboran,
         ]);
 
         return back()->with('success', 'Data laboratorium berhasil diperbarui.');
@@ -1737,34 +1771,6 @@ class AdminController extends Controller
         return back()->with('success', 'Data akun pengguna berhasil diperbarui.');
     }
 
-    public function storeLab(Request $request)
-    {
-        $user = Auth::user();
-
-        $rules = [
-            'nama_lab' => 'required|string|max:100',
-            'lokasi' => 'required|string|max:100',
-            'kapasitas' => 'required|integer',
-        ];
-
-        if ($user->isSuperAdmin()) {
-            $rules['fakultas_id'] = 'required|exists:fakultas,id';
-            $fakultasId = $request->fakultas_id;
-        } else {
-            $fakultasId = $user->fakultas_id;
-        }
-
-        $request->validate($rules);
-
-        Laboratorium::create([
-            'fakultas_id' => $fakultasId,
-            'nama_lab' => $request->nama_lab,
-            'lokasi' => $request->lokasi,
-            'kapasitas' => $request->kapasitas,
-        ]);
-
-        return back()->with('success', 'Laboratorium berhasil ditambahkan.');
-    }
 
     public function storePengumuman(Request $request)
     {
@@ -2488,11 +2494,13 @@ class AdminController extends Controller
             abort(403, 'Anda tidak memiliki akses ke laboratorium ini.');
         }
 
+        $dosenPengampuId = $request->dosen_pengampu_id ?: $request->dosen_id;
+
         JadwalPenggunaanLab::create([
             'lab_id' => $request->lab_id,
             'mata_kuliah' => $request->mata_kuliah,
             'dosen_id' => $request->dosen_id,
-            'dosen_pengampu_id' => $request->dosen_pengampu_id,
+            'dosen_pengampu_id' => $dosenPengampuId,
             'id_prodi' => $request->id_prodi,
             'hari' => $request->hari,
             'jam_mulai' => $request->jam_mulai,
@@ -2536,11 +2544,13 @@ class AdminController extends Controller
             abort(403, 'Anda tidak memiliki akses ke laboratorium target.');
         }
 
+        $dosenPengampuId = $request->dosen_pengampu_id ?: $request->dosen_id;
+
         $jadwal->update([
             'lab_id' => $request->lab_id,
             'mata_kuliah' => $request->mata_kuliah,
             'dosen_id' => $request->dosen_id,
-            'dosen_pengampu_id' => $request->dosen_pengampu_id,
+            'dosen_pengampu_id' => $dosenPengampuId,
             'id_prodi' => $request->id_prodi,
             'hari' => $request->hari,
             'jam_mulai' => $request->jam_mulai,
@@ -2551,7 +2561,22 @@ class AdminController extends Controller
             'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
         ]);
 
-        return back()->with('success', 'Jadwal Penggunaan Lab berhasil diperbarui.');
+        // Cascade sync updates to associated Agenda sessions
+        Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
+            ->where('status_agenda', '!=', 'Selesai')
+            ->update([
+                'lab_id' => $request->lab_id,
+                'mata_kuliah' => $request->mata_kuliah,
+                'dosen_id' => $request->dosen_id,
+                'dosen_pengampu_id' => $dosenPengampuId,
+                'jam_mulai' => $request->jam_mulai,
+                'jam_selesai' => $request->jam_selesai,
+                'kelas' => $request->kelas ?? 'A',
+                'semester' => $request->semester ?? '1',
+                'program_kuliah' => $request->program_kuliah ?? 'Reguler',
+            ]);
+
+        return back()->with('success', 'Jadwal Penggunaan Lab berhasil diperbarui dan sesi agenda terkait telah disinkronkan.');
     }
 
     public function deleteJadwalPenggunaanLab($id)
@@ -2621,7 +2646,7 @@ class AdminController extends Controller
                     Agenda::create([
                         'jadwal_penggunaan_lab_id' => $jadwal->id,
                         'dosen_id' => $jadwal->dosen_id,
-                        'dosen_pengampu_id' => $jadwal->dosen_pengampu_id,
+                        'dosen_pengampu_id' => $jadwal->dosen_pengampu_id ?: $jadwal->dosen_id,
                         'lab_id' => $jadwal->lab_id,
                         'mata_kuliah' => $jadwal->mata_kuliah,
                         'fakultas' => $jadwal->prodi->fakultas->nama_fakultas ?? 'Teknik',

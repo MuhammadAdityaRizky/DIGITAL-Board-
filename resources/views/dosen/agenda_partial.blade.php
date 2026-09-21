@@ -419,7 +419,7 @@
                         <div id="modal-realisasi-{{ $ag->id }}" class="fixed inset-0 z-50 overflow-y-auto hidden text-xs">
                             <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('modal-realisasi-{{ $ag->id }}')"></div>
                             <div class="relative min-h-screen flex items-center justify-center p-4">
-                                <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden text-left border-2 border-slate-200">
+                                <div class="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden text-left border-2 border-slate-200">
                                     <div class="bg-slate-100 border-b-2 border-slate-200 px-6 py-5 flex justify-between items-center text-slate-900">
                                         <div class="flex items-center gap-3">
                                             <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-lg">
@@ -470,7 +470,7 @@
                         <div id="modal-berita-acara-{{ $ag->id }}" class="fixed inset-0 z-50 overflow-y-auto hidden text-xs">
                             <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('modal-berita-acara-{{ $ag->id }}')"></div>
                             <div class="relative min-h-screen flex items-center justify-center p-4">
-                                <div class="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden text-left border-2 border-slate-200">
+                                <div class="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden text-left border-2 border-slate-200">
                                     
                                     <!-- Modal Header -->
                                     <div class="bg-slate-900 px-6 py-5 flex justify-between items-center text-white">
@@ -488,12 +488,7 @@
                                         </div>
                                         
                                         <div class="flex items-center gap-3">
-                                            <a href="{{ route('dosen.agenda.berita-acara.cetak', $ag->id) }}" 
-                                               target="_blank" 
-                                               class="min-h-[44px] px-4 py-2 bg-white hover:bg-slate-100 text-slate-900 rounded-xl font-bold text-sm flex items-center gap-2 shadow-sm transition">
-                                                <i class="fa-solid fa-print text-base"></i>
-                                                <span class="hidden sm:inline">Cetak / PDF A4</span>
-                                            </a>
+
                                             <button type="button" onclick="toggleModal('modal-berita-acara-{{ $ag->id }}')" class="text-white/80 hover:text-white text-xl w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 transition">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </button>
@@ -533,29 +528,29 @@
                                                     </div>
 
                                                     <div class="pt-3 border-t-2 border-slate-200">
-                                                        <div class="flex items-center justify-between mb-2.5">
+                                                        <div class="flex items-center justify-between mb-2">
                                                             <span class="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                                                                <i class="fa-solid fa-lock text-slate-500"></i> Informasi SK &amp; Jadwal Resmi
+                                                                <i class="fa-solid fa-pen-to-square text-teal-700"></i> Informasi Penanggung Jawab &amp; Tanda Tangan
                                                             </span>
-                                                            <span class="text-xs text-slate-600 font-bold italic">Sesuai data jadwal (read-only)</span>
+                                                            <span class="text-[11px] text-slate-500 font-medium">Bisa diedit jika ada pergantian</span>
                                                         </div>
 
                                                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                            <div class="p-3 bg-slate-50 border border-slate-300 rounded-xl">
-                                                                <p class="text-xs font-bold text-slate-600">Nama Laboran</p>
-                                                                <p class="text-sm font-extrabold text-slate-900 mt-0.5 truncate">{{ $baDetails['laboran'] }}</p>
+                                                            <div class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl">
+                                                                <label class="block text-xs font-bold text-slate-700 mb-1">Nama Laboran</label>
+                                                                <input type="text" name="laboran" value="{{ $baDetails['laboran'] }}" placeholder="Nama Laboran..." class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 text-xs focus:border-slate-800 outline-none">
                                                             </div>
-                                                            <div class="p-3 bg-slate-50 border border-slate-300 rounded-xl">
-                                                                <p class="text-xs font-bold text-slate-600">Nama Asisten Praktikum</p>
-                                                                <p class="text-sm font-extrabold text-slate-900 mt-0.5 truncate">{{ $baDetails['asisten'] }}</p>
+                                                            <div class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl">
+                                                                <label class="block text-xs font-bold text-slate-700 mb-1">Nama Asisten Praktikum</label>
+                                                                <input type="text" name="asisten" value="{{ $baDetails['asisten'] }}" placeholder="Nama Asisten..." class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 text-xs focus:border-slate-800 outline-none">
                                                             </div>
-                                                            <div class="p-3 bg-slate-50 border border-slate-300 rounded-xl">
-                                                                <p class="text-xs font-bold text-slate-600">Nama Dosen / Instruktur</p>
-                                                                <p class="text-sm font-extrabold text-slate-900 mt-0.5 truncate">{{ $baDetails['dosen'] }}</p>
+                                                            <div class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl">
+                                                                <label class="block text-xs font-bold text-slate-700 mb-1">Nama Dosen / Instruktur</label>
+                                                                <input type="text" name="dosen" value="{{ $baDetails['dosen'] }}" placeholder="Nama Dosen Pengampu..." class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 text-xs focus:border-slate-800 outline-none">
                                                             </div>
-                                                            <div class="p-3 bg-slate-50 border border-slate-300 rounded-xl">
-                                                                <p class="text-xs font-bold text-slate-600">Tahun Akademik (TA)</p>
-                                                                <p class="text-sm font-extrabold text-slate-900 mt-0.5 truncate">{{ $baDetails['tahun_ajaran'] }}</p>
+                                                            <div class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl">
+                                                                <label class="block text-xs font-bold text-slate-700 mb-1">Tahun Akademik (TA)</label>
+                                                                <input type="text" name="tahun_ajaran" value="{{ $baDetails['tahun_ajaran'] }}" placeholder="Contoh: 2026/2027" class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 text-xs focus:border-slate-800 outline-none">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -587,7 +582,7 @@
                                                                     <img src="https://commons.wikimedia.org/wiki/Special:FilePath/LOGO_UIKA_Terbaru2.png" 
                                                                          alt="UIKA" class="w-9 h-9 object-contain">
                                                                     <div>
-                                                                        <p class="font-extrabold text-[10px] text-sky-900 leading-tight">FAKULTAS TEKNIK &amp; SAINS</p>
+                                                                        <p class="font-extrabold text-[10px] text-teal-900 leading-tight">FAKULTAS TEKNIK &amp; SAINS</p>
                                                                         <p class="font-extrabold text-[9px] text-emerald-800 leading-tight">UNIVERSITAS IBN KHALDUN BOGOR</p>
                                                                         <p class="text-[8px] text-slate-600 tracking-tight">SISTEM INFORMASI • INFORMATIKA • SIPIL • ELEKTRO • MESIN</p>
                                                                     </div>
@@ -634,24 +629,40 @@
                                                                 </div>
                                                             </div>
 
-                                                            <!-- Mini 3 Signatures -->
-                                                            <div class="grid grid-cols-3 gap-2 text-center pt-3 relative z-10">
-                                                                <div>
-                                                                    <p class="font-bold text-[8.5px] text-slate-700">Laboran</p>
-                                                                    <div class="h-6"></div>
-                                                                    <p class="font-bold text-[9px] border-b border-slate-400 pb-0.5 truncate">{{ $baDetails['laboran'] }}</p>
+                                                            @if(!empty($baDetails['is_same_dosen']))
+                                                                <!-- Mini 2 Signatures (Dosen Pengampu & Pengajar Sama) -->
+                                                                <div class="grid grid-cols-2 gap-4 text-center pt-3 relative z-10 px-4">
+                                                                    <div>
+                                                                        <p class="font-bold text-[8.5px] text-slate-700">Laboran</p>
+                                                                        <div class="h-6"></div>
+                                                                        <p class="font-bold text-[9px] border-b border-slate-400 pb-0.5 truncate">{{ $baDetails['laboran'] }}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p class="font-bold text-[8.5px] text-slate-700">Dosen / Instruktur</p>
+                                                                        <div class="h-6"></div>
+                                                                        <p class="font-bold text-[9px] border-b border-slate-400 pb-0.5 truncate">{{ $baDetails['dosen'] }}</p>
+                                                                    </div>
                                                                 </div>
-                                                                <div>
-                                                                    <p class="font-bold text-[8.5px] text-slate-700">Asisten Praktikum</p>
-                                                                    <div class="h-6"></div>
-                                                                    <p class="font-bold text-[9px] border-b border-slate-400 pb-0.5 truncate">{{ $baDetails['asisten'] }}</p>
+                                                            @else
+                                                                <!-- Mini 3 Signatures (Dosen Pengampu & Asisten Berbeda) -->
+                                                                <div class="grid grid-cols-3 gap-2 text-center pt-3 relative z-10">
+                                                                    <div>
+                                                                        <p class="font-bold text-[8.5px] text-slate-700">Laboran</p>
+                                                                        <div class="h-6"></div>
+                                                                        <p class="font-bold text-[9px] border-b border-slate-400 pb-0.5 truncate">{{ $baDetails['laboran'] }}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p class="font-bold text-[8.5px] text-slate-700">Asisten Praktikum</p>
+                                                                        <div class="h-6"></div>
+                                                                        <p class="font-bold text-[9px] border-b border-slate-400 pb-0.5 truncate">{{ $baDetails['asisten'] }}</p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <p class="font-bold text-[8.5px] text-slate-700">Dosen / Instruktur</p>
+                                                                        <div class="h-6"></div>
+                                                                        <p class="font-bold text-[9px] border-b border-slate-400 pb-0.5 truncate">{{ $baDetails['dosen'] }}</p>
+                                                                    </div>
                                                                 </div>
-                                                                <div>
-                                                                    <p class="font-bold text-[8.5px] text-slate-700">Dosen / Instruktur</p>
-                                                                    <div class="h-6"></div>
-                                                                    <p class="font-bold text-[9px] border-b border-slate-400 pb-0.5 truncate">{{ $baDetails['dosen'] }}</p>
-                                                                </div>
-                                                            </div>
+                                                            @endif
 
                                                             <!-- Mini Footer Bar -->
                                                             <div class="bg-slate-800 text-white p-1.5 rounded-sm flex justify-between text-[8px] mt-2 relative z-10 font-medium">
@@ -695,7 +706,7 @@
                         <div id="modal-edit-agenda-{{ $ag->id }}" class="fixed inset-0 z-50 overflow-y-auto hidden text-xs">
                             <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal('modal-edit-agenda-{{ $ag->id }}')"></div>
                             <div class="relative min-h-screen flex items-center justify-center p-4">
-                                <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden text-left border-2 border-slate-200">
+                                <div class="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl overflow-hidden text-left border-2 border-slate-200">
                                     <div class="bg-slate-100 border-b-2 border-slate-200 px-6 py-5 flex justify-between items-center text-slate-900">
                                         <h3 class="font-black text-lg sm:text-xl flex items-center gap-2.5 text-slate-900">
                                             <i class="fa-solid fa-pen-to-square text-slate-700"></i>

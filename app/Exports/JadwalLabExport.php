@@ -30,7 +30,7 @@ class JadwalLabExport
         $lab = Laboratorium::find($this->labId) ?? Laboratorium::first();
         $labName = $lab ? $lab->nama_lab : 'Laboratorium';
 
-        $jadwals = JadwalPenggunaanLab::with(['lab', 'dosen', 'prodi'])
+        $jadwals = JadwalPenggunaanLab::with(['lab', 'dosen', 'dosenPengampu', 'prodi'])
             ->when($this->labId, function($q) {
                 $q->where('lab_id', $this->labId);
             })
@@ -277,8 +277,12 @@ class JadwalLabExport
             if (!empty($subInfo)) {
                 $textParts[] = implode(' - ', $subInfo);
             }
-            if ($j->dosen && $j->dosen->nama) {
+            if ($j->dosenPengampu && $j->dosen && $j->dosen_pengampu_id != $j->dosen_id) {
+                $textParts[] = $j->dosenPengampu->nama . ' / ' . $j->dosen->nama;
+            } elseif ($j->dosen && $j->dosen->nama) {
                 $textParts[] = $j->dosen->nama;
+            } elseif ($j->dosenPengampu && $j->dosenPengampu->nama) {
+                $textParts[] = $j->dosenPengampu->nama;
             }
 
             $cellText = implode(' - ', $textParts);

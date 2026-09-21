@@ -312,6 +312,11 @@
             margin-bottom: 35px;
         }
 
+        .signatures-section.two-cols {
+            grid-template-columns: repeat(2, 1fr);
+            padding: 0 45px;
+        }
+
         .sig-box {
             display: flex;
             flex-direction: column;
@@ -541,29 +546,48 @@
                     </tr>
                 </table>
 
-                <!-- Tiga Kolom Tanda Tangan -->
-                <div class="signatures-section">
-                    <!-- 1. Laboran -->
-                    <div class="sig-box">
-                        <div class="sig-title">Laboran</div>
-                        <div class="sig-space"></div>
-                        <div class="sig-name">{{ $details['laboran'] }}</div>
-                    </div>
+                @if(!empty($details['is_same_dosen']))
+                    <!-- Dua Kolom Tanda Tangan (Dosen Pengampu & Pengajar Sama) -->
+                    <div class="signatures-section two-cols">
+                        <!-- 1. Laboran -->
+                        <div class="sig-box">
+                            <div class="sig-title">Laboran</div>
+                            <div class="sig-space"></div>
+                            <div class="sig-name">{{ $details['laboran'] }}</div>
+                        </div>
 
-                    <!-- 2. Asisten Praktikum -->
-                    <div class="sig-box">
-                        <div class="sig-title">Asissten Praktikum</div>
-                        <div class="sig-space"></div>
-                        <div class="sig-name">{{ $details['asisten'] }}</div>
+                        <!-- 2. Dosen / Instruktur -->
+                        <div class="sig-box">
+                            <div class="sig-title">Dosen / Instruktur</div>
+                            <div class="sig-space"></div>
+                            <div class="sig-name">{{ $details['dosen'] }}</div>
+                        </div>
                     </div>
+                @else
+                    <!-- Tiga Kolom Tanda Tangan (Dosen Pengampu & Asisten Berbeda) -->
+                    <div class="signatures-section">
+                        <!-- 1. Laboran -->
+                        <div class="sig-box">
+                            <div class="sig-title">Laboran</div>
+                            <div class="sig-space"></div>
+                            <div class="sig-name">{{ $details['laboran'] }}</div>
+                        </div>
 
-                    <!-- 3. Dosen / Instruktur -->
-                    <div class="sig-box">
-                        <div class="sig-title">Dosen / Instruktur</div>
-                        <div class="sig-space"></div>
-                        <div class="sig-name">{{ $details['dosen'] }}</div>
+                        <!-- 2. Asisten Praktikum -->
+                        <div class="sig-box">
+                            <div class="sig-title">Asisten Praktikum</div>
+                            <div class="sig-space"></div>
+                            <div class="sig-name">{{ $details['asisten'] }}</div>
+                        </div>
+
+                        <!-- 3. Dosen / Instruktur -->
+                        <div class="sig-box">
+                            <div class="sig-title">Dosen / Instruktur</div>
+                            <div class="sig-space"></div>
+                            <div class="sig-name">{{ $details['dosen'] }}</div>
+                        </div>
                     </div>
-                </div>
+                @endif
 
             </div>
 

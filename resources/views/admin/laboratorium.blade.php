@@ -228,6 +228,9 @@
                                             <p class="flex items-center gap-2 font-medium">
                                                 <i class="fa-solid fa-chair text-slate-400 w-4 text-center"></i> <span class="font-bold text-slate-700">{{ $l->kapasitas }}</span> Kursi Workstation
                                             </p>
+                                            <p class="flex items-center gap-2 font-medium">
+                                                <i class="fa-solid fa-user-gear text-teal-600 w-4 text-center"></i> Laboran: <span class="font-bold text-slate-800">{{ $l->nama_laboran ?? '-' }}</span>
+                                            </p>
                                         </div>
                                     </div>
 
@@ -277,6 +280,7 @@
                                         <th class="px-5 py-3.5">Nama Laboratorium</th>
                                         <th class="px-5 py-3.5">Fakultas</th>
                                         <th class="px-5 py-3.5">Lokasi / Ruang</th>
+                                        <th class="px-5 py-3.5">Laboran Penanggung Jawab</th>
                                         <th class="px-5 py-3.5">Kapasitas</th>
                                         <th class="px-5 py-3.5">Status Saat Ini</th>
                                         <th class="px-5 py-3.5 text-center">Aksi</th>
@@ -298,6 +302,12 @@
                                             </td>
                                             <td class="px-5 py-3.5 font-medium text-slate-600">
                                                 <i class="fa-solid fa-location-dot text-slate-400 mr-1"></i> {{ $l->lokasi }}
+                                            </td>
+                                            <td class="px-5 py-3.5 font-bold text-slate-800">
+                                                <div class="flex items-center gap-1.5">
+                                                    <i class="fa-solid fa-user-gear text-teal-600 text-xs"></i>
+                                                    <span>{{ $l->nama_laboran ?? '-' }}</span>
+                                                </div>
                                             </td>
                                             <td class="px-5 py-3.5 font-bold text-slate-800">
                                                 {{ $l->kapasitas }} Kursi
@@ -402,8 +412,8 @@
                         <p id="detail-lab-kapasitas" class="font-bold text-slate-800">40 Workstation</p>
                     </div>
                     <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-1 col-span-2 sm:col-span-1">
-                        <p class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider">Penanggung Jawab (PIC)</p>
-                        <p id="detail-lab-pic" class="font-bold text-slate-800 truncate">Kurniawan, S.T (Laboran FT)</p>
+                        <p class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider">Laboran / Penanggung Jawab</p>
+                        <p id="detail-lab-pic" class="font-bold text-slate-800 truncate">-</p>
                     </div>
                 </div>
 
@@ -518,6 +528,11 @@
                     <label class="block text-slate-700 font-bold mb-1">Kapasitas (Jumlah Kursi Workstation)</label>
                     <input type="number" id="lab-kapasitas" name="kapasitas" required placeholder="Contoh: 30" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
                 </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1">Nama Laboran / Teknisi Penanggung Jawab Ruangan</label>
+                    <input type="text" id="lab-nama_laboran" name="nama_laboran" placeholder="Contoh: Kurniawan, S.T." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
+                    <span class="text-[10px] text-slate-400 mt-0.5 block">Nama ini akan otomatis digunakan pada tanda tangan lembar Berita Acara & Realisasi Praktikum di lab ini.</span>
+                </div>
                 <div class="flex gap-2.5 pt-3 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modal-lab')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
                     <button type="submit" class="flex-1 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg font-bold shadow-sm">Simpan</button>
@@ -606,7 +621,7 @@
             document.getElementById('detail-lab-lokasi').innerText = lab.lokasi || '-';
             document.getElementById('detail-lab-kapasitas').innerText = (lab.kapasitas || '30') + ' Workstation';
             document.getElementById('detail-lab-fakultas').innerHTML = `<i class="fa-solid fa-building-columns text-slate-400"></i> ${lab.fakultas ? lab.fakultas.nama_fakultas : 'Fakultas Umum'}`;
-            document.getElementById('detail-lab-pic').innerText = (lab.fakultas ? 'Admin Lab ' + lab.fakultas.nama_fakultas : 'Kurniawan, S.T (Laboran FT)');
+            document.getElementById('detail-lab-pic').innerText = lab.nama_laboran ? `${lab.nama_laboran} (Laboran)` : (lab.fakultas ? 'Admin Lab ' + lab.fakultas.nama_fakultas : 'Belum Ditentukan');
 
             // Status Badge
             const statusContainer = document.getElementById('detail-lab-status-badge');
@@ -711,6 +726,7 @@
                 document.getElementById('lab-nama_lab').value = "";
                 document.getElementById('lab-lokasi').value = "";
                 document.getElementById('lab-kapasitas').value = "30";
+                document.getElementById('lab-nama_laboran').value = "";
                 if (document.getElementById('lab-fakultas_id')) {
                     document.getElementById('lab-fakultas_id').value = "";
                 }
@@ -727,6 +743,7 @@
             document.getElementById('lab-nama_lab').value = lab.nama_lab;
             document.getElementById('lab-lokasi').value = lab.lokasi;
             document.getElementById('lab-kapasitas').value = lab.kapasitas || "30";
+            document.getElementById('lab-nama_laboran').value = lab.nama_laboran || "";
             if (document.getElementById('lab-fakultas_id')) {
                 document.getElementById('lab-fakultas_id').value = lab.fakultas_id || "";
             }

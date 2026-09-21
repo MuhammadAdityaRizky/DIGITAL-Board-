@@ -438,6 +438,21 @@ class DosenController extends Controller
         return back()->with('success', 'Realisasi pembelajaran berhasil diperbarui.');
     }
 
+    public function selesaiAgenda($id)
+    {
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->first();
+        $agenda = Agenda::findOrFail($id);
+
+        if (!$dosen || ($agenda->dosen_id !== $dosen->id && $agenda->dosen_pengampu_id !== $dosen->id)) {
+            abort(403, 'Akses Ditolak');
+        }
+
+        $agenda->update(['status_agenda' => 'Selesai']);
+
+        return back()->with('success', 'Kelas berhasil diakhiri (Selesai).');
+    }
+
     public function updateBeritaAcara(Request $request, $id)
     {
         $request->validate([
@@ -459,12 +474,12 @@ class DosenController extends Controller
         $materi = $request->filled('materi') ? $request->materi : ($agenda->materi_realisasi ?: $agenda->catatan);
         $catatan = $request->filled('catatan') ? $request->catatan : ($request->filled('berita_acara') ? $request->berita_acara : '');
 
-        // Lock metadata to schedule and institutional data
+        // Capture metadata from schedule and institutional data, with support for manual overrides
         $details = $agenda->berita_acara_details;
-        $laboran = $details['laboran'];
-        $asisten = $details['asisten'];
-        $dosenNama = $details['dosen'];
-        $tahunAjaran = $details['tahun_ajaran'];
+        $laboran = $request->filled('laboran') ? trim($request->laboran) : $details['laboran'];
+        $asisten = $request->filled('asisten') ? trim($request->asisten) : $details['asisten'];
+        $dosenNama = $request->filled('dosen') ? trim($request->dosen) : $details['dosen'];
+        $tahunAjaran = $request->filled('tahun_ajaran') ? trim($request->tahun_ajaran) : $details['tahun_ajaran'];
 
         $payload = [
             'materi' => $materi,
@@ -567,14 +582,11 @@ class DosenController extends Controller
         }
         $agendas = $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc')->get();
 
-        // Format Dosen / Dosen Pengampu
-        $dosenUtama = $agenda->dosenPengampu->nama ?? $agenda->dosen->nama ?? 'Zulkarnaen Noor Syarif, S.Kom., M.Kom';
+        // Format Dosen / Dosen Pengampu (Dinamis dari relasi DB)
+        $dosenUtama = $agenda->dosenPengampu->nama ?? $agenda->dosen->nama ?? '-';
         $dosenPendamping = null;
         if ($agenda->dosen_pengampu_id && $agenda->dosen_pengampu_id != $agenda->dosen_id && $agenda->dosen) {
             $dosenUtama = $agenda->dosenPengampu->nama;
-            $dosenPendamping = $agenda->dosen->nama;
-        } elseif ($agenda->dosen && str_contains($agenda->dosen->nama, 'Anggra')) {
-            $dosenUtama = 'Zulkarnaen Noor Syarif, S.Kom., M.Kom';
             $dosenPendamping = $agenda->dosen->nama;
         }
         $dosenDisplay = $dosenPendamping ? "{$dosenUtama} / {$dosenPendamping}" : $dosenUtama;

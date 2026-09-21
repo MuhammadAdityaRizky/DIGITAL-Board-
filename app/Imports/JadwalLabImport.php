@@ -190,7 +190,7 @@ class JadwalLabImport
                 $recordsToInsert[] = [
                     'lab_id' => $lab->id,
                     'dosen_id' => $parsed['dosen_id'],
-                    'dosen_pengampu_id' => null,
+                    'dosen_pengampu_id' => $parsed['dosen_pengampu_id'],
                     'id_prodi' => $parsed['id_prodi'],
                     'mata_kuliah' => $parsed['mata_kuliah'],
                     'hari' => $dayName,
@@ -298,18 +298,38 @@ class JadwalLabImport
             $kelas = strtoupper($m[1]);
         }
 
-        // 4. Extract Dosen
+        // 4. Extract Dosen (Pengampu & Pengajar)
         $dosenNameCandidate = null;
         $dosen = null;
-        if (preg_match('/(?:Pak|Bu|Bpk|Ibu)\s+([A-Za-z\s\.,]+)$/i', $norm, $m)) {
+        $dosenPengampu = null;
+
+        if (preg_match('/(?:Pak|Bu|Bpk|Ibu)\s+([A-Za-z\s\.,\/]+)$/i', $norm, $m)) {
             $dosenNameCandidate = trim($m[0]);
-            $dosen = $this->findDosen($dosenNameCandidate);
-        } elseif (preg_match('/-\s*([A-Za-z\s\.,]+)$/', $norm, $m)) {
+            $candText = preg_replace('/^(?:Pak|Bu|Bpk|Ibu)\s+/i', '', $dosenNameCandidate);
+            if (str_contains($candText, '/')) {
+                [$p1, $p2] = explode('/', $candText, 2);
+                $dosenPengampu = $this->findDosen(trim($p1));
+                $dosen = $this->findDosen(trim($p2));
+            } else {
+                $dosen = $this->findDosen($candText);
+            }
+        } elseif (preg_match('/-\s*([A-Za-z\s\.,\/]+)$/', $norm, $m)) {
             $candidate = trim($m[1]);
-            $testDosen = $this->findDosen($candidate);
-            if ($testDosen) {
-                $dosenNameCandidate = $candidate;
-                $dosen = $testDosen;
+            if (str_contains($candidate, '/')) {
+                [$p1, $p2] = explode('/', $candidate, 2);
+                $testPengampu = $this->findDosen(trim($p1));
+                $testDosen = $this->findDosen(trim($p2));
+                if ($testPengampu || $testDosen) {
+                    $dosenNameCandidate = $candidate;
+                    $dosenPengampu = $testPengampu;
+                    $dosen = $testDosen ?: $testPengampu;
+                }
+            } else {
+                $testDosen = $this->findDosen($candidate);
+                if ($testDosen) {
+                    $dosenNameCandidate = $candidate;
+                    $dosen = $testDosen;
+                }
             }
         }
 
@@ -334,10 +354,10 @@ class JadwalLabImport
         }
 
         // 6. Detect Prodi
-        $idProdi = $this->detectProdi($cleanMk, $dosen, $fillColor);
+        $idProdi = $this->detectProdi($cleanMk, $dosen ?: $dosenPengampu, $fillColor);
 
         // Fallback for dosen: if no dosen extracted, try matching by mata kuliah
-        if (!$dosen) {
+        if (!$dosen && !$dosenPengampu) {
             $matchedMk = $this->mataKuliahs->first(function($mk) use ($cleanMk) {
                 return stripos($cleanMk, $mk->nama_mk) !== false || stripos($mk->nama_mk, $cleanMk) !== false;
             });
@@ -346,12 +366,16 @@ class JadwalLabImport
             }
         }
 
+        $finalDosenId = $dosen ? $dosen->id : ($dosenPengampu ? $dosenPengampu->id : null);
+        $finalPengampuId = $dosenPengampu ? $dosenPengampu->id : $finalDosenId;
+
         return [
             'mata_kuliah' => $cleanMk,
             'semester' => $semester,
             'kelas' => $kelas,
             'program_kuliah' => $programKuliah,
-            'dosen_id' => $dosen ? $dosen->id : null,
+            'dosen_id' => $finalDosenId,
+            'dosen_pengampu_id' => $finalPengampuId,
             'id_prodi' => $idProdi,
         ];
     }

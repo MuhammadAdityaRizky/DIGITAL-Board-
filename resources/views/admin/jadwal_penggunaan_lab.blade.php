@@ -166,6 +166,12 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200">
+                            @php
+                                $skipSlots = [];
+                                foreach($hariList as $h) {
+                                    $skipSlots[$h] = 0;
+                                }
+                            @endphp
                             @foreach($timeSlots as $slot)
                                 @php
                                     list($slotStart, $slotEnd) = explode('-', $slot);
@@ -178,6 +184,11 @@
                                     </td>
                                     @foreach($hariList as $hari)
                                         @php
+                                            if ($skipSlots[$hari] > 0) {
+                                                $skipSlots[$hari]--;
+                                                continue;
+                                            }
+
                                             // Find items that overlap or start in this slot
                                             $matches = $jadwals->filter(function($j) use ($hari, $slotStartClean, $slotEndClean) {
                                                 return $j->hari === $hari && (
@@ -185,9 +196,36 @@
                                                     ($j->jam_mulai >= $slotStartClean && $j->jam_mulai < $slotEndClean)
                                                 );
                                             });
+
+                                            $rowspan = 1;
+                                            if ($matches->isNotEmpty()) {
+                                                $maxEnd = $matches->max('jam_selesai');
+                                                $counting = false;
+                                                $span = 0;
+                                                foreach ($timeSlots as $ts) {
+                                                    list($tsStart, $tsEnd) = explode('-', $ts);
+                                                    $tsStartClean = str_replace('.', ':', trim($tsStart)) . ':00';
+                                                    
+                                                    if ($tsStartClean === $slotStartClean) {
+                                                        $counting = true;
+                                                    }
+                                                    
+                                                    if ($counting) {
+                                                        if ($maxEnd > $tsStartClean) {
+                                                            $span++;
+                                                        } else {
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                $rowspan = $span > 0 ? $span : 1;
+                                                $skipSlots[$hari] = $rowspan - 1;
+                                            }
                                         @endphp
-                                        <td class="p-1.5 border-r border-slate-200 align-top hover:bg-slate-50/50 transition">
+                                        
+                                        <td class="p-1 border-r border-slate-200 hover:bg-slate-50/50 transition h-[1px]" @if($rowspan > 1) rowspan="{{ $rowspan }}" @endif>
                                             @if($matches->isNotEmpty())
+                                                <div class="h-full flex flex-col gap-1 w-full">
                                                 @foreach($matches as $m)
                                                     @php
                                                         // Determine background color based on Prodi
@@ -203,15 +241,20 @@
                                                             $bgColor = 'bg-rose-800 text-white border-rose-900'; // Merah
                                                         }
                                                     @endphp
-                                                    <div class="p-2 rounded-lg border {{ $bgColor }} shadow-xs mb-1 text-[11px] leading-tight relative group jadwal-card cursor-pointer" onmousedown="startDragSelect(event, {{ $m->id }})" onmouseenter="enterDragSelect(event, {{ $m->id }})">
+                                                    <div class="flex-1 min-h-[4rem] p-2.5 rounded-lg border {{ $bgColor }} shadow-xs text-[11px] leading-tight relative group jadwal-card cursor-pointer flex flex-col" onmousedown="startDragSelect(event, {{ $m->id }})" onmouseenter="enterDragSelect(event, {{ $m->id }})">
                                                         <div class="font-extrabold line-clamp-2">{{ $m->mata_kuliah }}</div>
-                                                        <div class="text-[10px] text-teal-200 mt-1 font-semibold">
+                                                        <div class="text-[10px] text-teal-200 mt-1.5 font-semibold">
                                                             Kelas {{ $m->kelas ?: 'A' }} @if($m->program_kuliah)• {{ $m->program_kuliah }}@endif @if($m->semester)• Sem {{ $m->semester }}@endif
                                                         </div>
                                                         <div class="text-[10px] text-slate-200 mt-0.5 font-medium flex items-center gap-1">
                                                             <i class="fa-solid fa-user-tie text-[9px]"></i> {{ $m->dosen->nama ?? '-' }}
                                                         </div>
-                                                        <div class="text-[9px] font-mono opacity-80 mt-1">
+                                                        @if($m->dosenPengampu && $m->dosen_pengampu_id != $m->dosen_id)
+                                                            <div class="text-[9.5px] text-amber-200 mt-0.5 font-medium flex items-center gap-1 truncate" title="Dosen Instruktur/Pengampu: {{ $m->dosenPengampu->nama }}">
+                                                                <i class="fa-solid fa-chalkboard-user text-[9px]"></i> Pengampu: {{ $m->dosenPengampu->nama }}
+                                                            </div>
+                                                        @endif
+                                                        <div class="text-[9px] font-mono opacity-80 mt-auto pt-2">
                                                             {{ substr($m->jam_mulai,0,5) }} - {{ substr($m->jam_selesai,0,5) }}
                                                         </div>
 
@@ -227,6 +270,7 @@
                                                         </div>
                                                     </div>
                                                 @endforeach
+                                                </div>
                                             @else
                                                 <button onclick="openAddModalWith('{{ $hari }}', '{{ substr($slotStartClean, 0, 5) }}', '{{ substr($slotEndClean, 0, 5) }}')" class="w-full h-8 rounded border border-dashed border-slate-200 hover:border-teal-400 hover:bg-teal-50/50 text-slate-300 hover:text-teal-600 flex items-center justify-center text-[10px] transition group" title="Tambah slot di sini">
                                                     <i class="fa-solid fa-plus opacity-0 group-hover:opacity-100 transition"></i>
@@ -523,86 +567,164 @@
                     </div>
                 </div>
 
-                <!-- Row 4: Dosen Pengajar Combobox (Filtered by Selected Prodi) -->
-                <div class="relative" id="dosen_combobox_wrapper" style="z-index: 20;">
-                    <label class="block text-slate-700 font-bold mb-1.5 flex items-center justify-between">
-                        <span class="flex items-center gap-1.5">
-                            <i class="fa-solid fa-user-tie text-teal-600 text-[11px]"></i>
-                            <span>Dosen Pengajar <span class="text-rose-500">*</span></span>
-                        </span>
-                        <div class="flex items-center gap-2">
-                            <span id="dosen_prodi_badge" class="hidden text-[10px] bg-teal-50 text-teal-800 border border-teal-200 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
-                                <i class="fa-solid fa-filter text-[9px] text-teal-600"></i> Filter Prodi: <b id="dosen_prodi_badge_text"></b>
+                <!-- Row 4: Dosen Pengampu & Dosen Pengajar Comboboxes -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 relative" style="z-index: 20;">
+                    <!-- Dosen Pengampu / Instruktur (Koordinator MK) -->
+                    <div class="relative" id="dosen_pengampu_combobox_wrapper">
+                        <label class="block text-slate-700 font-bold mb-1.5 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-chalkboard-user text-teal-600 text-[11px]"></i>
+                                <span>Dosen Instruktur / Pengampu</span>
                             </span>
-                        </div>
-                    </label>
-                    <input type="hidden" name="dosen_id" id="form_dosen_id" required value="">
-                    <div class="relative flex items-center">
-                        <input type="text" 
-                               id="form_dosen_name" 
-                               required 
-                               autocomplete="off" 
-                               placeholder="Pilih atau cari dosen pengajar..." 
-                               onclick="openDosenDropdown()" 
-                               onfocus="openDosenDropdown()" 
-                               oninput="handleDosenInput(this.value)" 
-                               class="w-full p-2.5 pr-8 rounded-xl bg-slate-50 border border-slate-200 font-semibold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition cursor-pointer">
-                        <button type="button" 
-                                onclick="toggleDosenDropdown(event)" 
-                                tabindex="-1" 
-                                class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
-                            <i id="dosen_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
-                        </button>
-                    </div>
-
-                    <!-- Dropdown Menu for Dosen -->
-                    <div id="dosen_dropdown_menu" 
-                         class="hidden absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl p-2.5 max-h-56 flex flex-col space-y-1.5" 
-                         style="background-color: #ffffff !important;">
-                        
-                        <!-- Search Bar within Dropdown -->
-                        <div class="relative shrink-0">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <span class="text-[10px] text-slate-400 font-normal">Penanggung Jawab MK</span>
+                        </label>
+                        <input type="hidden" name="dosen_pengampu_id" id="form_dosen_pengampu_id" value="">
+                        <div class="relative flex items-center">
                             <input type="text" 
-                                   id="dosen_search_input" 
-                                   oninput="filterDosenSearch(this.value)" 
-                                   placeholder="Cari nama dosen / NIDN..." 
+                                   id="form_dosen_pengampu_name" 
                                    autocomplete="off" 
-                                   class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700">
+                                   placeholder="Pilih dosen pengampu MK (opsional)..." 
+                                   onclick="openDosenPengampuDropdown()" 
+                                   onfocus="openDosenPengampuDropdown()" 
+                                   oninput="handleDosenPengampuInput(this.value)" 
+                                   class="w-full p-2.5 pr-8 rounded-xl bg-slate-50 border border-slate-200 font-semibold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition cursor-pointer">
+                            <button type="button" 
+                                    onclick="toggleDosenPengampuDropdown(event)" 
+                                    tabindex="-1" 
+                                    class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                <i id="dosen_pengampu_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                            </button>
                         </div>
 
-                        <div id="dosen_options_container" class="space-y-0.5 overflow-y-auto flex-1 max-h-40 custom-scrollbar pr-1">
-                            @foreach($dosens as $d)
-                                <div class="dosen-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition flex items-center justify-between group" 
-                                     data-id="{{ $d->id }}" 
-                                     data-name="{{ $d->nama }}" 
-                                     data-prodi="{{ $d->id_prodi ?? '' }}" 
-                                     data-prodi-name="{{ $d->prodi->nama_prodi ?? '' }}" 
-                                     onclick="selectDosenItem('{{ $d->id }}', '{{ addslashes($d->nama) }}', '{{ $d->id_prodi ?? '' }}')">
-                                    <div class="flex items-center gap-2 overflow-hidden">
-                                        <i class="fa-solid fa-user-check text-slate-300 group-hover:text-teal-600 text-xs shrink-0"></i>
-                                        <span class="font-semibold truncate">{{ $d->nama }}</span>
-                                        @if($d->prodi)
-                                            <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded group-hover:bg-teal-100 group-hover:text-teal-700 font-medium shrink-0">{{ $d->prodi->nama_prodi }}</span>
+                        <!-- Dropdown Menu for Dosen Pengampu -->
+                        <div id="dosen_pengampu_dropdown_menu" 
+                             class="hidden absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl p-2.5 max-h-56 flex flex-col space-y-1.5" 
+                             style="background-color: #ffffff !important;">
+                            
+                            <!-- Search Bar within Dropdown -->
+                            <div class="relative shrink-0">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" 
+                                       id="dosen_pengampu_search_input" 
+                                       oninput="filterDosenPengampuSearch(this.value)" 
+                                       placeholder="Cari nama dosen / NIDN..." 
+                                       autocomplete="off" 
+                                       class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700">
+                            </div>
+
+                            <!-- Option Sama Dengan Pengajar -->
+                            <div class="dosen-pengampu-item-option px-2.5 py-1.5 text-xs text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer transition flex items-center justify-between" 
+                                 data-id="" 
+                                 data-name="" 
+                                 onclick="selectDosenPengampuItem('', '')">
+                                <span class="font-medium italic text-slate-500">-- Sama Dengan Dosen Pengajar --</span>
+                                <span class="text-[10px] text-slate-400">Default</span>
+                            </div>
+
+                            <div id="dosen_pengampu_options_container" class="space-y-0.5 overflow-y-auto flex-1 max-h-40 custom-scrollbar pr-1">
+                                @foreach($dosens as $d)
+                                    <div class="dosen-pengampu-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition flex items-center justify-between group" 
+                                         data-id="{{ $d->id }}" 
+                                         data-name="{{ $d->nama }}" 
+                                         data-prodi="{{ $d->id_prodi ?? '' }}" 
+                                         onclick="selectDosenPengampuItem('{{ $d->id }}', '{{ addslashes($d->nama) }}')">
+                                        <div class="flex items-center gap-2 overflow-hidden">
+                                            <i class="fa-solid fa-chalkboard-user text-slate-300 group-hover:text-teal-600 text-xs shrink-0"></i>
+                                            <span class="font-semibold truncate">{{ $d->nama }}</span>
+                                        </div>
+                                        @if($d->nidn)
+                                            <span class="text-[10px] text-slate-400 bg-slate-100 group-hover:bg-teal-100 group-hover:text-teal-800 px-1.5 py-0.5 rounded font-mono shrink-0">NIDN: {{ $d->nidn }}</span>
                                         @endif
                                     </div>
-                                    @if($d->nidn)
-                                        <span class="text-[10px] text-slate-400 bg-slate-100 group-hover:bg-teal-100 group-hover:text-teal-800 px-1.5 py-0.5 rounded font-mono shrink-0">NIDN: {{ $d->nidn }}</span>
-                                    @endif
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
+                            <div id="dosen_pengampu_no_results" class="hidden px-3 py-2 text-xs text-slate-400 italic text-center">
+                                Dosen tidak ditemukan.
+                            </div>
                         </div>
-                        <div id="dosen_no_results" class="hidden px-3 py-2 text-xs text-slate-400 italic text-center">
-                            Dosen tidak ditemukan untuk prodi ini.
-                        </div>
-                        <!-- Toggle view all dosens button -->
-                        <div class="border-t border-slate-100 pt-1 shrink-0 text-center">
+                    </div>
+
+                    <!-- Dosen Pengajar Combobox -->
+                    <div class="relative" id="dosen_combobox_wrapper">
+                        <label class="block text-slate-700 font-bold mb-1.5 flex items-center justify-between">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-user-tie text-teal-600 text-[11px]"></i>
+                                <span>Dosen Pengajar / Asisten <span class="text-rose-500">*</span></span>
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <span id="dosen_prodi_badge" class="hidden text-[10px] bg-teal-50 text-teal-800 border border-teal-200 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                                    <i class="fa-solid fa-filter text-[9px] text-teal-600"></i> <b id="dosen_prodi_badge_text"></b>
+                                </span>
+                            </div>
+                        </label>
+                        <input type="hidden" name="dosen_id" id="form_dosen_id" required value="">
+                        <div class="relative flex items-center">
+                            <input type="text" 
+                                   id="form_dosen_name" 
+                                   required 
+                                   autocomplete="off" 
+                                   placeholder="Pilih dosen pengajar..." 
+                                   onclick="openDosenDropdown()" 
+                                   onfocus="openDosenDropdown()" 
+                                   oninput="handleDosenInput(this.value)" 
+                                   class="w-full p-2.5 pr-8 rounded-xl bg-slate-50 border border-slate-200 font-semibold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition cursor-pointer">
                             <button type="button" 
-                                    id="dosen_toggle_all_btn" 
-                                    onclick="toggleShowAllDosens(event)" 
-                                    class="hidden text-[10px] text-teal-700 hover:text-teal-900 font-bold px-2 py-1 rounded hover:bg-teal-50 transition cursor-pointer">
-                                Lihat Dosen Semua Prodi →
+                                    onclick="toggleDosenDropdown(event)" 
+                                    tabindex="-1" 
+                                    class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                <i id="dosen_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
                             </button>
+                        </div>
+
+                        <!-- Dropdown Menu for Dosen Pengajar -->
+                        <div id="dosen_dropdown_menu" 
+                             class="hidden absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl p-2.5 max-h-56 flex flex-col space-y-1.5" 
+                             style="background-color: #ffffff !important;">
+                            
+                            <!-- Search Bar within Dropdown -->
+                            <div class="relative shrink-0">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" 
+                                       id="dosen_search_input" 
+                                       oninput="filterDosenSearch(this.value)" 
+                                       placeholder="Cari nama dosen / NIDN..." 
+                                       autocomplete="off" 
+                                       class="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700">
+                            </div>
+
+                            <div id="dosen_options_container" class="space-y-0.5 overflow-y-auto flex-1 max-h-40 custom-scrollbar pr-1">
+                                @foreach($dosens as $d)
+                                    <div class="dosen-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-teal-50 hover:text-teal-900 cursor-pointer transition flex items-center justify-between group" 
+                                         data-id="{{ $d->id }}" 
+                                         data-name="{{ $d->nama }}" 
+                                         data-prodi="{{ $d->id_prodi ?? '' }}" 
+                                         data-prodi-name="{{ $d->prodi->nama_prodi ?? '' }}" 
+                                         onclick="selectDosenItem('{{ $d->id }}', '{{ addslashes($d->nama) }}', '{{ $d->id_prodi ?? '' }}')">
+                                        <div class="flex items-center gap-2 overflow-hidden">
+                                            <i class="fa-solid fa-user-check text-slate-300 group-hover:text-teal-600 text-xs shrink-0"></i>
+                                            <span class="font-semibold truncate">{{ $d->nama }}</span>
+                                            @if($d->prodi)
+                                                <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded group-hover:bg-teal-100 group-hover:text-teal-700 font-medium shrink-0">{{ $d->prodi->nama_prodi }}</span>
+                                            @endif
+                                        </div>
+                                        @if($d->nidn)
+                                            <span class="text-[10px] text-slate-400 bg-slate-100 group-hover:bg-teal-100 group-hover:text-teal-800 px-1.5 py-0.5 rounded font-mono shrink-0">NIDN: {{ $d->nidn }}</span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div id="dosen_no_results" class="hidden px-3 py-2 text-xs text-slate-400 italic text-center">
+                                Dosen tidak ditemukan untuk prodi ini.
+                            </div>
+                            <!-- Toggle view all dosens button -->
+                            <div class="border-t border-slate-100 pt-1 shrink-0 text-center">
+                                <button type="button" 
+                                        id="dosen_toggle_all_btn" 
+                                        onclick="toggleShowAllDosens(event)" 
+                                        class="hidden text-[10px] text-teal-700 hover:text-teal-900 font-bold px-2 py-1 rounded hover:bg-teal-50 transition cursor-pointer">
+                                    Lihat Dosen Semua Prodi →
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -977,6 +1099,7 @@
             closeMatkulDropdown();
             closeKelasDropdown();
             closeDosenDropdown();
+            closeDosenPengampuDropdown();
             closeProdiDropdown();
         }
 
@@ -1208,12 +1331,78 @@
         }
 
         // ==========================================
-        // 3. DOSEN PENGAJAR COMBOBOX (STEP 3: FILTERED BY PRODI)
+        // 3A. DOSEN PENGAMPU COMBOBOX
+        // ==========================================
+        function openDosenPengampuDropdown() {
+            closeMatkulDropdown();
+            closeKelasDropdown();
+            closeProdiDropdown();
+            closeDosenDropdown();
+            const menu = document.getElementById('dosen_pengampu_dropdown_menu');
+            const icon = document.getElementById('dosen_pengampu_chevron_icon');
+            if (menu) menu.classList.remove('hidden');
+            if (icon) icon.classList.add('rotate-180');
+        }
+
+        function closeDosenPengampuDropdown() {
+            const menu = document.getElementById('dosen_pengampu_dropdown_menu');
+            const icon = document.getElementById('dosen_pengampu_chevron_icon');
+            if (menu) menu.classList.add('hidden');
+            if (icon) icon.classList.remove('rotate-180');
+        }
+
+        function toggleDosenPengampuDropdown(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('dosen_pengampu_dropdown_menu');
+            if (menu && menu.classList.contains('hidden')) {
+                openDosenPengampuDropdown();
+                const searchInput = document.getElementById('dosen_pengampu_search_input');
+                if (searchInput) searchInput.focus();
+            } else {
+                closeDosenPengampuDropdown();
+            }
+        }
+
+        function filterDosenPengampuSearch(query) {
+            const q = (query || '').toLowerCase().trim();
+            const items = document.querySelectorAll('.dosen-pengampu-item-option');
+            const noResults = document.getElementById('dosen_pengampu_no_results');
+            let count = 0;
+            items.forEach(item => {
+                const name = (item.getAttribute('data-name') || '').toLowerCase();
+                if (!q || name.includes(q)) {
+                    item.style.display = '';
+                    count++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            if (noResults) {
+                noResults.style.display = count === 0 ? 'block' : 'none';
+            }
+        }
+
+        function selectDosenPengampuItem(id, name) {
+            document.getElementById('form_dosen_pengampu_id').value = id;
+            document.getElementById('form_dosen_pengampu_name').value = name;
+            closeDosenPengampuDropdown();
+        }
+
+        function handleDosenPengampuInput(val) {
+            openDosenPengampuDropdown();
+            const searchInput = document.getElementById('dosen_pengampu_search_input');
+            if (searchInput) searchInput.value = val;
+            filterDosenPengampuSearch(val);
+        }
+
+        // ==========================================
+        // 3B. DOSEN PENGAJAR COMBOBOX (STEP 3: FILTERED BY PRODI)
         // ==========================================
         function openDosenDropdown() {
             closeMatkulDropdown();
             closeKelasDropdown();
             closeProdiDropdown();
+            closeDosenPengampuDropdown();
             const menu = document.getElementById('dosen_dropdown_menu');
             const icon = document.getElementById('dosen_chevron_icon');
             if (menu) menu.classList.remove('hidden');
@@ -1391,6 +1580,10 @@
             if (matkulWrapper && !matkulWrapper.contains(e.target)) {
                 closeMatkulDropdown();
             }
+            const dosenPengampuWrapper = document.getElementById('dosen_pengampu_combobox_wrapper');
+            if (dosenPengampuWrapper && !dosenPengampuWrapper.contains(e.target)) {
+                closeDosenPengampuDropdown();
+            }
             const dosenWrapper = document.getElementById('dosen_combobox_wrapper');
             if (dosenWrapper && !dosenWrapper.contains(e.target)) {
                 closeDosenDropdown();
@@ -1405,12 +1598,15 @@
             if (e.key === 'Escape') {
                 const prodiMenu = document.getElementById('prodi_dropdown_menu');
                 const matkulMenu = document.getElementById('matkul_dropdown_menu');
+                const dosenPengampuMenu = document.getElementById('dosen_pengampu_dropdown_menu');
                 const dosenMenu = document.getElementById('dosen_dropdown_menu');
                 const kelasMenu = document.getElementById('kelas_dropdown_menu');
                 if (prodiMenu && !prodiMenu.classList.contains('hidden')) {
                     closeProdiDropdown();
                 } else if (matkulMenu && !matkulMenu.classList.contains('hidden')) {
                     closeMatkulDropdown();
+                } else if (dosenPengampuMenu && !dosenPengampuMenu.classList.contains('hidden')) {
+                    closeDosenPengampuDropdown();
                 } else if (dosenMenu && !dosenMenu.classList.contains('hidden')) {
                     closeDosenDropdown();
                 } else if (kelasMenu && !kelasMenu.classList.contains('hidden')) {
@@ -1578,6 +1774,8 @@
             document.getElementById('form_id_prodi').value = '';
             document.getElementById('form_prodi_name').value = '';
             document.getElementById('form_mata_kuliah').value = '';
+            document.getElementById('form_dosen_pengampu_id').value = '';
+            document.getElementById('form_dosen_pengampu_name').value = '';
             document.getElementById('form_dosen_id').value = '';
             document.getElementById('form_dosen_name').value = '';
             document.getElementById('form_kelas').value = 'A';
@@ -1633,20 +1831,33 @@
             // 4. Set Mata Kuliah
             document.getElementById('form_mata_kuliah').value = jadwal.mata_kuliah || '';
 
-            // 5. Set Dosen
+            // 5. Set Dosen Pengampu / Instruktur
+            document.getElementById('form_dosen_pengampu_id').value = jadwal.dosen_pengampu_id || '';
+            const matchedPengampu = document.querySelector(`.dosen-pengampu-item-option[data-id="${jadwal.dosen_pengampu_id}"]`);
+            if (matchedPengampu) {
+                document.getElementById('form_dosen_pengampu_name').value = matchedPengampu.getAttribute('data-name');
+            } else if (jadwal.dosen_pengampu) {
+                document.getElementById('form_dosen_pengampu_name').value = jadwal.dosen_pengampu.nama;
+            } else {
+                document.getElementById('form_dosen_pengampu_name').value = '';
+            }
+
+            // 6. Set Dosen Pengajar
             document.getElementById('form_dosen_id').value = jadwal.dosen_id || '';
             const matchedDosen = document.querySelector(`.dosen-item-option[data-id="${jadwal.dosen_id}"]`);
             if (matchedDosen) {
                 document.getElementById('form_dosen_name').value = matchedDosen.getAttribute('data-name');
+            } else if (jadwal.dosen) {
+                document.getElementById('form_dosen_name').value = jadwal.dosen.nama;
             } else {
                 document.getElementById('form_dosen_name').value = '';
             }
 
-            // 6. Set Kelas & Program Kuliah
+            // 7. Set Kelas & Program Kuliah
             document.getElementById('form_kelas').value = jadwal.kelas ? jadwal.kelas.replace(/^(Reg|Karyawan)\s+/i, '') : 'A';
             document.getElementById('form_program_kuliah').value = jadwal.program_kuliah || 'Reguler';
 
-            // 7. Set Jam
+            // 8. Set Jam
             document.getElementById('form_jam_mulai').value = jadwal.jam_mulai ? jadwal.jam_mulai.substr(0, 5) : '08:00';
             document.getElementById('form_jam_selesai').value = jadwal.jam_selesai ? jadwal.jam_selesai.substr(0, 5) : '10:30';
 

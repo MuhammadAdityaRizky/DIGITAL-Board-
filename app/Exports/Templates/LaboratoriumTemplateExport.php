@@ -21,7 +21,7 @@ class LaboratoriumTemplateExport implements FromArray, WithHeadings, WithEvents,
         $defaultLokasi = Laboratorium::whereNotNull('lokasi')->pluck('lokasi')->first() ?? 'Gedung FTS';
 
         return [
-            ['Lab Komputer Dasar', 40, $defaultLokasi, $defaultFakultas, 'aktif'],
+            ['Lab Komputer Dasar', 40, $defaultLokasi, 'Kurniawan, S.T.', $defaultFakultas, 'aktif'],
         ];
     }
 
@@ -31,6 +31,7 @@ class LaboratoriumTemplateExport implements FromArray, WithHeadings, WithEvents,
             'nama_lab',
             'kapasitas',
             'lokasi',
+            'nama_laboran',
             'fakultas',
             'status',
         ];
@@ -56,7 +57,7 @@ class LaboratoriumTemplateExport implements FromArray, WithHeadings, WithEvents,
                 $fakultas = Fakultas::pluck('nama_fakultas')->toArray();
                 if (!empty($fakultas)) {
                     $fakultasList = '"' . implode(',', $fakultas) . '"';
-                    $validationFak = $sheet->getCell('D2')->getDataValidation();
+                    $validationFak = $sheet->getCell('E2')->getDataValidation();
                     $validationFak->setType(DataValidation::TYPE_LIST);
                     $validationFak->setErrorStyle(DataValidation::STYLE_INFORMATION);
                     $validationFak->setAllowBlank(false);
@@ -69,11 +70,11 @@ class LaboratoriumTemplateExport implements FromArray, WithHeadings, WithEvents,
                     $validationFak->setPrompt('Pilih nama Fakultas naungan dari daftar.');
                     $validationFak->setFormula1($fakultasList);
 
-                    $sheet->setDataValidation('D2:D1000', $validationFak);
+                    $sheet->setDataValidation('E2:E1000', $validationFak);
                 }
 
                 // Dropdown for Status
-                $validationStatus = $sheet->getCell('E2')->getDataValidation();
+                $validationStatus = $sheet->getCell('F2')->getDataValidation();
                 $validationStatus->setType(DataValidation::TYPE_LIST);
                 $validationStatus->setErrorStyle(DataValidation::STYLE_INFORMATION);
                 $validationStatus->setAllowBlank(false);
@@ -86,14 +87,15 @@ class LaboratoriumTemplateExport implements FromArray, WithHeadings, WithEvents,
                 $validationStatus->setPrompt('Pilih status keaktifan lab.');
                 $validationStatus->setFormula1('"aktif,nonaktif"');
 
-                $sheet->setDataValidation('E2:E1000', $validationStatus);
+                $sheet->setDataValidation('F2:F1000', $validationStatus);
 
                 // Tooltip / Comments on Headers
                 $sheet->getComment('A1')->getText()->createTextRun("Nama unik dari Laboratorium. Wajib diisi.");
                 $sheet->getComment('B1')->getText()->createTextRun("Angka jumlah kapasitas maksimal mahasiswa.");
                 $sheet->getComment('C1')->getText()->createTextRun("Gedung / Lokasi laboratorium berada (Dinamis dari database).");
-                $sheet->getComment('D1')->getText()->createTextRun("Fakultas naungan laboratorium (Dinamis dari database).");
-                $sheet->getComment('E1')->getText()->createTextRun("Pilih status 'aktif' atau 'nonaktif'.");
+                $sheet->getComment('D1')->getText()->createTextRun("Nama Laboran / Teknisi Penanggung Jawab Ruang (Opsional).");
+                $sheet->getComment('E1')->getText()->createTextRun("Fakultas naungan laboratorium (Dinamis dari database).");
+                $sheet->getComment('F1')->getText()->createTextRun("Pilih status 'aktif' atau 'nonaktif'.");
             },
         ];
     }

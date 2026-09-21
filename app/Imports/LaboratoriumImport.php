@@ -39,8 +39,16 @@ class LaboratoriumImport implements ToModel, WithHeadingRow
         // Avoid duplicates
         $existing = Laboratorium::where('nama_lab', $row['nama_lab'])->first();
         if ($existing) {
+            $updates = [];
             if ($fakultasId && !$existing->fakultas_id) {
-                $existing->update(['fakultas_id' => $fakultasId]);
+                $updates['fakultas_id'] = $fakultasId;
+            }
+            $laboranVal = $row['nama_laboran'] ?? ($row['laboran'] ?? null);
+            if (!empty($laboranVal)) {
+                $updates['nama_laboran'] = trim($laboranVal);
+            }
+            if (!empty($updates)) {
+                $existing->update($updates);
             }
             return null;
         }
@@ -50,6 +58,7 @@ class LaboratoriumImport implements ToModel, WithHeadingRow
             'nama_lab' => $row['nama_lab'],
             'lokasi' => $row['lokasi'] ?? '-',
             'kapasitas' => $row['kapasitas'] ?? 30,
+            'nama_laboran' => !empty($row['nama_laboran'] ?? ($row['laboran'] ?? null)) ? trim($row['nama_laboran'] ?? $row['laboran']) : null,
         ]);
     }
 }

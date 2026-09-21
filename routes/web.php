@@ -111,6 +111,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/agenda/{id}', [DosenController::class, 'deleteAgenda'])->name('agenda.delete');
         Route::put('/agenda/{id}/realisasi', [DosenController::class, 'updateRealisasi'])->name('agenda.realisasi');
         Route::put('/agenda/{id}/berita-acara', [DosenController::class, 'updateBeritaAcara'])->name('agenda.berita-acara');
+        Route::post('/agenda/{id}/selesai', [DosenController::class, 'selesaiAgenda'])->name('agenda.selesai');
         Route::post('/agenda/{id}/qr-new', [DosenController::class, 'generateNewQrToken'])->name('agenda.qr');
         Route::post('/absensi', [DosenController::class, 'submitAttendance'])->name('absensi.submit');
         Route::post('/absensi/import-global', [DosenController::class, 'importAbsensiGlobal'])->name('absensi.import-global');

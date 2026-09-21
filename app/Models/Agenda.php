@@ -261,20 +261,18 @@ class Agenda extends Model
             }
         }
 
-        // Laboran (Ketetapan Laboratorium FT UIKA)
-        $laboranNama = 'Kurniawan S.T';
+        // Laboran (Prioritaskan override manual di JSON jika ada, fallback ke lab->nama_laboran)
+        $laboranNama = !empty($parsed['laboran']) ? $parsed['laboran'] : ($this->lab->nama_laboran ?? '-');
 
-        // Dosen & Asisten Praktikum sesuai data jadwal resmi
-        $dosenNama = $this->dosenPengampu->nama ?? $this->dosen->nama ?? 'Zulkarnaen Noor Syarif, S.Kom., M.Kom';
-        $asistenNama = 'Anggra Triawan, S.Kom, M.Kom';
+        // Dosen Instruktur & Asisten Praktikum (Prioritaskan override manual di JSON jika ada, fallback ke relasi)
+        $defaultDosenPengampu = $this->dosenPengampu->nama ?? $this->dosen->nama ?? '-';
+        $defaultAsisten = $this->dosen->nama ?? '-';
 
-        if ($this->dosen_pengampu_id && $this->dosen_pengampu_id != $this->dosen_id) {
-            $dosenNama = $this->dosenPengampu->nama ?? $dosenNama;
-            $asistenNama = $this->dosen->nama ?? $asistenNama;
-        } elseif ($this->dosen && str_contains($this->dosen->nama, 'Anggra')) {
-            $dosenNama = $this->dosenPengampu->nama ?? 'Zulkarnaen Noor Syarif, S.Kom., M.Kom';
-            $asistenNama = $this->dosen->nama;
-        }
+        $dosenNama = !empty($parsed['dosen']) ? $parsed['dosen'] : $defaultDosenPengampu;
+        $asistenNama = !empty($parsed['asisten']) ? $parsed['asisten'] : $defaultAsisten;
+
+        // Check if Dosen Pengampu & Pengajar/Asisten are identical
+        $isSameDosen = ($dosenNama === $asistenNama) || empty($asistenNama) || ($asistenNama === '-');
 
         return [
             'materi' => $parsed['materi'] ?? ($this->materi_realisasi ?: ($this->catatan ?: '')),
@@ -282,6 +280,7 @@ class Agenda extends Model
             'laboran' => $laboranNama,
             'asisten' => $asistenNama,
             'dosen' => $dosenNama,
+            'is_same_dosen' => $isSameDosen,
             'tahun_ajaran' => $tahunAjaran,
             'hari_tanggal_indo' => $hariTanggalIndo,
             'waktu_durasi' => $waktuDurasi,
