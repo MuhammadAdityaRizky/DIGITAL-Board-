@@ -728,7 +728,12 @@
                 document.getElementById('lab-kapasitas').value = "30";
                 document.getElementById('lab-nama_laboran').value = "";
                 if (document.getElementById('lab-fakultas_id')) {
-                    document.getElementById('lab-fakultas_id').value = "";
+                    const fakSelect = document.getElementById('lab-fakultas_id');
+                    if (fakSelect.options.length > 1) {
+                        fakSelect.selectedIndex = 1;
+                    } else {
+                        fakSelect.value = "";
+                    }
                 }
             }
         }
@@ -840,6 +845,9 @@
             @endif
 
             @if($errors->any() && !session('success') && !session('error') && !session('failed'))
+                if (typeof Swal !== 'undefined' && Swal.isVisible()) {
+                    Swal.close();
+                }
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal Memproses Data!',

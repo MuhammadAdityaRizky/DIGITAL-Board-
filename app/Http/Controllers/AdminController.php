@@ -695,10 +695,14 @@ class AdminController extends Controller
     {
         $user = Auth::user();
 
+        if ($user->isAdminFakultas() && !$request->filled('fakultas_id')) {
+            $request->merge(['fakultas_id' => $user->fakultas_id]);
+        }
+
         $rules = [
             'nama_lab' => 'required|string|max:100',
             'lokasi' => 'required|string|max:100',
-            'kapasitas' => 'required|integer',
+            'kapasitas' => 'required|integer|min:1',
             'nama_laboran' => 'nullable|string|max:100',
         ];
 
@@ -709,7 +713,16 @@ class AdminController extends Controller
             $fakultasId = $user->fakultas_id;
         }
 
-        $request->validate($rules);
+        $messages = [
+            'nama_lab.required' => 'Nama laboratorium wajib diisi.',
+            'lokasi.required' => 'Lokasi gedung/ruang wajib diisi.',
+            'kapasitas.required' => 'Kapasitas workstation wajib diisi.',
+            'kapasitas.integer' => 'Kapasitas harus berupa angka.',
+            'fakultas_id.required' => 'Fakultas naungan laboratorium wajib dipilih.',
+            'fakultas_id.exists' => 'Fakultas yang dipilih tidak valid.',
+        ];
+
+        $request->validate($rules, $messages);
 
         Laboratorium::create([
             'fakultas_id' => $fakultasId,
@@ -731,10 +744,14 @@ class AdminController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk mengubah data laboratorium ini.');
         }
 
+        if ($user->isAdminFakultas() && !$request->filled('fakultas_id')) {
+            $request->merge(['fakultas_id' => $user->fakultas_id]);
+        }
+
         $rules = [
             'nama_lab' => 'required|string|max:100',
             'lokasi' => 'required|string|max:100',
-            'kapasitas' => 'required|integer',
+            'kapasitas' => 'required|integer|min:1',
             'nama_laboran' => 'nullable|string|max:100',
         ];
 
@@ -745,7 +762,16 @@ class AdminController extends Controller
             $fakultasId = $lab->fakultas_id ?? $user->fakultas_id;
         }
 
-        $request->validate($rules);
+        $messages = [
+            'nama_lab.required' => 'Nama laboratorium wajib diisi.',
+            'lokasi.required' => 'Lokasi gedung/ruang wajib diisi.',
+            'kapasitas.required' => 'Kapasitas workstation wajib diisi.',
+            'kapasitas.integer' => 'Kapasitas harus berupa angka.',
+            'fakultas_id.required' => 'Fakultas naungan laboratorium wajib dipilih.',
+            'fakultas_id.exists' => 'Fakultas yang dipilih tidak valid.',
+        ];
+
+        $request->validate($rules, $messages);
 
         $lab->update([
             'fakultas_id' => $fakultasId,
