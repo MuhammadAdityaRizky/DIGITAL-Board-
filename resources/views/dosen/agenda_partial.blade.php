@@ -596,7 +596,7 @@
                                                             <div class="text-center py-1 relative z-10">
                                                                 <p class="font-black text-[12px] text-slate-900 underline uppercase tracking-wide">BERITA ACARA PRAKTIKUM</p>
                                                                 <p class="text-[9.5px] text-slate-700 mt-0.5 font-medium italic">
-                                                                    Telah Dilaksanakan Praktikum {{ $ag->mata_kuliah }} Semester {{ $ag->semester ?? 'IV' }} TA {{ $baDetails['tahun_ajaran'] }}
+                                                                    Telah Dilaksanakan Praktikum {{ $ag->mata_kuliah }} Semester {{ $baDetails['semester_program_kelas'] ?? ($ag->semester ?? 'I') }} TA {{ $baDetails['tahun_ajaran'] }}
                                                                 </p>
                                                             </div>
 

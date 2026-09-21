@@ -245,11 +245,26 @@ class Agenda extends Model
 
         $waktuDurasi = "{$jamMulai} - {$jamSelesai} ({$durasiMenit} menit)";
 
-        // Program Studi / Semester Kelas
-        $prodi = $this->jurusan ?: 'Sistem Informasi';
-        $semester = $this->semester ? "{$this->semester}" : 'IV';
-        $kelas = $this->kelas ? " {$this->kelas}" : '';
-        $prodiSemesterKelas = "{$prodi}/ {$semester}{$kelas}";
+        // Program Studi, Semester, Program Kuliah & Kelas dari Database
+        $prodi = $this->jurusan ?: ($this->jadwalPenggunaanLab?->prodi?->nama_prodi ?: 'Sistem Informasi');
+        $programKuliah = $this->program_kuliah ?: ($this->jadwalPenggunaanLab?->program_kuliah ?: 'Reguler');
+        $kelasRaw = trim($this->kelas ?: ($this->jadwalPenggunaanLab?->kelas ?: ''));
+        $semesterRaw = $this->semester ?: ($this->jadwalPenggunaanLab?->semester ?: '1');
+
+        $isKaryawan = stripos($programKuliah, 'karyawan') !== false 
+            || stripos($kelasRaw, 'karyawan') !== false 
+            || stripos($kelasRaw, 'kar') !== false;
+
+        $progLabel = $isKaryawan ? 'Karyawan' : 'Reguler';
+        $cleanKelas = trim(preg_replace('/karyawan|kar|reguler|reg|\s+/i', ' ', $kelasRaw));
+        $kelasSuffix = $cleanKelas ? " {$cleanKelas}" : ($kelasRaw ? " {$kelasRaw}" : '');
+
+        $romanMap = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII'];
+        $semRomawi = is_numeric($semesterRaw) && isset($romanMap[(int)$semesterRaw]) ? $romanMap[(int)$semesterRaw] : $semesterRaw;
+
+        $defaultProdiSemesterKelas = "{$prodi} / {$semRomawi} {$progLabel}{$kelasSuffix}";
+        $prodiSemesterKelas = !empty($parsed['prodi_semester_kelas']) ? $parsed['prodi_semester_kelas'] : $defaultProdiSemesterKelas;
+        $semesterProgramKelas = "{$semRomawi} {$progLabel}{$kelasSuffix}";
 
         // Tahun Akademik dari Jadwal atau default aktif
         $tahunAjaran = '2025/2026';
@@ -284,6 +299,12 @@ class Agenda extends Model
             'tahun_ajaran' => $tahunAjaran,
             'hari_tanggal_indo' => $hariTanggalIndo,
             'waktu_durasi' => $waktuDurasi,
+            'prodi' => $prodi,
+            'semester' => $semesterRaw,
+            'semester_romawi' => $semRomawi,
+            'program_kuliah' => $progLabel,
+            'kelas' => $cleanKelas ?: $kelasRaw,
+            'semester_program_kelas' => $semesterProgramKelas,
             'prodi_semester_kelas' => $prodiSemesterKelas,
             'is_custom' => $isJson,
         ];

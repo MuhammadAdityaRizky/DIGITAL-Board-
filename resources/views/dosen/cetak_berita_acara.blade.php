@@ -500,7 +500,7 @@
 
                 <!-- Teks Pengantar Pelaksanaan -->
                 <div class="intro-text">
-                    Telah Dilaksanakan Praktikum <strong>{{ $agenda->mata_kuliah }}</strong> Semester <strong>{{ $agenda->semester ?? 'IV' }}</strong> TA <strong>{{ $details['tahun_ajaran'] ?? '2025/2026' }}</strong>
+                    Telah Dilaksanakan Praktikum <strong>{{ $agenda->mata_kuliah }}</strong> Semester <strong>{{ $details['semester_program_kelas'] ?? ($agenda->semester ?? 'I') }}</strong> TA <strong>{{ $details['tahun_ajaran'] ?? '2025/2026' }}</strong>
                 </div>
 
                 <!-- Tabel Isian Formulir -->
