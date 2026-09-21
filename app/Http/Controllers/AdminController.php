@@ -1418,7 +1418,7 @@ class AdminController extends Controller
         $existingAbsensi = \App\Models\Absensi::where('agenda_id', $agenda->id)->get()->keyBy('mahasiswa_id');
         $existingAbsensiIds = $existingAbsensi->keys()->toArray();
 
-        // Query Mahasiswa pintar dengan fallback berjenjang
+        // Query Mahasiswa presisi berdasarkan Prodi, Semester, Program Kuliah, dan Kelas
         $baseQuery = \App\Models\Mahasiswa::with(['prodi', 'fakultas']);
 
         if ($agenda->jurusan) {
@@ -1428,39 +1428,37 @@ class AdminController extends Controller
             });
         }
 
-        // 1. Coba match prodi + semester + kelas
-        $students = (clone $baseQuery)
-            ->when($agenda->semester, function($q) use ($agenda) {
-                $semNum = preg_replace('/[^0-9]/', '', $agenda->semester);
-                if ($semNum) {
-                    $q->where('semester', $semNum);
-                }
-            })
-            ->when($agenda->kelas, function($q) use ($agenda) {
-                $kelasClean = trim(preg_replace('/^(IF|SI|TI|Reg|-|\s)+/i', '', $agenda->kelas));
-                if ($kelasClean) {
-                    $q->where('kelas', 'like', "%{$kelasClean}%");
-                }
-            })
-            ->orderBy('nama_lengkap', 'asc')
-            ->get();
-
-        // 2. Jika 0, coba match prodi + semester (tanpa mempedulikan kelas, jaga-jaga typo)
-        if ($students->isEmpty() && $agenda->semester) {
+        if ($agenda->semester) {
             $semNum = preg_replace('/[^0-9]/', '', $agenda->semester);
             if ($semNum) {
-                $students = (clone $baseQuery)->where('semester', $semNum)->orderBy('nama_lengkap', 'asc')->get();
+                $baseQuery->where('semester', (int)$semNum);
             }
         }
 
-        // Hapus fallback 3, 4, 5 karena jika data semester tersebut memang belum ada,
-        // menampilkan data mahasiswa semester lain justru menyebabkan bug (data tidak relevan).
-
-        // Gabungkan mahasiswa yang sudah memiliki data absensi di agenda ini agar tidak pernah terlewat
-        if (!empty($existingAbsensiIds)) {
-            $existingStudents = \App\Models\Mahasiswa::whereIn('id', $existingAbsensiIds)->get();
-            $students = $students->merge($existingStudents)->unique('id')->sortBy('nama_lengkap')->values();
+        if (!empty($agenda->program_kuliah)) {
+            $prog = trim($agenda->program_kuliah);
+            $baseQuery->where(function($q) use ($prog) {
+                $q->where('program_kuliah', 'like', "%{$prog}%")
+                  ->orWhereNull('program_kuliah');
+            });
         }
+
+        if (!empty($agenda->kelas)) {
+            $rawKelas = trim($agenda->kelas);
+            if (preg_match('/\b([A-Z])\b/i', $rawKelas, $matches)) {
+                $letter = strtoupper($matches[1]);
+                $baseQuery->where(function($q) use ($rawKelas, $letter) {
+                    $q->where('kelas', $rawKelas)
+                      ->orWhere('kelas', 'like', "% {$letter}")
+                      ->orWhere('kelas', 'like', "{$letter} %")
+                      ->orWhere('kelas', $letter);
+                });
+            } else {
+                $baseQuery->where('kelas', 'like', "%{$rawKelas}%");
+            }
+        }
+
+        $students = $baseQuery->orderBy('nama_lengkap', 'asc')->get();
 
         return view('admin.input_absensi', compact('agenda', 'students', 'existingAbsensi'));
     }
