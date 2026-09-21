@@ -591,27 +591,30 @@
                         @endif
                     </div>
                 </div>
-                <div id="mahasiswa-fields" class="hidden space-y-4">
+                <div id="academic-fields" class="hidden space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-slate-700 font-bold mb-1">Fakultas</label>
-                            <select name="fakultas" id="user-fakultas" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                                <option value="">-- Pilih --</option>
+                            <label class="block text-slate-700 font-bold mb-1">Fakultas <span class="text-rose-500">*</span></label>
+                            <select name="fakultas" id="user-fakultas" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
+                                <option value="">-- Pilih Fakultas --</option>
                                 @foreach($fakultas as $f)
                                     <option value="{{ $f->id }}">{{ $f->nama_fakultas }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div>
-                            <label class="block text-slate-700 font-bold mb-1">Jurusan</label>
-                            <select name="jurusan" id="user-jurusan" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                                <option value="">-- Pilih --</option>
+                            <label class="block text-slate-700 font-bold mb-1">Jurusan / Prodi <span class="text-rose-500">*</span></label>
+                            <select name="jurusan" id="user-jurusan" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
+                                <option value="">-- Pilih Jurusan --</option>
                                 @foreach($prodis as $p)
                                     <option value="{{ $p->id }}">{{ $p->nama_prodi }}</option>
                                 @endforeach
                             </select>
                         </div>
                     </div>
+                </div>
+
+                <div id="mahasiswa-fields" class="hidden space-y-4">
                     <div id="class-container" class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-slate-700 font-bold mb-1">Program Kuliah</label>
@@ -650,7 +653,16 @@
                         </div>
                     </div>
                 </div>
+
                 <div id="dosen-fields" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Status Dosen</label>
+                        <select name="status" id="user-status" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
+                            <option value="Tetap">Tetap</option>
+                            <option value="Tidak Tetap">Tidak Tetap</option>
+                            <option value="Honorer">Honorer</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="block text-slate-700 font-bold mb-1">Jabatan (Opsional)</label>
                         <input type="text" name="jabatan" id="user-jabatan" placeholder="Contoh: Ketua Program Studi, Dosen..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
@@ -1014,23 +1026,28 @@
 
         function handleRoleFieldsChange() {
             const role = document.getElementById('user-role').value;
+            const academicFields = document.getElementById('academic-fields');
             const mhsFields = document.getElementById('mahasiswa-fields');
             const dosenFields = document.getElementById('dosen-fields');
             const adminFields = document.getElementById('admin-fields');
             
             if (role === 'mahasiswa') {
+                if (academicFields) academicFields.classList.remove('hidden');
                 mhsFields.classList.remove('hidden');
                 dosenFields.classList.add('hidden');
                 if (adminFields) adminFields.classList.add('hidden');
             } else if (role === 'dosen') {
+                if (academicFields) academicFields.classList.remove('hidden');
                 mhsFields.classList.add('hidden');
                 dosenFields.classList.remove('hidden');
                 if (adminFields) adminFields.classList.add('hidden');
             } else if (role === 'admin') {
+                if (academicFields) academicFields.classList.add('hidden');
                 mhsFields.classList.add('hidden');
                 dosenFields.classList.add('hidden');
                 if (adminFields) adminFields.classList.remove('hidden');
             } else {
+                if (academicFields) academicFields.classList.add('hidden');
                 mhsFields.classList.add('hidden');
                 dosenFields.classList.add('hidden');
                 if (adminFields) adminFields.classList.add('hidden');
@@ -1041,7 +1058,7 @@
 
         function filterProdis(fakultasId, selectedProdiId = null) {
             const jurusanSelect = document.getElementById('user-jurusan');
-            jurusanSelect.innerHTML = '<option value="">-- Pilih --</option>';
+            jurusanSelect.innerHTML = '<option value="">-- Pilih Jurusan --</option>';
             
             const filtered = allProdis.filter(p => p.fakultas_id == fakultasId);
             filtered.forEach(p => {
@@ -1080,14 +1097,21 @@
             let jabatan = "";
             let kompetensi = "";
             
+            const academicFields = document.getElementById('academic-fields');
             const adminFields = document.getElementById('admin-fields');
 
             if (user.role === 'dosen') {
                 if (user.dosen) {
                     nama = user.dosen.nama;
+                    id_fakultas = user.dosen.id_fakultas || "";
+                    id_prodi = user.dosen.id_prodi || "";
                     jabatan = user.dosen.jabatan || "";
                     kompetensi = user.dosen.kompetensi || "";
+                    if (document.getElementById('user-status')) {
+                        document.getElementById('user-status').value = user.dosen.status || "Tetap";
+                    }
                 }
+                if (academicFields) academicFields.classList.remove('hidden');
                 document.getElementById('mahasiswa-fields').classList.add('hidden');
                 document.getElementById('dosen-fields').classList.remove('hidden');
                 if (adminFields) adminFields.classList.add('hidden');
@@ -1101,10 +1125,12 @@
                     semester = user.mahasiswa.semester || "";
                     status_mahasiswa = user.mahasiswa.status || "aktif";
                 }
+                if (academicFields) academicFields.classList.remove('hidden');
                 document.getElementById('mahasiswa-fields').classList.remove('hidden');
                 document.getElementById('dosen-fields').classList.add('hidden');
                 if (adminFields) adminFields.classList.add('hidden');
             } else if (user.role === 'admin') {
+                if (academicFields) academicFields.classList.add('hidden');
                 document.getElementById('mahasiswa-fields').classList.add('hidden');
                 document.getElementById('dosen-fields').classList.add('hidden');
                 if (adminFields) {
@@ -1113,6 +1139,7 @@
                     if (fakAdmin) fakAdmin.value = user.fakultas_id || "";
                 }
             } else {
+                if (academicFields) academicFields.classList.add('hidden');
                 document.getElementById('mahasiswa-fields').classList.add('hidden');
                 document.getElementById('dosen-fields').classList.add('hidden');
                 if (adminFields) adminFields.classList.add('hidden');

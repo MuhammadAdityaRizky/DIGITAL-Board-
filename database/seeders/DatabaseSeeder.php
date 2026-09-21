@@ -46,22 +46,22 @@ class DatabaseSeeder extends Seeder
         DB::table('fakultas')->insert([
             [
                 'id' => 1,
-                'nama_fakultas' => 'Fakultas Agama Islam (FAI)',
-                'created_at' => now(),
-            ],
-            [
-                'id' => 2,
-                'nama_fakultas' => 'Fakultas Keguruan dan Ilmu Pendidikan (FKIP)',
-                'created_at' => now(),
-            ],
-            [
-                'id' => 3,
                 'nama_fakultas' => 'Fakultas Teknik dan Sains (FTS)',
                 'created_at' => now(),
             ],
             [
-                'id' => 4,
+                'id' => 2,
                 'nama_fakultas' => 'Fakultas Ekonomi dan Bisnis (FEB)',
+                'created_at' => now(),
+            ],
+            [
+                'id' => 3,
+                'nama_fakultas' => 'Fakultas Agama Islam (FAI)',
+                'created_at' => now(),
+            ],
+            [
+                'id' => 4,
+                'nama_fakultas' => 'Fakultas Keguruan dan Ilmu Pendidikan (FKIP)',
                 'created_at' => now(),
             ],
             [

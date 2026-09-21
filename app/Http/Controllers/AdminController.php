@@ -1583,6 +1583,10 @@ class AdminController extends Controller
             'program_kuliah' => 'nullable|in:Reguler,Karyawan',
         ];
 
+        if ($authUser->isAdminFakultas() && !$request->filled('fakultas')) {
+            $request->merge(['fakultas' => $authUser->fakultas_id]);
+        }
+
         if ($request->role === 'dosen' || $request->role === 'mahasiswa') {
             $rules['fakultas'] = 'required|exists:fakultas,id';
             $rules['jurusan'] = 'required|exists:prodi,id';
@@ -1668,6 +1672,10 @@ class AdminController extends Controller
             'jabatan' => 'nullable|string|max:100',
             'program_kuliah' => 'nullable|in:Reguler,Karyawan',
         ];
+
+        if ($authUser->isAdminFakultas() && !$request->filled('fakultas')) {
+            $request->merge(['fakultas' => $authUser->fakultas_id]);
+        }
 
         if ($user->role === 'dosen' || $user->role === 'mahasiswa') {
             $rules['fakultas'] = 'required|exists:fakultas,id';

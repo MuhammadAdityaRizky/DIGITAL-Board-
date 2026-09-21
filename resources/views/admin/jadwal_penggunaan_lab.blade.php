@@ -730,18 +730,18 @@
     <div id="modal-import-jadwal-lab" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden">
         <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
             <!-- Header -->
-            <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-teal-950 text-white px-6 py-5 flex items-center justify-between border-b border-slate-700">
+            <div class="bg-slate-900 text-white px-6 py-4.5 flex items-center justify-between border-b border-slate-800 relative z-10">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400">
+                    <div class="w-10 h-10 rounded-2xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400 shrink-0">
                         <i class="fa-solid fa-file-excel text-lg"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-base text-white">Impor Matriks Jadwal Lab</h3>
-                        <p class="text-xs text-slate-300">Format matriks mingguan (.xlsx / .xls)</p>
+                        <h3 class="font-bold text-base text-white tracking-tight">Impor Matriks Jadwal Lab</h3>
+                        <p class="text-xs text-slate-300 mt-0.5">Format matriks mingguan (.xlsx / .xls)</p>
                     </div>
                 </div>
-                <button type="button" onclick="closeImportModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer">
-                    <i class="fa-solid fa-xmark text-sm"></i>
+                <button type="button" onclick="closeImportModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition cursor-pointer border border-slate-700 shadow-sm" title="Tutup Modal">
+                    <i class="fa-solid fa-xmark text-base"></i>
                 </button>
             </div>
 
@@ -795,12 +795,14 @@
                 <!-- File Dropzone -->
                 <div>
                     <label class="block text-slate-700 font-bold mb-1.5">
-                        Pilih Berkas Excel (.xlsx, .xls) <span class="text-rose-500">*</span>
+                        Pilih / Tarik Berkas Excel (.xlsx, .xls) <span class="text-rose-500">*</span>
                     </label>
-                    <div class="border-2 border-dashed border-slate-300 hover:border-teal-600 rounded-2xl p-5 text-center bg-slate-50/60 transition cursor-pointer" onclick="document.getElementById('excel_import_file').click()">
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-teal-600 mb-2"></i>
-                        <p class="text-xs font-bold text-slate-700" id="import_file_label">Klik untuk memilih file spreadsheet</p>
-                        <p class="text-[11px] text-slate-400 mt-0.5" id="import_file_sublabel">Format .xlsx atau .xls (Maks 10MB)</p>
+                    <div id="dropzone_import" class="border-2 border-dashed border-slate-300 hover:border-teal-600 rounded-2xl p-5 text-center bg-slate-50/60 hover:bg-teal-50/40 transition cursor-pointer group" onclick="document.getElementById('excel_import_file').click()">
+                        <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 group-hover:scale-110 group-hover:bg-teal-100 flex items-center justify-center mx-auto mb-2.5 transition transform shadow-xs">
+                            <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                        </div>
+                        <p class="text-xs font-bold text-slate-700 group-hover:text-teal-800 transition" id="import_file_label">Klik atau Tarik (Drag & Drop) file Excel ke sini</p>
+                        <p class="text-[11px] text-slate-400 mt-1" id="import_file_sublabel">Format .xlsx atau .xls (Maksimal 10MB)</p>
                         <input type="file" name="file" id="excel_import_file" accept=".xlsx,.xls" required class="hidden" onchange="handleImportFileSelect(this)">
                     </div>
                 </div>
@@ -858,6 +860,40 @@
                 document.getElementById('import_file_sublabel').textContent = (file.size / 1024).toFixed(1) + ' KB - Siap diimpor';
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropzone = document.getElementById('dropzone_import');
+            const fileInput = document.getElementById('excel_import_file');
+
+            if (dropzone && fileInput) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }, false);
+                });
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, function() {
+                        dropzone.classList.add('border-teal-600', 'bg-teal-50/80');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, function() {
+                        dropzone.classList.remove('border-teal-600', 'bg-teal-50/80');
+                    }, false);
+                });
+
+                dropzone.addEventListener('drop', function(e) {
+                    const dt = e.dataTransfer;
+                    if (dt && dt.files && dt.files.length > 0) {
+                        fileInput.files = dt.files;
+                        handleImportFileSelect(fileInput);
+                    }
+                }, false);
+            }
+        });
 
         function handleImportSubmit(e) {
             const btn = document.getElementById('btn-submit-import');
