@@ -527,32 +527,61 @@
                                                         <textarea name="catatan" rows="3" placeholder="Contoh: Praktikum berjalan tertib, seluruh PC laboratorium berfungsi baik..." class="w-full p-3 rounded-xl bg-slate-50 border-2 border-slate-300 text-slate-900 text-base focus:border-slate-800 outline-none leading-relaxed">{{ $baDetails['catatan'] }}</textarea>
                                                     </div>
 
-                                                    <div class="pt-3 border-t-2 border-slate-200">
-                                                        <div class="flex items-center justify-between mb-2">
+                                                    <div class="pt-3 border-t-2 border-slate-200 space-y-3">
+                                                        <div class="flex items-center justify-between">
                                                             <span class="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                                                                <i class="fa-solid fa-pen-to-square text-teal-700"></i> Informasi Penanggung Jawab &amp; Tanda Tangan
+                                                                <i class="fa-solid fa-circle-check text-emerald-600"></i> Informasi Penanggung Jawab &amp; Tanda Tangan
                                                             </span>
-                                                            <span class="text-[11px] text-slate-500 font-medium">Bisa diedit jika ada pergantian</span>
+                                                            <span class="text-xs text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                                                <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> Otomatis dari Sistem
+                                                            </span>
                                                         </div>
 
-                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                            <div class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl">
-                                                                <label class="block text-xs font-bold text-slate-700 mb-1">Nama Laboran</label>
-                                                                <input type="text" name="laboran" value="{{ $baDetails['laboran'] }}" placeholder="Nama Laboran..." class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 text-xs focus:border-slate-800 outline-none">
+                                                        <!-- Kartu Informasi Otomatis -->
+                                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                            <div class="p-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl">
+                                                                <p class="text-[11px] font-bold text-slate-500">Nama Laboran</p>
+                                                                <p class="text-xs font-extrabold text-slate-800 mt-0.5 truncate" title="{{ $baDetails['laboran'] }}">{{ $baDetails['laboran'] }}</p>
                                                             </div>
-                                                            <div class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl">
-                                                                <label class="block text-xs font-bold text-slate-700 mb-1">Nama Asisten Praktikum</label>
-                                                                <input type="text" name="asisten" value="{{ $baDetails['asisten'] }}" placeholder="Nama Asisten..." class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 text-xs focus:border-slate-800 outline-none">
+                                                            <div class="p-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl">
+                                                                <p class="text-[11px] font-bold text-slate-500">Nama Dosen / Instruktur</p>
+                                                                <p class="text-xs font-extrabold text-slate-800 mt-0.5 truncate" title="{{ $baDetails['dosen'] }}">{{ $baDetails['dosen'] }}</p>
                                                             </div>
-                                                            <div class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl">
-                                                                <label class="block text-xs font-bold text-slate-700 mb-1">Nama Dosen / Instruktur</label>
-                                                                <input type="text" name="dosen" value="{{ $baDetails['dosen'] }}" placeholder="Nama Dosen Pengampu..." class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 text-xs focus:border-slate-800 outline-none">
+                                                            <div class="p-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl">
+                                                                <p class="text-[11px] font-bold text-slate-500">Asisten Praktikum</p>
+                                                                <p class="text-xs font-extrabold text-slate-800 mt-0.5 truncate" title="{{ $baDetails['asisten'] }}">{{ $baDetails['asisten'] }}</p>
                                                             </div>
-                                                            <div class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl">
-                                                                <label class="block text-xs font-bold text-slate-700 mb-1">Tahun Akademik (TA)</label>
-                                                                <input type="text" name="tahun_ajaran" value="{{ $baDetails['tahun_ajaran'] }}" placeholder="Contoh: 2026/2027" class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 text-xs focus:border-slate-800 outline-none">
+                                                            <div class="p-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl">
+                                                                <p class="text-[11px] font-bold text-slate-500">Tahun Akademik (TA)</p>
+                                                                <p class="text-xs font-extrabold text-slate-800 mt-0.5 truncate">{{ $baDetails['tahun_ajaran'] }}</p>
                                                             </div>
                                                         </div>
+
+                                                        <!-- Opsi Penyesuaian Manual (Bila Diperlukan) -->
+                                                        <details class="group text-xs pt-1">
+                                                            <summary class="cursor-pointer font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1.5 select-none transition">
+                                                                <i class="fa-solid fa-pen text-[11px] group-open:rotate-90 transition-transform"></i>
+                                                                <span>Sesuaikan data manual jika ada perubahan (Opsional)</span>
+                                                            </summary>
+                                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2.5 p-3 bg-slate-100 rounded-xl border border-slate-300">
+                                                                <div>
+                                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Laboran</label>
+                                                                    <input type="text" name="laboran" value="{{ $baDetails['laboran'] }}" placeholder="Nama Laboran..." class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 text-xs focus:border-slate-800 outline-none">
+                                                                </div>
+                                                                <div>
+                                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Asisten Praktikum</label>
+                                                                    <input type="text" name="asisten" value="{{ $baDetails['asisten'] }}" placeholder="Nama Asisten..." class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 text-xs focus:border-slate-800 outline-none">
+                                                                </div>
+                                                                <div>
+                                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Dosen / Instruktur</label>
+                                                                    <input type="text" name="dosen" value="{{ $baDetails['dosen'] }}" placeholder="Nama Dosen Pengampu..." class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 text-xs focus:border-slate-800 outline-none">
+                                                                </div>
+                                                                <div>
+                                                                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Tahun Akademik</label>
+                                                                    <input type="text" name="tahun_ajaran" value="{{ $baDetails['tahun_ajaran'] }}" placeholder="Contoh: 2026/2027" class="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 text-xs focus:border-slate-800 outline-none">
+                                                                </div>
+                                                            </div>
+                                                        </details>
                                                     </div>
                                                 </div>
 
