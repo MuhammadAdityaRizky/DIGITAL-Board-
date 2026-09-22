@@ -193,8 +193,11 @@ class MahasiswaController extends Controller
             }
         }
 
-        $query->orderBy('tanggal', 'desc')
-              ->orderBy('jam_mulai', 'desc');
+        if ($request->get('sort') === 'terlama') {
+            $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc');
+        } else {
+            $query->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
+        }
 
         $agendas = $query->paginate(10)->withQueryString();
 

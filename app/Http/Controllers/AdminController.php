@@ -922,10 +922,10 @@ class AdminController extends Controller
             $query->where('tanggal', $request->tanggal);
         }
 
-        if ($request->get('sort') === 'terbaru') {
-            $query->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
-        } else {
+        if ($request->get('sort') === 'terlama') {
             $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc');
+        } else {
+            $query->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
         }
 
         $allAgendas = $query->get();

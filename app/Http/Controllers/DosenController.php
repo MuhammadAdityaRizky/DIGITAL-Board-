@@ -824,14 +824,21 @@ class DosenController extends Controller
         }
 
         $allDosenAgendas = (clone $query)->get();
+        $isSortDesc = $request->get('sort') !== 'terlama';
         $groupedAgendas = $allDosenAgendas->groupBy(function($item) {
             $kelasSuffix = $item->kelas ? ' - Kelas ' . $item->kelas : '';
             return $item->mata_kuliah . $kelasSuffix;
-        })->map(function($group) {
+        })->map(function($group) use ($isSortDesc) {
             return $group->sortBy(function($agenda) {
                 return $agenda->tanggal . ' ' . $agenda->jam_mulai;
-            })->values();
+            }, SORT_REGULAR, $isSortDesc)->values();
         });
+
+        if ($isSortDesc) {
+            $groupedAgendas = $groupedAgendas->sortByDesc(fn($g) => ($g->max('tanggal') ?? '') . ' ' . ($g->max('jam_mulai') ?? ''));
+        } else {
+            $groupedAgendas = $groupedAgendas->sortBy(fn($g) => ($g->min('tanggal') ?? '') . ' ' . ($g->min('jam_mulai') ?? ''));
+        }
 
         $agendas = $query->paginate(15)->withQueryString();
 

@@ -169,10 +169,10 @@
 
                         <!-- Urutan (col-span-4) -->
                         <div class="lg:col-span-4">
-                            <label class="block text-slate-600 font-semibold mb-1">Urutan Tampilan</label>
-                            <select name="sort" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
-                                <option value="terlama" {{ request('sort', 'terlama') != 'terbaru' ? 'selected' : '' }}>Urut Terlama (Pertemuan 1 → 16)</option>
-                                <option value="terbaru" {{ request('sort') == 'terbaru' ? 'selected' : '' }}>Urut Terbaru (Pertemuan 16 → 1)</option>
+                            <label class="block text-slate-600 font-semibold mb-1">Urutan Tanggal</label>
+                            <select name="sort" onchange="this.form.submit()" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition font-medium cursor-pointer">
+                                <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>📅 Tanggal Terbaru (Terbaru → Terlama)</option>
+                                <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>📅 Tanggal Terlama (Terlama → Terbaru)</option>
                             </select>
                         </div>
                     </div>
@@ -181,7 +181,8 @@
 
             <!-- Agendas List Grouped by Mata Kuliah & Kelas -->
             @php
-                $isSortDesc = request('sort') === 'terbaru';
+                $currentSort = request('sort', 'terbaru');
+                $isSortDesc = $currentSort === 'terbaru';
                 $groupedAgendas = $allAgendas->groupBy(function($item) {
                     return ($item->mata_kuliah ?: 'Umum') . '___' . ($item->kelas ?: '-');
                 })->map(function($group) use ($isSortDesc) {
@@ -190,9 +191,19 @@
                         if ($item->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $item->catatan, $m)) {
                             $num = (int)$m[1];
                         }
-                        return sprintf('%04d', $num) . '_' . $item->tanggal . ' ' . $item->jam_mulai;
+                        return ($item->tanggal ?? '') . '_' . sprintf('%04d', $num) . '_' . ($item->jam_mulai ?? '');
                     }, SORT_REGULAR, $isSortDesc)->values();
                 });
+
+                if ($isSortDesc) {
+                    $groupedAgendas = $groupedAgendas->sortByDesc(function($group) {
+                        return ($group->max('tanggal') ?? '') . ' ' . ($group->max('jam_mulai') ?? '');
+                    });
+                } else {
+                    $groupedAgendas = $groupedAgendas->sortBy(function($group) {
+                        return ($group->min('tanggal') ?? '') . ' ' . ($group->min('jam_mulai') ?? '');
+                    });
+                }
             @endphp
 
             <div class="space-y-4 w-full">
@@ -219,11 +230,11 @@
                     </div>
                 </div>
 
-                <!-- Dedicated List Controls Bar (Expand / Select All) -->
+                <!-- Dedicated List Controls Bar (Expand / Select All / Sort Toggle) -->
                 @if($groupedAgendas->count() > 0)
                 <div class="bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div class="flex items-center gap-2">
-                        <span class="text-slate-500 font-semibold text-[11px] uppercase tracking-wider mr-1">Kontrol Daftar:</span>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-slate-500 font-semibold text-[11px] uppercase tracking-wider mr-1">Kontrol:</span>
                         <button type="button" onclick="toggleExpandAll(this)" id="btn-toggle-expand-all" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka atau Tutup Semua Accordion Sesi">
                             <i class="fa-solid fa-chevron-down text-slate-500 text-[10px] transition-transform duration-200" id="icon-toggle-expand-all"></i>
                             <span id="text-toggle-expand-all">Buka Semua</span>
@@ -232,26 +243,26 @@
                             <i class="fa-regular fa-square-check text-teal-700 text-xs"></i>
                             <span>Pilih Semua Sesi</span>
                         </button>
+
+                        <!-- Quick Sort Buttons -->
+                        <div class="inline-flex items-center bg-white p-0.5 rounded-lg border border-slate-200 shadow-2xs sm:ml-2">
+                            <span class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden md:inline">Urutan:</span>
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'terbaru']) }}" 
+                               class="px-2.5 py-1 rounded-md text-xs font-bold transition flex items-center gap-1.5 {{ request('sort', 'terbaru') == 'terbaru' ? 'bg-teal-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}"
+                               title="Urutkan dari tanggal terbaru ke terlama">
+                                <i class="fa-solid fa-arrow-down-wide-short text-[11px]"></i>
+                                <span>Tanggal Terbaru</span>
+                            </a>
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'terlama']) }}" 
+                               class="px-2.5 py-1 rounded-md text-xs font-bold transition flex items-center gap-1.5 {{ request('sort') == 'terlama' ? 'bg-teal-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}"
+                               title="Urutkan dari tanggal terlama ke terbaru">
+                                <i class="fa-solid fa-arrow-up-wide-short text-[11px]"></i>
+                                <span>Tanggal Terlama</span>
+                            </a>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-slate-400 font-semibold text-[11px] hidden sm:inline">Urutan:</span>
-                        @php
-                            $currentSort = request('sort', 'terlama');
-                            $otherSort   = $currentSort === 'terbaru' ? 'terlama' : 'terbaru';
-                            $sortParams  = array_merge(request()->except('sort'), ['sort' => $otherSort]);
-                        @endphp
-                        <a href="{{ route('admin.agenda', array_merge(request()->except('sort'), ['sort' => 'terlama'])) }}"
-                           class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 border shadow-2xs
-                                  {{ $currentSort !== 'terbaru' ? 'bg-teal-800 text-white border-teal-800' : 'bg-white hover:bg-slate-100 text-slate-600 border-slate-200' }}"
-                           title="Tampilkan dari Pertemuan 1 ke 16">
-                            <i class="fa-solid fa-arrow-up-1-9 text-[10px]"></i> Terlama
-                        </a>
-                        <a href="{{ route('admin.agenda', array_merge(request()->except('sort'), ['sort' => 'terbaru'])) }}"
-                           class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 border shadow-2xs
-                                  {{ $currentSort === 'terbaru' ? 'bg-teal-800 text-white border-teal-800' : 'bg-white hover:bg-slate-100 text-slate-600 border-slate-200' }}"
-                           title="Tampilkan dari Pertemuan 16 ke 1">
-                            <i class="fa-solid fa-arrow-down-9-1 text-[10px]"></i> Terbaru
-                        </a>
+                    <div class="text-[11px] text-slate-400 font-medium hidden sm:block">
+                        Klik judul mata kuliah untuk membuka/menutup sesi pertemuan
                     </div>
                 </div>
                 @endif
