@@ -177,14 +177,12 @@
                         </div>
                     </div>
                 </form>
-            </div>
-
-            <!-- Agendas List Grouped by Mata Kuliah & Kelas -->
+                      <!-- Agendas List Grouped by Mata Kuliah, Kelas, & Program Kuliah -->
             @php
                 $currentSort = request('sort', 'terbaru');
                 $isSortDesc = $currentSort === 'terbaru';
                 $groupedAgendas = $allAgendas->groupBy(function($item) {
-                    return ($item->mata_kuliah ?: 'Umum') . '___' . ($item->kelas ?: '-');
+                    return ($item->mata_kuliah ?: 'Umum') . '___' . ($item->kelas ?: '-') . '___' . ($item->program_kuliah ?: 'Reguler');
                 })->map(function($group) use ($isSortDesc) {
                     return $group->sortBy(function($item) {
                         $num = 999;
@@ -214,7 +212,7 @@
                             <i class="fa-solid fa-list-check text-teal-700"></i>
                             <span>Daftar Agenda Perkuliahan</span>
                         </h3>
-                        <p class="text-xs text-slate-500 mt-0.5">{{ $groupedAgendas->count() }} Mata Kuliah • {{ $allAgendas->count() }} Total Sesi Terjadwal</p>
+                        <p class="text-xs text-slate-500 mt-0.5">{{ $groupedAgendas->count() }} Kelas Mata Kuliah • {{ $allAgendas->count() }} Total Sesi Terjadwal</p>
                     </div>
 
                     <!-- Creation & Import Actions (Separated from list controls) -->
@@ -254,7 +252,7 @@
                                 <span>Tanggal Terbaru</span>
                             </a>
                             <a href="{{ request()->fullUrlWithQuery(['sort' => 'terlama']) }}" 
-                               class="px-2.5 py-1 rounded-md text-xs font-bold transition flex items-center gap-1.5 {{ request('sort') == 'terlama' ? 'bg-teal-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}"
+                               class="px-2.5 py-1 rounded-md text-xs font-bold transition flex items-center gap-1.5 {{ request('sort', 'terlama') == 'terlama' ? 'bg-teal-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}"
                                title="Urutkan dari tanggal terlama ke terbaru">
                                 <i class="fa-solid fa-arrow-up-wide-short text-[11px]"></i>
                                 <span>Tanggal Terlama</span>
@@ -300,12 +298,14 @@
                         @php
                             $firstItem = $agendasGroup->first();
                             $namaMatkul = $firstItem->mata_kuliah ?: 'Umum';
+                            $isKaryawan = strcasecmp($firstItem->program_kuliah ?? '', 'karyawan') === 0;
+                            $progLabel = $isKaryawan ? 'Karyawan' : 'Reguler';
                             $totalPertemuan = $agendasGroup->count();
                             $selesaiCount = $agendasGroup->where('status_agenda', 'Selesai')->count();
                             $berlangsungCount = $agendasGroup->where('status_agenda', 'Berlangsung')->count();
                             $akanDatangCount = $agendasGroup->where('status_agenda', 'Akan Datang')->count();
                             $dibatalkanCount = $agendasGroup->where('status_agenda', 'Dibatalkan')->count();
-                            $groupSlug = 'group-' . $loop->index . '-' . Str::slug($namaMatkul . '-' . ($firstItem->kelas ?? 'all'));
+                            $groupSlug = 'group-' . $loop->index . '-' . Str::slug($namaMatkul . '-' . ($firstItem->kelas ?? 'all') . '-' . $progLabel);
                             $matchedMk = isset($mataKuliahs) ? $mataKuliahs->firstWhere('nama_mk', $namaMatkul) : null;
 
                             $minTanggal = $agendasGroup->min('tanggal');
@@ -341,6 +341,15 @@
                                         @if($matchedMk && $matchedMk->kode_mk)
                                             <span class="px-1.5 py-0.5 bg-slate-100 text-slate-600 font-mono text-[11px] font-semibold rounded">
                                                 {{ $matchedMk->kode_mk }}
+                                            </span>
+                                        @endif
+                                        @if($isKaryawan)
+                                            <span class="px-2 py-0.5 bg-purple-100 text-purple-900 border border-purple-300 rounded text-[11px] font-extrabold flex items-center gap-1">
+                                                <i class="fa-solid fa-briefcase text-[10px] text-purple-700"></i> Karyawan
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-0.5 bg-blue-50 text-blue-900 border border-blue-200 rounded text-[11px] font-bold flex items-center gap-1">
+                                                <i class="fa-solid fa-graduation-cap text-[10px] text-blue-700"></i> Reguler
                                             </span>
                                         @endif
                                         @if($firstItem->kelas)

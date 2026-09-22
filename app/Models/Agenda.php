@@ -64,36 +64,38 @@ class Agenda extends Model
         }
 
         // 3. Program Kuliah (Reguler vs Karyawan)
-        if (!empty($this->program_kuliah)) {
-            $prog = trim($this->program_kuliah);
-            $query->where(function($q) use ($prog) {
-                $q->where('program_kuliah', 'like', "%{$prog}%")
+        $isKaryawan = strcasecmp($this->program_kuliah ?? '', 'karyawan') === 0;
+
+        if ($isKaryawan) {
+            $query->where(function($q) {
+                $q->where('program_kuliah', 'like', '%Karyawan%')
+                  ->orWhere('kelas', 'like', '%Karyawan%')
+                  ->orWhere('kelas', 'KAR');
+            });
+        } else {
+            // Reguler
+            $query->where(function($q) {
+                $q->where('program_kuliah', 'like', '%Reguler%')
                   ->orWhereNull('program_kuliah');
             });
-        }
 
-        // 4. Kelas
-        if (!empty($this->kelas)) {
-            $rawKelas = trim($this->kelas);
-            if (preg_match('/^[A-Z]$/i', $rawKelas)) {
-                $letter = strtoupper($rawKelas);
-                $query->where(function($q) use ($letter) {
-                    $q->where('kelas', $letter)
-                      ->orWhere('kelas', 'like', "% {$letter}")
-                      ->orWhere('kelas', 'like', "{$letter} %")
-                      ->orWhere('kelas', 'like', "%-{$letter}");
-                    if ($letter === 'A') {
-                        $q->orWhere('kelas', 'Reguler');
-                    }
-                });
-            } elseif (stripos($rawKelas, 'Karyawan') !== false || stripos($rawKelas, 'KAR') !== false) {
-                $query->where(function($q) {
-                    $q->where('kelas', 'like', '%Karyawan%')
-                      ->orWhere('kelas', 'KAR')
-                      ->orWhere('program_kuliah', 'like', '%Karyawan%');
-                });
-            } else {
-                $query->where('kelas', 'like', "%{$rawKelas}%");
+            // 4. Kelas for Reguler
+            if (!empty($this->kelas)) {
+                $rawKelas = trim($this->kelas);
+                if (preg_match('/^[A-Z]$/i', $rawKelas)) {
+                    $letter = strtoupper($rawKelas);
+                    $query->where(function($q) use ($letter) {
+                        $q->where('kelas', $letter)
+                          ->orWhere('kelas', 'like', "% {$letter}")
+                          ->orWhere('kelas', 'like', "{$letter} %")
+                          ->orWhere('kelas', 'like', "%-{$letter}");
+                        if ($letter === 'A') {
+                            $q->orWhere('kelas', 'Reguler');
+                        }
+                    });
+                } else {
+                    $query->where('kelas', 'like', "%{$rawKelas}%");
+                }
             }
         }
 
