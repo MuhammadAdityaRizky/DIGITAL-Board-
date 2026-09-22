@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -251,9 +251,6 @@
                                                 <span class="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-100 text-xs font-bold rounded-xl flex items-center gap-1.5">
                                                     <i class="fa-solid fa-circle-xmark"></i> Belum Absen
                                                 </span>
-                                                <button type="button" onclick="openIzinModal({{ $ag->id }}, '{{ $ag->mata_kuliah }}')" class="px-3 py-1.5 bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-1">
-                                                    <i class="fa-solid fa-file-signature"></i> Ajukan Izin
-                                                </button>
                                             @endif
                                         </div>
                                     </div>
@@ -320,61 +317,7 @@
         </main>
     </div>
 
-    <!-- Modal Ajukan Izin -->
-    <div id="izinModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-2xl w-full max-w-md p-6 border border-slate-200 shadow-xl space-y-4 m-4">
-            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
-                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-file-signature text-teal-800"></i> Ajukan Izin Praktikum
-                </h3>
-                <button onclick="closeIzinModal()" class="text-slate-400 hover:text-slate-650 text-lg">&times;</button>
-            </div>
-            
-            <form action="{{ route('mahasiswa.perizinan.submit') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
-                @csrf
-                <input type="hidden" name="agenda_id" id="modal_agenda_id">
-                
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Mata Kuliah / Praktikum</label>
-                    <input type="text" id="modal_agenda_name" readonly class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 font-semibold focus:outline-none">
-                </div>
 
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Alasan Izin</label>
-                    <textarea name="alasan" required rows="3" placeholder="Tuliskan alasan izin Anda (misal: Sakit demam, keperluan keluarga mendesak...)" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Unggah Bukti Dokumen / Surat (Opsional)</label>
-                    <input type="file" name="bukti_dokumen" accept="image/*,application/pdf" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-teal-700/30">
-                    <span class="text-[10px] text-slate-400 mt-1 block">Format: JPG, PNG, PDF (Max. 2MB)</span>
-                </div>
-
-                <div class="pt-3 border-t border-slate-100 flex justify-end gap-2">
-                    <button type="button" onclick="closeIzinModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition">Batal</button>
-                    <button type="submit" class="px-5 py-2 bg-teal-800 hover:bg-teal-900 text-white font-bold rounded-lg transition shadow-sm">Kirim Pengajuan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        function openIzinModal(agendaId, agendaName) {
-            document.getElementById('modal_agenda_id').value = agendaId;
-            document.getElementById('modal_agenda_name').value = agendaName;
-            document.getElementById('izinModal').classList.remove('hidden');
-        }
-
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeIzinModal();
-            }
-        });
-
-        function closeIzinModal() {
-            document.getElementById('izinModal').classList.add('hidden');
-        }
-    </script>
 
     <!-- QR Scanner Modal -->
     <div id="modal-qr-scanner" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
