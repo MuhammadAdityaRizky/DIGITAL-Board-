@@ -6,7 +6,7 @@ use App\Models\Agenda;
 use App\Models\Dosen;
 use App\Models\Laboratorium;
 use App\Models\Pengumuman;
-use App\Models\Perizinan;
+
 use App\Models\Mahasiswa;
 use App\Models\Absensi;
 use App\Models\Fakultas;

@@ -213,7 +213,7 @@
                                                 <span class="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-[11px] font-extrabold font-mono text-teal-850 select-all" title="Kode Token Agenda">
                                                     ID: AGENDA_ID_{{ $ag->id }}
                                                 </span>
-                                                @if(!$ag->absensi->count() && !$ag->perizinan)
+                                                @if(!$ag->absensi->count())
                                                     <button type="button" onclick="useAgendaToken('AGENDA_ID_{{ $ag->id }}')" 
                                                             class="px-2 py-0.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded text-[10px] font-bold uppercase transition flex items-center gap-1">
                                                         <i class="fa-solid fa-i-cursor"></i> Salin/Isi Kode Ini
@@ -231,20 +231,6 @@
                                                 @else
                                                     <span class="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 text-xs font-bold rounded-xl flex items-center gap-1.5">
                                                         <i class="fa-solid fa-circle-check"></i> Izin (Disetujui)
-                                                    </span>
-                                                @endif
-                                            @elseif($ag->perizinan)
-                                                @if(strtolower($ag->perizinan->status_persetujuan) == 'pending')
-                                                    <span class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-100 text-xs font-bold rounded-xl flex items-center gap-1.5">
-                                                        <i class="fa-solid fa-clock"></i> Izin (Pending)
-                                                    </span>
-                                                @elseif(strtolower($ag->perizinan->status_persetujuan) == 'disetujui')
-                                                    <span class="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 text-xs font-bold rounded-xl flex items-center gap-1.5">
-                                                        <i class="fa-solid fa-circle-check"></i> Izin (Disetujui)
-                                                    </span>
-                                                @elseif(strtolower($ag->perizinan->status_persetujuan) == 'ditolak')
-                                                    <span class="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-100 text-xs font-bold rounded-xl flex items-center gap-1.5">
-                                                        <i class="fa-solid fa-circle-xmark"></i> Izin (Ditolak)
                                                     </span>
                                                 @endif
                                             @else

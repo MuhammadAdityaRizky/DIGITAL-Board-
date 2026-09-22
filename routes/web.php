@@ -135,7 +135,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
         Route::get('/dashboard', [MahasiswaController::class, 'dashboard'])->name('dashboard');
         Route::post('/absensi', [MahasiswaController::class, 'submitAttendance'])->name('absensi.submit');
-        Route::post('/perizinan', [MahasiswaController::class, 'submitIzin'])->name('perizinan.submit');
+
+
         
         Route::get('/riwayat', [MahasiswaController::class, 'riwayat'])->name('riwayat');
         Route::get('/agenda', [MahasiswaController::class, 'agenda'])->name('agenda');

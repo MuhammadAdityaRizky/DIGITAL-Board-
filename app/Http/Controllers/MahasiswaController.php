@@ -6,7 +6,6 @@ use App\Models\Absensi;
 use App\Models\Agenda;
 use App\Models\Mahasiswa;
 use App\Models\Pengumuman;
-use App\Models\Perizinan;
 use Illuminate\Http\Request;
 
 class MahasiswaController extends Controller
@@ -36,13 +35,7 @@ class MahasiswaController extends Controller
                 return $query->where('kelas', $mahasiswa->kelas);
             })
             ->orderBy('jam_mulai', 'asc')
-            ->get()
-            ->map(function($ag) use ($mahasiswa) {
-                $ag->perizinan = Perizinan::where('agenda_id', $ag->id)
-                    ->where('mahasiswa_id', $mahasiswa->id)
-                    ->first();
-                return $ag;
-            });
+            ->get();
         }
 
         $absensiHistory = Absensi::with(['agenda.dosen', 'agenda.lab'])
@@ -50,12 +43,7 @@ class MahasiswaController extends Controller
             ->orderBy('waktu_masuk', 'desc')
             ->get();
 
-        $perizinans = Perizinan::with(['agenda.dosen', 'agenda.lab'])
-            ->where('mahasiswa_id', $mahasiswa->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return view('mahasiswa.dashboard', compact('mahasiswa', 'todayAgendas', 'absensiHistory', 'perizinans', 'profileIncomplete'));
+        return view('mahasiswa.dashboard', compact('mahasiswa', 'todayAgendas', 'absensiHistory', 'profileIncomplete'));
     }
 
     public function submitAttendance(Request $request)
@@ -129,67 +117,6 @@ class MahasiswaController extends Controller
         return back()->with('success', 'Absensi BERHASIL dicatat untuk: ' . $agenda->mata_kuliah);
     }
 
-    public function submitIzin(Request $request)
-    {
-        $request->validate([
-            'agenda_id' => 'required|exists:agenda,id',
-            'alasan' => 'required|string',
-            'bukti_dokumen' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-        ]);
-
-        $user = auth()->user();
-        $mahasiswa = Mahasiswa::with(['prodi', 'fakultas'])->where('user_id', $user->id)->firstOrFail();
-
-        $agenda = Agenda::findOrFail($request->agenda_id);
-        if (!$mahasiswa->id_fakultas || !$mahasiswa->id_prodi ||
-            $agenda->fakultas !== $mahasiswa->fakultas->nama_fakultas ||
-            $agenda->jurusan !== $mahasiswa->prodi->nama_prodi ||
-            ($agenda->kelas && $mahasiswa->kelas && $agenda->kelas !== $mahasiswa->kelas)) {
-            return back()->withErrors(['msg' => 'Anda hanya dapat mengajukan izin untuk kelas dari Fakultas dan Prodi Anda.']);
-        }
-
-        // Check if already attended
-        $hasAttended = Absensi::where('agenda_id', $request->agenda_id)
-            ->where('mahasiswa_id', $mahasiswa->id)
-            ->where('status_kehadiran', 'Hadir')
-            ->exists();
-
-        if ($hasAttended) {
-            return back()->withErrors(['msg' => 'Anda sudah hadir di kelas ini, tidak bisa mengajukan izin.']);
-        }
-
-        // Check if there is an existing permission request
-        $existing = Perizinan::where('agenda_id', $request->agenda_id)
-            ->where('mahasiswa_id', $mahasiswa->id)
-            ->first();
-
-        if ($existing) {
-            return back()->with('info', 'Anda sudah mengajukan izin untuk kelas ini. Status saat ini: ' . strtoupper($existing->status_persetujuan));
-        }
-
-        $filename = null;
-        if ($request->hasFile('bukti_dokumen')) {
-            $file = $request->file('bukti_dokumen');
-            $destinationPath = public_path('uploads/bukti_izin');
-            if (!file_exists($destinationPath)) {
-                mkdir($destinationPath, 0777, true);
-            }
-            $filename = 'izin_' . time() . '_' . $mahasiswa->nim . '.' . $file->getClientOriginalExtension();
-            $file->move($destinationPath, $filename);
-        }
-
-        Perizinan::create([
-            'mahasiswa_id' => $mahasiswa->id,
-            'agenda_id' => $request->agenda_id,
-            'kategori' => 'Izin',
-            'alasan' => $request->alasan,
-            'bukti_url' => $filename ? 'uploads/bukti_izin/' . $filename : null,
-            'status_persetujuan' => 'Pending',
-        ]);
-
-        return back()->with('success', 'Pengajuan izin berhasil dikirim. Menunggu verifikasi Dosen.');
-    }
-
     public function riwayat(Request $request)
     {
         $user = auth()->user();
@@ -208,18 +135,13 @@ class MahasiswaController extends Controller
 
         $absensiHistory = $query->paginate(10)->withQueryString();
 
-        $perizinans = Perizinan::with(['agenda.dosen', 'agenda.lab'])
-            ->where('mahasiswa_id', $mahasiswa->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
         $hadirCount = Absensi::where('mahasiswa_id', $mahasiswa->id)->where('status_kehadiran', 'Hadir')->count();
         $izinCount = Absensi::where('mahasiswa_id', $mahasiswa->id)->where('status_kehadiran', 'Izin')->count();
         $alpaCount = Absensi::where('mahasiswa_id', $mahasiswa->id)->where('status_kehadiran', 'Alpa')->count();
         $totalSesi = $hadirCount + $izinCount + $alpaCount;
         $attendancePercentage = $totalSesi > 0 ? round(($hadirCount / $totalSesi) * 100, 1) : 100;
 
-        return view('mahasiswa.riwayat', compact('mahasiswa', 'absensiHistory', 'perizinans', 'hadirCount', 'izinCount', 'alpaCount', 'totalSesi', 'attendancePercentage'));
+        return view('mahasiswa.riwayat', compact('mahasiswa', 'absensiHistory', 'hadirCount', 'izinCount', 'alpaCount', 'totalSesi', 'attendancePercentage'));
     }
 
     public function agenda(Request $request)
