@@ -50,6 +50,21 @@ class User extends Authenticatable
         return $this->role === 'admin' && !is_null($this->fakultas_id);
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->isSuperAdmin() || $this->isAdminFakultas();
+    }
+
+    public function isDosen(): bool
+    {
+        return strtolower((string)$this->role) === 'dosen';
+    }
+
+    public function isMahasiswa(): bool
+    {
+        return strtolower((string)$this->role) === 'mahasiswa';
+    }
+
     public function canManageLab(?Laboratorium $lab): bool
     {
         if ($this->isSuperAdmin()) {
