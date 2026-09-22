@@ -1,4 +1,4 @@
-﻿@php
+@php
     // Find active agenda (current time falls between start and end time today)
     $currentTime = now()->format('H:i:s');
     
@@ -34,7 +34,7 @@
         <!-- Agenda Panel -->
         <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col gap-5">
             <!-- Header -->
-            <div class="flex justify-between items-center border-b border-slate-150 pb-3">
+            <div class="flex justify-between items-center border-b-2 border-slate-200 pb-3.5 mb-1">
                 <div class="flex items-center gap-2 text-[#0b8a5a] font-bold text-sm tracking-wider uppercase">
                     <i class="fa-solid fa-calendar-days text-base"></i>
                     <span>Agenda {{ $activeLab->nama_lab }}</span>
@@ -49,17 +49,17 @@
             </div>
 
             <!-- Schedule Content -->
-            <div class="flex flex-col gap-6">
+            <div class="flex flex-col gap-5">
                 <!-- Current Class (Sedang Berlangsung) -->
                 @if($activeAgenda)
-                    <div class="border-l-4 border-[#0c4ea6] pl-5 py-1 space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[11px] font-extrabold text-slate-400 tracking-wider uppercase">Mata Kuliah Saat Ini</span>
-                            <span class="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">{{ substr($activeAgenda->jam_mulai, 0, 5) }}-{{ substr($activeAgenda->jam_selesai, 0, 5) }}</span>
+                    <div class="border-l-4 border-[#0c4ea6] bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 md:p-5 space-y-3 shadow-2xs">
+                        <div class="flex justify-between items-center pb-1 border-b border-slate-200/60">
+                            <span class="text-[11px] font-extrabold text-[#0c4ea6] tracking-wider uppercase">Mata Kuliah Saat Ini</span>
+                            <span class="text-xs font-bold text-slate-700 bg-white border border-slate-200 px-2.5 py-0.5 rounded-md shadow-2xs">{{ substr($activeAgenda->jam_mulai, 0, 5) }} - {{ substr($activeAgenda->jam_selesai, 0, 5) }} WIB</span>
                         </div>
                         <div>
                             @if($activeAgenda->status_agenda === 'Berlangsung')
-                                <span class="inline-block px-2.5 py-1 bg-[#e0effe] text-[#1d4ed8] rounded-md text-[11px] font-extrabold uppercase tracking-wide animate-pulse">
+                                <span class="inline-block px-2.5 py-1 bg-[#e0effe] text-[#1d4ed8] border border-[#bfdbfe] rounded-md text-[11px] font-extrabold uppercase tracking-wide animate-pulse">
                                     Sedang Berlangsung
                                 </span>
                             @elseif($activeAgenda->status_agenda === 'Dibatalkan')
@@ -75,11 +75,11 @@
                         <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 leading-tight">
                             {{ $activeAgenda->mata_kuliah }}
                         </h2>
-                        <div class="text-xs text-slate-500 font-semibold space-y-1">
+                        <div class="border-t border-slate-200/80 pt-3 mt-3 text-xs text-slate-600 font-semibold space-y-1.5">
                             <div>{{ $activeAgenda->lab->nama_lab }} • Dosen Mengajar: {{ $activeAgenda->dosen->nama ?? '-' }} • Dosen Pengampu: {{ $activeAgenda->dosenPengampu->nama ?? $activeAgenda->dosen->nama ?? '-' }}</div>
                             <div>Fakultas: {{ $activeAgenda->fakultas }} • Prodi: {{ $activeAgenda->jurusan }}</div>
                             <div>Program: {{ $activeAgenda->program_kuliah ?? 'Reguler' }} {{ $activeAgenda->tahun_ajaran }} • Tipe: {{ $activeAgenda->jenis_pertemuan ?? 'Praktikum' }} • Semester: {{ $activeAgenda->semester ?? '1' }} • Kelas: {{ $activeAgenda->kelas ?? 'A' }}</div>
-                            <div class="flex items-center gap-1.5 pt-1.5">
+                            <div class="flex items-center gap-1.5 pt-1.5 border-t border-slate-200/50 mt-2">
                                 <span class="text-slate-400">Kehadiran Dosen:</span>
                                 @if($activeAgenda->dosen_waktu_masuk)
                                     <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">
@@ -94,24 +94,29 @@
                         </div>
                     </div>
                 @else
-                    <div class="border-l-4 border-[#0c4ea6] pl-5 py-4 bg-slate-50 rounded-r-2xl text-center">
+                    <div class="border-l-4 border-[#0c4ea6] p-5 bg-slate-50/70 border border-slate-200/80 rounded-2xl text-center shadow-2xs">
                         <i class="fa-solid fa-desktop text-2xl text-slate-300 block mb-2"></i>
                         <p class="text-sm font-bold text-slate-500">Tidak ada agenda kuliah sedang berlangsung saat ini.</p>
                     </div>
                 @endif
 
-                <div class="h-px bg-slate-150"></div>
+                <!-- Garis Pemisah (Divider) -->
+                <div class="relative flex items-center my-1">
+                    <div class="flex-grow border-t-2 border-slate-200"></div>
+                    <span class="shrink-0 mx-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Agenda Selanjutnya</span>
+                    <div class="flex-grow border-t-2 border-slate-200"></div>
+                </div>
 
                 <!-- Next Class (Mata Kuliah Berikutnya) -->
                 @if($nextAgenda)
-                    <div class="border-l-4 border-[#00b87c] pl-5 py-1 space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[11px] font-extrabold text-slate-400 tracking-wider uppercase">Mata Kuliah Berikutnya</span>
-                            <span class="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">{{ substr($nextAgenda->jam_mulai, 0, 5) }} - {{ substr($nextAgenda->jam_selesai, 0, 5) }}</span>
+                    <div class="border-l-4 border-[#00b87c] bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 md:p-5 space-y-3 shadow-2xs">
+                        <div class="flex justify-between items-center pb-1 border-b border-slate-200/60">
+                            <span class="text-[11px] font-extrabold text-[#00b87c] tracking-wider uppercase">Mata Kuliah Berikutnya</span>
+                            <span class="text-xs font-bold text-slate-700 bg-white border border-slate-200 px-2.5 py-0.5 rounded-md shadow-2xs">{{ substr($nextAgenda->jam_mulai, 0, 5) }} - {{ substr($nextAgenda->jam_selesai, 0, 5) }} WIB</span>
                         </div>
                         <div>
                             @if($nextAgenda->status_agenda === 'Berlangsung')
-                                <span class="inline-block px-2.5 py-1 bg-[#e0effe] text-[#1d4ed8] rounded-md text-[11px] font-extrabold uppercase tracking-wide animate-pulse">
+                                <span class="inline-block px-2.5 py-1 bg-[#e0effe] text-[#1d4ed8] border border-[#bfdbfe] rounded-md text-[11px] font-extrabold uppercase tracking-wide animate-pulse">
                                     Sedang Berlangsung
                                 </span>
                             @elseif($nextAgenda->status_agenda === 'Dibatalkan')
@@ -119,7 +124,7 @@
                                     Dibatalkan
                                 </span>
                             @else
-                                <span class="inline-block px-2.5 py-1 bg-[#f1f5f9] text-[#475569] rounded-md text-[11px] font-extrabold uppercase tracking-wide">
+                                <span class="inline-block px-2.5 py-1 bg-[#f1f5f9] text-[#475569] border border-slate-200 rounded-md text-[11px] font-extrabold uppercase tracking-wide">
                                     Kelas Selanjutnya
                                 </span>
                             @endif
@@ -127,11 +132,11 @@
                         <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 leading-tight">
                             {{ $nextAgenda->mata_kuliah }}
                         </h2>
-                         <div class="text-xs text-slate-500 font-semibold space-y-1">
+                        <div class="border-t border-slate-200/80 pt-3 mt-3 text-xs text-slate-600 font-semibold space-y-1.5">
                             <div>{{ $nextAgenda->lab->nama_lab }} • Dosen Mengajar: {{ $nextAgenda->dosen->nama ?? '-' }} • Dosen Pengampu: {{ $nextAgenda->dosenPengampu->nama ?? $nextAgenda->dosen->nama ?? '-' }}</div>
                             <div>Fakultas: {{ $nextAgenda->fakultas }} • Prodi: {{ $nextAgenda->jurusan }}</div>
                             <div>Program: {{ $nextAgenda->program_kuliah ?? 'Reguler' }} {{ $nextAgenda->tahun_ajaran }} • Semester: {{ $nextAgenda->semester ?? '1' }} • Kelas: {{ $nextAgenda->kelas ?? 'A' }}</div>
-                            <div class="flex items-center gap-1.5 pt-1.5">
+                            <div class="flex items-center gap-1.5 pt-1.5 border-t border-slate-200/50 mt-2">
                                 <span class="text-slate-400">Kehadiran Dosen:</span>
                                 @if($nextAgenda->dosen_waktu_masuk)
                                     <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">
@@ -146,7 +151,7 @@
                         </div>
                     </div>
                 @else
-                    <div class="border-l-4 border-[#00b87c] pl-5 py-4 bg-slate-50 rounded-r-2xl text-center">
+                    <div class="border-l-4 border-[#00b87c] p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl text-center shadow-2xs">
                         <i class="fa-solid fa-calendar-check text-2xl text-slate-300 block mb-2"></i>
                         <p class="text-sm font-bold text-slate-500">Tidak ada agenda kuliah berikutnya untuk hari ini.</p>
                     </div>
