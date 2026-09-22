@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -19,7 +19,7 @@
         .custom-sidebar-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden text-slate-800 pb-16 lg:pb-0">
+<body class="flex h-screen overflow-hidden text-slate-800">
 
     <!-- Sidebar -->
     @include('admin.partials.sidebar')
@@ -28,8 +28,11 @@
     <main class="flex-1 flex flex-col h-full overflow-hidden">
         
         <!-- Header -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0">
-            <div class="flex items-center gap-2">
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 flex-shrink-0">
+            <div class="flex items-center gap-2.5">
+                <button type="button" onclick="toggleAdminMobileSidebar()" class="lg:hidden p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition focus:outline-none cursor-pointer" title="Buka Menu Sidebar">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
                 <img src="{{ asset('images/logo-uika.png') }}" alt="Logo UIKA" class="w-8 h-8 object-contain flex lg:hidden shrink-0">
                 <h2 class="font-bold text-base text-slate-800 lg:hidden">DIGITAL Board</h2>
                 <h2 class="font-bold text-base text-slate-800 hidden lg:block">Manajemen Laboratorium</h2>

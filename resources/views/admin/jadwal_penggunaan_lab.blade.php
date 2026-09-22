@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -22,7 +22,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden text-slate-800 pb-16 lg:pb-0">
+<body class="flex h-screen overflow-hidden text-slate-800">
 
     <!-- Sidebar -->
     @include('admin.partials.sidebar')
@@ -31,9 +31,13 @@
     <main class="flex-1 flex flex-col h-full overflow-hidden">
         
         <!-- Header -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 shrink-0">
-            <div class="flex items-center gap-3">
-                <h2 class="font-bold text-base text-slate-800">Pusat Jadwal & Perkuliahan</h2>
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 shrink-0">
+            <div class="flex items-center gap-2.5">
+                <button type="button" onclick="toggleAdminMobileSidebar()" class="lg:hidden p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition focus:outline-none cursor-pointer" title="Buka Menu Sidebar">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+                <img src="{{ asset('images/logo-uika.png') }}" alt="Logo UIKA" class="w-8 h-8 object-contain flex lg:hidden shrink-0">
+                <h2 class="font-bold text-base text-slate-800 hidden lg:block">Pusat Jadwal & Perkuliahan</h2>
                 <!-- Tab Switching Navigation (Analyst Recommendation #4) -->
                 <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
                     <a href="{{ route('admin.jadwal-lab') }}" class="px-3.5 py-1.5 bg-teal-800 text-white font-bold rounded-lg shadow-sm flex items-center gap-1.5">
