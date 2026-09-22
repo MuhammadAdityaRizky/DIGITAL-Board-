@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -259,7 +259,7 @@
                             Mata kuliah : <strong>{{ $report['mataKuliah'] }}</strong>
                         </td>
                         <td style="border: none; padding: 2px 0; text-align: right; font-size: 9.5px;">
-                            Semester/Kelas : <strong>{{ $report['kelas'] ?: 'II Reg' }}</strong>
+                            Semester/Kelas : <strong>{{ $report['mainAgenda']->semester ? 'Sem ' . $report['mainAgenda']->semester . ' / ' : '' }}Kelas {{ $report['kelas'] ?: '-' }} ({{ $report['mainAgenda']->program_kuliah ?: 'Reguler' }})</strong>
                         </td>
                     </tr>
                     @if($report['mainAgenda'] && $report['mainAgenda']->dosen)

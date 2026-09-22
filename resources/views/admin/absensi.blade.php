@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -151,7 +151,7 @@
                                                 <input type="checkbox" name="agenda_ids[]" value="{{ $item->id }}" class="item-cetak-mk mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                                                 <div class="flex-1">
                                                     <span class="font-bold text-slate-800 block">{{ $item->mata_kuliah }}</span>
-                                                    <span class="text-[11px] text-slate-500">Kelas: <strong class="text-slate-700">{{ $item->kelas ?: '-' }}</strong> | Dosen: {{ $item->dosen->nama ?? '-' }}</span>
+                                                    <span class="text-[11px] text-slate-500">Kelas: <strong class="text-slate-700">{{ $item->kelas ?: '-' }}</strong> @if(strtolower($item->program_kuliah ?? '') === 'karyawan')<span class="ml-1 px-1.5 py-0.5 bg-purple-100 text-purple-800 rounded font-bold text-[9px]"><i class="fa-solid fa-moon text-[8px]"></i> Karyawan</span>@elseif($item->program_kuliah)<span class="ml-1 px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded font-bold text-[9px]">{{ $item->program_kuliah }}</span>@endif | Dosen: {{ $item->dosen->nama ?? '-' }}</span>
                                                 </div>
                                             </label>
                                         @endforeach
@@ -206,8 +206,8 @@
                                 <select name="mata_kuliah_kelas" required class="w-full text-sm p-2.5 rounded-lg border border-slate-200 bg-slate-50 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                                     <option value="" disabled selected>-- Pilih Kelas --</option>
                                     @foreach($uniqueClasses as $uc)
-                                        <option value="{{ $uc->mata_kuliah }}|{{ $uc->kelas }}|{{ $uc->dosen_id }}">
-                                            {{ $uc->mata_kuliah }} {{ $uc->kelas ? '('.$uc->kelas.')' : '' }} - Dosen: {{ $uc->dosen->nama ?? '-' }}
+                                        <option value="{{ $uc->mata_kuliah }}|{{ $uc->kelas }}|{{ $uc->dosen_id }}|{{ $uc->program_kuliah }}">
+                                            {{ $uc->mata_kuliah }} {{ $uc->kelas ? '('.$uc->kelas.')' : '' }} {{ $uc->program_kuliah ? '['.$uc->program_kuliah.']' : '' }} - Dosen: {{ $uc->dosen->nama ?? '-' }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -251,6 +251,15 @@
                                                 <span class="px-2.5 py-0.5 bg-teal-500/30 text-teal-200 border border-teal-400/40 rounded-md text-[10px] font-bold uppercase">
                                                     Kelas {{ $firstAgenda->kelas ?: '-' }}
                                                 </span>
+                                                @if(strtolower($firstAgenda->program_kuliah ?? '') === 'karyawan')
+                                                    <span class="px-2.5 py-0.5 bg-purple-500/40 text-purple-200 border border-purple-400/50 rounded-md text-[10px] font-bold uppercase flex items-center gap-1 shadow-2xs">
+                                                        <i class="fa-solid fa-moon text-[9px]"></i> Karyawan (Kelas Malam)
+                                                    </span>
+                                                @elseif($firstAgenda->program_kuliah)
+                                                    <span class="px-2.5 py-0.5 bg-blue-500/30 text-blue-200 border border-blue-400/50 rounded-md text-[10px] font-bold uppercase">
+                                                        {{ $firstAgenda->program_kuliah }}
+                                                    </span>
+                                                @endif
                                             </div>
                                             <p class="text-xs text-slate-300 mt-0.5">
                                                 Dosen: <strong class="text-white">{{ $firstAgenda->dosen->nama ?? 'Dosen Pengampu' }}</strong> • {{ $firstAgenda->lab->nama_lab ?? '-' }}

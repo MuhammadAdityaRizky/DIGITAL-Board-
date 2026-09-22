@@ -68,6 +68,15 @@
                                         Kelas {{ $first->kelas }}
                                     </span>
                                 @endif
+                                @if(strtolower($first->program_kuliah ?? '') === 'karyawan')
+                                    <span class="px-2.5 py-0.5 bg-purple-100 border border-purple-300 text-purple-900 rounded-lg text-xs font-bold shadow-2xs flex items-center gap-1">
+                                        <i class="fa-solid fa-moon text-xs text-purple-700"></i> Karyawan
+                                    </span>
+                                @elseif($first->program_kuliah)
+                                    <span class="px-2.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-900 rounded-lg text-xs font-bold shadow-2xs">
+                                        {{ $first->program_kuliah }}
+                                    </span>
+                                @endif
                                 @if($first->semester)
                                     <span class="px-2.5 py-0.5 bg-white border border-slate-300 text-slate-900 rounded-lg text-xs font-bold shadow-2xs">
                                         Semester {{ $first->semester }}

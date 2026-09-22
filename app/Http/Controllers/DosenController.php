@@ -533,6 +533,7 @@ class DosenController extends Controller
             } else {
                 $query->where('mata_kuliah', $baseAgenda->mata_kuliah)
                       ->where('kelas', $baseAgenda->kelas)
+                      ->where('program_kuliah', $baseAgenda->program_kuliah)
                       ->where('dosen_id', $baseAgenda->dosen_id);
             }
             $agendas = $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc')->get();
@@ -578,6 +579,7 @@ class DosenController extends Controller
         } else {
             $query->where('mata_kuliah', $agenda->mata_kuliah)
                   ->where('kelas', $agenda->kelas)
+                  ->where('program_kuliah', $agenda->program_kuliah)
                   ->where('dosen_id', $agenda->dosen_id);
         }
         $agendas = $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc')->get();
@@ -826,8 +828,9 @@ class DosenController extends Controller
         $allDosenAgendas = (clone $query)->get();
         $isSortDesc = $request->get('sort') !== 'terlama';
         $groupedAgendas = $allDosenAgendas->groupBy(function($item) {
+            $progSuffix = $item->program_kuliah ? ' (' . $item->program_kuliah . ')' : '';
             $kelasSuffix = $item->kelas ? ' - Kelas ' . $item->kelas : '';
-            return $item->mata_kuliah . $kelasSuffix;
+            return $item->mata_kuliah . $progSuffix . $kelasSuffix;
         })->map(function($group) use ($isSortDesc) {
             return $group->sortBy(function($agenda) {
                 return $agenda->tanggal . ' ' . $agenda->jam_mulai;
@@ -865,7 +868,7 @@ class DosenController extends Controller
             ->orderBy('mata_kuliah')
             ->get()
             ->unique(function ($item) {
-                return $item->mata_kuliah . '-' . $item->kelas . '-' . $item->dosen_id;
+                return $item->mata_kuliah . '-' . $item->kelas . '-' . ($item->program_kuliah ?: 'Reguler') . '-' . $item->dosen_id;
             });
 
         $dosenAgendaIds = $allDosenAgendas->pluck('id')->toArray();
@@ -958,11 +961,17 @@ class DosenController extends Controller
         $mata_kuliah = $parts[0] ?? '';
         $kelas = $parts[1] ?? '';
         $dosen_id = $parts[2] ?? '';
+        $program_kuliah = $parts[3] ?? null;
 
-        $baseAgenda = Agenda::where('mata_kuliah', $mata_kuliah)
+        $baseAgendaQuery = Agenda::where('mata_kuliah', $mata_kuliah)
             ->where('kelas', $kelas)
-            ->where('dosen_id', $dosen_id)
-            ->first();
+            ->where('dosen_id', $dosen_id);
+
+        if ($program_kuliah) {
+            $baseAgendaQuery->where('program_kuliah', $program_kuliah);
+        }
+
+        $baseAgenda = $baseAgendaQuery->first();
 
         if (!$baseAgenda || ($baseAgenda->dosen_id !== $dosen->id && $baseAgenda->dosen_pengampu_id !== $dosen->id)) {
             return redirect()->back()->with('error', 'Data mata kuliah/kelas tidak ditemukan atau Anda tidak memiliki akses.');

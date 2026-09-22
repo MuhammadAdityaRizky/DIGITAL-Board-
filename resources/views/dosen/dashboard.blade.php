@@ -527,6 +527,15 @@
                                                                         Kelas: {{ $ag->kelas }}
                                                                     </span>
                                                                 @endif
+                                                                @if(strtolower($ag->program_kuliah ?? '') === 'karyawan')
+                                                                    <span class="px-2 py-0.5 bg-purple-100 text-purple-900 border border-purple-300 rounded-md text-[11px] font-bold flex items-center gap-1 shadow-2xs">
+                                                                        <i class="fa-solid fa-moon text-[9px] text-purple-700"></i> Karyawan
+                                                                    </span>
+                                                                @elseif($ag->program_kuliah)
+                                                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-900 border border-blue-200 rounded-md text-[11px] font-bold">
+                                                                        {{ $ag->program_kuliah }}
+                                                                    </span>
+                                                                @endif
                                                                 <span class="text-xs font-semibold text-slate-600 ml-auto flex items-center gap-1 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md">
                                                                     <i class="fa-regular fa-clock text-slate-500"></i>
                                                                     {{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB

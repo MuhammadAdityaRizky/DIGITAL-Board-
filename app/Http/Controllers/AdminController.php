@@ -1282,15 +1282,15 @@ class AdminController extends Controller
 
         $allAgendas = $query->get();
 
-        // Group agendas by Mata Kuliah + Kelas + Dosen ID
+        // Group agendas by Mata Kuliah + Kelas + Program Kuliah + Dosen ID
         $groupedAgendas = $allAgendas->groupBy(function($item) {
-            return $item->mata_kuliah . '___' . ($item->kelas ?: 'General') . '___' . ($item->dosen_id ?: 0);
+            return $item->mata_kuliah . '___' . ($item->kelas ?: 'General') . '___' . ($item->program_kuliah ?: 'Reguler') . '___' . ($item->dosen_id ?: 0);
         });
 
         $agendas = $allAgendas;
 
         $uniqueClasses = $allAgendas->unique(function ($item) {
-            return $item->mata_kuliah . '-' . $item->kelas . '-' . $item->dosen_id;
+            return $item->mata_kuliah . '-' . $item->kelas . '-' . ($item->program_kuliah ?: 'Reguler') . '-' . $item->dosen_id;
         });
 
         return view('admin.absensi', compact('agendas', 'groupedAgendas', 'uniqueClasses'));
@@ -1320,9 +1320,9 @@ class AdminController extends Controller
 
         $allAgendas = $query->get();
 
-        // Group agendas by Mata Kuliah + Kelas + Dosen
+        // Group agendas by Mata Kuliah + Kelas + Program Kuliah + Dosen
         $groupedAgendas = $allAgendas->groupBy(function($item) {
-            return $item->mata_kuliah . '___' . ($item->kelas ?: '-') . '___' . $item->dosen_id;
+            return $item->mata_kuliah . '___' . ($item->kelas ?: '-') . '___' . ($item->program_kuliah ?: 'Reguler') . '___' . $item->dosen_id;
         });
 
         // Filter groups if specific agenda IDs were checked
@@ -1459,11 +1459,17 @@ class AdminController extends Controller
         $mata_kuliah = $parts[0] ?? '';
         $kelas = $parts[1] ?? '';
         $dosen_id = $parts[2] ?? '';
+        $program_kuliah = $parts[3] ?? null;
 
-        $baseAgenda = Agenda::with('lab')->where('mata_kuliah', $mata_kuliah)
+        $baseAgendaQuery = Agenda::with('lab')->where('mata_kuliah', $mata_kuliah)
             ->where('kelas', $kelas)
-            ->where('dosen_id', $dosen_id)
-            ->first();
+            ->where('dosen_id', $dosen_id);
+
+        if ($program_kuliah) {
+            $baseAgendaQuery->where('program_kuliah', $program_kuliah);
+        }
+
+        $baseAgenda = $baseAgendaQuery->first();
 
         if (!$baseAgenda) {
             return redirect()->back()->with('error', 'Data mata kuliah/kelas tidak ditemukan.');
