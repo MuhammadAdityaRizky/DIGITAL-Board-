@@ -233,8 +233,25 @@
                             <span>Pilih Semua Sesi</span>
                         </button>
                     </div>
-                    <div class="text-[11px] text-slate-400 font-medium hidden sm:block">
-                        Klik judul mata kuliah untuk membuka/menutup sesi pertemuan
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-slate-400 font-semibold text-[11px] hidden sm:inline">Urutan:</span>
+                        @php
+                            $currentSort = request('sort', 'terlama');
+                            $otherSort   = $currentSort === 'terbaru' ? 'terlama' : 'terbaru';
+                            $sortParams  = array_merge(request()->except('sort'), ['sort' => $otherSort]);
+                        @endphp
+                        <a href="{{ route('admin.agenda', array_merge(request()->except('sort'), ['sort' => 'terlama'])) }}"
+                           class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 border shadow-2xs
+                                  {{ $currentSort !== 'terbaru' ? 'bg-teal-800 text-white border-teal-800' : 'bg-white hover:bg-slate-100 text-slate-600 border-slate-200' }}"
+                           title="Tampilkan dari Pertemuan 1 ke 16">
+                            <i class="fa-solid fa-arrow-up-1-9 text-[10px]"></i> Terlama
+                        </a>
+                        <a href="{{ route('admin.agenda', array_merge(request()->except('sort'), ['sort' => 'terbaru'])) }}"
+                           class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 border shadow-2xs
+                                  {{ $currentSort === 'terbaru' ? 'bg-teal-800 text-white border-teal-800' : 'bg-white hover:bg-slate-100 text-slate-600 border-slate-200' }}"
+                           title="Tampilkan dari Pertemuan 16 ke 1">
+                            <i class="fa-solid fa-arrow-down-9-1 text-[10px]"></i> Terbaru
+                        </a>
                     </div>
                 </div>
                 @endif
