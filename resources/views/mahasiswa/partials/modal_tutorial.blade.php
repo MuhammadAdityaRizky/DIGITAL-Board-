@@ -26,11 +26,8 @@
             <button type="button" onclick="switchMhsTutorialTab('tab-mhs-agenda')" id="btn-mhs-agenda" class="px-4 py-2.5 rounded-t-xl font-extrabold transition text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
                 <i class="fa-solid fa-calendar-days text-blue-600"></i> 2. Jadwal & Ruang
             </button>
-            <button type="button" onclick="switchMhsTutorialTab('tab-mhs-izin')" id="btn-mhs-izin" class="px-4 py-2.5 rounded-t-xl font-extrabold transition text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-file-signature text-amber-600"></i> 3. Izin & Sakit
-            </button>
             <button type="button" onclick="switchMhsTutorialTab('tab-mhs-riwayat')" id="btn-mhs-riwayat" class="px-4 py-2.5 rounded-t-xl font-extrabold transition text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-chart-pie text-emerald-600"></i> 4. Rekap Kehadiran
+                <i class="fa-solid fa-chart-pie text-emerald-600"></i> 3. Rekap Kehadiran
             </button>
         </div>
 
@@ -65,9 +62,9 @@
                     <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
                         <span class="w-6 h-6 rounded-full bg-teal-800 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">2</span>
                         <div>
-                            <strong class="text-slate-900 block font-bold text-xs">Buka Kamera HP atau Tombol "Scan QR"</strong>
+                            <strong class="text-slate-900 block font-bold text-xs">Buka Kamera / Scanner di Portal Mahasiswa</strong>
                             <p class="text-slate-600 mt-0.5 font-medium leading-relaxed">
-                                Klik tombol <strong>"Scan QR Presensi"</strong> di Dashboard portal mahasiswa, atau gunakan aplikasi scanner kamera smartphone Anda.
+                                Klik tombol scan QR di dashboard atau navigasi bawah, lalu arahkan kamera HP Anda ke layar Smart Board.
                             </p>
                         </div>
                     </div>
@@ -75,9 +72,9 @@
                     <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
                         <span class="w-6 h-6 rounded-full bg-teal-800 text-white font-extrabold flex items-center justify-center shrink-0 text-xs">3</span>
                         <div>
-                            <strong class="text-slate-900 block font-bold text-xs">Arahkan Kamera ke Layar Smart Board Lab</strong>
+                            <strong class="text-slate-900 block font-bold text-xs">Presensi Otomatis Berhasil</strong>
                             <p class="text-slate-600 mt-0.5 font-medium leading-relaxed">
-                                Arahkan kamera ke QR Code yang berganti setiap 5 detik di layar depan kelas. Status kehadiran Anda akan langsung tersimpan dan otomatis menjadi <strong class="text-emerald-700">Hadir</strong>.
+                                Notifikasi berhasil akan langsung muncul dan status kehadiran Anda otomatis tercatat.
                             </p>
                         </div>
                     </div>
@@ -88,72 +85,34 @@
             <div id="tab-mhs-agenda" class="hidden space-y-4">
                 <div class="p-4 bg-blue-50 border border-blue-200 rounded-2xl flex items-start gap-3">
                     <div class="w-8 h-8 rounded-xl bg-blue-700 text-white flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">
-                        <i class="fa-solid fa-calendar-days"></i>
+                        <i class="fa-solid fa-calendar-check"></i>
                     </div>
                     <div>
-                        <h4 class="font-extrabold text-sm text-blue-950">Melihat Agenda Kuliah & Lokasi Ruang Lab</h4>
+                        <h4 class="font-extrabold text-sm text-blue-950">Melihat Agenda Perkuliahan & Pemakaian Lab</h4>
                         <p class="text-blue-900 font-medium mt-1 leading-relaxed">
-                            Cek jadwal perkuliahan Anda secara berkala agar tidak salah ruangan atau terlambat masuk kelas.
+                            Pantau seluruh jadwal perkuliahan, ruang laboratorium, dan dosen pengampu secara berkala.
                         </p>
                     </div>
                 </div>
 
                 <div class="space-y-3">
                     <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                        <strong class="text-slate-900 block font-bold text-xs">Menu "Agenda Kuliah"</strong>
+                        <strong class="text-slate-900 block font-bold text-xs">Tab "Untuk Saya"</strong>
                         <p class="text-slate-600 font-medium leading-relaxed">
-                            Di menu ini Anda dapat melihat daftar seluruh pertemuan perkuliahan, lengkap dengan nama dosen pengampu, materi rencana, dan jam pelaksanaan.
+                            Secara otomatis menyaring dan hanya menampilkan jadwal praktikum khusus untuk kelas, semester, dan prodi Anda.
                         </p>
                     </div>
 
                     <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                        <strong class="text-slate-900 block font-bold text-xs">Cek Lokasi Lab</strong>
+                        <strong class="text-slate-900 block font-bold text-xs">Tab "Semua Agenda Lab"</strong>
                         <p class="text-slate-600 font-medium leading-relaxed">
-                            Setiap kartu agenda mencantumkan nama lab dan lokasinya (contoh: <em>Lab 209 - Gedung FTS Lantai 2</em>). Jika terdapat jadwal pengganti, ruangan lab mungkin dipindahkan ke lab lain yang kosong.
+                            Melihat seluruh jadwal pemakaian laboratorium di seluruh fakultas untuk mengecek ketersediaan lab kosong.
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 3: IZIN & SAKIT -->
-            <div id="tab-mhs-izin" class="hidden space-y-4">
-                <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">
-                        <i class="fa-solid fa-file-medical"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-extrabold text-sm text-amber-950">Pengajuan Surat Izin atau Keterangan Sakit</h4>
-                        <p class="text-amber-900 font-medium mt-1 leading-relaxed">
-                            Jika Anda berhalangan hadir pada sesi perkuliahan, segera ajukan izin resmi sebelum atau sesaat setelah perkuliahan selesai.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="space-y-3">
-                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                        <strong class="text-slate-900 block font-bold text-xs">1. Buka Agenda Perkuliahan Hari Ini</strong>
-                        <p class="text-slate-600 font-medium leading-relaxed">
-                            Klik tombol <strong>"Ajukan Perizinan"</strong> pada sesi pertemuan yang ingin Anda mintakan dispensasi.
-                        </p>
-                    </div>
-
-                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                        <strong class="text-slate-900 block font-bold text-xs">2. Unggah Foto Bukti Surat yang Sah</strong>
-                        <p class="text-slate-600 font-medium leading-relaxed">
-                            Lampirkan foto surat dokter (jika sakit) atau surat dispensasi/tugas resmi (jika ada keperluan dinas/kampus). Tuliskan alasan secara jelas dan sopan.
-                        </p>
-                    </div>
-
-                    <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                        <strong class="text-slate-900 block font-bold text-xs">3. Verifikasi oleh Dosen Pengampu</strong>
-                        <p class="text-slate-600 font-medium leading-relaxed">
-                            Dosen pengampu akan memeriksa permohonan Anda. Setelah disetujui, status Anda di rekapitulasi akan berubah menjadi <strong class="text-blue-700">Izin</strong> atau <strong class="text-amber-700">Sakit</strong> (bukan Alpa).
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 4: REKAP KEHADIRAN -->
+            <!-- TAB 3: REKAP KEHADIRAN -->
             <div id="tab-mhs-riwayat" class="hidden space-y-4">
                 <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3">
                     <div class="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">
@@ -178,7 +137,7 @@
                     <div class="p-3.5 bg-emerald-50/70 border border-emerald-300 rounded-xl space-y-1">
                         <strong class="text-emerald-950 block font-bold text-xs">Pemberitahuan Dosen Manual</strong>
                         <p class="text-emerald-900 font-medium leading-relaxed">
-                            Jika Anda merasa hadir di kelas namun terlewat scan QR, segera konfirmasi langsung kepada dosen pengajar sebelum perkuliahan hari itu ditutup agar dosen dapat menginput status Hadir secara manual.
+                            Jika Anda merasa hadir di kelas namun terlewat scan QR atau memiliki kendala izin, segera konfirmasi langsung kepada dosen pengajar agar status dapat disesuaikan secara manual.
                         </p>
                     </div>
                 </div>
@@ -211,24 +170,21 @@
     }
 
     function switchMhsTutorialTab(tabId) {
-        const tabs = ['tab-mhs-absen', 'tab-mhs-agenda', 'tab-mhs-izin', 'tab-mhs-riwayat'];
+        const tabs = ['tab-mhs-absen', 'tab-mhs-agenda', 'tab-mhs-riwayat'];
         tabs.forEach(t => {
             const el = document.getElementById(t);
             const btn = document.getElementById('btn-' + t);
             if (el) {
                 if (t === tabId) {
                     el.classList.remove('hidden');
+                    if (btn) {
+                        btn.className = "px-4 py-2.5 rounded-t-xl font-extrabold transition border-b-2 border-teal-800 bg-white text-teal-900 shadow-2xs flex items-center gap-2 whitespace-nowrap";
+                    }
                 } else {
                     el.classList.add('hidden');
-                }
-            }
-            if (btn) {
-                if (t === tabId) {
-                    btn.classList.add('border-b-2', 'border-teal-800', 'bg-white', 'text-teal-900', 'shadow-2xs');
-                    btn.classList.remove('text-slate-600');
-                } else {
-                    btn.classList.remove('border-b-2', 'border-teal-800', 'bg-white', 'text-teal-900', 'shadow-2xs');
-                    btn.classList.add('text-slate-600');
+                    if (btn) {
+                        btn.className = "px-4 py-2.5 rounded-t-xl font-extrabold transition text-slate-600 hover:text-slate-900 flex items-center gap-2 whitespace-nowrap";
+                    }
                 }
             }
         });

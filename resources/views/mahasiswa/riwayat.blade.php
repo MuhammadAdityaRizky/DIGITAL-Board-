@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -152,19 +152,9 @@
                                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari praktikum..." class="pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-teal-700">
                                 <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400"></i>
                             </form>
-                        </div>
-
-                        @if($absensiHistory->count() > 0)
+                                                @if($absensiHistory->count() > 0)
                             <div class="space-y-4">
                                 @foreach($absensiHistory as $abs)
-                                    @php
-                                        $izin = null;
-                                        if (in_array(strtolower($abs->status_kehadiran), ['izin', 'sakit'])) {
-                                            $izin = \App\Models\Perizinan::where('agenda_id', $abs->agenda_id)
-                                                ->where('mahasiswa_id', $abs->mahasiswa_id)
-                                                ->first();
-                                        }
-                                    @endphp
                                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
                                         <div class="flex flex-col md:flex-row gap-5 items-start">
                                             <!-- Time block -->
@@ -196,16 +186,6 @@
                                                     </p>
                                                     <p class="text-[10px] text-slate-400 mt-1">Waktu Scan: <span class="font-mono text-slate-600">{{ $abs->waktu_masuk }}</span></p>
                                                 </div>
-
-                                                @if($izin)
-                                                    <div class="pt-2 border-t border-slate-200 flex justify-end">
-                                                        <button type="button" 
-                                                                onclick="viewIzinDetail('{{ $izin->kategori }}', '{{ addslashes($izin->alasan) }}', '{{ $izin->bukti_url ? asset($izin->bukti_url) : '' }}')"
-                                                                class="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                                                            <i class="fa-solid fa-file-waveform"></i> Detail Pengajuan
-                                                        </button>
-                                                    </div>
-                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -226,16 +206,15 @@
                 <!-- Right Card: Information & Tip -->
                 <div class="space-y-6">
                     <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                        <h3 class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-teal-800"></i> Ketentuan Absensi</h3>
+                        <h3 class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-teal-800"></i> Ketentuan Presensi</h3>
                         <ul class="text-xs text-slate-600 space-y-2.5 list-disc list-inside">
                             <li>Setiap mahasiswa wajib melakukan scan QR Code menggunakan token yang tertera pada Digital Board laboratorium.</li>
                             <li>Kehadiran tercatat otomatis jika token / ID agenda valid.</li>
-                            <li>Bila mahasiswa berhalangan hadir (sakit/izin), harap mengajukan form **Ajukan Izin** dengan bukti surat dokter/pendukung sebelum kelas berakhir.</li>
-                            <li>Bila izin disetujui dosen, status kehadiran akan otomatis diperbarui menjadi `Izin` di sistem.</li>
+                            <li>Bila terdapat kendala kehadiran atau dispensasi, silakan berkoordinasi langsung dengan Dosen Pengampu matakuliah bersangkutan.</li>
                         </ul>
                     </div>
                 </div>
-            </div>
+            </div>        </div>
 
     <!-- Bottom Navigation Bar (Mobile Only - Symmetrical 4-tab layout with Center Scan QR) -->
     <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-lg">
@@ -279,63 +258,6 @@
                 menu.classList.add('hidden');
             }
         });
-    </script>
-
-    <!-- Detail Izin Modal -->
-    <div id="modal-detail-izin" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden text-xs">
-        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl border border-slate-100">
-            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center text-slate-855 font-bold">
-                <h4 class="font-bold text-sm">Detail Pengajuan Izin</h4>
-                <button type="button" onclick="closeModal('modal-detail-izin')" class="text-slate-400 hover:text-slate-655 text-base"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-slate-400 font-bold mb-0.5">Kategori Perizinan</label>
-                    <span id="detail-izin-kategori" class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 font-bold rounded text-[10px] uppercase">Izin</span>
-                </div>
-                <div>
-                    <label class="block text-slate-400 font-bold mb-0.5">Keterangan / Alasan</label>
-                    <p id="detail-izin-alasan" class="text-xs text-slate-700 font-medium bg-slate-50 border border-slate-200 p-3 rounded-lg leading-relaxed italic">"Alasan izin..."</p>
-                </div>
-                <div id="detail-izin-bukti-container">
-                    <label class="block text-slate-400 font-bold mb-1">Bukti Foto / Dokumen</label>
-                    <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 p-2 text-center">
-                        <img id="detail-izin-foto" src="" alt="Bukti Perizinan" class="max-h-60 mx-auto object-contain rounded-lg shadow-sm">
-                        <p id="detail-izin-no-bukti" class="text-slate-400 italic py-4">Tidak ada bukti foto dilampirkan.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
-
-        function viewIzinDetail(kategori, alasan, buktiUrl) {
-            document.getElementById('detail-izin-kategori').innerText = kategori;
-            if (kategori === 'Sakit') {
-                document.getElementById('detail-izin-kategori').className = "px-2 py-0.5 bg-[#fff8eb] text-[#d89115] border border-[#ffe0b2] font-bold rounded text-[10px] uppercase";
-            } else {
-                document.getElementById('detail-izin-kategori').className = "px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 font-bold rounded text-[10px] uppercase";
-            }
-            document.getElementById('detail-izin-alasan').innerText = `"${alasan}"`;
-            
-            const fotoEl = document.getElementById('detail-izin-foto');
-            const noBuktiEl = document.getElementById('detail-izin-no-bukti');
-            if (buktiUrl) {
-                fotoEl.src = buktiUrl;
-                fotoEl.classList.remove('hidden');
-                noBuktiEl.classList.add('hidden');
-            } else {
-                fotoEl.src = "";
-                fotoEl.classList.add('hidden');
-                noBuktiEl.classList.remove('hidden');
-            }
-            
-            document.getElementById('modal-detail-izin').classList.remove('hidden');
-        }
     </script>
 
     <!-- Hidden form for QR attendance submission -->

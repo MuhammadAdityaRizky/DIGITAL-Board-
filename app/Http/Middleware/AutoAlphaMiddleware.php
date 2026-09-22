@@ -8,7 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 use App\Models\Agenda;
 use App\Models\Mahasiswa;
 use App\Models\Absensi;
-use App\Models\Perizinan;
 use Carbon\Carbon;
 
 class AutoAlphaMiddleware
@@ -33,7 +32,6 @@ class AutoAlphaMiddleware
             $oldAgendaIds = Agenda::where('tanggal', '<', Carbon::now()->subDays(365)->format('Y-m-d'))->pluck('id');
             if ($oldAgendaIds->isNotEmpty()) {
                 Absensi::whereIn('agenda_id', $oldAgendaIds)->delete();
-                Perizinan::whereIn('agenda_id', $oldAgendaIds)->delete();
                 Agenda::whereIn('id', $oldAgendaIds)->delete();
             }
 
@@ -61,22 +59,11 @@ class AutoAlphaMiddleware
                         ->exists();
 
                     if (!$exists) {
-                        // Check if they have an approved permission request
-                        $approvedIzin = Perizinan::where('agenda_id', $agenda->id)
-                            ->where('mahasiswa_id', $student->id)
-                            ->where('status_persetujuan', 'disetujui')
-                            ->first();
-
-                        $status = 'Alpa';
-                        if ($approvedIzin) {
-                            $status = $approvedIzin->kategori === 'Sakit' ? 'Sakit' : 'Izin';
-                        }
-
                         Absensi::create([
                             'agenda_id' => $agenda->id,
                             'mahasiswa_id' => $student->id,
                             'waktu_masuk' => $agenda->tanggal . ' ' . $agenda->jam_selesai,
-                            'status_kehadiran' => $status,
+                            'status_kehadiran' => 'Alpa',
                         ]);
                     }
                 }

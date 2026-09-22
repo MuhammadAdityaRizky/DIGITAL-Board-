@@ -35,11 +35,6 @@ class Mahasiswa extends Model
         return $this->belongsTo(Prodi::class, 'id_prodi');
     }
 
-    public function perizinan()
-    {
-        return $this->hasMany(Perizinan::class, 'mahasiswa_id');
-    }
-
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
