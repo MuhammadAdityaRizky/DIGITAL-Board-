@@ -51,16 +51,8 @@ class AutoAlphaMiddleware
                 ->get();
 
             foreach ($unprocessed as $agenda) {
-                // Get all active students matching this class's Fakultas, Prodi/Jurusan, and Kelas
-                $students = Mahasiswa::where('status', 'aktif')
-                    ->where('kelas', $agenda->kelas)
-                    ->whereHas('fakultas', function($q) use ($agenda) {
-                        $q->where('nama_fakultas', $agenda->fakultas);
-                    })
-                    ->whereHas('prodi', function($q) use ($agenda) {
-                        $q->where('nama_prodi', $agenda->jurusan);
-                    })
-                    ->get();
+                // Get all active students precisely matching this agenda's Prodi, Semester, Program Kuliah, and Kelas
+                $students = $agenda->getStudentsQuery()->get();
 
                 foreach ($students as $student) {
                     // Check if they already have an absensi record

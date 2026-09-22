@@ -41,6 +41,66 @@ class Agenda extends Model
     }
 
     /**
+     * Query Mahasiswa presisi berdasarkan Prodi, Semester, Program Kuliah, dan Kelas
+     */
+    public function getStudentsQuery()
+    {
+        $query = Mahasiswa::with(['prodi', 'fakultas'])->where('status', 'aktif');
+
+        // 1. Prodi / Jurusan
+        if (!empty($this->jurusan)) {
+            $jurusan = trim($this->jurusan);
+            $query->whereHas('prodi', function($q) use ($jurusan) {
+                $q->where('nama_prodi', 'like', "%{$jurusan}%");
+            });
+        }
+
+        // 2. Semester
+        if (!empty($this->semester)) {
+            $semNum = (int) preg_replace('/[^0-9]/', '', $this->semester);
+            if ($semNum > 0) {
+                $query->where('semester', $semNum);
+            }
+        }
+
+        // 3. Program Kuliah (Reguler vs Karyawan)
+        if (!empty($this->program_kuliah)) {
+            $prog = trim($this->program_kuliah);
+            $query->where(function($q) use ($prog) {
+                $q->where('program_kuliah', 'like', "%{$prog}%")
+                  ->orWhereNull('program_kuliah');
+            });
+        }
+
+        // 4. Kelas
+        if (!empty($this->kelas)) {
+            $rawKelas = trim($this->kelas);
+            if (preg_match('/^[A-Z]$/i', $rawKelas)) {
+                $letter = strtoupper($rawKelas);
+                $query->where(function($q) use ($letter) {
+                    $q->where('kelas', $letter)
+                      ->orWhere('kelas', 'like', "% {$letter}")
+                      ->orWhere('kelas', 'like', "{$letter} %")
+                      ->orWhere('kelas', 'like', "%-{$letter}");
+                    if ($letter === 'A') {
+                        $q->orWhere('kelas', 'Reguler');
+                    }
+                });
+            } elseif (stripos($rawKelas, 'Karyawan') !== false || stripos($rawKelas, 'KAR') !== false) {
+                $query->where(function($q) {
+                    $q->where('kelas', 'like', '%Karyawan%')
+                      ->orWhere('kelas', 'KAR')
+                      ->orWhere('program_kuliah', 'like', '%Karyawan%');
+                });
+            } else {
+                $query->where('kelas', 'like', "%{$rawKelas}%");
+            }
+        }
+
+        return $query;
+    }
+
+    /**
      * Get the academic year / tahun ajaran for this agenda (e.g. "2026/2027").
      */
     public function getTahunAjaranAttribute()

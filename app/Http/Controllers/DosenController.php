@@ -909,49 +909,8 @@ class DosenController extends Controller
         }
 
         $existingAbsensi = \App\Models\Absensi::where('agenda_id', $agenda->id)->get()->keyBy('mahasiswa_id');
-        $existingAbsensiIds = $existingAbsensi->keys()->toArray();
 
-        // Query Mahasiswa presisi berdasarkan Prodi, Semester, Program Kuliah, dan Kelas
-        $baseQuery = \App\Models\Mahasiswa::with(['prodi', 'fakultas']);
-
-        if ($agenda->jurusan) {
-            $jurusanClean = trim($agenda->jurusan);
-            $baseQuery->whereHas('prodi', function($qP) use ($jurusanClean) {
-                $qP->where('nama_prodi', 'like', "%{$jurusanClean}%");
-            });
-        }
-
-        if ($agenda->semester) {
-            $semNum = preg_replace('/[^0-9]/', '', $agenda->semester);
-            if ($semNum) {
-                $baseQuery->where('semester', (int)$semNum);
-            }
-        }
-
-        if (!empty($agenda->program_kuliah)) {
-            $prog = trim($agenda->program_kuliah);
-            $baseQuery->where(function($q) use ($prog) {
-                $q->where('program_kuliah', 'like', "%{$prog}%")
-                  ->orWhereNull('program_kuliah');
-            });
-        }
-
-        if (!empty($agenda->kelas)) {
-            $rawKelas = trim($agenda->kelas);
-            if (preg_match('/\b([A-Z])\b/i', $rawKelas, $matches)) {
-                $letter = strtoupper($matches[1]);
-                $baseQuery->where(function($q) use ($rawKelas, $letter) {
-                    $q->where('kelas', $rawKelas)
-                      ->orWhere('kelas', 'like', "% {$letter}")
-                      ->orWhere('kelas', 'like', "{$letter} %")
-                      ->orWhere('kelas', $letter);
-                });
-            } else {
-                $baseQuery->where('kelas', 'like', "%{$rawKelas}%");
-            }
-        }
-
-        $students = $baseQuery->orderBy('nama_lengkap', 'asc')->get();
+        $students = $agenda->getStudentsQuery()->orderBy('nama_lengkap', 'asc')->get();
 
         return view('dosen.input_absensi', compact('agenda', 'students', 'existingAbsensi', 'dosen'));
     }
