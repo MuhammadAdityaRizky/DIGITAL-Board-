@@ -1,4 +1,4 @@
-﻿@if(isset($groupedAgendas) && $groupedAgendas->count() > 0)
+@if(isset($groupedAgendas) && $groupedAgendas->count() > 0)
     <div class="space-y-6">
         @php
             $hasActiveAnywhere = false;
@@ -8,6 +8,8 @@
                     break;
                 }
             }
+            // Tentukan tahun_akademik terbaru dari semua data yang tampil
+            $latestTahunAkademik = $groupedAgendas->flatten()->max('tahun_akademik');
         @endphp
         @foreach($groupedAgendas as $courseTitle => $sessions)
             @php
@@ -20,7 +22,10 @@
 
                 $minTanggal = $sessions->min('tanggal');
                 $maxTanggal = $sessions->max('tanggal');
-                $isPastCourse = $maxTanggal < date('Y-m-d') && $ongoingSessions === 0;
+                // "Semester Lalu" hanya jika tahun_akademik berbeda dari yang terbaru
+                $courseTahunAkademik = $first->tahun_akademik ?? '';
+                $isPastCourse = $maxTanggal < date('Y-m-d') && $ongoingSessions === 0
+                    && $courseTahunAkademik !== $latestTahunAkademik;
 
                 if ($minTanggal && $maxTanggal) {
                     if ($minTanggal === $maxTanggal) {

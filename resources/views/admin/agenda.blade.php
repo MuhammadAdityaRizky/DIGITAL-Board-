@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -264,6 +264,10 @@
                         </div>
                     </div>
 
+                    @php
+                        // Tentukan tahun_akademik terbaru dari semua data yang tampil
+                        $latestTahunAkademik = $groupedAgendas->flatten()->max('tahun_akademik');
+                    @endphp
                     @foreach($groupedAgendas as $groupKey => $agendasGroup)
                         @php
                             $firstItem = $agendasGroup->first();
@@ -278,7 +282,10 @@
 
                             $minTanggal = $agendasGroup->min('tanggal');
                             $maxTanggal = $agendasGroup->max('tanggal');
-                            $isPastCourse = $maxTanggal < date('Y-m-d') && $berlangsungCount === 0;
+                            // "Semester Lalu" hanya jika tahun_akademik berbeda dari yang terbaru
+                            $courseTahunAkademik = $firstItem->tahun_akademik ?? '';
+                            $isPastCourse = $maxTanggal < date('Y-m-d') && $berlangsungCount === 0
+                                && $courseTahunAkademik !== $latestTahunAkademik;
 
                             if ($minTanggal && $maxTanggal) {
                                 if ($minTanggal === $maxTanggal) {
