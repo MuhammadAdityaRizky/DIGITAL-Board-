@@ -115,25 +115,7 @@
             <!-- Attendance Logs Grouped Per Agenda -->
             <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden max-w-5xl">
                 <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex justify-between items-center flex-wrap gap-3">
-                    <div class="flex items-center gap-3 flex-wrap">
-                        <h3 class="font-bold text-sm text-slate-800">Laporan Kehadiran Per Sesi Praktikum</h3>
-                        
-                        <!-- Quick Sort Buttons -->
-                        <div class="inline-flex items-center bg-white p-0.5 rounded-lg border border-slate-200 shadow-2xs">
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'terbaru']) }}" 
-                               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition flex items-center gap-1.5 {{ request('sort', 'terbaru') == 'terbaru' ? 'bg-teal-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}"
-                               title="Urutkan dari tanggal terbaru ke terlama">
-                                <i class="fa-solid fa-arrow-down-wide-short text-[10px]"></i>
-                                <span>Terbaru</span>
-                            </a>
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'terlama']) }}" 
-                               class="px-2.5 py-1 rounded-md text-[11px] font-bold transition flex items-center gap-1.5 {{ request('sort') == 'terlama' ? 'bg-teal-800 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' }}"
-                               title="Urutkan dari tanggal terlama ke terbaru">
-                                <i class="fa-solid fa-arrow-up-wide-short text-[10px]"></i>
-                                <span>Terlama</span>
-                            </a>
-                        </div>
-                    </div>
+                    <h3 class="font-bold text-sm text-slate-800">Laporan Kehadiran Per Sesi Praktikum</h3>
                     <div class="flex gap-2">
                         <button onclick="document.getElementById('modal-import-global').classList.remove('hidden')" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white border border-blue-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-file-excel"></i> Import Excel Global
