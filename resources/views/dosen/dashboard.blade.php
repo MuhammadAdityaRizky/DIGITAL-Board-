@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -326,13 +326,16 @@
                                                     $semLabel = str_contains(strtolower($j->semester ?? ''), 'semester') 
                                                         ? $j->semester 
                                                         : 'Semester ' . ($j->semester ?? '1');
+                                                    $isKaryawan = strcasecmp($j->program_kuliah ?? '', 'karyawan') === 0;
+                                                    $progLabel = $isKaryawan ? 'Karyawan' : 'Reguler';
                                                 @endphp
-                                                <div class="combobox-item p-3 hover:bg-slate-50 cursor-pointer transition flex flex-col gap-1"
+                                                <div class="combobox-item p-3 hover:bg-slate-50 cursor-pointer transition flex flex-col gap-1.5"
                                                      data-id="{{ $j->id }}"
-                                                     data-title="{{ $j->mata_kuliah }} - Kelas {{ $j->kelas }} ({{ $semLabel }}, Setiap {{ $j->hari }})"
-                                                     data-search="{{ strtolower($j->mata_kuliah . ' ' . $j->kelas . ' ' . $j->hari . ' ' . ($j->lab->nama_lab ?? '') . ' ' . ($j->prodi->nama_prodi ?? '') . ' ' . $semLabel) }}"
+                                                     data-title="{{ $j->mata_kuliah }} - Kelas {{ $j->kelas }} ({{ $progLabel }}, {{ $semLabel }}, Setiap {{ $j->hari }})"
+                                                     data-search="{{ strtolower($j->mata_kuliah . ' ' . $j->kelas . ' ' . $progLabel . ' ' . $j->hari . ' ' . ($j->lab->nama_lab ?? '') . ' ' . ($j->prodi->nama_prodi ?? '') . ' ' . $semLabel) }}"
                                                      data-lab="{{ strtoupper($j->lab->nama_lab ?? 'Lab') }}"
-                                                     data-kelas="{{ $j->kelas ?? 'Reg A' }}"
+                                                     data-kelas="{{ $j->kelas ?? 'A' }}"
+                                                     data-program="{{ $progLabel }}"
                                                      data-semester="{{ $j->semester ?? '1' }}"
                                                      data-prodi="{{ $j->prodi->nama_prodi ?? 'Sistem Informasi' }}"
                                                      data-hari="{{ $j->hari }}"
@@ -341,15 +344,29 @@
                                                      onclick="selectComboboxDashboard(this)">
                                                     <div class="flex items-center justify-between gap-2 font-bold text-slate-900 text-xs sm:text-sm">
                                                         <span class="font-extrabold text-slate-900">{{ $j->mata_kuliah }}</span>
-                                                        <div class="flex items-center gap-1.5 shrink-0">
-                                                            <span class="px-2 py-0.5 bg-slate-100 text-slate-800 border border-slate-300 rounded text-xs font-bold">
+                                                        <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
+                                                            <span class="px-2 py-0.5 bg-slate-100 text-slate-800 border border-slate-300 rounded text-[11px] font-bold">
                                                                 {{ $semLabel }}
                                                             </span>
-                                                            <span class="px-2 py-0.5 bg-slate-200 text-slate-900 rounded text-xs font-bold">Kelas {{ $j->kelas }}</span>
+                                                            @if($isKaryawan)
+                                                                <span class="px-2 py-0.5 bg-purple-100 text-purple-900 border border-purple-300 rounded text-[11px] font-extrabold flex items-center gap-1">
+                                                                    <i class="fa-solid fa-briefcase text-[10px] text-purple-700"></i> Karyawan
+                                                                </span>
+                                                            @else
+                                                                <span class="px-2 py-0.5 bg-blue-50 text-blue-900 border border-blue-200 rounded text-[11px] font-bold flex items-center gap-1">
+                                                                    <i class="fa-solid fa-graduation-cap text-[10px] text-blue-700"></i> Reguler
+                                                                </span>
+                                                            @endif
+                                                            <span class="px-2 py-0.5 bg-slate-200 text-slate-900 rounded text-[11px] font-bold">Kelas {{ $j->kelas }}</span>
                                                         </div>
                                                     </div>
                                                     <div class="flex items-center justify-between text-xs text-slate-500 font-medium mt-0.5">
-                                                        <span><i class="fa-regular fa-calendar-check mr-1 text-slate-600"></i>Setiap {{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }} - {{ substr($j->jam_selesai,0,5) }} WIB</span>
+                                                        <span>
+                                                            <i class="fa-regular fa-calendar-check mr-1 text-slate-600"></i>Setiap {{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }} - {{ substr($j->jam_selesai,0,5) }} WIB
+                                                            @if($isKaryawan)
+                                                                <span class="text-purple-700 font-bold ml-1">(Kelas Malam)</span>
+                                                            @endif
+                                                        </span>
                                                         <span class="text-slate-800 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-300"><i class="fa-solid fa-door-open mr-1 text-slate-600"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
                                                     </div>
                                                 </div>
@@ -364,7 +381,10 @@
                                     <div id="jadwal-info-box" class="hidden mt-1.5 p-2.5 bg-slate-50 border border-slate-300 rounded-xl space-y-0.5 text-xs">
                                         <div class="flex justify-between items-center font-bold text-slate-800">
                                             <span id="info-lab"><i class="fa-solid fa-door-open mr-1 text-slate-600"></i> Lab</span>
-                                            <span id="info-kelas" class="px-2 py-0.5 bg-slate-200 rounded text-xs font-bold">Kelas</span>
+                                            <div class="flex items-center gap-1.5">
+                                                <span id="info-program" class="px-2 py-0.5 bg-blue-50 text-blue-800 border border-blue-200 rounded text-xs font-bold">Reguler</span>
+                                                <span id="info-kelas" class="px-2 py-0.5 bg-slate-200 rounded text-xs font-bold">Kelas</span>
+                                            </div>
                                         </div>
                                         <div class="text-slate-600 truncate font-medium text-xs">
                                             <span>Jadwal: <strong id="info-rutin" class="text-slate-800 font-bold">-</strong></span>
@@ -998,19 +1018,34 @@
                                 @foreach($jadwalPenggunaanLab as $j)
                                     @php
                                         $createdSessions = \App\Models\Agenda::where('jadwal_penggunaan_lab_id', $j->id)->count();
+                                        $isKaryawan = strcasecmp($j->program_kuliah ?? '', 'karyawan') === 0;
                                     @endphp
                                     <div class="p-3 bg-slate-50/70 border border-slate-200 rounded-xl space-y-2 hover:border-slate-300 transition">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="font-bold text-xs sm:text-sm text-slate-800 truncate max-w-[200px]">{{ $j->mata_kuliah }}</span>
-                                            <div class="flex items-center gap-1.5 shrink-0">
+                                            <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
                                                 <span class="px-2 py-0.5 bg-white text-slate-700 border border-slate-200 rounded text-[11px] font-bold">
                                                     {{ str_contains(strtolower($j->semester ?? ''), 'semester') ? $j->semester : 'Smt ' . ($j->semester ?? '1') }}
                                                 </span>
+                                                @if($isKaryawan)
+                                                    <span class="px-2 py-0.5 bg-purple-100 text-purple-900 border border-purple-200 rounded text-[10px] font-extrabold flex items-center gap-1">
+                                                        <i class="fa-solid fa-briefcase text-[9px] text-purple-700"></i> Kar
+                                                    </span>
+                                                @else
+                                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-900 border border-blue-200 rounded text-[10px] font-bold flex items-center gap-1">
+                                                        <i class="fa-solid fa-graduation-cap text-[9px] text-blue-700"></i> Reg
+                                                    </span>
+                                                @endif
                                                 <span class="px-2 py-0.5 bg-slate-200/80 text-slate-700 rounded text-[11px] font-bold">Kelas {{ $j->kelas }}</span>
                                             </div>
                                         </div>
                                         <div class="flex items-center justify-between text-xs text-slate-600 font-medium">
-                                            <span><i class="fa-regular fa-clock mr-1 text-slate-500"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }} - {{ substr($j->jam_selesai,0,5) }} WIB</span>
+                                            <span>
+                                                <i class="fa-regular fa-clock mr-1 text-slate-500"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }} - {{ substr($j->jam_selesai,0,5) }} WIB
+                                                @if($isKaryawan)
+                                                    <span class="text-purple-700 font-bold text-[11px] ml-1">(Malam)</span>
+                                                @endif
+                                            </span>
                                             <span class="text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200 font-bold text-[11px]"><i class="fa-solid fa-door-open mr-1 text-teal-700"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
                                         </div>
                                         <div class="pt-2 border-t border-slate-200/70 flex items-center justify-between text-xs font-medium">
@@ -1164,6 +1199,7 @@
 
                         const lab = itemEl.dataset.lab || '';
                         const kelas = itemEl.dataset.kelas || '';
+                        const program = itemEl.dataset.program || 'Reguler';
                         const semester = itemEl.dataset.semester || '';
                         const prodi = itemEl.dataset.prodi || '';
                         const hari = itemEl.dataset.hari || '';
@@ -1175,13 +1211,20 @@
                             box.classList.remove('hidden');
                             const labEl = document.getElementById('info-lab');
                             const kelasEl = document.getElementById('info-kelas');
+                            const progEl = document.getElementById('info-program');
                             const rutinEl = document.getElementById('info-rutin');
-                            const prodiEl = document.getElementById('info-prodi');
 
                             if (labEl) labEl.innerHTML = `<i class="fa-solid fa-door-open mr-1 text-teal-600"></i> ${lab}`;
                             if (kelasEl) kelasEl.innerText = `Kelas ${kelas} • Smt ${semester}`;
+                            if (progEl) {
+                                progEl.innerText = program;
+                                if (program.toLowerCase() === 'karyawan') {
+                                    progEl.className = 'px-2 py-0.5 bg-purple-100 text-purple-900 border border-purple-300 rounded text-xs font-extrabold';
+                                } else {
+                                    progEl.className = 'px-2 py-0.5 bg-blue-50 text-blue-900 border border-blue-200 rounded text-xs font-bold';
+                                }
+                            }
                             if (rutinEl) rutinEl.innerText = `${hari}, ${jamMulai} - ${jamSelesai} WIB`;
-                            if (prodiEl) prodiEl.innerText = prodi;
                         }
 
                         const inMasuk = document.getElementById('input_waktu_masuk');

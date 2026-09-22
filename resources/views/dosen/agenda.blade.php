@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -432,25 +432,52 @@
                                 <div id="combobox_menu_modal" 
                                      class="hidden absolute z-30 left-0 right-0 mt-1 max-h-72 overflow-y-auto bg-white border-2 border-slate-300 rounded-xl shadow-xl divide-y divide-slate-100">
                                     @foreach($jadwalPenggunaanLab as $j)
-                                        <div class="combobox-item p-3.5 hover:bg-slate-50 cursor-pointer transition flex flex-col gap-1"
+                                        @php
+                                            $semLabel = str_contains(strtolower($j->semester ?? ''), 'semester') 
+                                                ? $j->semester 
+                                                : 'Semester ' . ($j->semester ?? '1');
+                                            $isKaryawan = strcasecmp($j->program_kuliah ?? '', 'karyawan') === 0;
+                                            $progLabel = $isKaryawan ? 'Karyawan' : 'Reguler';
+                                        @endphp
+                                        <div class="combobox-item p-3.5 hover:bg-slate-50 cursor-pointer transition flex flex-col gap-1.5"
                                              data-id="{{ $j->id }}"
-                                             data-title="{{ $j->mata_kuliah }} - {{ $j->kelas }} ({{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }}-{{ substr($j->jam_selesai,0,5) }})"
-                                             data-search="{{ strtolower($j->mata_kuliah . ' ' . $j->kelas . ' ' . $j->hari . ' ' . ($j->lab->nama_lab ?? '') . ' ' . ($j->prodi->nama_prodi ?? '')) }}"
+                                             data-title="{{ $j->mata_kuliah }} - Kelas {{ $j->kelas }} ({{ $progLabel }}, {{ $semLabel }}, {{ $j->hari }})"
+                                             data-search="{{ strtolower($j->mata_kuliah . ' ' . $j->kelas . ' ' . $progLabel . ' ' . $j->hari . ' ' . ($j->lab->nama_lab ?? '') . ' ' . ($j->prodi->nama_prodi ?? '') . ' ' . $semLabel) }}"
                                              data-lab="{{ strtoupper($j->lab->nama_lab ?? 'Lab') }}"
                                              data-lab-id="{{ $j->lab_id }}"
-                                             data-kelas="{{ $j->kelas ?? 'Reg A' }}"
+                                             data-kelas="{{ $j->kelas ?? 'A' }}"
+                                             data-program="{{ $progLabel }}"
                                              data-semester="{{ $j->semester ?? '1' }}"
                                              data-prodi="{{ $j->prodi->nama_prodi ?? 'Sistem Informasi' }}"
                                              data-hari="{{ $j->hari }}"
                                              data-jam-mulai="{{ substr($j->jam_mulai, 0, 5) }}"
                                              data-jam-selesai="{{ substr($j->jam_selesai, 0, 5) }}"
                                              onclick="selectComboboxModal(this)">
-                                            <div class="flex items-center justify-between font-bold text-slate-900 text-base">
-                                                <span class="font-black text-slate-900">{{ $j->mata_kuliah }}</span>
-                                                <span class="px-2.5 py-0.5 bg-slate-200 text-slate-900 rounded-md text-xs font-bold">Kelas {{ $j->kelas }}</span>
+                                            <div class="flex items-center justify-between font-bold text-slate-900 text-sm sm:text-base gap-2">
+                                                <span class="font-extrabold text-slate-900">{{ $j->mata_kuliah }}</span>
+                                                <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
+                                                    <span class="px-2 py-0.5 bg-slate-100 text-slate-800 border border-slate-300 rounded text-xs font-bold">
+                                                        {{ $semLabel }}
+                                                    </span>
+                                                    @if($isKaryawan)
+                                                        <span class="px-2 py-0.5 bg-purple-100 text-purple-900 border border-purple-300 rounded text-xs font-extrabold flex items-center gap-1">
+                                                            <i class="fa-solid fa-briefcase text-[10px] text-purple-700"></i> Karyawan
+                                                        </span>
+                                                    @else
+                                                        <span class="px-2 py-0.5 bg-blue-50 text-blue-900 border border-blue-200 rounded text-xs font-bold flex items-center gap-1">
+                                                            <i class="fa-solid fa-graduation-cap text-[10px] text-blue-700"></i> Reguler
+                                                        </span>
+                                                    @endif
+                                                    <span class="px-2 py-0.5 bg-slate-200 text-slate-900 rounded text-xs font-bold">Kelas {{ $j->kelas }}</span>
+                                                </div>
                                             </div>
-                                            <div class="flex items-center justify-between text-sm text-slate-600 font-semibold mt-0.5">
-                                                <span><i class="fa-regular fa-clock mr-1.5 text-slate-500"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }} - {{ substr($j->jam_selesai,0,5) }} WIB</span>
+                                            <div class="flex items-center justify-between text-xs sm:text-sm text-slate-600 font-semibold mt-0.5">
+                                                <span>
+                                                    <i class="fa-regular fa-clock mr-1.5 text-slate-500"></i>{{ $j->hari }}, {{ substr($j->jam_mulai,0,5) }} - {{ substr($j->jam_selesai,0,5) }} WIB
+                                                    @if($isKaryawan)
+                                                        <span class="text-purple-700 font-bold ml-1">(Kelas Malam)</span>
+                                                    @endif
+                                                </span>
                                                 <span class="text-slate-900 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-300"><i class="fa-solid fa-door-open mr-1 text-slate-600"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
                                             </div>
                                         </div>
