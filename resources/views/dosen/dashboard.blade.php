@@ -935,11 +935,6 @@
                                                             <h5 class="font-bold text-slate-700 flex items-center justify-between">
                                                                 <span><i class="fa-solid fa-users text-teal-600"></i> Daftar Kehadiran Mahasiswa</span>
                                                                 <div class="flex items-center gap-2.5">
-                                                                    @if($ag->absensi->count() > 0)
-                                                                        <a href="{{ route('dosen.agenda.export-kehadiran', $ag->id) }}" target="_blank" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg text-xs font-extrabold uppercase flex items-center gap-1.5 transition">
-                                                                            <i class="fa-solid fa-print"></i> Cetak Absen
-                                                                        </a>
-                                                                    @endif
                                                                     <span class="text-xs text-slate-500 font-semibold">Total: {{ $ag->absensi->count() }} Hadir</span>
                                                                 </div>
                                                             </h5>

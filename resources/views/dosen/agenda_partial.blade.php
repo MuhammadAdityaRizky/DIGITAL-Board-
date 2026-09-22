@@ -384,17 +384,8 @@
                                         @endif
                                     </div>
 
-                                    <!-- Grup Tombol Utilitas (Cetak Hadir, Cetak BA, Edit, Hapus) -->
+                                    <!-- Grup Tombol Utilitas (Cetak BA, Edit, Hapus) -->
                                     <div class="flex items-center gap-2 flex-wrap">
-                                        @if($ag->absensi->count() > 0)
-                                            <a href="{{ route('dosen.agenda.export-kehadiran', $ag->id) }}" target="_blank" 
-                                               class="h-[36px] px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs" 
-                                               title="Cetak Rekapitulasi Daftar Hadir">
-                                                <i class="fa-solid fa-print text-xs text-slate-600"></i>
-                                                <span>Cetak Hadir</span>
-                                            </a>
-                                        @endif
-
                                         @if(!$isFuture)
                                             <a href="{{ route('dosen.agenda.berita-acara.cetak', $ag->id) }}" target="_blank" 
                                                class="h-[36px] px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs" 

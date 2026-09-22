@@ -1077,20 +1077,6 @@ class DosenController extends Controller
         return back()->with('success', 'Password akun berhasil diperbarui.');
     }
 
-    public function exportKehadiran($id)
-    {
-        $user = auth()->user();
-        $dosen = Dosen::where('user_id', $user->id)->first();
-        if (!$dosen) {
-            return back()->with('error', 'Data profil Dosen tidak ditemukan.');
-        }
-        $agenda = Agenda::with(['dosen', 'lab', 'absensi.mahasiswa'])->where('dosen_id', $dosen->id)->findOrFail($id);
-        
-        return view('dosen.export_agenda_kehadiran', compact('agenda'));
-    }
-
-
-
     public function bulkDeleteAgendas(Request $request)
     {
         $request->validate([

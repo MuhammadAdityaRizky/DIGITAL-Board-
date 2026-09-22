@@ -122,7 +122,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/absensi/{id}/input', [DosenController::class, 'storeInputAbsensi'])->name('absensi.store-input');
         
         Route::get('/agenda', [DosenController::class, 'agenda'])->name('agenda');
-        Route::get('/agenda/{id}/export-kehadiran', [DosenController::class, 'exportKehadiran'])->name('agenda.export-kehadiran');
         Route::get('/agenda/{id}/berita-acara/cetak', [DosenController::class, 'cetakBeritaAcara'])->name('agenda.berita-acara.cetak');
         Route::get('/agenda/{id}/realisasi-praktikum/cetak', [DosenController::class, 'cetakRealisasiPraktikum'])->name('agenda.realisasi-praktikum.cetak');
         Route::get('/jadwal-lab', [DosenController::class, 'jadwalPenggunaanLab'])->name('jadwal-lab');
