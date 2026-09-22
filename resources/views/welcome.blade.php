@@ -1,4 +1,4 @@
-﻿@php
+@php
     // Find active agenda (current time falls between start and end time today)
     $currentTime = now()->format('H:i:s');
     
@@ -50,13 +50,13 @@
 
 
 
-    <!-- Header Section (Royal Blue with thin border) -->
-    <header class="flex flex-col md:flex-row justify-between items-center bg-[#0c4ea6] border-2 border-[#1e60b8] rounded-2xl p-4 md:px-8 gap-4 shadow-md text-white">
+    <!-- Header Section (Dark Slate matching Admin Console) -->
+    <header class="flex flex-col md:flex-row justify-between items-center bg-slate-900 border border-slate-800 rounded-2xl p-4 md:px-8 gap-4 shadow-xl text-white">
         <!-- Logo & Campus Name -->
         <div class="flex items-center gap-4">
             <img src="{{ asset('images/logo-uika.png') }}" 
                  alt="Logo UIKA" 
-                 class="w-14 h-14 md:w-16 md:h-16 object-contain shrink-0">
+                 class="w-14 h-14 md:w-16 md:h-16 object-contain shrink-0 drop-shadow-sm">
             <div class="text-[11px] md:text-xs font-black tracking-wider leading-tight text-slate-100 uppercase">
                 <div>Universitas</div>
                 <div>Ibn Khaldun</div>
@@ -66,17 +66,17 @@
 
         <!-- Center Title -->
         <div class="text-center md:flex-1">
-            <h1 class="text-xl md:text-3xl font-extrabold tracking-wide text-white uppercase drop-shadow-sm">
+            <h1 class="text-xl md:text-3xl font-extrabold tracking-wider text-white uppercase drop-shadow-sm">
                 INFORMATION UIKA BOARD
             </h1>
-            <a href="{{ route('board') }}" class="inline-flex items-center gap-1.5 text-[9px] font-bold text-[#00b87c] hover:text-white uppercase tracking-widest mt-1 bg-black/25 px-2.5 py-1 rounded-full transition duration-300">
+            <a href="{{ route('board') }}" class="inline-flex items-center gap-1.5 text-[9px] font-bold text-teal-300 hover:text-white uppercase tracking-widest mt-1.5 bg-teal-900/60 hover:bg-teal-800 border border-teal-500/30 px-3 py-1 rounded-full transition duration-300">
                 <i class="fa-solid fa-arrow-left"></i> Kembali ke Portal Lab
             </a>
         </div>
 
         <!-- Clock & Date Section -->
         <div class="text-center md:text-right shrink-0">
-            <div id="live-day" class="text-xs md:text-sm font-black tracking-widest text-slate-200 uppercase">RABU</div>
+            <div id="live-day" class="text-xs md:text-sm font-black tracking-widest text-teal-400 uppercase">RABU</div>
             <div id="live-date" class="text-[10px] md:text-xs font-bold text-slate-300">12 Agustus 2026</div>
             <div id="live-clock" class="text-2xl md:text-4xl font-extrabold text-white tracking-tight mt-0.5 leading-none">00:00 AM</div>
         </div>

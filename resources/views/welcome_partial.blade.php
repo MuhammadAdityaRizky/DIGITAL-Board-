@@ -35,14 +35,14 @@
         <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col gap-5">
             <!-- Header -->
             <div class="flex justify-between items-center border-b-2 border-slate-200 pb-3.5 mb-1">
-                <div class="flex items-center gap-2 text-[#0b8a5a] font-bold text-sm tracking-wider uppercase">
-                    <i class="fa-solid fa-calendar-days text-base"></i>
+                <div class="flex items-center gap-2.5 text-slate-900 font-extrabold text-sm tracking-wider uppercase">
+                    <i class="fa-solid fa-calendar-days text-teal-700 text-base"></i>
                     <span>Agenda {{ $activeLab->nama_lab }}</span>
                     @if($activeLab->fakultas)
                         <span class="text-[11px] font-semibold text-slate-400 normal-case tracking-normal">({{ $activeLab->fakultas->nama_fakultas }})</span>
                     @endif
                 </div>
-                <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#00b87c] text-white rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600 text-white rounded-full text-[10px] font-bold uppercase tracking-wider shadow-xs">
                     <span class="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>
                     <span>Live</span>
                 </div>
@@ -52,14 +52,14 @@
             <div class="flex flex-col gap-5">
                 <!-- Current Class (Sedang Berlangsung) -->
                 @if($activeAgenda)
-                    <div class="border-l-4 border-[#0c4ea6] bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 md:p-5 space-y-3 shadow-2xs">
+                    <div class="border-l-4 border-slate-900 bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 md:p-5 space-y-3 shadow-2xs">
                         <div class="flex justify-between items-center pb-1 border-b border-slate-200/60">
-                            <span class="text-[11px] font-extrabold text-[#0c4ea6] tracking-wider uppercase">Mata Kuliah Saat Ini</span>
+                            <span class="text-[11px] font-extrabold text-teal-800 tracking-wider uppercase">Mata Kuliah Saat Ini</span>
                             <span class="text-xs font-bold text-slate-700 bg-white border border-slate-200 px-2.5 py-0.5 rounded-md shadow-2xs">{{ substr($activeAgenda->jam_mulai, 0, 5) }} - {{ substr($activeAgenda->jam_selesai, 0, 5) }} WIB</span>
                         </div>
                         <div>
                             @if($activeAgenda->status_agenda === 'Berlangsung')
-                                <span class="inline-block px-2.5 py-1 bg-[#e0effe] text-[#1d4ed8] border border-[#bfdbfe] rounded-md text-[11px] font-extrabold uppercase tracking-wide animate-pulse">
+                                <span class="inline-block px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-md text-[11px] font-extrabold uppercase tracking-wide animate-pulse">
                                     Sedang Berlangsung
                                 </span>
                             @elseif($activeAgenda->status_agenda === 'Dibatalkan')
@@ -72,7 +72,7 @@
                                 </span>
                             @endif
                         </div>
-                        <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 leading-tight">
+                        <h2 class="text-xl md:text-2xl font-extrabold text-slate-850 leading-tight">
                             {{ $activeAgenda->mata_kuliah }}
                         </h2>
                         <div class="border-t border-slate-200/80 pt-3 mt-3 text-xs text-slate-600 font-semibold space-y-1.5">
@@ -94,7 +94,7 @@
                         </div>
                     </div>
                 @else
-                    <div class="border-l-4 border-[#0c4ea6] p-5 bg-slate-50/70 border border-slate-200/80 rounded-2xl text-center shadow-2xs">
+                    <div class="border-l-4 border-slate-900 p-5 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-center shadow-2xs">
                         <i class="fa-solid fa-desktop text-2xl text-slate-300 block mb-2"></i>
                         <p class="text-sm font-bold text-slate-500">Tidak ada agenda kuliah sedang berlangsung saat ini.</p>
                     </div>
@@ -103,20 +103,20 @@
                 <!-- Garis Pemisah (Divider) -->
                 <div class="relative flex items-center my-1">
                     <div class="flex-grow border-t-2 border-slate-200"></div>
-                    <span class="shrink-0 mx-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Agenda Selanjutnya</span>
+                    <span class="shrink-0 mx-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Agenda Selanjutnya</span>
                     <div class="flex-grow border-t-2 border-slate-200"></div>
                 </div>
 
                 <!-- Next Class (Mata Kuliah Berikutnya) -->
                 @if($nextAgenda)
-                    <div class="border-l-4 border-[#00b87c] bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 md:p-5 space-y-3 shadow-2xs">
+                    <div class="border-l-4 border-teal-700 bg-slate-50/80 border border-slate-200/90 rounded-2xl p-4 md:p-5 space-y-3 shadow-2xs">
                         <div class="flex justify-between items-center pb-1 border-b border-slate-200/60">
-                            <span class="text-[11px] font-extrabold text-[#00b87c] tracking-wider uppercase">Mata Kuliah Berikutnya</span>
+                            <span class="text-[11px] font-extrabold text-teal-800 tracking-wider uppercase">Mata Kuliah Berikutnya</span>
                             <span class="text-xs font-bold text-slate-700 bg-white border border-slate-200 px-2.5 py-0.5 rounded-md shadow-2xs">{{ substr($nextAgenda->jam_mulai, 0, 5) }} - {{ substr($nextAgenda->jam_selesai, 0, 5) }} WIB</span>
                         </div>
                         <div>
                             @if($nextAgenda->status_agenda === 'Berlangsung')
-                                <span class="inline-block px-2.5 py-1 bg-[#e0effe] text-[#1d4ed8] border border-[#bfdbfe] rounded-md text-[11px] font-extrabold uppercase tracking-wide animate-pulse">
+                                <span class="inline-block px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-md text-[11px] font-extrabold uppercase tracking-wide animate-pulse">
                                     Sedang Berlangsung
                                 </span>
                             @elseif($nextAgenda->status_agenda === 'Dibatalkan')
@@ -124,12 +124,12 @@
                                     Dibatalkan
                                 </span>
                             @else
-                                <span class="inline-block px-2.5 py-1 bg-[#f1f5f9] text-[#475569] border border-slate-200 rounded-md text-[11px] font-extrabold uppercase tracking-wide">
+                                <span class="inline-block px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded-md text-[11px] font-extrabold uppercase tracking-wide">
                                     Kelas Selanjutnya
                                 </span>
                             @endif
                         </div>
-                        <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 leading-tight">
+                        <h2 class="text-xl md:text-2xl font-extrabold text-slate-850 leading-tight">
                             {{ $nextAgenda->mata_kuliah }}
                         </h2>
                         <div class="border-t border-slate-200/80 pt-3 mt-3 text-xs text-slate-600 font-semibold space-y-1.5">
@@ -151,7 +151,7 @@
                         </div>
                     </div>
                 @else
-                    <div class="border-l-4 border-[#00b87c] p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl text-center shadow-2xs">
+                    <div class="border-l-4 border-teal-700 p-4 bg-slate-50/80 border border-slate-200/90 rounded-2xl text-center shadow-2xs">
                         <i class="fa-solid fa-calendar-check text-2xl text-slate-300 block mb-2"></i>
                         <p class="text-sm font-bold text-slate-500">Tidak ada agenda kuliah berikutnya untuk hari ini.</p>
                     </div>
@@ -162,12 +162,12 @@
         <!-- Important Info Panel -->
         <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col gap-4 relative overflow-hidden">
             <!-- Header with Slide Controls -->
-            <div class="flex items-center justify-between border-b border-slate-150 pb-3">
-                <div class="flex items-center gap-2 text-slate-800 font-bold text-sm tracking-wider uppercase">
-                    <i class="fa-solid fa-bullhorn text-[#0c4ea6] text-base"></i>
+            <div class="flex items-center justify-between border-b-2 border-slate-200 pb-3.5">
+                <div class="flex items-center gap-2.5 text-slate-900 font-extrabold text-sm tracking-wider uppercase">
+                    <i class="fa-solid fa-bullhorn text-teal-700 text-base"></i>
                     <span>Informasi Penting</span>
                     @if(isset($pengumuman) && count($pengumuman) > 0)
-                        <span class="ml-2 px-2 py-0.5 bg-blue-50 text-[#0c4ea6] text-[10px] font-extrabold rounded-full border border-blue-200">
+                        <span class="ml-2 px-2.5 py-0.5 bg-teal-50 text-teal-800 text-[10px] font-extrabold rounded-full border border-teal-200">
                             {{ count($pengumuman) }} Berita
                         </span>
                     @endif
@@ -180,16 +180,16 @@
                             @foreach($pengumuman as $index => $item)
                                 <button type="button" onclick="goToAnnouncementSlide({{ $index }})" 
                                         id="announcement-dot-{{ $index }}"
-                                        class="h-2 rounded-full transition-all duration-300 cursor-pointer {{ $index === 0 ? 'bg-[#0c4ea6] w-4' : 'bg-slate-300 w-2' }}" 
+                                        class="h-2 rounded-full transition-all duration-300 cursor-pointer {{ $index === 0 ? 'bg-slate-900 w-4' : 'bg-slate-300 w-2' }}" 
                                         title="Slide {{ $index + 1 }}"></button>
                             @endforeach
                         </div>
                         <button type="button" onclick="prevAnnouncementSlide()" 
-                                class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs" title="Sebelumnya">
+                                class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition cursor-pointer text-xs" title="Sebelumnya">
                             <i class="fa-solid fa-chevron-left"></i>
                         </button>
                         <button type="button" onclick="nextAnnouncementSlide()" 
-                                class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer text-xs" title="Berikutnya">
+                                class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition cursor-pointer text-xs" title="Berikutnya">
                             <i class="fa-solid fa-chevron-right"></i>
                         </button>
                     </div>
@@ -289,7 +289,7 @@
                     const dot = document.getElementById('announcement-dot-' + i);
                     if (dot) {
                         if (i === window.currentAnnouncementSlide) {
-                            dot.className = "h-2 rounded-full transition-all duration-300 cursor-pointer bg-[#0c4ea6] w-4";
+                            dot.className = "h-2 rounded-full transition-all duration-300 cursor-pointer bg-slate-900 w-4";
                         } else {
                             dot.className = "h-2 rounded-full transition-all duration-300 cursor-pointer bg-slate-300 w-2";
                         }
@@ -326,16 +326,16 @@
     <div class="flex flex-col gap-6">
         
         <!-- Scan QR Card -->
-        <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col">
-            <!-- Banner Header -->
-            <div class="bg-[#ebf3fc] px-5 py-3.5 border-b border-slate-150 flex items-center justify-between">
+        <div class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm flex flex-col">
+            <!-- Banner Header (Dark Slate matching Admin Console) -->
+            <div class="bg-slate-900 px-5 py-3.5 border-b border-slate-800 flex items-center justify-between text-white">
                 <div class="flex items-center gap-2.5">
-                    <i class="fa-solid fa-qrcode text-[#0c4ea6] text-base"></i>
-                    <span class="font-extrabold text-[#0c4ea6] text-xs uppercase tracking-wider">Scan untuk Akses Presensi</span>
+                    <i class="fa-solid fa-qrcode text-teal-400 text-base"></i>
+                    <span class="font-extrabold text-white text-xs uppercase tracking-wider">Scan untuk Akses Presensi</span>
                 </div>
                 @if($activeAgenda && $activeAgenda->id)
-                    <span class="inline-flex items-center gap-1 text-[9px] font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full border border-emerald-200 uppercase">
-                        <i class="fa-solid fa-arrows-rotate text-[8px] animate-spin"></i> 5s Dynamic
+                    <span class="inline-flex items-center gap-1 text-[9px] font-extrabold text-teal-300 bg-teal-950/80 px-2.5 py-0.5 rounded-full border border-teal-500/40 uppercase tracking-wider">
+                        <i class="fa-solid fa-arrows-rotate text-[8px] animate-spin text-teal-400"></i> 5s Dynamic
                     </span>
                 @endif
             </div>
@@ -363,20 +363,20 @@
                 </div>
 
                 @if($activeAgenda && $activeAgenda->id)
-                    <div class="text-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 w-full max-w-[240px] shadow-sm">
+                    <div class="text-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 w-full max-w-[240px] shadow-2xs">
                         <p class="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider">KODE PRESENSI MANUAL (5s REFRESH)</p>
-                        <p class="text-xs font-extrabold text-teal-850 tracking-widest font-mono mt-0.5 select-all">{{ $dynamicQrToken }}</p>
+                        <p class="text-xs font-extrabold text-slate-800 tracking-widest font-mono mt-0.5 select-all">{{ $dynamicQrToken }}</p>
                     </div>
-                    <div class="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                        <i class="fa-solid fa-shield-halved text-[9px]"></i>
+                    <div class="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-bold text-teal-800 bg-teal-50 px-3 py-1 rounded-full border border-teal-200">
+                        <i class="fa-solid fa-shield-halved text-[9px] text-teal-600"></i>
                         <span>Dynamic Anti-Cheat (Refresh 5dtk)</span>
                     </div>
                 @endif
             </div>
 
             <!-- Banner Footer -->
-            <div class="bg-[#ebf3fc] py-3 px-5 text-center border-t border-slate-150 w-full">
-                <span class="text-[#0c4ea6] font-extrabold text-xs uppercase tracking-wider">
+            <div class="bg-slate-900 py-3.5 px-5 text-center border-t border-slate-800 w-full">
+                <span class="text-teal-300 font-extrabold text-xs uppercase tracking-wider">
                     @if($activeAgenda)
                         Berlaku s.d. {{ substr($activeAgenda->jam_selesai, 0, 5) }} WIB
                     @else
@@ -387,18 +387,18 @@
         </div>
 
         <!-- Tata Tertib Ruangan Card -->
-        <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col">
-            <!-- Banner Header -->
-            <div class="bg-[#ebf3fc] px-5 py-3.5 border-b border-slate-150 flex items-center gap-2.5">
-                <i class="fa-solid fa-list-check text-[#0c4ea6] text-base"></i>
-                <span class="font-extrabold text-[#0c4ea6] text-xs uppercase tracking-wider">Tata Tertib Ruangan</span>
+        <div class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm flex flex-col">
+            <!-- Banner Header (Dark Slate matching Admin Console) -->
+            <div class="bg-slate-900 px-5 py-3.5 border-b border-slate-800 flex items-center gap-2.5 text-white">
+                <i class="fa-solid fa-list-check text-teal-400 text-base"></i>
+                <span class="font-extrabold text-white text-xs uppercase tracking-wider">Tata Tertib Ruangan</span>
             </div>
 
             <!-- Rules List -->
             <div class="p-6 bg-white flex flex-col gap-4">
                 <div class="flex items-start gap-4">
-                    <div class="w-7 h-7 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                        <i class="fa-solid fa-ban text-red-500 text-xs"></i>
+                    <div class="w-7 h-7 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <i class="fa-solid fa-ban text-rose-600 text-xs"></i>
                     </div>
                     <p class="text-xs text-slate-700 leading-normal font-medium mt-0.5">
                         Wajib menjaga kebersihan dan ketertiban selama berada di laboratorium.
@@ -406,8 +406,8 @@
                 </div>
 
                 <div class="flex items-start gap-4">
-                    <div class="w-7 h-7 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                        <i class="fa-solid fa-desktop text-blue-500 text-xs"></i>
+                    <div class="w-7 h-7 rounded-full bg-teal-50 border border-teal-100 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <i class="fa-solid fa-desktop text-teal-700 text-xs"></i>
                     </div>
                     <p class="text-xs text-slate-700 leading-normal font-medium mt-0.5">
                         Gunakan komputer sesuai absen.
@@ -415,8 +415,8 @@
                 </div>
 
                 <div class="flex items-start gap-4">
-                    <div class="w-7 h-7 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                        <i class="fa-solid fa-power-off text-amber-500 text-xs"></i>
+                    <div class="w-7 h-7 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <i class="fa-solid fa-power-off text-amber-600 text-xs"></i>
                     </div>
                     <p class="text-xs text-slate-700 leading-normal font-medium mt-0.5">
                         Matikan komputer & rapikan kursi.
@@ -424,8 +424,8 @@
                 </div>
 
                 <div class="flex items-start gap-4">
-                    <div class="w-7 h-7 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                        <i class="fa-solid fa-burger text-red-400 text-xs"></i>
+                    <div class="w-7 h-7 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <i class="fa-solid fa-burger text-rose-500 text-xs"></i>
                     </div>
                     <p class="text-xs text-slate-700 leading-normal font-medium mt-0.5">
                         Dilarang membawa makanan dan minuman ke dalam laboratorium.
@@ -433,8 +433,8 @@
                 </div>
 
                 <div class="flex items-start gap-4">
-                    <div class="w-7 h-7 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
-                        <i class="fa-solid fa-shield-halved text-emerald-500 text-xs"></i>
+                    <div class="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                        <i class="fa-solid fa-shield-halved text-emerald-600 text-xs"></i>
                     </div>
                     <p class="text-xs text-slate-700 leading-normal font-medium mt-0.5">
                         Gunakan komputer dan fasilitas laboratorium dengan baik dan bertanggung jawab.
