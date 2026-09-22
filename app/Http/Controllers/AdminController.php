@@ -1280,12 +1280,35 @@ class AdminController extends Controller
             $query->whereBetween('tanggal', [$request->start_date, $request->end_date]);
         }
 
+        $sort = $request->get('sort', 'terbaru');
+        $isSortDesc = ($sort !== 'terlama');
+
+        if ($isSortDesc) {
+            $query->orderBy('tanggal', 'desc')->orderBy('jam_mulai', 'desc');
+        } else {
+            $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc');
+        }
+
         $allAgendas = $query->get();
 
         // Group agendas by Mata Kuliah + Kelas + Program Kuliah + Dosen ID
         $groupedAgendas = $allAgendas->groupBy(function($item) {
             return $item->mata_kuliah . '___' . ($item->kelas ?: 'General') . '___' . ($item->program_kuliah ?: 'Reguler') . '___' . ($item->dosen_id ?: 0);
+        })->map(function($group) use ($isSortDesc) {
+            return $group->sortBy(function($agenda) {
+                $num = 999;
+                if ($agenda->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $agenda->catatan, $m)) {
+                    $num = (int)$m[1];
+                }
+                return ($agenda->tanggal ?? '') . '_' . sprintf('%04d', $num) . '_' . ($agenda->jam_mulai ?? '');
+            })->values();
         });
+
+        if ($isSortDesc) {
+            $groupedAgendas = $groupedAgendas->sortByDesc(fn($g) => ($g->max('tanggal') ?? '') . ' ' . ($g->max('jam_mulai') ?? ''));
+        } else {
+            $groupedAgendas = $groupedAgendas->sortBy(fn($g) => ($g->min('tanggal') ?? '') . ' ' . ($g->min('jam_mulai') ?? ''));
+        }
 
         $agendas = $allAgendas;
 
