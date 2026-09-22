@@ -10,13 +10,25 @@ use Illuminate\Http\Request;
 
 class MahasiswaController extends Controller
 {
+    private function handleMissingMahasiswaProfile()
+    {
+        $user = auth()->user();
+        if ($user && ($user->isSuperAdmin() || $user->isAdminFakultas())) {
+            return redirect()->route('admin.dashboard')->withErrors(['msg' => 'Anda sedang login sebagai Admin. Mengalihkan ke Dashboard Admin.']);
+        }
+        if ($user && $user->isDosen()) {
+            return redirect()->route('dosen.dashboard')->withErrors(['msg' => 'Anda sedang login sebagai Dosen. Mengalihkan ke Dashboard Dosen.']);
+        }
+        return redirect()->route('login')->withErrors(['msg' => 'Data profil Mahasiswa tidak ditemukan.']);
+    }
+
     public function dashboard()
     {
         $user = auth()->user();
         $mahasiswa = Mahasiswa::with(['prodi', 'fakultas'])->where('user_id', $user->id)->first();
 
         if (!$mahasiswa) {
-            return redirect()->route('login')->withErrors(['msg' => 'Data profil Mahasiswa tidak ditemukan.']);
+            return $this->handleMissingMahasiswaProfile();
         }
 
         $profileIncomplete = !$mahasiswa->id_fakultas || !$mahasiswa->id_prodi;
@@ -120,7 +132,11 @@ class MahasiswaController extends Controller
     public function riwayat(Request $request)
     {
         $user = auth()->user();
-        $mahasiswa = Mahasiswa::where('user_id', $user->id)->firstOrFail();
+        $mahasiswa = Mahasiswa::where('user_id', $user->id)->first();
+
+        if (!$mahasiswa) {
+            return $this->handleMissingMahasiswaProfile();
+        }
 
         $query = Absensi::with(['agenda.dosen', 'agenda.lab'])
             ->where('mahasiswa_id', $mahasiswa->id)
@@ -147,7 +163,11 @@ class MahasiswaController extends Controller
     public function agenda(Request $request)
     {
         $user = auth()->user();
-        $mahasiswa = Mahasiswa::with(['prodi', 'fakultas'])->where('user_id', $user->id)->firstOrFail();
+        $mahasiswa = Mahasiswa::with(['prodi', 'fakultas'])->where('user_id', $user->id)->first();
+
+        if (!$mahasiswa) {
+            return $this->handleMissingMahasiswaProfile();
+        }
 
         $scope = $request->get('scope', 'untuk-saya');
 
@@ -210,7 +230,12 @@ class MahasiswaController extends Controller
     public function pengumuman()
     {
         $user = auth()->user();
-        $mahasiswa = Mahasiswa::where('user_id', $user->id)->firstOrFail();
+        $mahasiswa = Mahasiswa::where('user_id', $user->id)->first();
+
+        if (!$mahasiswa) {
+            return $this->handleMissingMahasiswaProfile();
+        }
+
         $pengumuman = Pengumuman::with(['admin', 'laboratoriums'])->orderBy('created_at', 'desc')->get();
         return view('mahasiswa.pengumuman', compact('mahasiswa', 'pengumuman'));
     }
@@ -218,7 +243,12 @@ class MahasiswaController extends Controller
     public function pengaturan()
     {
         $user = auth()->user();
-        $mahasiswa = Mahasiswa::where('user_id', $user->id)->firstOrFail();
+        $mahasiswa = Mahasiswa::where('user_id', $user->id)->first();
+
+        if (!$mahasiswa) {
+            return $this->handleMissingMahasiswaProfile();
+        }
+
         $fakultas = \App\Models\Fakultas::all();
         $prodis = \App\Models\Prodi::all();
         return view('mahasiswa.pengaturan', compact('mahasiswa', 'fakultas', 'prodis'));
@@ -227,7 +257,11 @@ class MahasiswaController extends Controller
     public function updatePengaturan(Request $request)
     {
         $user = auth()->user();
-        $mahasiswa = Mahasiswa::where('user_id', $user->id)->firstOrFail();
+        $mahasiswa = Mahasiswa::where('user_id', $user->id)->first();
+
+        if (!$mahasiswa) {
+            return $this->handleMissingMahasiswaProfile();
+        }
 
         $request->validate([
             'password' => 'required|string|min:6|confirmed',

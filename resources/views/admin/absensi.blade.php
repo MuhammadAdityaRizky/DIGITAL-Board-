@@ -290,7 +290,7 @@
 
                                  <!-- DAFTAR PERTEMUAN KE-N & LAPORAN ABSENSINYA -->
                                 <div class="p-5 space-y-3 bg-slate-50/40">
-                                    @foreach($groupItems as $meetIndex => $ag)
+                                    @foreach($groupItems->take(10) as $meetIndex => $ag)
                                         <div class="pertemuan-accordion-item border border-slate-200 rounded-xl overflow-hidden bg-white shadow-2xs">
                                             <!-- Sub-Header: PERTEMUAN KE-N (ACCORDION TOGGLE HEADER) -->
                                             <div onclick="togglePertemuanAccordion(this)" class="pertemuan-header bg-slate-100/90 hover:bg-slate-200/80 border-b border-slate-200 px-5 py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 cursor-pointer select-none transition">
@@ -330,13 +330,13 @@
                                                         </a>
                                                     @endif
                                                     <div class="w-6 h-6 rounded-full bg-slate-200/60 flex items-center justify-center text-slate-600 transition">
-                                                        <i class="fa-solid fa-chevron-down accordion-icon text-xs transition-transform duration-200 {{ $meetIndex === 0 ? 'rotate-180' : '' }}"></i>
+                                                        <i class="fa-solid fa-chevron-down accordion-icon text-xs transition-transform duration-200"></i>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- LAPORAN ABSENSINYA (COLLAPSIBLE CONTENT BODY) -->
-                                            <div class="pertemuan-body p-4 bg-white {{ $meetIndex === 0 ? '' : 'hidden' }}">
+                                            <div class="pertemuan-body p-4 bg-white hidden">
                                                 @if($ag->absensi->count() > 0)
                                                     <div class="overflow-x-auto rounded-lg border border-slate-150 text-xs">
                                                         <table class="w-full text-left text-slate-700">
@@ -380,6 +380,11 @@
                                             </div>
                                         </div>
                                     @endforeach
+                                    @if($groupItems->count() > 10)
+                                        <div class="p-3 text-center text-xs text-slate-500 font-medium bg-white border border-slate-200 rounded-xl">
+                                            <i class="fa-solid fa-circle-info mr-1 text-teal-600"></i> Menampilkan 10 pertemuan pertama dari total <strong>{{ $groupItems->count() }}</strong> Pertemuan. Gunakan tombol Cetak untuk melihat seluruh laporan.
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach

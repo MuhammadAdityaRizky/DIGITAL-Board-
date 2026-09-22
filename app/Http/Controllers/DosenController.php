@@ -786,7 +786,14 @@ class DosenController extends Controller
     public function agenda(Request $request)
     {
         $user = auth()->user();
-        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+        $dosen = Dosen::where('user_id', $user->id)->first();
+
+        if (!$dosen) {
+            if ($user->isSuperAdmin() || $user->isAdminFakultas()) {
+                return redirect()->route('admin.agenda')->withErrors(['msg' => 'Anda sedang login sebagai Admin. Mengalihkan ke Halaman Agenda Admin.']);
+            }
+            return redirect()->route('login')->withErrors(['msg' => 'Data profil Dosen tidak ditemukan. Silakan hubungi Administrator.']);
+        }
 
         $query = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'absensi.mahasiswa.user', 'jadwalPenggunaanLab'])
             ->where(function($q) use ($dosen) {
@@ -897,7 +904,11 @@ class DosenController extends Controller
     public function inputAbsensi($id)
     {
         $user = auth()->user();
-        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+        $dosen = Dosen::where('user_id', $user->id)->first();
+
+        if (!$dosen) {
+            return redirect()->route('dosen.dashboard')->withErrors(['msg' => 'Data profil Dosen tidak ditemukan.']);
+        }
 
         $agenda = Agenda::with(['dosen', 'lab'])->findOrFail($id);
         
@@ -928,7 +939,10 @@ class DosenController extends Controller
         ]);
 
         $user = auth()->user();
-        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+        $dosen = Dosen::where('user_id', $user->id)->first();
+        if (!$dosen) {
+            return back()->with('error', 'Data profil Dosen tidak ditemukan.');
+        }
         $agenda = Agenda::findOrFail($id);
 
         if ($agenda->dosen_id !== $dosen->id && $agenda->dosen_pengampu_id !== $dosen->id) {
@@ -955,7 +969,10 @@ class DosenController extends Controller
         ]);
 
         $user = auth()->user();
-        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+        $dosen = Dosen::where('user_id', $user->id)->first();
+        if (!$dosen) {
+            return back()->with('error', 'Data profil Dosen tidak ditemukan.');
+        }
 
         $parts = explode('|', $request->mata_kuliah_kelas);
         $mata_kuliah = $parts[0] ?? '';
@@ -988,7 +1005,10 @@ class DosenController extends Controller
     public function storeInputAbsensi(Request $request, $id)
     {
         $user = auth()->user();
-        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+        $dosen = Dosen::where('user_id', $user->id)->first();
+        if (!$dosen) {
+            return back()->with('error', 'Data profil Dosen tidak ditemukan.');
+        }
 
         $agenda = Agenda::findOrFail($id);
 
@@ -1030,7 +1050,10 @@ class DosenController extends Controller
     public function pengaturan()
     {
         $user = auth()->user();
-        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+        $dosen = Dosen::where('user_id', $user->id)->first();
+        if (!$dosen) {
+            return redirect()->route('dosen.dashboard')->withErrors(['msg' => 'Data profil Dosen tidak ditemukan.']);
+        }
         return view('dosen.pengaturan', compact('dosen'));
     }
 
@@ -1057,7 +1080,10 @@ class DosenController extends Controller
     public function exportKehadiran($id)
     {
         $user = auth()->user();
-        $dosen = Dosen::where('user_id', $user->id)->firstOrFail();
+        $dosen = Dosen::where('user_id', $user->id)->first();
+        if (!$dosen) {
+            return back()->with('error', 'Data profil Dosen tidak ditemukan.');
+        }
         $agenda = Agenda::with(['dosen', 'lab', 'absensi.mahasiswa'])->where('dosen_id', $dosen->id)->findOrFail($id);
         
         return view('dosen.export_agenda_kehadiran', compact('agenda'));
@@ -1072,7 +1098,10 @@ class DosenController extends Controller
             'agenda_ids.*' => 'exists:agenda,id',
         ]);
 
-        $dosen = Dosen::where('user_id', auth()->id())->firstOrFail();
+        $dosen = Dosen::where('user_id', auth()->id())->first();
+        if (!$dosen) {
+            return back()->with('error', 'Data profil Dosen tidak ditemukan.');
+        }
 
         $deletedCount = Agenda::whereIn('id', $request->agenda_ids)
             ->where(function($q) use ($dosen) {
@@ -1089,7 +1118,13 @@ class DosenController extends Controller
      */
     public function jadwalPenggunaanLab(Request $request)
     {
-        $dosen = Dosen::where('user_id', auth()->id())->firstOrFail();
+        $dosen = Dosen::where('user_id', auth()->id())->first();
+        if (!$dosen) {
+            if (auth()->user()->isSuperAdmin() || auth()->user()->isAdminFakultas()) {
+                return redirect()->route('admin.jadwal-lab')->withErrors(['msg' => 'Anda sedang login sebagai Admin. Mengalihkan ke Jadwal Lab Admin.']);
+            }
+            return redirect()->route('login')->withErrors(['msg' => 'Data profil Dosen tidak ditemukan.']);
+        }
         $labs = Laboratorium::orderBy('nama_lab', 'asc')->get();
         $selectedLabId = $request->get('lab_id', $labs->first()->id ?? null);
         $selectedDate = $request->get('tanggal', date('Y-m-d'));

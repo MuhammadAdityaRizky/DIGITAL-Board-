@@ -38,8 +38,8 @@
                 }
 
                 $isFiltered = request()->anyFilled(['search', 'tanggal']);
-                // Default expanded jika difilter, ada sesi berlangsung, ada sesi hari ini, atau jika tidak ada yang aktif maka matkul pertama saja
-                $isExpanded = $isFiltered || ($ongoingSessions > 0) || ($todaySessions > 0) || (!$hasActiveAnywhere && $loop->first);
+                // Default closed unless filtered
+                $isExpanded = $isFiltered;
             @endphp
             <!-- Course Card Container (Wadah Kartu Mata Kuliah) -->
             <div class="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden transition-all">
@@ -148,7 +148,7 @@
 
                 <!-- Sessions List inside Course Container -->
                 <div id="content-{{ $courseSlug }}" class="course-accordion-content p-3.5 sm:p-5 bg-slate-100/70 space-y-4 {{ $isExpanded ? '' : 'hidden' }}">
-                    @foreach($sessions as $sessionIndex => $ag)
+                    @foreach($sessions->take(10) as $sessionIndex => $ag)
                         @php
                             $isToday = $ag->tanggal === date('Y-m-d');
                             $isFuture = $ag->tanggal > date('Y-m-d');
@@ -856,6 +856,11 @@
                             </div>
                         </div>
                     @endforeach
+                    @if($sessions->count() > 10)
+                        <div class="p-3 text-center text-xs text-slate-500 font-medium bg-white border border-slate-200 rounded-xl">
+                            <i class="fa-solid fa-circle-info mr-1 text-teal-600"></i> Menampilkan 10 sesi pertemuan pertama dari total <strong>{{ $sessions->count() }}</strong> Sesi.
+                        </div>
+                    @endif
                 </div>
             </div>
         @endforeach

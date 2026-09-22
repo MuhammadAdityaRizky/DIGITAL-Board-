@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -561,8 +561,9 @@
                     <input type="text" id="user-username_or_nim_nip" name="username_or_nim_nip" required placeholder="Masukkan identitas login..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
                 </div>
                 <div id="password-container">
-                    <label class="block text-slate-700 font-bold mb-1">Password</label>
+                    <label id="password-label" class="block text-slate-700 font-bold mb-1">Password <span id="password-required-star" class="text-rose-500">*</span></label>
                     <input type="password" id="user-password" name="password" required placeholder="Masukkan password..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+                    <p id="password-hint" class="text-[10px] text-slate-500 mt-1 font-medium hidden">💡 Kosongkan jika tidak ingin mengubah password pengguna ini.</p>
                 </div>
                 <div id="role-container">
                     <label class="block text-slate-700 font-bold mb-1">Role Akun</label>
@@ -578,17 +579,12 @@
                 <div id="admin-fields" class="hidden space-y-4">
                     <div>
                         <label class="block text-slate-700 font-bold mb-1">Fakultas Naungan Admin <span class="text-rose-500">*</span></label>
-                        @if(auth()->user()->isSuperAdmin())
-                            <select name="fakultas_admin" id="user-fakultas_admin" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
-                                <option value="">-- Pilih Fakultas --</option>
-                                @foreach($fakultas as $f)
-                                    <option value="{{ $f->id }}">{{ $f->nama_fakultas }}</option>
-                                @endforeach
-                            </select>
-                        @else
-                            <input type="hidden" name="fakultas_admin" value="{{ auth()->user()->fakultas_id }}">
-                            <input type="text" readonly disabled value="{{ auth()->user()->fakultas?->nama_fakultas ?? 'Fakultas Anda' }}" class="w-full p-2.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-500 font-bold cursor-not-allowed">
-                        @endif
+                        <select name="fakultas_admin" id="user-fakultas_admin" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
+                            <option value="">-- Pilih Fakultas --</option>
+                            @foreach($fakultas as $f)
+                                <option value="{{ $f->id }}">{{ $f->nama_fakultas }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
                 <div id="academic-fields" class="hidden space-y-4">
@@ -1014,12 +1010,34 @@
             document.getElementById('user-method').value = "POST";
             document.getElementById('password-container').style.display = "block";
             document.getElementById('user-password').required = true;
+            document.getElementById('user-password').value = "";
+            document.getElementById('user-password').placeholder = "Masukkan password...";
+            const pwdLabel = document.getElementById('password-label');
+            if (pwdLabel) pwdLabel.innerHTML = 'Password <span class="text-rose-500">*</span>';
+            const pwdHint = document.getElementById('password-hint');
+            if (pwdHint) pwdHint.classList.add('hidden');
+
             document.getElementById('role-container').style.display = "block";
             
             document.getElementById('user-nama_lengkap').value = "";
             document.getElementById('user-username_or_nim_nip').value = "";
             document.getElementById('user-role').value = "dosen";
             
+            @if(auth()->user()->isAdminFakultas())
+                const userFakId = "{{ auth()->user()->fakultas_id }}";
+                const fakEl = document.getElementById('user-fakultas');
+                if (fakEl) {
+                    fakEl.value = userFakId;
+                }
+                filterProdis(userFakId);
+            @else
+                const fakEl = document.getElementById('user-fakultas');
+                if (fakEl) {
+                    fakEl.value = "";
+                }
+                filterProdis("");
+            @endif
+
             handleRoleFieldsChange();
             toggleModal('modal-user');
         }
@@ -1058,6 +1076,7 @@
 
         function filterProdis(fakultasId, selectedProdiId = null) {
             const jurusanSelect = document.getElementById('user-jurusan');
+            if (!jurusanSelect) return;
             jurusanSelect.innerHTML = '<option value="">-- Pilih Jurusan --</option>';
             
             const filtered = allProdis.filter(p => p.fakultas_id == fakultasId);
@@ -1072,9 +1091,12 @@
             });
         }
 
-        document.getElementById('user-fakultas').addEventListener('change', function() {
-            filterProdis(this.value);
-        });
+        const userFakInput = document.getElementById('user-fakultas');
+        if (userFakInput) {
+            userFakInput.addEventListener('change', function() {
+                filterProdis(this.value);
+            });
+        }
 
         function editUser(user) {
             document.getElementById('modal-user-title').innerText = "Edit Pengguna";
@@ -1083,8 +1105,15 @@
             document.getElementById('user-form').action = updateUrl;
             document.getElementById('user-method').value = "PUT";
             
-            document.getElementById('password-container').style.display = "none";
+            document.getElementById('password-container').style.display = "block";
             document.getElementById('user-password').required = false;
+            document.getElementById('user-password').value = "";
+            document.getElementById('user-password').placeholder = "Kosongkan jika tidak ingin mengubah password...";
+            const pwdLabel = document.getElementById('password-label');
+            if (pwdLabel) pwdLabel.innerHTML = 'Ubah Password <span class="text-slate-400 font-normal">(Opsional)</span>';
+            const pwdHint = document.getElementById('password-hint');
+            if (pwdHint) pwdHint.classList.remove('hidden');
+
             document.getElementById('role-container').style.display = "none";
             
             let nama = user.username;

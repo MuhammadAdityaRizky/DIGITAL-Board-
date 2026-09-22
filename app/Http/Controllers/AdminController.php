@@ -1627,6 +1627,10 @@ class AdminController extends Controller
             'program_kuliah' => 'nullable|in:Reguler,Karyawan',
         ];
 
+        if ($request->has('fakultas_admin') && $request->filled('fakultas_admin') && !$request->filled('fakultas')) {
+            $request->merge(['fakultas' => $request->fakultas_admin]);
+        }
+
         if ($authUser->isAdminFakultas() && !$request->filled('fakultas')) {
             $request->merge(['fakultas' => $authUser->fakultas_id]);
         }
@@ -1708,6 +1712,7 @@ class AdminController extends Controller
         $rules = [
             'nama_lengkap' => 'required|string|max:100',
             'username_or_nim_nip' => 'required|string|max:50|unique:users,username,' . $id,
+            'password' => 'nullable|string|min:4',
             'kelas' => 'nullable|string|max:50',
             'semester' => 'nullable|integer|min:1|max:14',
             'status' => 'nullable|in:Tetap,Tidak Tetap,Honorer,Cuti',
@@ -1716,6 +1721,10 @@ class AdminController extends Controller
             'jabatan' => 'nullable|string|max:100',
             'program_kuliah' => 'nullable|in:Reguler,Karyawan',
         ];
+
+        if ($request->has('fakultas_admin') && $request->filled('fakultas_admin') && !$request->filled('fakultas')) {
+            $request->merge(['fakultas' => $request->fakultas_admin]);
+        }
 
         if ($authUser->isAdminFakultas() && !$request->filled('fakultas')) {
             $request->merge(['fakultas' => $authUser->fakultas_id]);
