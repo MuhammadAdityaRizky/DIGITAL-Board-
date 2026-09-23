@@ -413,7 +413,6 @@
                 </span>
             </div>
         </div>
-        </div>
 
         <!-- Tata Tertib Ruangan Card -->
         <div class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm flex flex-col">
