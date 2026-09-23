@@ -512,11 +512,11 @@
                                                                 @endif
                                                                 @if($ag->status_agenda === 'Berlangsung')
                                                                     <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-300 rounded-md text-[11px] font-black">● Berlangsung</span>
-                                                                @elseif($ag->status_agenda === 'Selesai')
+                                                                @elseif($ag->status_agenda === 'Selesai')if($ag->status_agenda === 'Selesai')
                                                                     <span class="px-2 py-0.5 bg-slate-100 text-slate-800 border border-slate-300 rounded-md text-[11px] font-bold">● Selesai</span>
-                                                                @elseif($ag->status_agenda === 'Dibatalkan')
+                                                                @elseif($ag->status_agenda === 'Selesai')if($ag->status_agenda === 'Dibatalkan')
                                                                     <span class="px-2 py-0.5 bg-rose-100 text-rose-950 border border-rose-300 rounded-md text-[11px] font-bold">✕ Dibatalkan</span>
-                                                                @else
+                                                                @elseif($ag->status_agenda === 'Selesai')
                                                                     <span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-300 rounded-md text-[11px] font-bold">○ Mendatang</span>
                                                                 @endif
                                                                 <span class="px-2 py-0.5 bg-slate-100 text-slate-800 border border-slate-300 rounded-md text-[11px] font-bold">
