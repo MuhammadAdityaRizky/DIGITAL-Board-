@@ -178,10 +178,11 @@ class JadwalLabExport
             18 => '19.00-20.00',
             19 => '20.00-21.00',
             20 => '21.00-22.00',
+            21 => '22.00-23.00',
         ];
 
         // Initialize all grid cells with default light blue fill and thin borders
-        for ($r = 7; $r <= 20; $r++) {
+        for ($r = 7; $r <= 21; $r++) {
             // Col A
             $sheet->setCellValue('A' . $r, $timeSlots[$r]);
             $sheet->getStyle('A' . $r)->getFont()->setName('Tahoma')->setSize(11)->setBold(true);

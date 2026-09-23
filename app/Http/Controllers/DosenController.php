@@ -1142,7 +1142,7 @@ class DosenController extends Controller
             ->orderBy('jam_mulai', 'asc')
             ->get();
 
-        // Standar slot waktu harian (08:00 - 21:00)
+        // Standar slot waktu harian (08:00 - 23:00)
         $timeSlots = [
             ['start' => '08:00', 'end' => '10:00', 'label' => '08:00 - 10:00 WIB', 'session' => 'Pagi 1'],
             ['start' => '10:00', 'end' => '12:00', 'label' => '10:00 - 12:00 WIB', 'session' => 'Pagi 2'],
@@ -1150,6 +1150,7 @@ class DosenController extends Controller
             ['start' => '15:00', 'end' => '17:00', 'label' => '15:00 - 17:00 WIB', 'session' => 'Sore 1'],
             ['start' => '17:00', 'end' => '19:00', 'label' => '17:00 - 19:00 WIB', 'session' => 'Sore 2'],
             ['start' => '19:00', 'end' => '21:00', 'label' => '19:00 - 21:00 WIB', 'session' => 'Malam 1'],
+            ['start' => '21:00', 'end' => '23:00', 'label' => '21:00 - 23:00 WIB', 'session' => 'Malam 2'],
         ];
 
         // Hitung ketersediaan slot harian untuk tanggal terpilih
@@ -1202,7 +1203,7 @@ class DosenController extends Controller
         // Data untuk mode Matriks Mingguan
         $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         $matrixSlots = [
-            '08.00-10.00', '10.00-12.00', '13.00-15.00', '15.00-17.00', '17.00-19.00', '19.00-21.00'
+            '08.00-10.00', '10.00-12.00', '13.00-15.00', '15.00-17.00', '17.00-19.00', '19.00-21.00', '21.00-23.00'
         ];
 
         // Daftar kelas dosen untuk modal Buat Agenda / Kuliah Pengganti
