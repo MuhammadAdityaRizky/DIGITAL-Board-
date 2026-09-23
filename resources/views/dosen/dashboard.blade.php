@@ -482,6 +482,7 @@
                                                 $carbonTgl = \Carbon\Carbon::parse($ag->tanggal);
                                                 $isToday = $ag->tanggal === date('Y-m-d');
                                                 $isFuture = $ag->tanggal > date('Y-m-d');
+                                                $isTodayBeforeStart = $isToday && $ag->jam_mulai && now()->format('H:i:s') < $ag->jam_mulai;
                                             @endphp
                                             <div class="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-4.5 space-y-3 hover:border-slate-300 transition-all shadow-2xs">
                                                 <div class="flex flex-col md:flex-row gap-4 items-start">
@@ -579,12 +580,20 @@
                                                                      @endif
 
                                                                      <!-- 1. Tombol Absensi Mahasiswa -->
-                                                                     <a href="{{ route('dosen.absensi.input', $ag->id) }}" 
-                                                                        class="h-[36px] px-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                                                                        title="Input & Kelola Absensi Mahasiswa">
-                                                                         <i class="fa-solid fa-users-viewfinder text-xs"></i>
-                                                                         <span>{{ $isToday ? 'Absensi Mahasiswa' : 'Edit Rekap Absensi' }}</span>
-                                                                     </a>
+                                                                     @if($isTodayBeforeStart)
+                                                                         <span class="h-[36px] px-3.5 bg-slate-100 text-slate-400 border border-slate-300 rounded-xl text-xs font-bold flex items-center gap-1.5 select-none cursor-not-allowed shadow-2xs"
+                                                                               title="Absensi dibuka saat kelas dimulai pukul {{ substr($ag->jam_mulai,0,5) }} WIB">
+                                                                             <i class="fa-solid fa-lock text-xs text-slate-400"></i>
+                                                                             <span>Absensi (Mulai {{ substr($ag->jam_mulai,0,5) }})</span>
+                                                                         </span>
+                                                                     @else
+                                                                         <a href="{{ route('dosen.absensi.input', $ag->id) }}" 
+                                                                            class="h-[36px] px-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                                                                            title="Input & Kelola Absensi Mahasiswa">
+                                                                             <i class="fa-solid fa-users-viewfinder text-xs"></i>
+                                                                             <span>{{ $isToday ? 'Absensi Mahasiswa' : 'Edit Rekap Absensi' }}</span>
+                                                                         </a>
+                                                                     @endif
 
                                                                      <!-- 2. Tombol Realisasi Pembelajaran -->
                                                                      <button type="button" 

@@ -88,6 +88,18 @@ class MahasiswaController extends Controller
             ]);
         }
 
+        // Validasi jam: absensi hanya bisa dilakukan setelah kelas dimulai (jam_mulai)
+        // Setelah kelas selesai pun tetap diperbolehkan (edit / pencatatan telat)
+        if ($agenda->tanggal === date('Y-m-d') && $agenda->jam_mulai) {
+            $currentTime = now()->format('H:i:s');
+            if ($currentTime < $agenda->jam_mulai) {
+                $jamMulai = substr($agenda->jam_mulai, 0, 5);
+                return back()->withErrors([
+                    'qr_code_token' => "Absensi ditolak! Kelas belum dimulai. Presensi baru bisa dilakukan mulai pukul {$jamMulai} WIB."
+                ]);
+            }
+        }
+
         // 1. Validasi Fakultas (Fakultas harus sama)
         if ($agenda->fakultas && $agenda->fakultas !== $mahasiswa->fakultas->nama_fakultas) {
             return back()->withErrors([

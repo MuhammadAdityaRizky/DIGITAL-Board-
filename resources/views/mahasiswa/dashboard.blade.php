@@ -197,6 +197,10 @@
                                 </div>
                             @elseif(count($todayAgendas) > 0)
                                 @foreach($todayAgendas as $ag)
+                                    @php
+                                        $jamMulaiStr = substr($ag->jam_mulai, 0, 5);
+                                        $kelasBlmMulai = now()->format('H:i') < substr($ag->jam_mulai, 0, 5);
+                                    @endphp
                                     <div class="py-4 first:pt-0 last:pb-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                         <div class="space-y-1">
                                             <div class="flex items-center gap-2">
@@ -204,6 +208,12 @@
                                                     {{ substr($ag->jam_mulai, 0, 5) }} - {{ substr($ag->jam_selesai, 0, 5) }} WIB
                                                 </span>
                                                 <span class="text-xs text-slate-500 font-semibold">{{ $ag->lab->nama_lab }}</span>
+
+                                                @if($kelasBlmMulai)
+                                                    <span class="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold rounded flex items-center gap-1">
+                                                        <i class="fa-solid fa-clock"></i> Belum Dimulai
+                                                    </span>
+                                                @endif
                                             </div>
                                             <h4 class="font-bold text-slate-800 text-base">{{ $ag->mata_kuliah }}</h4>
                                             <p class="text-xs text-slate-500">Dosen: <span class="font-medium text-slate-700">{{ $ag->dosen->nama }}</span></p>
@@ -213,7 +223,11 @@
                                                 <span class="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-[11px] font-extrabold font-mono text-teal-850 select-all" title="Kode Token Agenda">
                                                     ID: AGENDA_ID_{{ $ag->id }}
                                                 </span>
-                                                @if(!$ag->absensi->count())
+                                                @if($kelasBlmMulai)
+                                                    <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-[10px] font-bold flex items-center gap-1 cursor-not-allowed" title="Absensi dibuka pukul {{ $jamMulaiStr }} WIB">
+                                                        <i class="fa-solid fa-lock text-[9px]"></i> Buka pukul {{ $jamMulaiStr }} WIB
+                                                    </span>
+                                                @elseif(!$ag->absensi->count())
                                                     <button type="button" onclick="useAgendaToken('AGENDA_ID_{{ $ag->id }}')" 
                                                             class="px-2 py-0.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded text-[10px] font-bold uppercase transition flex items-center gap-1">
                                                         <i class="fa-solid fa-i-cursor"></i> Salin/Isi Kode Ini
@@ -223,7 +237,11 @@
                                         </div>
 
                                         <div class="flex flex-wrap items-center gap-2">
-                                            @if($ag->absensi->count() > 0)
+                                            @if($kelasBlmMulai)
+                                                <span class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl flex items-center gap-1.5">
+                                                    <i class="fa-solid fa-hourglass-half"></i> Mulai {{ $jamMulaiStr }} WIB
+                                                </span>
+                                            @elseif($ag->absensi->count() > 0)
                                                 @if(strtolower($ag->absensi->first()->status_kehadiran) == 'hadir')
                                                     <span class="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 text-xs font-bold rounded-xl flex items-center gap-1.5">
                                                         <i class="fa-solid fa-circle-check"></i> Hadir
