@@ -396,7 +396,7 @@
         function editAnnouncement(ann) {
             document.getElementById('modal-ann-title').innerText = "Edit Pengumuman Resmi";
             
-            const updateUrl = `/admin/pengumuman/${ann.id}`;
+            const updateUrl = `{{ url('/admin/pengumuman') }}/${ann.id}`;
             document.getElementById('ann-form').action = updateUrl;
             document.getElementById('ann-method').value = "PUT";
             

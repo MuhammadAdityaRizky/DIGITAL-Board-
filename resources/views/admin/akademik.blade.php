@@ -965,26 +965,26 @@
         }
         
         function openEditFakultasModal(id, nama) {
-            document.getElementById('edit-fakultas-form').action = `/admin/akademik/fakultas/${id}`;
+            document.getElementById('edit-fakultas-form').action = `{{ url('/admin/akademik/fakultas') }}/${id}`;
             document.getElementById('edit-fakultas-nama').value = nama;
             openModal('modal-edit-fakultas');
         }
 
         function openEditProdiModal(id, nama, fakultasId) {
-            document.getElementById('edit-prodi-form').action = `/admin/akademik/prodi/${id}`;
+            document.getElementById('edit-prodi-form').action = `{{ url('/admin/akademik/prodi') }}/${id}`;
             document.getElementById('edit-prodi-nama').value = nama;
             document.getElementById('edit-prodi-fakultas').value = fakultasId;
             openModal('modal-edit-prodi');
         }
 
         function openEditKelasModal(id, nama) {
-            document.getElementById('edit-kelas-form').action = `/admin/akademik/kelas/${id}`;
+            document.getElementById('edit-kelas-form').action = `{{ url('/admin/akademik/kelas') }}/${id}`;
             document.getElementById('edit-kelas-nama').value = nama;
             openModal('modal-edit-kelas');
         }
 
         function openEditMatkulModal(id, nama, kode, prodiId, sks, semester, kategori) {
-            document.getElementById('edit-matkul-form').action = `/admin/akademik/matkul/${id}`;
+            document.getElementById('edit-matkul-form').action = `{{ url('/admin/akademik/matkul') }}/${id}`;
             document.getElementById('edit-matkul-nama').value = nama;
             document.getElementById('edit-matkul-kode').value = kode;
             document.getElementById('edit-matkul-sks').value = sks || 3;

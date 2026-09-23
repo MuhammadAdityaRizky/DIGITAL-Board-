@@ -1104,7 +1104,7 @@
         function editUser(user) {
             document.getElementById('modal-user-title').innerText = "Edit Pengguna";
             
-            const updateUrl = `/admin/users/${user.id}`;
+            const updateUrl = `{{ url('/admin/users') }}/${user.id}`;
             document.getElementById('user-form').action = updateUrl;
             document.getElementById('user-method').value = "PUT";
             

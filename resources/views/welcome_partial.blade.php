@@ -1,24 +1,45 @@
 @php
-    // Find active agenda (current time falls between start and end time today)
+    // Current time
     $currentTime = now()->format('H:i:s');
     
-    $activeAgenda = $agendas->first(function($agenda) use ($currentTime) {
-        return $currentTime >= $agenda->jam_mulai && $currentTime <= $agenda->jam_selesai;
+    // 1. Current Running Agenda (strictly between start and end time today)
+    $runningAgenda = $agendas->first(function($agenda) use ($currentTime) {
+        return $currentTime >= $agenda->jam_mulai && $currentTime <= $agenda->jam_selesai && $agenda->status_agenda !== 'Dibatalkan';
     });
     
-    // If no agenda is currently active, find the next upcoming one as the main active display
+    // 2. Active display agenda for main card (use running agenda, or fallback to next upcoming class)
+    $activeAgenda = $runningAgenda;
     if (!$activeAgenda) {
         $activeAgenda = $agendas->first(function($agenda) use ($currentTime) {
-            return $agenda->jam_mulai > $currentTime;
+            return $agenda->jam_mulai > $currentTime && $agenda->status_agenda !== 'Dibatalkan';
         });
     }
     
-    // Get next agenda after the active agenda
+    // 3. Get next agenda after display agenda
     $nextAgenda = null;
     if ($activeAgenda) {
         $nextAgenda = $agendas->first(function($agenda) use ($activeAgenda, $currentTime) {
-            return $agenda->jam_mulai > $activeAgenda->jam_mulai && $agenda->jam_mulai > $currentTime;
+            return $agenda->jam_mulai > $activeAgenda->jam_mulai && $agenda->jam_mulai > $currentTime && $agenda->status_agenda !== 'Dibatalkan';
         });
+    }
+
+    // 4. QR Agenda: ONLY active when class is currently RUNNING or within 15 minutes before start time!
+    $qrAgenda = $runningAgenda;
+    $isQrActive = false;
+
+    if ($qrAgenda) {
+        $isQrActive = true;
+    } else {
+        // Check if there is an agenda starting within 15 minutes (buffer window)
+        $upcomingBuffer = $agendas->first(function($agenda) use ($currentTime) {
+            if ($agenda->status_agenda === 'Dibatalkan') return false;
+            $diffInSec = strtotime($agenda->jam_mulai) - strtotime($currentTime);
+            return $diffInSec > 0 && $diffInSec <= 900; // <= 15 minutes (900 seconds)
+        });
+        if ($upcomingBuffer) {
+            $qrAgenda = $upcomingBuffer;
+            $isQrActive = true;
+        }
     }
     
     // Get latest announcement
@@ -326,36 +347,31 @@
                     <i class="fa-solid fa-qrcode text-teal-400 text-base"></i>
                     <span class="font-extrabold text-white text-xs uppercase tracking-wider">Scan untuk Akses Presensi</span>
                 </div>
-                @if($activeAgenda && $activeAgenda->id)
+                @if($isQrActive && $qrAgenda && $qrAgenda->id)
                     <span class="inline-flex items-center gap-1 text-[9px] font-extrabold text-teal-300 bg-teal-950/80 px-2.5 py-0.5 rounded-full border border-teal-500/40 uppercase tracking-wider">
                         <i class="fa-solid fa-arrows-rotate text-[8px] animate-spin text-teal-400"></i> 5s Dynamic
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1 text-[9px] font-extrabold text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full border border-slate-700 uppercase tracking-wider">
+                        <i class="fa-solid fa-lock text-[8px]"></i> QR Belum Aktif
                     </span>
                 @endif
             </div>
 
             <!-- QR Center Body -->
             <div class="flex-grow flex flex-col items-center justify-center py-8 px-6 bg-white">
-                @php
-                    $dynamicQrToken = ($activeAgenda && $activeAgenda->id) 
-                        ? \App\Models\Agenda::generateDynamicQrToken($activeAgenda->id) 
-                        : 'NO_ACTIVE_AGENDA';
-                @endphp
+                @if($isQrActive && $qrAgenda && $qrAgenda->id)
+                    @php
+                        $dynamicQrToken = \App\Models\Agenda::generateDynamicQrToken($qrAgenda->id);
+                    @endphp
 
-                <!-- QR Container -->
-                <div class="p-3 bg-white shrink-0 mb-3 flex items-center justify-center">
-                    <!-- QR Image -->
-                    @if($activeAgenda && $activeAgenda->id)
+                    <!-- QR Container -->
+                    <div class="p-3 bg-white shrink-0 mb-3 flex items-center justify-center">
                         <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data={{ urlencode($dynamicQrToken) }}" 
                              alt="Presensi QR Code" 
                              class="w-48 h-48 md:w-56 md:h-56 object-contain drop-shadow-sm">
-                    @else
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=NO_ACTIVE_AGENDA" 
-                             alt="Fallback QR Code" 
-                             class="w-48 h-48 md:w-56 md:h-56 object-contain opacity-35">
-                    @endif
-                </div>
+                    </div>
 
-                @if($activeAgenda && $activeAgenda->id)
                     <div class="text-center bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 w-full max-w-[240px] shadow-2xs">
                         <p class="text-[9px] font-extrabold text-slate-500 uppercase tracking-wider">KODE PRESENSI MANUAL (5s REFRESH)</p>
                         <p class="text-xs font-extrabold text-slate-800 tracking-widest font-mono mt-0.5 select-all">{{ $dynamicQrToken }}</p>
@@ -364,19 +380,39 @@
                         <i class="fa-solid fa-shield-halved text-[9px] text-teal-600"></i>
                         <span>Dynamic Anti-Cheat (Refresh 5dtk)</span>
                     </div>
+                @else
+                    <!-- Inactive / Lock State -->
+                    <div class="flex flex-col items-center justify-center text-center p-6 space-y-3 my-2">
+                        <div class="w-20 h-20 rounded-full bg-slate-50 border-2 border-slate-200 flex items-center justify-center text-slate-300 shadow-inner">
+                            <i class="fa-solid fa-lock text-3xl text-slate-400"></i>
+                        </div>
+                        <div class="space-y-1 max-w-[245px]">
+                            <h4 class="font-extrabold text-xs text-slate-700 uppercase tracking-wide">QR Presensi Belum Aktif</h4>
+                            <p class="text-[11px] text-slate-500 leading-normal font-medium">
+                                @if($activeAgenda && $activeAgenda->jam_mulai > $currentTime)
+                                    QR Code presensi akan terbuka otomatis 15 menit sebelum jam kuliah dimulai (<strong>{{ substr($activeAgenda->jam_mulai, 0, 5) }} WIB</strong>).
+                                @else
+                                    Saat ini belum ada sesi perkuliahan aktif di laboratorium ini.
+                                @endif
+                            </p>
+                        </div>
+                    </div>
                 @endif
             </div>
 
             <!-- Banner Footer -->
             <div class="bg-slate-900 py-3.5 px-5 text-center border-t border-slate-800 w-full">
                 <span class="text-teal-300 font-extrabold text-xs uppercase tracking-wider">
-                    @if($activeAgenda)
-                        Berlaku s.d. {{ substr($activeAgenda->jam_selesai, 0, 5) }} WIB
+                    @if($isQrActive && $qrAgenda)
+                        Berlaku s.d. {{ substr($qrAgenda->jam_selesai, 0, 5) }} WIB
+                    @elseif($activeAgenda && $activeAgenda->jam_mulai > $currentTime)
+                        Sesi Berikutnya: {{ substr($activeAgenda->jam_mulai, 0, 5) }} - {{ substr($activeAgenda->jam_selesai, 0, 5) }} WIB
                     @else
                         Belum Ada Agenda Aktif
                     @endif
                 </span>
             </div>
+        </div>
         </div>
 
         <!-- Tata Tertib Ruangan Card -->

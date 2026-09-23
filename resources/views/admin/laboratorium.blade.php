@@ -744,7 +744,7 @@
         function editLab(lab) {
             document.getElementById('modal-lab-title').innerText = "Edit Detail Laboratorium";
             
-            const updateUrl = `/admin/laboratorium/${lab.id}`;
+            const updateUrl = `{{ url('/admin/laboratorium') }}/${lab.id}`;
             document.getElementById('lab-form').action = updateUrl;
             document.getElementById('lab-method').value = "PUT";
             
