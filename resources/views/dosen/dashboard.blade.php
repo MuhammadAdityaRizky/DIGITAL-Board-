@@ -611,7 +611,7 @@
                                                                      </button>
 
                                                                      <!-- 4. Tombol Selesai Kelas -->
-                                                                     @if($ag->status_agenda !== 'Selesai')
+                                                                     @if($ag->status_agenda === 'Berlangsung')
                                                                      <form action="{{ route('dosen.agenda.selesai', $ag->id) }}" method="POST" class="inline m-0 p-0">
                                                                          @csrf
                                                                          <button type="submit" 
@@ -622,7 +622,7 @@
                                                                              <span>Selesai Kelas</span>
                                                                          </button>
                                                                      </form>
-                                                                     @else
+                                                                     @elseif($ag->status_agenda === 'Selesai')
                                                                      <div class="h-[36px] px-3 bg-slate-100 text-slate-500 border border-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-default">
                                                                          <i class="fa-solid fa-check-circle text-slate-400 text-xs"></i> 
                                                                          <span>Kelas Selesai</span>
