@@ -243,24 +243,17 @@
                     </div>
                 @endforeach
             @else
-                <!-- Fallback if DB has no announcements -->
-                <div class="border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-slate-50/50 shadow-xs">
-                    <div class="w-20 h-20 md:w-28 md:h-28 bg-white border border-slate-200 rounded-xl flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-xs">
-                        <img src="{{ asset('images/logo-uika.png') }}" 
-                             alt="UIKA Logo Box" 
-                             class="w-full h-full object-contain p-1">
+                <!-- Empty state when DB has no announcements -->
+                <div class="border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center bg-slate-50/50 shadow-xs text-center py-8">
+                    <div class="w-12 h-12 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-bullhorn text-slate-400 text-lg"></i>
                     </div>
-                    <div class="flex-grow min-w-0">
-                        <h3 class="font-extrabold text-sm md:text-base text-slate-850">
-                            Jadwal Ujian Tengah Semester (UTS)
-                        </h3>
-                        <p class="text-[10px] md:text-xs font-bold text-slate-400 mt-0.5">
-                            {{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, D MMMM Y') }}
-                        </p>
-                        <p class="text-xs md:text-sm text-slate-600 mt-2 leading-relaxed">
-                            Pelaksanaan UTS ganjil akan dimulai pada minggu pertama bulan ini. Mohon persiapkan berkas pendaftaran Anda.
-                        </p>
-                    </div>
+                    <h3 class="font-bold text-sm md:text-base text-slate-700">
+                        Belum Ada Pengumuman Resmi
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1 max-w-md">
+                        Saat ini belum ada pengumuman terbaru yang diterbitkan untuk laboratorium ini.
+                    </p>
                 </div>
             @endif
         </div>
