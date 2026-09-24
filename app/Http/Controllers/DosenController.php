@@ -516,45 +516,61 @@ class DosenController extends Controller
     public function cetakBeritaAcara(Request $request, $id)
     {
         $user = auth()->user();
-        $baseAgenda = Agenda::with(['dosen', 'dosenPengampu', 'lab'])->findOrFail($id);
 
-        if ($user->role === 'dosen') {
-            $dosen = Dosen::where('user_id', $user->id)->first();
-            if ($dosen && $baseAgenda->dosen_id !== $dosen->id && $baseAgenda->dosen_pengampu_id !== $dosen->id) {
-                abort(403, 'Anda tidak memiliki akses ke Berita Acara ini.');
-            }
-        }
-
-        // Cek apakah cetak banyak (pilih beberapa pertemuan atau seluruh pertemuan pada MK)
-        if ($request->filled('ids')) {
-            $rawIds = is_array($request->ids) ? $request->ids : explode(',', $request->ids);
-            $ids = array_filter(array_map('intval', $rawIds));
-
-            $agendas = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'absensi.mahasiswa'])
-                ->whereIn('id', $ids)
-                ->orderBy('tanggal', 'asc')
-                ->orderBy('jam_mulai', 'asc')
-                ->get();
-        } elseif ($request->boolean('all_mk') || $request->get('mode') === 'all') {
+        // 1. Ambil data agenda (Mendukung mode cetak semua global, cetak terpilih, atau per mata kuliah)
+        if ($id === 'all' || $request->get('mode') === 'all_global' || $request->get('ids') === 'all') {
             $query = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'absensi.mahasiswa']);
-            if ($baseAgenda->jadwal_penggunaan_lab_id) {
-                $query->where('jadwal_penggunaan_lab_id', $baseAgenda->jadwal_penggunaan_lab_id);
-            } else {
-                $query->where('mata_kuliah', $baseAgenda->mata_kuliah)
-                      ->where('kelas', $baseAgenda->kelas)
-                      ->where('program_kuliah', $baseAgenda->program_kuliah)
-                      ->where('dosen_id', $baseAgenda->dosen_id);
+            if ($user->role === 'dosen') {
+                $dosen = Dosen::where('user_id', $user->id)->first();
+                if ($dosen) {
+                    $query->where(function($q) use ($dosen) {
+                        $q->where('dosen_id', $dosen->id)
+                          ->orWhere('dosen_pengampu_id', $dosen->id);
+                    });
+                }
             }
-            $agendas = $query->orderBy('tanggal', 'asc')->orderBy('jam_mulai', 'asc')->get();
+            $agendas = $query->get();
         } else {
-            $agendas = collect([$baseAgenda]);
-            $baseAgenda->load('absensi.mahasiswa');
+            $baseAgenda = Agenda::with(['dosen', 'dosenPengampu', 'lab'])->find($id);
+
+            if ($user->role === 'dosen' && $baseAgenda) {
+                $dosen = Dosen::where('user_id', $user->id)->first();
+                if ($dosen && $baseAgenda->dosen_id !== $dosen->id && $baseAgenda->dosen_pengampu_id !== $dosen->id) {
+                    abort(403, 'Anda tidak memiliki akses ke Berita Acara ini.');
+                }
+            }
+
+            if ($request->filled('ids')) {
+                $rawIds = is_array($request->ids) ? $request->ids : explode(',', $request->ids);
+                $ids = array_filter(array_map('intval', $rawIds));
+
+                $agendas = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'absensi.mahasiswa'])
+                    ->whereIn('id', $ids)
+                    ->get();
+            } elseif ($request->boolean('all_mk') || $request->get('mode') === 'all') {
+                $query = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'absensi.mahasiswa']);
+                if ($baseAgenda && $baseAgenda->jadwal_penggunaan_lab_id) {
+                    $query->where('jadwal_penggunaan_lab_id', $baseAgenda->jadwal_penggunaan_lab_id);
+                } elseif ($baseAgenda) {
+                    $query->where('mata_kuliah', $baseAgenda->mata_kuliah)
+                          ->where('kelas', $baseAgenda->kelas)
+                          ->where('program_kuliah', $baseAgenda->program_kuliah)
+                          ->where('dosen_id', $baseAgenda->dosen_id);
+                }
+                $agendas = $query->get();
+            } else {
+                $agendas = $baseAgenda ? collect([$baseAgenda]) : collect();
+                if ($baseAgenda) {
+                    $baseAgenda->load('absensi.mahasiswa');
+                }
+            }
         }
 
         if ($agendas->isEmpty()) {
             abort(404, 'Agenda pertemuan tidak ditemukan.');
         }
 
+        // Map agenda ke format detail berita acara
         $items = $agendas->map(function($ag) {
             return [
                 'agenda' => $ag,
@@ -562,7 +578,36 @@ class DosenController extends Controller
             ];
         });
 
-        $agenda = $agendas->first();
+        // Urutkan Rapi berdasarkan: Dosen (A-Z) -> Mata Kuliah (A-Z) -> Kelas (A-Z) -> Tanggal/Waktu
+        $items = $items->sort(function ($a, $b) {
+            // 1. Nama Dosen (A-Z)
+            $dosenA = strtolower(trim($a['details']['dosen'] ?? $a['agenda']->dosenPengampu?->nama ?? $a['agenda']->dosen?->nama ?? ''));
+            $dosenB = strtolower(trim($b['details']['dosen'] ?? $b['agenda']->dosenPengampu?->nama ?? $b['agenda']->dosen?->nama ?? ''));
+            if ($dosenA !== $dosenB) {
+                return strcmp($dosenA, $dosenB);
+            }
+
+            // 2. Nama Mata Kuliah (A-Z)
+            $mkA = strtolower(trim($a['agenda']->mata_kuliah ?? ''));
+            $mkB = strtolower(trim($b['agenda']->mata_kuliah ?? ''));
+            if ($mkA !== $mkB) {
+                return strcmp($mkA, $mkB);
+            }
+
+            // 3. Kelas (A-Z)
+            $kelasA = strtolower(trim($a['agenda']->kelas ?? ''));
+            $kelasB = strtolower(trim($b['agenda']->kelas ?? ''));
+            if ($kelasA !== $kelasB) {
+                return strcmp($kelasA, $kelasB);
+            }
+
+            // 4. Tanggal & Jam Pertemuan (Ascending)
+            $tglA = ($a['agenda']->tanggal ?? '') . ' ' . ($a['agenda']->jam_mulai ?? '');
+            $tglB = ($b['agenda']->tanggal ?? '') . ' ' . ($b['agenda']->jam_mulai ?? '');
+            return strcmp($tglA, $tglB);
+        })->values();
+
+        $agenda = $items->first()['agenda'];
         $details = $items->first()['details'] ?? [];
         $totalItems = $items->count();
 
