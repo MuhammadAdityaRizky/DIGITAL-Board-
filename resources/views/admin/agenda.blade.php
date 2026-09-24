@@ -220,10 +220,6 @@
 
                     <!-- Creation & Import Actions (Separated from list controls) -->
                     <div class="flex items-center gap-2 flex-wrap">
-                        <a href="{{ route('admin.agenda.berita-acara.cetak', 'all') }}" target="_blank" class="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Cetak Seluruh Berita Acara (Terurut Rapi Dosen A-Z & Matkul)">
-                            <i class="fa-solid fa-print text-sky-700"></i>
-                            <span>Cetak Seluruh BA</span>
-                        </a>
                         <button onclick="toggleModal('modal-import-agenda')" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs cursor-pointer">
                             <i class="fa-solid fa-file-import text-teal-700"></i>
                             <span>Impor Excel</span>
