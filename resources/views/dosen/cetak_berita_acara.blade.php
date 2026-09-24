@@ -1,4 +1,4 @@
-﻿@php
+@php
     $items = $items ?? collect([['agenda' => $agenda, 'details' => $details]]);
     $totalItems = $totalItems ?? $items->count();
 @endphp
@@ -120,13 +120,14 @@
             z-index: 1;
             text-align: center;
             white-space: nowrap;
+            width: 100%;
         }
 
         .watermark-text {
-            font-size: 42px;
+            font-size: 26px;
             font-weight: 900;
             color: rgba(15, 23, 42, 0.05);
-            letter-spacing: 12px;
+            letter-spacing: 6px;
             text-transform: uppercase;
         }
 
@@ -371,6 +372,8 @@
         .footer-address {
             color: #f8fafc;
             opacity: 0.95;
+            flex: 1;
+            padding-right: 12px;
         }
 
         .footer-url {
@@ -378,6 +381,8 @@
             font-weight: 700;
             text-decoration: none;
             letter-spacing: 0.4px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         /* Print Media Styles */
@@ -442,7 +447,7 @@
             <span>Berita Acara Praktikum (FTS-LAB-P03-F-01)</span>
             @if($totalItems > 1)
                 <span style="font-size: 12px; font-weight: 500; opacity: 0.85; margin-left: 8px;">
-                    • {{ $totalItems }} Pertemuan
+                    • {{ $totalItems }} Lembar BA (Terurut Rapi: Dosen A-Z &amp; Matkul)
                 </span>
             @endif
         </div>
@@ -467,7 +472,7 @@
 
                 <!-- Watermark Background -->
                 <div class="watermark-container">
-                    <div class="watermark-text">I M A N . I L M U . A M A L</div>
+                    <div class="watermark-text">. I M A N . I L M U . A M A L .</div>
                 </div>
 
                 <!-- Content Layer -->

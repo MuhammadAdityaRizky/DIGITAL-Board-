@@ -615,8 +615,8 @@
                                                         <!-- Mini Document Paper Container -->
                                                         <div class="bg-white p-5 rounded-xl border-2 border-slate-300 shadow-sm relative overflow-hidden text-[11px] space-y-2.5 select-none">
                                                             <!-- Watermark Mockup -->
-                                                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5 font-black text-2xl tracking-widest text-slate-900 select-none">
-                                                                IMAN.ILMU.AMAL
+                                                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5 font-black text-xs tracking-wider text-slate-900 select-none">
+                                                                . I M A N . I L M U . A M A L .
                                                             </div>
 
                                                             <!-- Mini Kop Surat -->
@@ -709,8 +709,8 @@
 
                                                             <!-- Mini Footer Bar -->
                                                             <div class="bg-slate-800 text-white p-1.5 rounded-sm flex justify-between text-[8px] mt-2 relative z-10 font-medium">
-                                                                <span class="truncate">Ibn Khaldun Bogor : Jl. KH. Sholeh Iskandar KM. 2</span>
-                                                                <span class="font-bold">www.ft.uika-bogor.ac.id</span>
+                                                                <span class="truncate pr-2">Ibn Khaldun Bogor : Jl. KH. Sholeh Iskandar KM. 2</span>
+                                                                <span class="font-bold whitespace-nowrap shrink-0">www.ft.uika-bogor.ac.id</span>
                                                             </div>
                                                         </div>
                                                     </div>
