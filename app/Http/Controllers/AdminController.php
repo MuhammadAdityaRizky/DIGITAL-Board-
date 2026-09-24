@@ -877,11 +877,16 @@ class AdminController extends Controller
     public function agenda(Request $request)
     {
         $user = Auth::user();
-        $query = Agenda::with(['dosen', 'dosenPengampu', 'lab', 'jadwalPenggunaanLab']);
+        $query = Agenda::with(['dosen', 'dosenPengampu', 'lab.fakultas', 'jadwalPenggunaanLab']);
 
         if ($user->isAdminFakultas()) {
             $query->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
+        } elseif ($request->filled('fakultas_id')) {
+            $query->whereHas('lab', fn($q) => $q->where('fakultas_id', $request->fakultas_id));
         }
+
+        // Base query for counts before status filters
+        $baseCountsQuery = clone $query;
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -922,8 +927,41 @@ class AdminController extends Controller
             });
         }
 
+        $nowDate = date('Y-m-d');
+        $nowTime = date('H:i:s');
+
         if ($request->filled('tanggal')) {
             $query->where('tanggal', $request->tanggal);
+        }
+
+        if ($request->filled('status_agenda')) {
+            $status = $request->status_agenda;
+            if ($status === 'Berlangsung') {
+                $query->where('tanggal', $nowDate)
+                      ->where('jam_mulai', '<=', $nowTime)
+                      ->where('jam_selesai', '>=', $nowTime)
+                      ->where('status_agenda', '!=', 'Dibatalkan');
+            } elseif ($status === 'Akan Datang') {
+                $query->where(function($q) use ($nowDate, $nowTime) {
+                    $q->where('tanggal', '>', $nowDate)
+                      ->orWhere(function($sq) use ($nowDate, $nowTime) {
+                          $sq->where('tanggal', $nowDate)
+                             ->where('jam_mulai', '>', $nowTime)
+                             ->where('status_agenda', '!=', 'Dibatalkan');
+                      });
+                });
+            } elseif ($status === 'Selesai') {
+                $query->where(function($q) use ($nowDate, $nowTime) {
+                    $q->where('tanggal', '<', $nowDate)
+                      ->orWhere(function($sq) use ($nowDate, $nowTime) {
+                          $sq->where('tanggal', $nowDate)
+                             ->where('jam_selesai', '<', $nowTime)
+                             ->where('status_agenda', '!=', 'Dibatalkan');
+                      });
+                });
+            } elseif ($status === 'hari_ini') {
+                $query->where('tanggal', $nowDate);
+            }
         }
 
         if ($request->get('sort') === 'terlama') {
@@ -934,21 +972,46 @@ class AdminController extends Controller
 
         $allAgendas = $query->get();
 
+        // Live ongoing agendas for highlight widget (Hanya yang BENAR-BENAR SEDANG BERJALAN SAAT INI)
+        $liveAgendas = (clone $baseCountsQuery)
+            ->where('tanggal', $nowDate)
+            ->where('jam_mulai', '<=', $nowTime)
+            ->where('jam_selesai', '>=', $nowTime)
+            ->where('status_agenda', '!=', 'Dibatalkan')
+            ->orderBy('jam_mulai', 'asc')
+            ->get();
+
+        $allBaseAgendas = (clone $baseCountsQuery)->get();
+        $counts = [
+            'total' => $allBaseAgendas->count(),
+            'berlangsung' => $liveAgendas->count(),
+            'hari_ini' => $allBaseAgendas->where('tanggal', $nowDate)->count(),
+            'akan_datang' => $allBaseAgendas->where('status_agenda', 'Akan Datang')->count(),
+            'selesai' => $allBaseAgendas->where('status_agenda', 'Selesai')->count(),
+        ];
+
         if ($user->isAdminFakultas()) {
+            $userFakultas = Fakultas::find($user->fakultas_id);
             $dosens = Dosen::where('id_fakultas', $user->fakultas_id)->orderBy('nama', 'asc')->get();
-            $labs = Laboratorium::forUser($user)->orderBy('nama_lab', 'asc')->get();
+            $labs = Laboratorium::forUser($user)->with('fakultas')->orderBy('nama_lab', 'asc')->get();
             $fakultas = Fakultas::where('id', $user->fakultas_id)->get();
             $prodis = Prodi::where('fakultas_id', $user->fakultas_id)->orderBy('nama_prodi', 'asc')->get();
         } else {
+            $userFakultas = null;
             $dosens = Dosen::orderBy('nama', 'asc')->get();
-            $labs = Laboratorium::orderBy('nama_lab', 'asc')->get();
+            if ($request->filled('fakultas_id')) {
+                $labs = Laboratorium::where('fakultas_id', $request->fakultas_id)->with('fakultas')->orderBy('nama_lab', 'asc')->get();
+                $prodis = Prodi::where('fakultas_id', $request->fakultas_id)->orderBy('nama_prodi', 'asc')->get();
+            } else {
+                $labs = Laboratorium::with('fakultas')->orderBy('nama_lab', 'asc')->get();
+                $prodis = Prodi::with('fakultas')->orderBy('nama_prodi', 'asc')->get();
+            }
             $fakultas = Fakultas::orderBy('nama_fakultas', 'asc')->get();
-            $prodis = Prodi::with('fakultas')->orderBy('nama_prodi', 'asc')->get();
         }
         $kelases = Kelas::all();
         $mataKuliahs = MataKuliah::with('prodi.fakultas')->orderBy('nama_mk', 'asc')->get();
 
-        return view('admin.agenda', compact('allAgendas', 'dosens', 'labs', 'fakultas', 'prodis', 'kelases', 'mataKuliahs'));
+        return view('admin.agenda', compact('allAgendas', 'liveAgendas', 'counts', 'dosens', 'labs', 'fakultas', 'userFakultas', 'prodis', 'kelases', 'mataKuliahs'));
     }
 
     public function storeAgenda(Request $request)

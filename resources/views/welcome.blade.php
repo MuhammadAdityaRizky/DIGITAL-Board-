@@ -2,22 +2,19 @@
     // Find active agenda (current time falls between start and end time today)
     $currentTime = now()->format('H:i:s');
     
-    $activeAgenda = $agendas->first(function($agenda) use ($currentTime) {
-        return $currentTime >= $agenda->jam_mulai && $currentTime <= $agenda->jam_selesai;
+    $runningAgenda = $agendas->first(function($agenda) use ($currentTime) {
+        return $currentTime >= $agenda->jam_mulai && $currentTime <= $agenda->jam_selesai && $agenda->status_agenda === 'Berlangsung';
     });
     
-    // If no agenda is currently active, find the next upcoming one as the main active display
-    if (!$activeAgenda) {
-        $activeAgenda = $agendas->first(function($agenda) use ($currentTime) {
-            return $agenda->jam_mulai > $currentTime;
-        });
-    }
+    $activeAgenda = $runningAgenda;
     
-    // Get next agenda after the active agenda
-    $nextAgenda = null;
+    $nextAgenda = $agendas->first(function($agenda) use ($currentTime) {
+        return $agenda->jam_mulai > $currentTime && $agenda->status_agenda !== 'Dibatalkan' && $agenda->status_agenda !== 'Selesai';
+    });
+    
     if ($activeAgenda) {
         $nextAgenda = $agendas->first(function($agenda) use ($activeAgenda, $currentTime) {
-            return $agenda->jam_mulai > $activeAgenda->jam_mulai && $agenda->jam_mulai > $currentTime;
+            return $agenda->id !== $activeAgenda->id && $agenda->jam_mulai >= $activeAgenda->jam_selesai && $agenda->jam_mulai > $currentTime && $agenda->status_agenda !== 'Dibatalkan' && $agenda->status_agenda !== 'Selesai';
         });
     }
     

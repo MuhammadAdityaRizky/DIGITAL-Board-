@@ -157,6 +157,10 @@ class Agenda extends Model
         if ($value === 'Dibatalkan') {
             return 'Dibatalkan';
         }
+
+        if ($value === 'Selesai') {
+            return 'Selesai';
+        }
         
         $now = now();
         $tanggal = \Carbon\Carbon::parse($this->tanggal);

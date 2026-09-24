@@ -2,37 +2,42 @@
     // Current time
     $currentTime = now()->format('H:i:s');
     
-    // 1. Current Running Agenda (strictly between start and end time today)
+    // 1. Current Running Agenda (strictly between start and end time today and MUST have status Berlangsung)
     $runningAgenda = $agendas->first(function($agenda) use ($currentTime) {
-        return $currentTime >= $agenda->jam_mulai && $currentTime <= $agenda->jam_selesai && $agenda->status_agenda !== 'Dibatalkan';
+        return $currentTime >= $agenda->jam_mulai 
+            && $currentTime <= $agenda->jam_selesai 
+            && $agenda->status_agenda === 'Berlangsung';
     });
     
-    // 2. Active display agenda for main card (use running agenda, or fallback to next upcoming class)
+    // 2. Active display agenda for main card: use running agenda ONLY if running
     $activeAgenda = $runningAgenda;
-    if (!$activeAgenda) {
-        $activeAgenda = $agendas->first(function($agenda) use ($currentTime) {
-            return $agenda->jam_mulai > $currentTime && $agenda->status_agenda !== 'Dibatalkan';
-        });
-    }
     
-    // 3. Get next agenda after display agenda
-    $nextAgenda = null;
+    // 3. Next upcoming agenda today (not Selesai / Dibatalkan)
+    $nextAgenda = $agendas->first(function($agenda) use ($currentTime) {
+        return $agenda->jam_mulai > $currentTime 
+            && $agenda->status_agenda !== 'Dibatalkan'
+            && $agenda->status_agenda !== 'Selesai';
+    });
+
     if ($activeAgenda) {
         $nextAgenda = $agendas->first(function($agenda) use ($activeAgenda, $currentTime) {
-            return $agenda->jam_mulai > $activeAgenda->jam_mulai && $agenda->jam_mulai > $currentTime && $agenda->status_agenda !== 'Dibatalkan';
+            return $agenda->id !== $activeAgenda->id 
+                && $agenda->jam_mulai >= $activeAgenda->jam_selesai 
+                && $agenda->status_agenda !== 'Dibatalkan'
+                && $agenda->status_agenda !== 'Selesai';
         });
     }
 
-    // 4. QR Agenda: ONLY active when class is currently RUNNING or within 15 minutes before start time!
+    // 4. QR Agenda: ONLY active when class is currently RUNNING and NOT Selesai, or within 15 minutes before next start time!
     $qrAgenda = $runningAgenda;
     $isQrActive = false;
 
-    if ($qrAgenda) {
+    if ($qrAgenda && $qrAgenda->status_agenda === 'Berlangsung') {
         $isQrActive = true;
     } else {
         // Check if there is an agenda starting within 15 minutes (buffer window)
         $upcomingBuffer = $agendas->first(function($agenda) use ($currentTime) {
-            if ($agenda->status_agenda === 'Dibatalkan') return false;
+            if ($agenda->status_agenda === 'Dibatalkan' || $agenda->status_agenda === 'Selesai') return false;
             $diffInSec = strtotime($agenda->jam_mulai) - strtotime($currentTime);
             return $diffInSec > 0 && $diffInSec <= 900; // <= 15 minutes (900 seconds)
         });

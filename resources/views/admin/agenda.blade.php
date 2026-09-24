@@ -51,7 +51,7 @@
                 <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1 rounded-xl hover:bg-slate-50 transition">
                     <div class="text-right hidden sm:block">
                         <p class="font-bold text-xs text-slate-800 group-hover:text-teal-700 transition">{{ auth()->user()->username }}</p>
-                        <p class="text-[9px] font-semibold tracking-wider text-slate-500 uppercase">SUPER ADMIN</p>
+                        <p class="text-[9px] font-semibold tracking-wider text-slate-500 uppercase">{{ auth()->user()->isSuperAdmin() ? 'SUPER ADMIN' : 'ADMIN FAKULTAS' }}</p>
                     </div>
                     <div class="w-9 h-9 rounded-full bg-teal-100 group-hover:bg-teal-200 text-teal-900 border border-teal-200 flex items-center justify-center font-bold text-xs transition transform group-hover:scale-105 shadow-xs">
                         {{ strtoupper(substr(auth()->user()->username ?? 'AD', 0, 2)) }}
@@ -64,7 +64,7 @@
                     <div class="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
                         <p class="text-xs font-bold text-slate-800 truncate">{{ auth()->user()->username ?? 'Administrator' }}</p>
                         <span class="inline-block mt-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/60 rounded-md text-[9px] font-bold uppercase tracking-wider">
-                            Super Admin
+                            {{ auth()->user()->isSuperAdmin() ? 'Super Admin' : 'Admin Fakultas' }}
                         </span>
                     </div>
 
@@ -110,6 +110,28 @@
                             </div>
                         </div>
 
+                        <!-- Fakultas Filter (col-span-3) -->
+                        <div class="lg:col-span-3">
+                            <label class="block text-slate-600 font-semibold mb-1">Fakultas</label>
+                            @if(auth()->user()->isSuperAdmin())
+                                <select name="fakultas_id" onchange="this.form.submit()" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition font-medium">
+                                    <option value="">-- Semua Fakultas --</option>
+                                    @foreach($fakultas as $f)
+                                        <option value="{{ $f->id }}" {{ request('fakultas_id') == $f->id ? 'selected' : '' }}>
+                                            {{ $f->nama_fakultas }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <div class="w-full py-2 px-3 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center justify-between" title="Fakultas Anda Terkunci">
+                                    <span class="truncate">{{ $userFakultas->nama_fakultas ?? 'Fakultas Terkunci' }}</span>
+                                    <span class="text-[10px] text-slate-500 bg-slate-200/80 px-1.5 py-0.5 rounded font-mono shrink-0 ml-1">
+                                        <i class="fa-solid fa-lock text-[9px] mr-0.5"></i> Locked
+                                    </span>
+                                </div>
+                            @endif
+                        </div>
+
                         <!-- Ruang Lab (col-span-3) -->
                         <div class="lg:col-span-3">
                             <label class="block text-slate-600 font-semibold mb-1">Ruang Lab</label>
@@ -117,20 +139,7 @@
                                 <option value="">-- Semua Ruang Lab --</option>
                                 @foreach($labs as $l)
                                     <option value="{{ $l->id }}" {{ request('lab_id') == $l->id ? 'selected' : '' }}>
-                                        {{ strtoupper($l->nama_lab) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Fakultas / Prodi (col-span-3) -->
-                        <div class="lg:col-span-3">
-                            <label class="block text-slate-600 font-semibold mb-1">Fakultas / Prodi</label>
-                            <select name="prodi_id" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
-                                <option value="">-- Semua Prodi --</option>
-                                @foreach($prodis as $p)
-                                    <option value="{{ $p->id }}" {{ request('prodi_id') == $p->id ? 'selected' : '' }}>
-                                        {{ $p->nama_prodi }}
+                                        {{ strtoupper($l->nama_lab) }}@if(auth()->user()->isSuperAdmin() && !request('fakultas_id') && $l->fakultas) ({{ $l->fakultas->nama_fakultas }})@endif
                                     </option>
                                 @endforeach
                             </select>
@@ -141,7 +150,7 @@
                             <button type="submit" class="flex-1 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-lg font-semibold transition-all shadow-xs flex items-center justify-center gap-1 cursor-pointer">
                                 <i class="fa-solid fa-filter text-xs"></i> Filter
                             </button>
-                            @if(request()->anyFilled(['search', 'lab_id', 'prodi_id', 'pertemuan', 'tanggal', 'sort']))
+                            @if(request()->anyFilled(['search', 'fakultas_id', 'lab_id', 'prodi_id', 'status_agenda', 'pertemuan', 'tanggal', 'sort']))
                                 <a href="{{ route('admin.agenda') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition-all border border-slate-200 text-center flex items-center justify-center" title="Reset Filter">
                                     <i class="fa-solid fa-rotate-left"></i>
                                 </a>
@@ -149,13 +158,37 @@
                         </div>
                     </div>
 
-                    <!-- Row 2 Filters: Pertemuan, Tanggal, Urutan -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-12 gap-3 items-end pt-2 border-t border-slate-100">
-                        <!-- Filter Pertemuan (col-span-4) -->
-                        <div class="lg:col-span-4">
+                    <!-- Row 2 Filters: Prodi, Status, Pertemuan, Tanggal, Urutan -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end pt-2.5 border-t border-slate-100">
+                        <!-- Program Studi (col-span-3) -->
+                        <div class="lg:col-span-3">
+                            <label class="block text-slate-600 font-semibold mb-1">Program Studi</label>
+                            <select name="prodi_id" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
+                                <option value="">-- Semua Prodi --</option>
+                                @foreach($prodis as $p)
+                                    <option value="{{ $p->id }}" {{ request('prodi_id') == $p->id ? 'selected' : '' }}>
+                                        {{ $p->nama_prodi }}@if(auth()->user()->isSuperAdmin() && !request('fakultas_id') && $p->fakultas) ({{ $p->fakultas->nama_fakultas }})@endif
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Status Agenda (col-span-3) -->
+                        <div class="lg:col-span-3">
+                            <label class="block text-slate-600 font-semibold mb-1">Status Agenda</label>
+                            <select name="status_agenda" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition font-medium">
+                                <option value="">Semua Status</option>
+                                <option value="Berlangsung" {{ request('status_agenda') == 'Berlangsung' ? 'selected' : '' }}>🟢 Sedang Berlangsung</option>
+                                <option value="hari_ini" {{ request('status_agenda') == 'hari_ini' ? 'selected' : '' }}>📅 Hari Ini</option>
+                                <option value="Akan Datang" {{ request('status_agenda') == 'Akan Datang' ? 'selected' : '' }}>⏳ Akan Datang</option>
+                            </select>
+                        </div>
+
+                        <!-- Filter Pertemuan (col-span-2) -->
+                        <div class="lg:col-span-2">
                             <label class="block text-slate-600 font-semibold mb-1">Pertemuan Sesi</label>
                             <select name="pertemuan" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
-                                <option value="">Semua Pertemuan (Pertemuan 1 - 16)</option>
+                                <option value="">Semua (1 - 16)</option>
                                 @for($i = 1; $i <= 16; $i++)
                                     <option value="{{ $i }}" {{ request('pertemuan') == $i ? 'selected' : '' }}>
                                         Pertemuan {{ $i }}
@@ -164,23 +197,176 @@
                             </select>
                         </div>
 
-                        <!-- Tanggal (col-span-4) -->
-                        <div class="lg:col-span-4">
+                        <!-- Tanggal (col-span-2) -->
+                        <div class="lg:col-span-2">
                             <label class="block text-slate-600 font-semibold mb-1">Tanggal Praktikum</label>
                             <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition">
                         </div>
 
-                        <!-- Urutan (col-span-4) -->
-                        <div class="lg:col-span-4">
+                        <!-- Urutan (col-span-2) -->
+                        <div class="lg:col-span-2">
                             <label class="block text-slate-600 font-semibold mb-1">Urutan Tanggal</label>
                             <select name="sort" onchange="this.form.submit()" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition font-medium cursor-pointer">
-                                <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>📅 Tanggal Terbaru (Terbaru → Terlama)</option>
-                                <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>📅 Tanggal Terlama (Terlama → Terbaru)</option>
+                                <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>📅 Terbaru</option>
+                                <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>📅 Terlama</option>
                             </select>
                         </div>
                     </div>
                 </form>
-                      <!-- Agendas List Grouped by Mata Kuliah, Kelas, & Program Kuliah -->
+            </div>
+
+            @php
+                $queryParamsWithoutStatus = request()->except(['status_agenda', 'page']);
+                $urlSemua = route('admin.agenda', $queryParamsWithoutStatus);
+                $urlBerlangsung = route('admin.agenda', array_merge($queryParamsWithoutStatus, ['status_agenda' => 'Berlangsung']));
+                $urlHariIni = route('admin.agenda', array_merge($queryParamsWithoutStatus, ['status_agenda' => 'hari_ini']));
+                $urlAkanDatang = route('admin.agenda', array_merge($queryParamsWithoutStatus, ['status_agenda' => 'Akan Datang']));
+            @endphp
+
+            <!-- QUICK STATUS FILTER BAR WITH BORDER ATAS & BORDER BAWAH -->
+            <div class="bg-white border-y border-slate-200/90 py-3.5 px-4 rounded-xl shadow-xs flex flex-wrap items-center justify-between gap-3">
+                <!-- Status Filter Pills -->
+                <div class="flex items-center gap-1.5 flex-wrap text-xs">
+                    <span class="text-slate-500 font-bold text-[11px] uppercase tracking-wider mr-1">Filter Cepat:</span>
+                    <a href="{{ $urlSemua }}" 
+                       class="px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5 {{ !request()->filled('status_agenda') ? 'bg-slate-800 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer' }}"
+                       title="Tampilkan Semua Agenda">
+                        <span>Semua</span>
+                        <span class="px-1.5 py-0.2 text-[10px] rounded-full {{ !request()->filled('status_agenda') ? 'bg-slate-700 text-slate-200' : 'bg-white text-slate-600 border border-slate-200' }}">{{ $counts['total'] ?? 0 }}</span>
+                    </a>
+
+                    <a href="{{ $urlBerlangsung }}" 
+                       class="px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5 {{ request('status_agenda') == 'Berlangsung' ? 'bg-emerald-700 text-white shadow-xs' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/70 cursor-pointer' }}"
+                       title="Filter Hanya yang Sedang Berlangsung Saat Ini">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 {{ ($counts['berlangsung'] ?? 0) > 0 ? 'animate-pulse' : '' }}"></span>
+                        <span>Sedang Berlangsung</span>
+                        <span class="px-1.5 py-0.2 text-[10px] rounded-full {{ request('status_agenda') == 'Berlangsung' ? 'bg-emerald-800 text-emerald-100' : 'bg-white text-emerald-700 border border-emerald-200' }}">{{ $counts['berlangsung'] ?? 0 }}</span>
+                    </a>
+
+                    <a href="{{ $urlHariIni }}" 
+                       class="px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5 {{ request('status_agenda') == 'hari_ini' ? 'bg-teal-800 text-white shadow-xs' : 'bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200/70 cursor-pointer' }}"
+                       title="Filter Jadwal Kuliah Hari Ini">
+                        <i class="fa-regular fa-calendar-check text-[11px]"></i>
+                        <span>Hari Ini</span>
+                        <span class="px-1.5 py-0.2 text-[10px] rounded-full {{ request('status_agenda') == 'hari_ini' ? 'bg-teal-900 text-teal-100' : 'bg-white text-teal-700 border border-teal-200' }}">{{ $counts['hari_ini'] ?? 0 }}</span>
+                    </a>
+
+                    <a href="{{ $urlAkanDatang }}" 
+                       class="px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1.5 {{ request('status_agenda') == 'Akan Datang' ? 'bg-blue-700 text-white shadow-xs' : 'bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200/70 cursor-pointer' }}"
+                       title="Filter Jadwal Mendatang">
+                        <i class="fa-regular fa-clock text-[11px]"></i>
+                        <span>Akan Datang</span>
+                        <span class="px-1.5 py-0.2 text-[10px] rounded-full {{ request('status_agenda') == 'Akan Datang' ? 'bg-blue-800 text-blue-100' : 'bg-white text-blue-700 border border-blue-200' }}">{{ $counts['akan_datang'] ?? 0 }}</span>
+                    </a>
+                </div>
+
+                <!-- Role & Scope Context Badge -->
+                <div class="text-[11px] font-medium flex items-center gap-2">
+                    @if(auth()->user()->isSuperAdmin())
+                        <span class="px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-lg flex items-center gap-1.5 font-semibold">
+                            <i class="fa-solid fa-shield-halved text-teal-700"></i> Super Admin (Akses Seluruh Fakultas & Lab)
+                        </span>
+                    @else
+                        <span class="px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded-lg flex items-center gap-1.5 font-semibold">
+                            <i class="fa-solid fa-building-columns text-slate-500"></i> {{ $userFakultas->nama_fakultas ?? 'Fakultas' }} • {{ $labs->count() }} Lab Naungan
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- SECTION HIGHLIGHT: MATKUL SEDANG BERLANGSUNG -->
+            @if(isset($liveAgendas) && $liveAgendas->count() > 0)
+            <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 border-y-2 border-emerald-500/80 rounded-2xl p-4.5 sm:p-5 shadow-xs space-y-3.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2.5">
+                        <span class="relative flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-600"></span>
+                        </span>
+                        <h4 class="font-black text-xs sm:text-sm text-emerald-950 uppercase tracking-wide flex items-center gap-2">
+                            <span>Mata Kuliah Sedang Berlangsung</span>
+                            <span class="px-2 py-0.5 bg-emerald-600 text-white rounded-full text-[10px] font-bold">{{ $liveAgendas->count() }} Kelas Aktif</span>
+                        </h4>
+                    </div>
+                    <span class="text-[11px] text-emerald-800 font-medium flex items-center gap-1">
+                        <i class="fa-solid fa-clock text-emerald-600"></i> Live Monitor Realtime
+                    </span>
+                </div>
+
+                <!-- Live Cards Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                    @foreach($liveAgendas as $live)
+                        @php
+                            $livePertemuan = '-';
+                            if ($live->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $live->catatan, $lm)) {
+                                $livePertemuan = $lm[1];
+                            }
+                            $liveLab = $live->lab;
+                            $liveFakultas = $liveLab?->fakultas;
+                        @endphp
+                        <div class="bg-white border border-emerald-200/90 rounded-xl p-4 shadow-sm hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
+                            <div>
+                                <!-- Header Badges -->
+                                <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded text-[10px] font-extrabold flex items-center gap-1">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span> BERLANGSUNG
+                                        </span>
+                                        @if(auth()->user()->isSuperAdmin() && $liveFakultas)
+                                            <span class="px-2 py-0.5 bg-teal-50 text-teal-900 border border-teal-200 rounded text-[10px] font-bold flex items-center gap-1" title="Fakultas {{ $liveFakultas->nama_fakultas }}">
+                                                <i class="fa-solid fa-building-columns text-[9px] text-teal-700"></i>
+                                                {{ $liveFakultas->nama_fakultas }}
+                                            </span>
+                                        @endif
+                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-800 border border-slate-200 rounded text-[10px] font-bold flex items-center gap-1">
+                                            <i class="fa-solid fa-flask text-[9px] text-teal-700"></i>
+                                            {{ $liveLab->nama_lab ?? 'Lab' }}
+                                        </span>
+                                    </div>
+                                    <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                                        Kelas {{ $live->kelas ?: '-' }}
+                                    </span>
+                                </div>
+
+                                <!-- Course Title -->
+                                <h5 class="font-bold text-slate-900 text-sm tracking-tight leading-snug line-clamp-2">
+                                    {{ $live->mata_kuliah }}
+                                </h5>
+
+                                <!-- Info Meta -->
+                                <div class="mt-2.5 space-y-1 text-xs text-slate-600">
+                                    <div class="flex items-center gap-1.5">
+                                        <i class="fa-solid fa-user-tie text-[11px] text-slate-400 w-4"></i>
+                                        <span class="truncate font-medium text-slate-800">{{ $live->dosenPengampu->nama ?? $live->dosen->nama ?? '-' }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
+                                        <i class="fa-regular fa-clock text-[11px] text-teal-600 w-4"></i>
+                                        <span class="font-semibold text-teal-800">{{ substr($live->jam_mulai,0,5) }} - {{ substr($live->jam_selesai,0,5) }} WIB</span>
+                                        <span>•</span>
+                                        <span>Pertemuan {{ $livePertemuan }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CTA Actions -->
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                                <span class="text-[10px] text-slate-400">{{ $live->jurusan ?? 'Prodi' }}</span>
+                                <div class="flex items-center gap-1.5">
+                                    <a href="{{ route('admin.absensi.input', $live->id) }}" class="px-2.5 py-1 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs">
+                                        <i class="fa-solid fa-clipboard-user text-[10px]"></i> Absensi
+                                    </a>
+                                    <a href="{{ route('admin.agenda.berita-acara.cetak', $live->id) }}" target="_blank" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition border border-slate-200" title="Cetak Berita Acara">
+                                        <i class="fa-regular fa-file-lines text-[10px]"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            <!-- Agendas List Grouped by Mata Kuliah, Kelas, & Program Kuliah -->
             @php
                 $currentSort = request('sort', 'terbaru');
                 $isSortDesc = $currentSort === 'terbaru';
@@ -375,7 +561,17 @@
                                         <span class="text-slate-300">•</span>
                                         <span>{{ $firstItem->jurusan ?? 'Program Studi' }}</span>
                                         <span class="text-slate-300">•</span>
-                                        <span>{{ $firstItem->lab->nama_lab ?? 'Lab' }}</span>
+                                        <span class="inline-flex items-center gap-1 font-semibold text-slate-700">
+                                            <i class="fa-solid fa-flask text-teal-600 text-[10px]"></i>
+                                            {{ $firstItem->lab->nama_lab ?? 'Lab' }}
+                                        </span>
+                                        @if(auth()->user()->isSuperAdmin() && $firstItem->lab && $firstItem->lab->fakultas)
+                                            <span class="text-slate-300">•</span>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200/80 rounded font-semibold text-[10px]">
+                                                <i class="fa-solid fa-building-columns text-emerald-600 text-[9px]"></i>
+                                                {{ $firstItem->lab->fakultas->nama_fakultas }}
+                                            </span>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2.5 self-end sm:self-center shrink-0">
@@ -509,8 +705,17 @@
                                                         @endif
                                                     </td>
                                                     <td class="p-3.5">
-                                                        <div class="font-medium text-slate-800 text-xs">{{ $ag->lab->nama_lab ?? '-' }}</div>
-                                                        <div class="text-[11px] text-slate-400">{{ $ag->lab->lokasi ?? '-' }}</div>
+                                                        <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                                            <i class="fa-solid fa-flask text-[10px] text-teal-700"></i>
+                                                            <span>{{ $ag->lab->nama_lab ?? '-' }}</span>
+                                                        </div>
+                                                        @if(auth()->user()->isSuperAdmin() && $ag->lab && $ag->lab->fakultas)
+                                                            <div class="text-[11px] text-teal-700 font-semibold flex items-center gap-1 mt-0.5">
+                                                                <i class="fa-solid fa-building-columns text-[9px] text-teal-600"></i>
+                                                                <span>{{ $ag->lab->fakultas->nama_fakultas }}</span>
+                                                            </div>
+                                                        @endif
+                                                        <div class="text-[11px] text-slate-400 mt-0.5">{{ $ag->lab->lokasi ?? '-' }}</div>
                                                     </td>
                                                     <td class="p-3.5 text-right pr-5">
                                                         <div class="inline-flex items-center gap-1.5 justify-end">
