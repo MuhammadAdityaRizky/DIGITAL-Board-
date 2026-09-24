@@ -190,10 +190,6 @@
                     
                     <div class="flex items-center gap-2 ml-auto flex-wrap">
                         @if($agendas->count() > 0)
-                            <a href="{{ route('dosen.agenda.berita-acara.cetak', 'all') }}" target="_blank" class="h-[36px] px-3.5 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-2xs cursor-pointer flex-shrink-0" title="Cetak Seluruh Berita Acara (Terurut Rapi Matkul & Pertemuan)">
-                                <i class="fa-solid fa-print text-sky-700"></i>
-                                <span>Cetak Seluruh BA</span>
-                            </a>
                             <button type="button" onclick="toggleAllCourseAccordions(this)" id="btn-toggle-all-courses" class="h-[36px] px-3.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-2xs cursor-pointer" title="Buka atau tutup semua daftar pertemuan">
                                 <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200" id="icon-toggle-all-courses"></i>
                                 <span id="text-toggle-all-courses">Buka Semua</span>
