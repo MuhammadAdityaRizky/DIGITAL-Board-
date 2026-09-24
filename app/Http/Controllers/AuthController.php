@@ -11,9 +11,13 @@ class AuthController extends Controller
     public function showLogin()
     {
         if (Auth::check()) {
-            Auth::logout();
-            session()->invalidate();
-            session()->regenerateToken();
+            $user = Auth::user();
+            return match ($user->role) {
+                'super_admin', 'admin' => redirect()->route('admin.dashboard'),
+                'dosen' => redirect()->route('dosen.dashboard'),
+                'mahasiswa' => redirect()->route('mahasiswa.dashboard'),
+                default => redirect()->route('board'),
+            };
         }
         return view('auth.login');
     }

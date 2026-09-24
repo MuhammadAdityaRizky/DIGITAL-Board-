@@ -8,17 +8,17 @@ use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\TemplateController;
 use Illuminate\Support\Facades\Route;
 
-// Public Digital Display Board (Home Route & Specific Lab Board)
-Route::get('/', [DigitalBoardController::class, 'index'])->name('board');
-Route::get('/board/{lab_id?}', [DigitalBoardController::class, 'index'])->name('board.lab');
-
 // Guest Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/demo-login/{role}', [AuthController::class, 'demoLogin'])->name('demo.login');
 
-// Authenticated Routes
+// Authenticated Routes (Harus login terlebih dahulu)
 Route::middleware('auth')->group(function () {
+    // Digital Display Board Portal (Hanya bisa diakses jika sudah login)
+    Route::get('/', [DigitalBoardController::class, 'index'])->name('board');
+    Route::get('/board/{lab_id?}', [DigitalBoardController::class, 'index'])->name('board.lab');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::get('/template/download/{type}', [TemplateController::class, 'download'])->name('template.download');

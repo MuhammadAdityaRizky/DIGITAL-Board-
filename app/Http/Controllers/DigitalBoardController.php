@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Agenda;
 use App\Models\Pengumuman;
-use App\Models\Laboratorium;
-use App\Models\Fakultas;
 
 class DigitalBoardController extends Controller
 {
@@ -16,22 +14,11 @@ class DigitalBoardController extends Controller
         }
 
         if (!$lab_id) {
-            // Proteksi Akses: Hanya Administrator yang dapat memilih & mengakses Portal Kiosk Board
-            if (!auth()->check()) {
-                return redirect()->route('login')->with('error', 'Akses Terbatas: Silakan login sebagai Administrator terlebih dahulu untuk mengakses Portal Digital Board.');
-            }
-
-            if (auth()->user()->role !== 'admin') {
-                return redirect()->route('login')->with('error', 'Akses Terbatas: Hanya Administrator yang berhak mengakses Portal Kiosk Monitor.');
-            }
-
-            $labs = Laboratorium::with('fakultas')->orderBy('nama_lab')->get();
-            $fakultas = Fakultas::orderBy('nama_fakultas')->get();
-
-            return view('board_portal', compact('labs', 'fakultas'));
+            $labs = \App\Models\Laboratorium::with('fakultas')->orderBy('nama_lab')->get();
+            return view('board_portal', compact('labs'));
         }
 
-        $activeLab = Laboratorium::with('fakultas')->findOrFail($lab_id);
+        $activeLab = \App\Models\Laboratorium::with('fakultas')->findOrFail($lab_id);
 
         $agendas = Agenda::with(['dosen.user', 'lab'])
             ->where('lab_id', $lab_id)

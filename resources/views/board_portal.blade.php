@@ -5,7 +5,7 @@
     <link rel="shortcut icon" href="{{ asset('images/logo-uika.png') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Kiosk Digital Board - Universitas Ibn Khaldun Bogor</title>
+    <title>Portal Display Laboratorium - UIKA Smart Lab</title>
 
     <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
@@ -55,32 +55,43 @@
             </div>
         </div>
 
-        <!-- Admin Info & Navigation Actions -->
-        <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end flex-wrap">
-            @if(auth()->check() && auth()->user()->role === 'admin')
-                <div class="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-2 text-xs font-bold text-[#0c4ea6]">
-                    <i class="fa-solid fa-user-gear"></i>
-                    <span>Admin: {{ auth()->user()->name ?: (auth()->user()->username ?: 'Administrator') }}</span>
-                </div>
-                <a href="{{ route('admin.dashboard') }}" 
-                   class="px-4 py-2 bg-[#0c4ea6] hover:bg-[#0a3f86] text-white font-bold text-xs rounded-xl transition shadow-sm flex items-center gap-1.5">
-                    <i class="fa-solid fa-gauge"></i>
-                    <span>Dashboard Admin</span>
-                </a>
+        <!-- Action Button -->
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+            @auth
+                @if(in_array(auth()->user()->role, ['admin', 'super_admin']))
+                    <a href="{{ route('admin.dashboard') }}" 
+                       class="px-4 py-2.5 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-xs transition duration-200 shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-gauge text-teal-700"></i>
+                        <span>Panel Admin</span>
+                    </a>
+                @elseif(auth()->user()->role === 'dosen')
+                    <a href="{{ route('dosen.dashboard') }}" 
+                       class="px-4 py-2.5 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-xs transition duration-200 shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-gauge text-teal-700"></i>
+                        <span>Panel Dosen</span>
+                    </a>
+                @elseif(auth()->user()->role === 'mahasiswa')
+                    <a href="{{ route('mahasiswa.dashboard') }}" 
+                       class="px-4 py-2.5 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-800 font-bold text-xs transition duration-200 shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-gauge text-teal-700"></i>
+                        <span>Panel Mahasiswa</span>
+                    </a>
+                @endif
                 <form action="{{ route('logout') }}" method="POST" class="inline">
                     @csrf
-                    <button type="submit" class="px-3 py-2 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-600 font-bold text-xs rounded-xl transition flex items-center gap-1">
+                    <button type="submit" 
+                            class="px-3.5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition duration-200 shadow-sm flex items-center gap-1.5" title="Keluar dari sistem">
                         <i class="fa-solid fa-right-from-bracket"></i>
-                        <span>Keluar</span>
+                        <span>Logout</span>
                     </button>
                 </form>
             @else
                 <a href="{{ route('login') }}" 
                    class="px-4 py-2.5 rounded-xl border border-slate-200 hover:border-[#0c4ea6]/40 bg-slate-50 hover:bg-white text-slate-700 hover:text-[#0c4ea6] font-bold text-xs transition duration-200 shadow-sm flex items-center gap-2">
                     <i class="fa-solid fa-user-shield text-[#0c4ea6]"></i>
-                    <span>Login Administrator</span>
+                    <span>Login Staff / Dosen</span>
                 </a>
-            @endif
+            @endauth
         </div>
     </header>
 
@@ -89,59 +100,24 @@
         
         <!-- Hero Title Section -->
         <div class="text-center max-w-2xl mx-auto mb-8 space-y-2.5">
-            <span class="inline-flex items-center gap-1.5 px-3.5 py-1 bg-[#00b87c]/10 text-[#0b8a5a] border border-[#00b87c]/20 text-[11px] font-extrabold uppercase tracking-wider rounded-full">
-                <i class="fa-solid fa-desktop text-xs"></i> Portal Kiosk Monitor Digital Board
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-[#00b87c]/10 text-[#0b8a5a] border border-[#00b87c]/20 text-[11px] font-extrabold uppercase tracking-wider rounded-full">
+                <i class="fa-solid fa-desktop text-xs"></i> Select Kiosk Monitor
             </span>
             <h2 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
-                Papan Informasi Digital Per Fakultas
+                Papan Informasi Laboratorium
             </h2>
             <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                Pilih ruang laboratorium atau gunakan filter fakultas di bawah ini untuk membuka layar monitor papan informasi perkuliahan &amp; pengumuman secara real-time.
+                Pilih ruang laboratorium untuk membuka tampilan layar papan informasi perkuliahan, agenda dosen, dan pengumuman secara real-time.
             </p>
         </div>
 
-        <!-- Filter & Search Controls -->
-        <div class="w-full max-w-4xl mx-auto mb-8 space-y-3.5">
-            <!-- Search Bar & Dropdown Select -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <!-- Search Input -->
-                <div class="relative sm:col-span-2">
-                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" id="labSearch" placeholder="Cari nama lab, lokasi gedung, atau fakultas..." 
-                           class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0c4ea6]/20 focus:border-[#0c4ea6] shadow-sm transition">
-                </div>
-
-                <!-- Fakultas Dropdown Select -->
-                <div class="relative">
-                    <i class="fa-solid fa-building-columns absolute left-3.5 top-1/2 -translate-y-1/2 text-[#0c4ea6] text-xs pointer-events-none"></i>
-                    <select id="fakultasFilter" 
-                            class="w-full pl-9 pr-8 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0c4ea6]/20 focus:border-[#0c4ea6] shadow-sm appearance-none cursor-pointer transition">
-                        <option value="">🏢 Semua Fakultas</option>
-                        @foreach($fakultas as $f)
-                            <option value="{{ strtolower($f->nama_fakultas) }}">{{ $f->nama_fakultas }}</option>
-                        @endforeach
-                    </select>
-                    <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-                </div>
-            </div>
-
-            <!-- Quick Filter Pills for Fakultas -->
-            <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs font-semibold">
-                <span class="text-slate-400 text-[11px] font-bold uppercase tracking-wider shrink-0 mr-1">Filter Fakultas:</span>
-                <button type="button" onclick="setFakultasFilter('')" class="fakultas-pill px-3 py-1.5 rounded-xl border border-[#0c4ea6] bg-[#0c4ea6] text-white font-bold transition shrink-0 cursor-pointer" data-val="">
-                    Semua
-                </button>
-                @foreach($fakultas as $f)
-                    @php
-                        preg_match('/\(([^)]+)\)/', $f->nama_fakultas, $matches);
-                        $shortName = $matches[1] ?? $f->nama_fakultas;
-                    @endphp
-                    <button type="button" onclick="setFakultasFilter('{{ strtolower($f->nama_fakultas) }}')" 
-                            class="fakultas-pill px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:border-[#0c4ea6]/40 hover:text-[#0c4ea6] font-bold transition shrink-0 cursor-pointer" 
-                            data-val="{{ strtolower($f->nama_fakultas) }}">
-                        {{ $shortName }}
-                    </button>
-                @endforeach
+        <!-- Search Control Bar -->
+        <div class="w-full max-w-3xl mx-auto mb-8">
+            <!-- Search Bar -->
+            <div class="relative w-full">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="labSearch" placeholder="Cari nama lab atau lokasi gedung..." 
+                       class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0c4ea6]/20 focus:border-[#0c4ea6] shadow-sm transition">
             </div>
         </div>
 
@@ -149,9 +125,7 @@
         <div id="labGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($labs as $lab)
                 <div class="lab-card bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between gap-5 card-shadow transition duration-200 relative overflow-hidden" 
-                     data-location="{{ strtolower($lab->lokasi) }}" 
-                     data-name="{{ strtolower($lab->nama_lab) }}"
-                     data-fakultas="{{ strtolower($lab->fakultas?->nama_fakultas ?? '') }}">
+                     data-location="{{ strtolower($lab->lokasi) }}" data-name="{{ strtolower($lab->nama_lab) }}">
                     
                     <!-- Top Status Bar -->
                     <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-4">
@@ -197,7 +171,7 @@
                     <!-- Action Launch Monitor -->
                     <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
                         <span class="text-[11px] font-bold text-slate-400">
-                            <i class="fa-solid fa-desktop text-slate-400 mr-1"></i> Live Kiosk Mode
+                            <i class="fa-solid fa-[#0c4ea6] fa-desktop text-slate-400 mr-1"></i> Live Kiosk Mode
                         </span>
                         
                         <a href="{{ route('board.lab', $lab->id) }}" 
@@ -216,19 +190,6 @@
                     <p class="text-slate-500 text-xs">Silakan tambahkan data laboratorium melalui Dashboard Admin.</p>
                 </div>
             @endforelse
-
-            <!-- No Filter Result Message -->
-            <div id="noFilterResult" class="hidden col-span-full py-14 text-center bg-white border border-dashed border-slate-300 rounded-3xl p-8">
-                <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-blue-50 text-[#0c4ea6] flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-filter"></i>
-                </div>
-                <h4 class="font-bold text-slate-800 text-sm mb-1">Tidak Ada Laboratorium Ditemukan</h4>
-                <p class="text-slate-500 text-xs">Tidak ada laboratorium yang sesuai dengan pencarian atau filter fakultas yang dipilih.</p>
-                <button type="button" onclick="setFakultasFilter(''); if(document.getElementById('labSearch')) document.getElementById('labSearch').value='';" 
-                        class="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
-                    Reset Filter &amp; Pencarian
-                </button>
-            </div>
         </div>
     </main>
 
@@ -238,61 +199,27 @@
         <p class="text-slate-400 text-[11px]">Computer Laboratory Digital Information Board System</p>
     </footer>
 
-    <!-- Interactive Search & Filter JS -->
+    <!-- Interactive Search JS -->
     <script>
         const searchInput = document.getElementById('labSearch');
-        const fakultasFilter = document.getElementById('fakultasFilter');
-        let activeFakultas = '';
-
-        function setFakultasFilter(val) {
-            activeFakultas = val.toLowerCase().trim();
-            if (fakultasFilter) {
-                fakultasFilter.value = activeFakultas;
-            }
-            document.querySelectorAll('.fakultas-pill').forEach(pill => {
-                if ((pill.dataset.val || '').toLowerCase() === activeFakultas) {
-                    pill.classList.remove('bg-white', 'text-slate-700', 'border-slate-200');
-                    pill.classList.add('bg-[#0c4ea6]', 'text-white', 'border-[#0c4ea6]');
-                } else {
-                    pill.classList.remove('bg-[#0c4ea6]', 'text-white', 'border-[#0c4ea6]');
-                    pill.classList.add('bg-white', 'text-slate-700', 'border-slate-200');
-                }
-            });
-            updateDisplay();
-        }
 
         function updateDisplay() {
-            const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
-            const selectedFakultas = activeFakultas || (fakultasFilter ? fakultasFilter.value.toLowerCase().trim() : '');
+            const query = searchInput.value.toLowerCase().trim();
             const cards = document.querySelectorAll('.lab-card');
-            let countVisible = 0;
 
             cards.forEach(card => {
                 const name = card.dataset.name || '';
                 const location = card.dataset.location || '';
-                const fakultas = card.dataset.fakultas || '';
 
-                const matchQuery = !query || name.includes(query) || location.includes(query) || fakultas.includes(query);
-                const matchFakultas = !selectedFakultas || fakultas.includes(selectedFakultas);
-
-                if (matchQuery && matchFakultas) {
+                if (name.includes(query) || location.includes(query)) {
                     card.style.display = 'flex';
-                    countVisible++;
                 } else {
                     card.style.display = 'none';
                 }
             });
-
-            const noResultEl = document.getElementById('noFilterResult');
-            if (noResultEl) {
-                noResultEl.style.display = (countVisible === 0 && cards.length > 0) ? 'block' : 'none';
-            }
         }
 
         searchInput?.addEventListener('input', updateDisplay);
-        fakultasFilter?.addEventListener('change', function() {
-            setFakultasFilter(this.value);
-        });
     </script>
 </body>
 </html>

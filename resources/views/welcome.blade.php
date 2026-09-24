@@ -89,13 +89,29 @@
     </div>
     </main>
 
-    <!-- Invisible trigger / subtle admin portal link in footer -->
+    <!-- Footer Link Section -->
     <footer class="flex items-center justify-between text-slate-400 text-[10px] px-2">
         <div>&copy; 2026 Computer Laboratory Digital Board System</div>
         <div>
-            <a href="{{ route('login') }}" class="text-slate-400 hover:text-slate-600 transition flex items-center gap-1">
-                <i class="fa-solid fa-lock text-[9px]"></i> Portal Log In
-            </a>
+            @auth
+                @if(in_array(auth()->user()->role, ['admin', 'super_admin']))
+                    <a href="{{ route('admin.dashboard') }}" class="text-teal-400 hover:text-teal-300 font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-gauge text-[9px]"></i> Kembali ke Panel Admin
+                    </a>
+                @elseif(auth()->user()->role === 'dosen')
+                    <a href="{{ route('dosen.dashboard') }}" class="text-teal-400 hover:text-teal-300 font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-gauge text-[9px]"></i> Kembali ke Panel Dosen
+                    </a>
+                @else
+                    <a href="{{ route('mahasiswa.dashboard') }}" class="text-teal-400 hover:text-teal-300 font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-gauge text-[9px]"></i> Kembali ke Panel Mahasiswa
+                    </a>
+                @endif
+            @else
+                <a href="{{ route('login') }}" class="text-slate-400 hover:text-slate-600 transition flex items-center gap-1">
+                    <i class="fa-solid fa-lock text-[9px]"></i> Portal Log In
+                </a>
+            @endauth
         </div>
     </footer>
 
