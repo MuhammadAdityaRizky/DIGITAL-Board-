@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -63,72 +63,7 @@
     <main class="flex-1 flex flex-col h-full overflow-hidden relative">
         
         <!-- Top Navbar -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 lg:px-8 flex-shrink-0 shadow-xs z-10">
-            <div class="flex items-center gap-3">
-                <img src="{{ asset('images/logo-uika.png') }}" alt="Logo UIKA" class="w-9 h-9 object-contain flex lg:hidden shrink-0">
-
-                <div>
-                    <h2 class="font-extrabold text-base text-slate-800 lg:hidden">DIGITAL Board</h2>
-                    <h2 class="font-extrabold text-lg text-slate-900 hidden lg:block">Jadwal & Ketersediaan Ruangan Lab</h2>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-2.5">
-                <!-- Tombol Panduan / Tutorial Dosen -->
-                <button type="button" onclick="openTutorialDosenModal()" class="hidden md:flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl text-xs font-extrabold transition shadow-2xs cursor-pointer" title="Buka Panduan & Tutorial Penggunaan Portal Dosen">
-                    <i class="fa-solid fa-circle-question text-amber-600 text-sm"></i>
-                    <span>Panduan Sistem</span>
-                </button>
-
-                <!-- Profile Avatar & Dropdown Menu -->
-                <div class="relative" id="profileDropdownWrapper">
-                <button type="button" onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 focus:outline-none group cursor-pointer p-1.5 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-200">
-                    <div class="text-right hidden sm:block">
-                        <p class="font-extrabold text-xs text-slate-900 group-hover:text-teal-800 transition leading-tight">{{ $dosen->nama }}</p>
-                        <p class="text-xs font-bold tracking-wide text-teal-800 mt-0.5">NIP: {{ $dosen->nip }} • Dosen</p>
-                    </div>
-                    <div class="w-9 h-9 rounded-xl bg-teal-800 group-hover:bg-teal-900 text-white flex items-center justify-center font-extrabold text-xs transition transform group-hover:scale-105 shadow-sm">
-                        {{ substr($dosen->nama, 0, 2) }}
-                    </div>
-                    <i class="fa-solid fa-chevron-down text-xs text-slate-500 group-hover:text-slate-700 transition hidden sm:inline-block"></i>
-                </button>
-
-                <!-- Dropdown Menu -->
-                <div id="profileDropdownMenu" class="absolute right-0 top-full mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 hidden transform transition-all duration-200 origin-top-right">
-                    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50">
-                        <p class="text-xs font-extrabold text-slate-900 truncate">{{ $dosen->nama }}</p>
-                        <p class="text-xs text-slate-600 font-mono font-bold mt-0.5">NIP: {{ $dosen->nip }}</p>
-                        <span class="inline-block mt-1.5 px-2.5 py-0.5 bg-teal-100 text-teal-900 border border-teal-200 rounded-md text-xs font-extrabold">
-                            Dosen Pengajar
-                        </span>
-                    </div>
-
-                    <div class="py-1">
-                        <a href="{{ route('dosen.pengaturan') }}" class="flex items-center gap-3 px-4 py-2.5 text-xs text-slate-700 hover:bg-teal-50 hover:text-teal-900 transition font-bold group">
-                            <div class="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-teal-100 group-hover:text-teal-800 flex items-center justify-center text-slate-600 transition">
-                                <i class="fa-solid fa-gear text-xs"></i>
-                            </div>
-                            <div>
-                                <span class="font-extrabold block">Pengaturan Akun</span>
-                                <span class="text-xs text-slate-500 block font-medium">Edit profil & ganti password</span>
-                            </div>
-                        </a>
-                    </div>
-
-                    <div class="pt-1 border-t border-slate-100">
-                        <form action="{{ route('logout') }}" method="POST" class="logout-form">
-                            @csrf
-                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-rose-700 hover:bg-rose-50 transition font-extrabold text-left group">
-                                <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center transition">
-                                    <i class="fa-solid fa-right-from-bracket text-xs"></i>
-                                </div>
-                                <span>Keluar / Logout</span>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </header>
+        @include('dosen.partials.header', ['title' => 'Jadwal & Ketersediaan Ruangan Lab'])
 
         <!-- Main Scrollable Body -->
         <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
@@ -193,7 +128,23 @@
                         <button type="button" onclick="switchViewMode('weekly')" id="btn-mode-weekly" class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition">
                             <i class="fa-solid fa-table-cells"></i> Matriks mingguan
                         </button>
-                    </div>
+                    @if(auth()->user()->isSuperAdmin() || auth()->user()->isAdminFakultas())
+                        <div class="w-full pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-amber-50/90 p-3 rounded-xl border border-amber-200">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-user-gear text-amber-600 text-sm"></i>
+                                <span class="text-xs font-extrabold text-amber-900">Mode Pratinjau Admin: Pilih Dosen</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <select name="dosen_id" onchange="document.getElementById('filterLabForm').submit()" class="py-1.5 px-3 rounded-lg bg-white border border-amber-300 text-xs font-bold text-slate-800 outline-none cursor-pointer shadow-2xs">
+                                    @foreach($dosens as $dsn)
+                                        <option value="{{ $dsn->id }}" {{ $dosen->id == $dsn->id ? 'selected' : '' }}>
+                                            {{ $dsn->nama }} (NIP: {{ $dsn->nip }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    @endif
                 </form>
             </div>
 

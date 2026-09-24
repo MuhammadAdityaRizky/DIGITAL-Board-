@@ -3,18 +3,18 @@
     <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden text-left animate-in fade-in zoom-in duration-150">
         
         <!-- Header Modal -->
-        <div class="bg-gradient-to-r from-teal-900 via-teal-800 to-slate-900 text-white px-6 py-5 flex justify-between items-center flex-shrink-0">
+        <div class="px-6 py-5 flex justify-between items-center flex-shrink-0 text-white border-b border-teal-950/40 rounded-t-3xl" style="background: linear-gradient(135deg, #042f2e 0%, #0d9488 55%, #0f172a 100%);">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-2xl bg-teal-700/80 border border-teal-500/40 flex items-center justify-center font-black text-white text-lg shadow-inner">
+                <div class="w-10 h-10 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center font-black text-white text-lg shadow-inner shrink-0">
                     <i class="fa-solid fa-book-open-reader"></i>
                 </div>
                 <div>
-                    <h3 class="font-extrabold text-base sm:text-lg tracking-tight">Panduan Penggunaan Portal Dosen</h3>
-                    <p class="text-xs text-teal-200 font-bold">Petunjuk Praktis Pengelolaan Perkuliahan & Lab</p>
+                    <h3 class="font-extrabold text-base sm:text-lg tracking-tight text-white">Panduan Penggunaan Portal Dosen</h3>
+                    <p class="text-xs text-teal-100 font-semibold">Petunjuk Praktis Pengelolaan Perkuliahan & Lab</p>
                 </div>
             </div>
-            <button type="button" onclick="closeTutorialDosenModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm transition cursor-pointer">
-                <i class="fa-solid fa-xmark"></i>
+            <button type="button" onclick="closeTutorialDosenModal()" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/25 text-white flex items-center justify-center text-sm transition cursor-pointer border border-white/15 shrink-0" title="Tutup Modal">
+                <i class="fa-solid fa-xmark text-base"></i>
             </button>
         </div>
 

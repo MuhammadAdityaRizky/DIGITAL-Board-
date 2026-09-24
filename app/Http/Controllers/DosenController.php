@@ -24,6 +24,15 @@ class DosenController extends Controller
         $user = auth()->user();
         $dosen = Dosen::where('user_id', $user->id)->first();
 
+        if (!$dosen && ($user->isSuperAdmin() || $user->isAdminFakultas())) {
+            if (request()->filled('dosen_id')) {
+                $dosen = Dosen::find(request('dosen_id'));
+            }
+            if (!$dosen) {
+                $dosen = Dosen::whereHas('agendas')->first() ?? Dosen::first();
+            }
+        }
+
         if (!$dosen) {
             return redirect()->route('login')->withErrors(['msg' => 'Data profil Dosen tidak ditemukan.']);
         }
@@ -788,10 +797,16 @@ class DosenController extends Controller
         $user = auth()->user();
         $dosen = Dosen::where('user_id', $user->id)->first();
 
-        if (!$dosen) {
-            if ($user->isSuperAdmin() || $user->isAdminFakultas()) {
-                return redirect()->route('admin.agenda')->withErrors(['msg' => 'Anda sedang login sebagai Admin. Mengalihkan ke Halaman Agenda Admin.']);
+        if (!$dosen && ($user->isSuperAdmin() || $user->isAdminFakultas())) {
+            if ($request->filled('dosen_id')) {
+                $dosen = Dosen::find($request->dosen_id);
             }
+            if (!$dosen) {
+                $dosen = Dosen::whereHas('agendas')->first() ?? Dosen::first();
+            }
+        }
+
+        if (!$dosen) {
             return redirect()->route('login')->withErrors(['msg' => 'Data profil Dosen tidak ditemukan. Silakan hubungi Administrator.']);
         }
 
@@ -1051,6 +1066,9 @@ class DosenController extends Controller
     {
         $user = auth()->user();
         $dosen = Dosen::where('user_id', $user->id)->first();
+        if (!$dosen && ($user->isSuperAdmin() || $user->isAdminFakultas())) {
+            $dosen = Dosen::first();
+        }
         if (!$dosen) {
             return redirect()->route('dosen.dashboard')->withErrors(['msg' => 'Data profil Dosen tidak ditemukan.']);
         }
@@ -1104,11 +1122,19 @@ class DosenController extends Controller
      */
     public function jadwalPenggunaanLab(Request $request)
     {
-        $dosen = Dosen::where('user_id', auth()->id())->first();
-        if (!$dosen) {
-            if (auth()->user()->isSuperAdmin() || auth()->user()->isAdminFakultas()) {
-                return redirect()->route('admin.jadwal-lab')->withErrors(['msg' => 'Anda sedang login sebagai Admin. Mengalihkan ke Jadwal Lab Admin.']);
+        $user = auth()->user();
+        $dosen = Dosen::where('user_id', $user->id)->first();
+
+        if (!$dosen && ($user->isSuperAdmin() || $user->isAdminFakultas())) {
+            if ($request->filled('dosen_id')) {
+                $dosen = Dosen::find($request->dosen_id);
             }
+            if (!$dosen) {
+                $dosen = Dosen::whereHas('agendas')->first() ?? Dosen::first();
+            }
+        }
+
+        if (!$dosen) {
             return redirect()->route('login')->withErrors(['msg' => 'Data profil Dosen tidak ditemukan.']);
         }
         $labs = Laboratorium::orderBy('nama_lab', 'asc')->get();
@@ -1214,8 +1240,10 @@ class DosenController extends Controller
             ->with(['lab', 'prodi'])
             ->get();
 
+        $dosens = Dosen::orderBy('nama', 'asc')->get();
+
         return view('dosen.jadwal_lab', compact(
-            'dosen', 'labs', 'selectedLab', 'selectedLabId', 'selectedDate',
+            'dosen', 'dosens', 'labs', 'selectedLab', 'selectedLabId', 'selectedDate',
             'carbonDate', 'selectedDayName', 'slotAvailability', 'timeSlots',
             'hariList', 'matrixSlots', 'rutinJadwals', 'myClasses'
         ));

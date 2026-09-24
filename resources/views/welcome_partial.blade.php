@@ -44,6 +44,9 @@
     
     // Get latest announcement
     $latestAnnouncement = $pengumuman->first();
+    
+    // Dynamic Theme Color
+    $themeColor = $activeLab->warna_theme ?? '#0f172a';
 @endphp
 
 <!-- Main Board Grid -->
@@ -341,8 +344,8 @@
         
         <!-- Scan QR Card -->
         <div class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm flex flex-col">
-            <!-- Banner Header (Dark Slate matching Admin Console) -->
-            <div class="bg-slate-900 px-5 py-3.5 border-b border-slate-800 flex items-center justify-between text-white">
+            <!-- Banner Header (Dynamic Theme Color matching Admin Lab RGB) -->
+            <div class="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between text-white transition-all duration-500" style="background: linear-gradient(135deg, {{ $themeColor }} 0%, #090d16 100%);">
                 <div class="flex items-center gap-2.5">
                     <i class="fa-solid fa-qrcode text-teal-400 text-base"></i>
                     <span class="font-extrabold text-white text-xs uppercase tracking-wider">Scan untuk Akses Presensi</span>
@@ -401,7 +404,7 @@
             </div>
 
             <!-- Banner Footer -->
-            <div class="bg-slate-900 py-3.5 px-5 text-center border-t border-slate-800 w-full">
+            <div class="py-3.5 px-5 text-center border-t border-slate-800 w-full transition-all duration-500" style="background: linear-gradient(135deg, {{ $themeColor }} 0%, #090d16 100%);">
                 <span class="text-teal-300 font-extrabold text-xs uppercase tracking-wider">
                     @if($isQrActive && $qrAgenda)
                         Berlaku s.d. {{ substr($qrAgenda->jam_selesai, 0, 5) }} WIB
@@ -416,8 +419,8 @@
 
         <!-- Tata Tertib Ruangan Card -->
         <div class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm flex flex-col">
-            <!-- Banner Header (Dark Slate matching Admin Console) -->
-            <div class="bg-slate-900 px-5 py-3.5 border-b border-slate-800 flex items-center gap-2.5 text-white">
+            <!-- Banner Header (Dynamic Theme Color matching Admin Lab RGB) -->
+            <div class="px-5 py-3.5 border-b border-slate-800 flex items-center gap-2.5 text-white transition-all duration-500" style="background: linear-gradient(135deg, {{ $themeColor }} 0%, #090d16 100%);">
                 <i class="fa-solid fa-list-check text-teal-400 text-base"></i>
                 <span class="font-extrabold text-white text-xs uppercase tracking-wider">Tata Tertib Ruangan</span>
             </div>

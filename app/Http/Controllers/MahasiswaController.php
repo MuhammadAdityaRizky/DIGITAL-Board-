@@ -10,6 +10,25 @@ use Illuminate\Http\Request;
 
 class MahasiswaController extends Controller
 {
+    private function getMahasiswaUser()
+    {
+        $user = auth()->user();
+        if (!$user) return null;
+
+        $mahasiswa = Mahasiswa::with(['prodi', 'fakultas'])->where('user_id', $user->id)->first();
+
+        if (!$mahasiswa && ($user->isSuperAdmin() || $user->isAdminFakultas() || $user->isDosen())) {
+            if (request()->filled('mahasiswa_id')) {
+                $mahasiswa = Mahasiswa::with(['prodi', 'fakultas'])->find(request('mahasiswa_id'));
+            }
+            if (!$mahasiswa) {
+                $mahasiswa = Mahasiswa::with(['prodi', 'fakultas'])->first();
+            }
+        }
+
+        return $mahasiswa;
+    }
+
     private function handleMissingMahasiswaProfile()
     {
         $user = auth()->user();
@@ -24,8 +43,7 @@ class MahasiswaController extends Controller
 
     public function dashboard()
     {
-        $user = auth()->user();
-        $mahasiswa = Mahasiswa::with(['prodi', 'fakultas'])->where('user_id', $user->id)->first();
+        $mahasiswa = $this->getMahasiswaUser();
 
         if (!$mahasiswa) {
             return $this->handleMissingMahasiswaProfile();
@@ -143,8 +161,7 @@ class MahasiswaController extends Controller
 
     public function riwayat(Request $request)
     {
-        $user = auth()->user();
-        $mahasiswa = Mahasiswa::where('user_id', $user->id)->first();
+        $mahasiswa = $this->getMahasiswaUser();
 
         if (!$mahasiswa) {
             return $this->handleMissingMahasiswaProfile();
@@ -174,8 +191,7 @@ class MahasiswaController extends Controller
 
     public function agenda(Request $request)
     {
-        $user = auth()->user();
-        $mahasiswa = Mahasiswa::with(['prodi', 'fakultas'])->where('user_id', $user->id)->first();
+        $mahasiswa = $this->getMahasiswaUser();
 
         if (!$mahasiswa) {
             return $this->handleMissingMahasiswaProfile();
@@ -241,8 +257,7 @@ class MahasiswaController extends Controller
 
     public function pengumuman()
     {
-        $user = auth()->user();
-        $mahasiswa = Mahasiswa::where('user_id', $user->id)->first();
+        $mahasiswa = $this->getMahasiswaUser();
 
         if (!$mahasiswa) {
             return $this->handleMissingMahasiswaProfile();
@@ -254,8 +269,7 @@ class MahasiswaController extends Controller
 
     public function pengaturan()
     {
-        $user = auth()->user();
-        $mahasiswa = Mahasiswa::where('user_id', $user->id)->first();
+        $mahasiswa = $this->getMahasiswaUser();
 
         if (!$mahasiswa) {
             return $this->handleMissingMahasiswaProfile();
@@ -268,8 +282,7 @@ class MahasiswaController extends Controller
 
     public function updatePengaturan(Request $request)
     {
-        $user = auth()->user();
-        $mahasiswa = Mahasiswa::where('user_id', $user->id)->first();
+        $mahasiswa = $this->getMahasiswaUser();
 
         if (!$mahasiswa) {
             return $this->handleMissingMahasiswaProfile();

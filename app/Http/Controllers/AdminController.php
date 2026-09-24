@@ -704,6 +704,7 @@ class AdminController extends Controller
             'lokasi' => 'required|string|max:100',
             'kapasitas' => 'required|integer|min:1',
             'nama_laboran' => 'nullable|string|max:100',
+            'warna_theme' => 'nullable|string|max:20',
         ];
 
         if ($user->isSuperAdmin()) {
@@ -730,6 +731,7 @@ class AdminController extends Controller
             'lokasi' => $request->lokasi,
             'kapasitas' => $request->kapasitas,
             'nama_laboran' => $request->nama_laboran,
+            'warna_theme' => $request->warna_theme ?? '#0f172a',
         ]);
 
         return back()->with('success', 'Laboratorium baru berhasil ditambahkan.');
@@ -753,6 +755,7 @@ class AdminController extends Controller
             'lokasi' => 'required|string|max:100',
             'kapasitas' => 'required|integer|min:1',
             'nama_laboran' => 'nullable|string|max:100',
+            'warna_theme' => 'nullable|string|max:20',
         ];
 
         if ($user->isSuperAdmin()) {
@@ -779,6 +782,7 @@ class AdminController extends Controller
             'lokasi' => $request->lokasi,
             'kapasitas' => $request->kapasitas,
             'nama_laboran' => $request->nama_laboran,
+            'warna_theme' => $request->warna_theme ?? ($lab->warna_theme ?? '#0f172a'),
         ]);
 
         return back()->with('success', 'Data laboratorium berhasil diperbarui.');

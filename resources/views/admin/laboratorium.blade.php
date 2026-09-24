@@ -102,7 +102,7 @@
                             <button onclick="toggleModal('modal-import-lab')" class="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs">
                                 <i class="fa-solid fa-file-import text-teal-700"></i> Import Lab
                             </button>
-                            <button onclick="toggleModal('modal-lab')" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-2 shadow-sm">
+                            <button onclick="openAddLabModal()" class="px-4 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-2 shadow-sm">
                                 <i class="fa-solid fa-plus text-xs"></i> Tambah Lab Baru
                             </button>
                         </div>
@@ -233,6 +233,13 @@
                                             </p>
                                             <p class="flex items-center gap-2 font-medium">
                                                 <i class="fa-solid fa-user-gear text-teal-600 w-4 text-center"></i> Laboran: <span class="font-bold text-slate-800">{{ $l->nama_laboran ?? '-' }}</span>
+                                            </p>
+                                            <p class="flex items-center gap-2 font-medium pt-0.5">
+                                                <i class="fa-solid fa-palette text-slate-400 w-4 text-center"></i> Tema Board (RGB): 
+                                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-extrabold font-mono text-white border border-slate-300/80 shadow-2xs" style="background-color: {{ $l->warna_theme ?? '#0f172a' }}">
+                                                    <span class="w-2 h-2 rounded-full bg-white/80"></span>
+                                                    {{ strtoupper($l->warna_theme ?? '#0f172a') }}
+                                                </span>
                                             </p>
                                         </div>
                                     </div>
@@ -536,6 +543,27 @@
                     <input type="text" id="lab-nama_laboran" name="nama_laboran" placeholder="Contoh: Kurniawan, S.T." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
                     <span class="text-[10px] text-slate-400 mt-0.5 block">Nama ini akan otomatis digunakan pada tanda tangan lembar Berita Acara & Realisasi Praktikum di lab ini.</span>
                 </div>
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1 flex items-center justify-between">
+                        <span>Warna Tema RGB Digital Board</span>
+                        <span class="text-[10px] text-slate-400 font-normal">Warna Layar TV Board</span>
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" id="lab-warna_theme_picker" value="#0f172a" onchange="document.getElementById('lab-warna_theme').value = this.value" class="w-10 h-10 rounded-lg cursor-pointer border border-slate-300 p-0.5 bg-white shrink-0">
+                        <input type="text" id="lab-warna_theme" name="warna_theme" value="#0f172a" placeholder="#0f172a" oninput="document.getElementById('lab-warna_theme_picker').value = this.value" class="flex-1 p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-extrabold font-mono text-slate-800 uppercase">
+                    </div>
+                    <!-- Preset Color Pills -->
+                    <div class="flex items-center gap-1.5 mt-2 flex-wrap text-[10px]">
+                        <span class="text-slate-500 font-bold mr-1">Preset:</span>
+                        <button type="button" onclick="setLabColor('#0f172a')" class="w-6 h-6 rounded-full bg-[#0f172a] border border-slate-300 shadow-2xs hover:scale-110 transition cursor-pointer" title="Dark Slate (#0f172a)"></button>
+                        <button type="button" onclick="setLabColor('#064e3b')" class="w-6 h-6 rounded-full bg-[#064e3b] border border-slate-300 shadow-2xs hover:scale-110 transition cursor-pointer" title="Deep Emerald (#064e3b)"></button>
+                        <button type="button" onclick="setLabColor('#042f2e')" class="w-6 h-6 rounded-full bg-[#042f2e] border border-slate-300 shadow-2xs hover:scale-110 transition cursor-pointer" title="Dark Teal (#042f2e)"></button>
+                        <button type="button" onclick="setLabColor('#1e3a8a')" class="w-6 h-6 rounded-full bg-[#1e3a8a] border border-slate-300 shadow-2xs hover:scale-110 transition cursor-pointer" title="Royal Navy (#1e3a8a)"></button>
+                        <button type="button" onclick="setLabColor('#581c87')" class="w-6 h-6 rounded-full bg-[#581c87] border border-slate-300 shadow-2xs hover:scale-110 transition cursor-pointer" title="Cyber Purple (#581c87)"></button>
+                        <button type="button" onclick="setLabColor('#881337')" class="w-6 h-6 rounded-full bg-[#881337] border border-slate-300 shadow-2xs hover:scale-110 transition cursor-pointer" title="Crimson Red (#881337)"></button>
+                        <button type="button" onclick="setLabColor('#78350f')" class="w-6 h-6 rounded-full bg-[#78350f] border border-slate-300 shadow-2xs hover:scale-110 transition cursor-pointer" title="Amber Bronze (#78350f)"></button>
+                    </div>
+                </div>
                 <div class="flex gap-2.5 pt-3 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modal-lab')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
                     <button type="submit" class="flex-1 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg font-bold shadow-sm">Simpan</button>
@@ -721,23 +749,34 @@
             if (modal) {
                 modal.classList.toggle('hidden');
             }
-            
-            if (modalId === 'modal-lab' && modal && modal.classList.contains('hidden') === false) {
-                document.getElementById('modal-lab-title').innerText = "Tambah Laboratorium";
-                document.getElementById('lab-form').action = "{{ route('admin.labs.store') }}";
-                document.getElementById('lab-method').value = "POST";
-                document.getElementById('lab-nama_lab').value = "";
-                document.getElementById('lab-lokasi').value = "";
-                document.getElementById('lab-kapasitas').value = "30";
-                document.getElementById('lab-nama_laboran').value = "";
-                if (document.getElementById('lab-fakultas_id')) {
-                    const fakSelect = document.getElementById('lab-fakultas_id');
-                    if (fakSelect.options.length > 1) {
-                        fakSelect.selectedIndex = 1;
-                    } else {
-                        fakSelect.value = "";
-                    }
+        }
+
+        function openAddLabModal() {
+            document.getElementById('modal-lab-title').innerText = "Tambah Laboratorium";
+            document.getElementById('lab-form').action = "{{ route('admin.labs.store') }}";
+            document.getElementById('lab-method').value = "POST";
+            document.getElementById('lab-nama_lab').value = "";
+            document.getElementById('lab-lokasi').value = "";
+            document.getElementById('lab-kapasitas').value = "30";
+            document.getElementById('lab-nama_laboran').value = "";
+            setLabColor('#0f172a');
+            if (document.getElementById('lab-fakultas_id')) {
+                const fakSelect = document.getElementById('lab-fakultas_id');
+                if (fakSelect.options.length > 1) {
+                    fakSelect.selectedIndex = 1;
+                } else {
+                    fakSelect.value = "";
                 }
+            }
+            toggleModal('modal-lab');
+        }
+
+        function setLabColor(hex) {
+            if (document.getElementById('lab-warna_theme')) {
+                document.getElementById('lab-warna_theme').value = hex;
+            }
+            if (document.getElementById('lab-warna_theme_picker')) {
+                document.getElementById('lab-warna_theme_picker').value = hex;
             }
         }
 
@@ -752,6 +791,7 @@
             document.getElementById('lab-lokasi').value = lab.lokasi;
             document.getElementById('lab-kapasitas').value = lab.kapasitas || "30";
             document.getElementById('lab-nama_laboran').value = lab.nama_laboran || "";
+            setLabColor(lab.warna_theme || "#0f172a");
             if (document.getElementById('lab-fakultas_id')) {
                 document.getElementById('lab-fakultas_id').value = lab.fakultas_id || "";
             }

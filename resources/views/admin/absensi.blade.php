@@ -250,7 +250,7 @@
                             @endphp
                             <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
                                 <!-- HEADER JUDUL MATA KULIAH & KELAS -->
-                                <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-teal-950 text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <div class="px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #042f2e 60%, #0f172a 100%);">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 font-bold text-lg">
                                             <i class="fa-solid fa-book-bookmark"></i>

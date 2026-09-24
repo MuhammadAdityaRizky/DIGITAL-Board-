@@ -24,6 +24,9 @@
     // Get latest announcement
     $latestAnnouncement = $pengumuman->first();
 @endphp
+@php
+    $themeColor = $activeLab->warna_theme ?? '#0f172a';
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -48,10 +51,8 @@
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col justify-between p-4 md:p-6 space-y-6">
 
-
-
-    <!-- Header Section (Dark Slate matching Admin Console) -->
-    <header class="flex flex-col md:flex-row justify-between items-center bg-slate-900 border border-slate-800 rounded-2xl p-4 md:px-8 gap-4 shadow-xl text-white">
+    <!-- Header Section (Dynamic Theme Color matching Admin Lab RGB) -->
+    <header class="flex flex-col md:flex-row justify-between items-center border border-slate-800/20 rounded-2xl p-4 md:px-8 gap-4 shadow-xl text-white transition-all duration-500" style="background: linear-gradient(135deg, {{ $themeColor }} 0%, #090d16 100%);">
         <!-- Logo & Campus Name -->
         <div class="flex items-center gap-4">
             <img src="{{ asset('images/logo-uika.png') }}" 

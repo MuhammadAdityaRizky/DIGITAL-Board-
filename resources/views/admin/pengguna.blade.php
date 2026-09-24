@@ -682,18 +682,18 @@
     <!-- MODAL PANDUAN FITUR OTOMATIS -->
     <div id="modal-fitur-auto" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-3xl w-full max-h-[88vh] flex flex-col overflow-hidden text-left">
-            <div class="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 text-white px-6 py-4.5 flex justify-between items-center flex-shrink-0 border-b border-slate-800">
+            <div class="px-6 py-4.5 flex justify-between items-center flex-shrink-0 text-white border-b border-slate-800 rounded-t-3xl" style="background: linear-gradient(135deg, #0f172a 0%, #042f2e 50%, #0f172a 100%);">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 text-base">
+                    <div class="w-10 h-10 rounded-2xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 text-base shrink-0">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                     </div>
                     <div>
                         <h3 class="font-extrabold text-base tracking-tight text-white">Panduan Fitur Otomatisasi Sistem</h3>
-                        <p class="text-xs text-teal-300/90 font-medium">Otomatisasi Manajemen Mahasiswa, Dosen & Akademik</p>
+                        <p class="text-xs text-teal-200 font-semibold">Otomatisasi Manajemen Mahasiswa, Dosen & Akademik</p>
                     </div>
                 </div>
-                <button type="button" onclick="toggleModal('modal-fitur-auto')" class="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-rose-500 text-slate-300 hover:text-white flex items-center justify-center text-sm transition cursor-pointer">
-                    <i class="fa-solid fa-xmark"></i>
+                <button type="button" onclick="toggleModal('modal-fitur-auto')" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm transition cursor-pointer border border-white/15 shrink-0" title="Tutup Modal">
+                    <i class="fa-solid fa-xmark text-base"></i>
                 </button>
             </div>
             <div class="px-6 pt-4 pb-1 bg-slate-50/70 border-b border-slate-200/80 flex-shrink-0">

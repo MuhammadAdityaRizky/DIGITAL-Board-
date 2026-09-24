@@ -217,23 +217,6 @@
                                             </div>
                                             <h4 class="font-bold text-slate-800 text-base">{{ $ag->mata_kuliah }}</h4>
                                             <p class="text-xs text-slate-500">Dosen: <span class="font-medium text-slate-700">{{ $ag->dosen->nama }}</span></p>
-                                            
-                                            <!-- Token / ID Agenda Info for Camera Fallback -->
-                                            <div class="flex flex-wrap items-center gap-2 pt-1">
-                                                <span class="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-[11px] font-extrabold font-mono text-teal-850 select-all" title="Kode Token Agenda">
-                                                    ID: AGENDA_ID_{{ $ag->id }}
-                                                </span>
-                                                @if($kelasBlmMulai)
-                                                    <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-[10px] font-bold flex items-center gap-1 cursor-not-allowed" title="Absensi dibuka pukul {{ $jamMulaiStr }} WIB">
-                                                        <i class="fa-solid fa-lock text-[9px]"></i> Buka pukul {{ $jamMulaiStr }} WIB
-                                                    </span>
-                                                @elseif(!$ag->absensi->count())
-                                                    <button type="button" onclick="useAgendaToken('AGENDA_ID_{{ $ag->id }}')" 
-                                                            class="px-2 py-0.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded text-[10px] font-bold uppercase transition flex items-center gap-1">
-                                                        <i class="fa-solid fa-i-cursor"></i> Salin/Isi Kode Ini
-                                                    </button>
-                                                @endif
-                                            </div>
                                         </div>
 
                                         <div class="flex flex-wrap items-center gap-2">
