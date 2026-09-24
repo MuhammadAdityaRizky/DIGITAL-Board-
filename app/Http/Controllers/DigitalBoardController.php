@@ -9,6 +9,19 @@ class DigitalBoardController extends Controller
 {
     public function index($lab_id = null)
     {
+        $user = auth()->user();
+
+        // Portal Display hanya boleh diakses oleh Admin / Super Admin
+        if (!$user || !in_array($user->role, ['admin', 'super_admin'])) {
+            if ($user?->role === 'dosen') {
+                return redirect()->route('dosen.dashboard')->with('error', 'Akses ditolak. Portal Display Board hanya dapat diakses oleh Admin.');
+            }
+            if ($user?->role === 'mahasiswa') {
+                return redirect()->route('mahasiswa.dashboard')->with('error', 'Akses ditolak. Portal Display Board hanya dapat diakses oleh Admin.');
+            }
+            abort(403, 'Akses ditolak. Portal Display Board hanya dapat diakses oleh Admin.');
+        }
+
         if (!$lab_id && request()->has('lab_id')) {
             $lab_id = request('lab_id');
         }

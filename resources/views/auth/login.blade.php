@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -77,11 +77,9 @@
                     <div class="flex items-center gap-3.5 lg:block">
                         <!-- Logo Box -->
                         <div class="inline-flex items-center justify-center p-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-sm border border-white/40 shrink-0">
-                            <a href="{{ route('board') }}" title="Ke Halaman Display Board" class="transition transform hover:scale-105">
-                                <img src="{{ asset('images/logo-uika.png') }}" 
-                                     alt="Logo UIKA" 
-                                     class="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 object-contain">
-                            </a>
+                            <img src="{{ asset('images/logo-uika.png') }}" 
+                                 alt="Logo UIKA" 
+                                 class="w-10 h-10 sm:w-11 sm:h-11 lg:w-12 lg:h-12 object-contain">
                         </div>
 
                         <!-- Badge (Desktop Only) -->
