@@ -152,7 +152,7 @@ class DosenController extends Controller
 
             $jadwal = \App\Models\JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu'])->findOrFail($request->jadwal_penggunaan_lab_id);
 
-            $targetLabId = $jadwal->lab_id ?? 5;
+            $targetLabId = $request->lab_id ?? $jadwal->lab_id ?? 5;
             $targetDosenId = $jadwal->dosen_id ?? $dosen->id;
 
             // 1. Cek Bentrok Ruang Laboratorium
@@ -198,7 +198,7 @@ class DosenController extends Controller
                 'jadwal_penggunaan_lab_id' => $jadwal->id,
                 'dosen_id' => $jadwal->dosen_id ?? $dosen->id,
                 'dosen_pengampu_id' => $jadwal->dosen_pengampu_id,
-                'lab_id' => $jadwal->lab_id ?? 5,
+                'lab_id' => $targetLabId,
                 'mata_kuliah' => $jadwal->mata_kuliah,
                 'program_kuliah' => $jadwal->program_kuliah ?? 'Reguler',
                 'tahun_akademik' => $jadwal->tahun_akademik ?? '2026/2027 Ganjil',
@@ -1192,6 +1192,12 @@ class DosenController extends Controller
 
         // Perhitungan Tanggal & Hari
         $carbonDate = \Carbon\Carbon::parse($selectedDate);
+        $todayDate = date('Y-m-d');
+        $prevDate = $carbonDate->copy()->subDay()->format('Y-m-d');
+        $nextDate = $carbonDate->copy()->addDay()->format('Y-m-d');
+        $currentTime = date('H:i:s');
+        $isToday = ($selectedDate === $todayDate);
+
         $dayNames = [
             1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 0 => 'Minggu'
         ];
@@ -1228,6 +1234,7 @@ class DosenController extends Controller
         foreach ($timeSlots as $slot) {
             $slotStart = $slot['start'] . ':00';
             $slotEnd = $slot['end'] . ':00';
+            $isLive = $isToday && ($currentTime >= $slotStart && $currentTime < $slotEnd);
 
             // Cek agenda aktual terlebih dahulu
             $agendaOccupant = $agendasOnDate->first(function($a) use ($slotStart, $slotEnd) {
@@ -1249,32 +1256,82 @@ class DosenController extends Controller
             $dosenName = '';
             $kelas = '';
             $exactTime = '';
+            $agendaId = null;
+            $agendaStatus = null;
+            $statusKehadiranDosen = null;
+            $materi = '';
+            $prodiName = '';
+            $occupantType = null;
 
-            if ($occupant) {
-                $isMine = ($occupant->dosen_id == $dosen->id || ($occupant->dosen_pengampu_id ?? null) == $dosen->id);
-                $title = $occupant->mata_kuliah;
-                $dosenName = $occupant->dosen->nama ?? 'Dosen';
-                $kelas = $occupant->kelas ?? '-';
-                $exactTime = substr($occupant->jam_mulai, 0, 5) . ' - ' . substr($occupant->jam_selesai, 0, 5);
+            if ($agendaOccupant) {
+                $occupantType = 'agenda';
+                $isMine = ($agendaOccupant->dosen_id == $dosen->id || ($agendaOccupant->dosen_pengampu_id ?? null) == $dosen->id);
+                $title = $agendaOccupant->mata_kuliah;
+                $dosenName = $agendaOccupant->dosen->nama ?? 'Dosen';
+                $kelas = $agendaOccupant->kelas ?? '-';
+                $exactTime = substr($agendaOccupant->jam_mulai, 0, 5) . ' - ' . substr($agendaOccupant->jam_selesai, 0, 5);
+                $agendaId = $agendaOccupant->id;
+                $agendaStatus = $agendaOccupant->status_agenda;
+                $statusKehadiranDosen = $agendaOccupant->status_kehadiran_dosen;
+                $materi = $agendaOccupant->materi_pembelajaran ?? $agendaOccupant->catatan ?? '';
+                $prodiName = $agendaOccupant->jurusan ?? '';
+            } elseif ($rutinOccupant) {
+                $occupantType = 'rutin';
+                $isMine = ($rutinOccupant->dosen_id == $dosen->id || ($rutinOccupant->dosen_pengampu_id ?? null) == $dosen->id);
+                $title = $rutinOccupant->mata_kuliah;
+                $dosenName = $rutinOccupant->dosen->nama ?? 'Dosen';
+                $kelas = $rutinOccupant->kelas ?? '-';
+                $exactTime = substr($rutinOccupant->jam_mulai, 0, 5) . ' - ' . substr($rutinOccupant->jam_selesai, 0, 5);
+                $prodiName = $rutinOccupant->prodi->nama_prodi ?? '';
             }
 
             $slotAvailability[] = [
                 'slot' => $slot,
                 'is_occupied' => $isOccupied,
                 'is_mine' => $isMine,
+                'is_live' => $isLive,
                 'title' => $title,
                 'dosen_name' => $dosenName,
                 'kelas' => $kelas,
                 'exact_time' => $exactTime,
-                'source' => $agendaOccupant ? 'Agenda' : ($rutinOccupant ? 'Jadwal Rutin' : 'Kosong'),
+                'agenda_id' => $agendaId,
+                'agenda_status' => $agendaStatus,
+                'status_kehadiran_dosen' => $statusKehadiranDosen,
+                'materi' => $materi,
+                'prodi_name' => $prodiName,
+                'occupant_type' => $occupantType,
+                'source' => $agendaOccupant ? 'Agenda Aktual' : ($rutinOccupant ? 'Jadwal Rutin' : 'Kosong'),
             ];
         }
 
-        // Data untuk mode Matriks Mingguan
+        // Data untuk mode Matriks Mingguan dengan pemetaan tanggal riil Senin - Sabtu
         $hariList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         $matrixSlots = [
             '08.00-10.00', '10.00-12.00', '13.00-15.00', '15.00-17.00', '17.00-19.00', '19.00-21.00', '21.00-23.00'
         ];
+
+        // Hitung tanggal riil untuk masing-masing hari pada minggu yang dipilih
+        $startOfWeek = $carbonDate->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $weekDays = [];
+        foreach ($hariList as $index => $namaHari) {
+            $dayDate = $startOfWeek->copy()->addDays($index);
+            $weekDays[$namaHari] = [
+                'date' => $dayDate->format('Y-m-d'),
+                'formatted' => $dayDate->translatedFormat('d M'),
+                'full_date' => $dayDate->translatedFormat('l, d F Y'),
+                'is_today' => ($dayDate->format('Y-m-d') === $todayDate),
+                'is_selected' => ($dayDate->format('Y-m-d') === $selectedDate),
+            ];
+        }
+
+        // Ambil agenda aktual untuk lab ini selama minggu terpilih
+        $weekStartDate = $startOfWeek->format('Y-m-d');
+        $weekEndDate = $startOfWeek->copy()->addDays(5)->format('Y-m-d');
+        $weekAgendas = Agenda::with(['dosen', 'lab'])
+            ->where('lab_id', $selectedLabId)
+            ->whereBetween('tanggal', [$weekStartDate, $weekEndDate])
+            ->where('status_agenda', '!=', 'Dibatalkan')
+            ->get();
 
         // Daftar kelas dosen untuk modal Buat Agenda / Kuliah Pengganti
         $myClasses = \App\Models\JadwalPenggunaanLab::where(function($q) use ($dosen) {
@@ -1289,7 +1346,8 @@ class DosenController extends Controller
         return view('dosen.jadwal_lab', compact(
             'dosen', 'dosens', 'labs', 'selectedLab', 'selectedLabId', 'selectedDate',
             'carbonDate', 'selectedDayName', 'slotAvailability', 'timeSlots',
-            'hariList', 'matrixSlots', 'rutinJadwals', 'myClasses'
+            'hariList', 'matrixSlots', 'rutinJadwals', 'myClasses', 'agendasOnDate',
+            'weekDays', 'weekAgendas', 'todayDate', 'prevDate', 'nextDate', 'isToday'
         ));
     }
 
