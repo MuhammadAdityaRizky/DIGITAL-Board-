@@ -813,12 +813,32 @@
                                                 </select>
                                             </div>
                                             <div>
-                                                <label class="block text-sm font-extrabold text-slate-900 mb-1">Kelas</label>
-                                                <input type="text" name="kelas" value="{{ $ag->kelas }}" class="w-full p-2.5 rounded-xl bg-slate-50 border-2 border-slate-300 text-slate-900 text-base font-bold">
+                                                <label class="block text-sm font-extrabold text-slate-900 mb-1">Kelas <span class="text-rose-600">*</span></label>
+                                                <select name="kelas" required class="w-full p-2.5 rounded-xl bg-slate-50 border-2 border-slate-300 text-slate-900 text-base font-bold focus:border-slate-800 outline-none cursor-pointer">
+                                                    @if(isset($masterKelas) && $masterKelas->isNotEmpty())
+                                                        @foreach($masterKelas as $mk)
+                                                            <option value="{{ $mk->nama_kelas }}" {{ $ag->kelas == $mk->nama_kelas ? 'selected' : '' }}>
+                                                                Kelas {{ $mk->nama_kelas }}
+                                                            </option>
+                                                        @endforeach
+                                                        @if(!$masterKelas->contains('nama_kelas', $ag->kelas) && !empty($ag->kelas))
+                                                            <option value="{{ $ag->kelas }}" selected>{{ $ag->kelas }}</option>
+                                                        @endif
+                                                    @else
+                                                        <option value="A" {{ $ag->kelas == 'A' ? 'selected' : '' }}>Kelas A</option>
+                                                        <option value="B" {{ $ag->kelas == 'B' ? 'selected' : '' }}>Kelas B</option>
+                                                        <option value="C" {{ $ag->kelas == 'C' ? 'selected' : '' }}>Kelas C</option>
+                                                    @endif
+                                                </select>
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-extrabold text-slate-900 mb-1">Semester</label>
-                                                <input type="text" name="semester" value="{{ $ag->semester }}" required class="w-full p-2.5 rounded-xl bg-slate-50 border-2 border-slate-300 text-slate-900 text-base font-bold">
+                                                <select name="semester" required class="w-full p-2.5 rounded-xl bg-slate-50 border-2 border-slate-300 text-slate-900 text-base font-bold focus:border-slate-800 outline-none cursor-pointer">
+                                                    @for($s = 1; $s <= 8; $s++)
+                                                        <option value="{{ $s }}" {{ $ag->semester == $s ? 'selected' : '' }}>Semester {{ $s }}</option>
+                                                    @endfor
+                                                    <option value="Pendek" {{ $ag->semester == 'Pendek' ? 'selected' : '' }}>Semester Pendek</option>
+                                                </select>
                                             </div>
                                         </div>
 

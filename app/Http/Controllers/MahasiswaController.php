@@ -62,7 +62,12 @@ class MahasiswaController extends Controller
             ->where('fakultas', $mahasiswa->fakultas->nama_fakultas)
             ->where('jurusan', $mahasiswa->prodi->nama_prodi)
             ->when($mahasiswa->kelas, function ($query) use ($mahasiswa) {
-                return $query->where('kelas', $mahasiswa->kelas);
+                return $query->where(function ($q) use ($mahasiswa) {
+                    $q->where('kelas', $mahasiswa->kelas)
+                      ->orWhere('kelas', 'like', '%' . $mahasiswa->kelas . '%')
+                      ->orWhereNull('kelas')
+                      ->orWhere('kelas', '');
+                });
             })
             ->orderBy('jam_mulai', 'asc')
             ->get();
@@ -132,11 +137,23 @@ class MahasiswaController extends Controller
             ]);
         }
 
-        // 3. Validasi Kelas (Kelas harus sama, jika mahasiswa sudah mengatur kelas)
-        if ($agenda->kelas && $mahasiswa->kelas && $agenda->kelas !== $mahasiswa->kelas) {
-            return back()->withErrors([
-                'qr_code_token' => 'Absensi ditolak! Agenda ini ditujukan untuk Kelas ' . $agenda->kelas . ', bukan Kelas Anda (' . $mahasiswa->kelas . ').'
-            ]);
+        // 3. Validasi Kelas (Mendukung kelas tunggal maupun kelas gabungan, misal "Reg A / Reg B", "A, B", "Gabungan A & B")
+        if ($agenda->kelas && $mahasiswa->kelas) {
+            $agendaKelasClean = strtolower(trim($agenda->kelas));
+            $mhsKelasClean = strtolower(trim($mahasiswa->kelas));
+            
+            // Cek apakah match langsung atau merupakan bagian dari kelas gabungan
+            $allowedClasses = array_filter(array_map('trim', preg_split('/[\/,+&-]|\bdan\b|\batau\b/i', $agendaKelasClean)));
+            
+            $isMatch = ($agendaKelasClean === $mhsKelasClean) 
+                || in_array($mhsKelasClean, $allowedClasses)
+                || str_contains($agendaKelasClean, $mhsKelasClean);
+
+            if (!$isMatch) {
+                return back()->withErrors([
+                    'qr_code_token' => 'Absensi ditolak! Agenda ini ditujukan untuk Kelas ' . $agenda->kelas . ', bukan Kelas Anda (' . $mahasiswa->kelas . ').'
+                ]);
+            }
         }
 
         // Catatan: Semester sengaja tidak dibatasi (menerima presensi meskipun semester mahasiswa berbeda).
@@ -209,7 +226,10 @@ class MahasiswaController extends Controller
                 $query->where('jurusan', $mahasiswa->prodi->nama_prodi);
             }
             if ($mahasiswa->kelas) {
-                $query->where('kelas', $mahasiswa->kelas);
+                $query->where(function($q) use ($mahasiswa) {
+                    $q->where('kelas', $mahasiswa->kelas)
+                      ->orWhere('kelas', 'like', '%' . $mahasiswa->kelas . '%');
+                });
             }
 
             if ($request->filled('search')) {

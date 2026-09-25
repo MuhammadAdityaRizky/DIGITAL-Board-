@@ -915,6 +915,7 @@ class DosenController extends Controller
         $labs = Laboratorium::all();
         $fakultas = \App\Models\Fakultas::all();
         $prodis = \App\Models\Prodi::with('fakultas')->get();
+        $masterKelas = \App\Models\Kelas::orderBy('nama_kelas', 'asc')->get();
 
         $jadwalPenggunaanLab = \App\Models\JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu'])
             ->where(function($q) use ($dosen) {
@@ -953,11 +954,11 @@ class DosenController extends Controller
             ->toArray();
 
         if ($request->ajax()) {
-            $html = view('dosen.agenda_partial', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses', 'groupedAgendas', 'jadwalPenggunaanLab', 'clashingAgendaIds'))->render();
+            $html = view('dosen.agenda_partial', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses', 'groupedAgendas', 'jadwalPenggunaanLab', 'clashingAgendaIds', 'masterKelas'))->render();
             return response()->json(['html' => $html]);
         }
 
-        return view('dosen.agenda', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses', 'groupedAgendas', 'jadwalPenggunaanLab', 'clashingAgendaIds'));
+        return view('dosen.agenda', compact('dosen', 'dosens', 'agendas', 'labs', 'fakultas', 'prodis', 'uniqueClasses', 'groupedAgendas', 'jadwalPenggunaanLab', 'clashingAgendaIds', 'masterKelas'));
     }
 
     public function inputAbsensi($id)
