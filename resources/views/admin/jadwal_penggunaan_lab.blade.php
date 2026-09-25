@@ -805,31 +805,31 @@
                                     @for($i = 0; $i < count($kNames); $i++)
                                         @for($j = $i + 1; $j < count($kNames); $j++)
                                             @php $comboVal = $kNames[$i] . ' & ' . $kNames[$j]; @endphp
-                                            <div class="kelas-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-purple-50 hover:text-purple-950 cursor-pointer transition flex items-center justify-between group" 
+                                            <div class="kelas-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-purple-50 hover:text-purple-950 cursor-pointer transition flex items-center justify-between gap-2 group" 
                                                  data-name="{{ $comboVal }}" 
                                                  onclick="selectKelasItem('{{ $comboVal }}')">
-                                                <div class="flex items-center gap-2">
-                                                    <span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 font-bold text-[11px] group-hover:bg-purple-700 group-hover:text-white transition">
+                                                <div class="flex items-center gap-2 min-w-0 truncate">
+                                                    <span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 font-bold text-[11px] shrink-0 group-hover:bg-purple-700 group-hover:text-white transition">
                                                         {{ $comboVal }}
                                                     </span>
-                                                    <span class="font-bold text-slate-800">Gabungan: Kelas {{ $comboVal }}</span>
+                                                    <span class="font-bold text-slate-800 truncate">Gabungan: Kelas {{ $comboVal }}</span>
                                                 </div>
-                                                <span class="text-[10px] text-purple-600 font-medium">Pilih</span>
+                                                <span class="text-[10px] text-purple-600 font-semibold shrink-0">Pilih</span>
                                             </div>
                                         @endfor
                                     @endfor
                                     @if(count($kNames) > 2)
                                         @php $allComboVal = implode(', ', $kNames); @endphp
-                                        <div class="kelas-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-purple-50 hover:text-purple-950 cursor-pointer transition flex items-center justify-between group" 
+                                        <div class="kelas-item-option px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-purple-50 hover:text-purple-950 cursor-pointer transition flex items-center justify-between gap-2 group" 
                                              data-name="{{ $allComboVal }}" 
                                              onclick="selectKelasItem('{{ $allComboVal }}')">
-                                            <div class="flex items-center gap-2">
-                                                <span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 font-bold text-[11px] group-hover:bg-purple-700 group-hover:text-white transition">
+                                            <div class="flex items-center gap-2 min-w-0 truncate">
+                                                <span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 font-bold text-[11px] shrink-0 group-hover:bg-purple-700 group-hover:text-white transition">
                                                     Semua
                                                 </span>
-                                                <span class="font-bold text-slate-800">Gabungan: Semua ({{ $allComboVal }})</span>
+                                                <span class="font-bold text-slate-800 truncate">Gabungan: Semua ({{ $allComboVal }})</span>
                                             </div>
-                                            <span class="text-[10px] text-purple-600 font-medium">Pilih</span>
+                                            <span class="text-[10px] text-purple-600 font-semibold shrink-0">Pilih</span>
                                         </div>
                                     @endif
                                 @endif
