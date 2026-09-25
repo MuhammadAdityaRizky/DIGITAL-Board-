@@ -249,8 +249,19 @@
                                                     @endphp
                                                     <div class="flex-1 min-h-[4rem] p-2.5 rounded-lg border {{ $bgColor }} shadow-xs text-[11px] leading-tight relative group jadwal-card cursor-pointer flex flex-col" onmousedown="startDragSelect(event, {{ $m->id }})" onmouseenter="enterDragSelect(event, {{ $m->id }})">
                                                         <div class="font-extrabold line-clamp-2">{{ $m->mata_kuliah }}</div>
-                                                        <div class="text-[10px] text-teal-200 mt-1.5 font-semibold">
-                                                            Kelas {{ $m->kelas ?: 'A' }} @if($m->program_kuliah)• {{ $m->program_kuliah }}@endif @if($m->semester)• Sem {{ $m->semester }}@endif
+                                                        <div class="text-[10px] text-teal-200 mt-1.5 font-semibold flex items-center flex-wrap gap-1">
+                                                            @php
+                                                                $isMerged = preg_match('/[&,\/+]/i', $m->kelas) || stripos($m->kelas, 'dan') !== false;
+                                                            @endphp
+                                                            @if($isMerged)
+                                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-400/25 border border-purple-300/40 rounded text-[9.5px] font-extrabold text-purple-100 shadow-2xs">
+                                                                    <i class="fa-solid fa-layer-group text-[8.5px] text-purple-200"></i> Gabungan: Kelas {{ $m->kelas }}
+                                                                </span>
+                                                            @else
+                                                                <span>Kelas {{ $m->kelas ?: 'A' }}</span>
+                                                            @endif
+                                                            @if($m->program_kuliah)<span>• {{ $m->program_kuliah }}</span>@endif 
+                                                            @if($m->semester)<span>• Sem {{ $m->semester }}</span>@endif
                                                         </div>
                                                         <div class="text-[10px] text-slate-200 mt-0.5 font-medium flex items-center gap-1">
                                                             <i class="fa-solid fa-user-tie text-[9px]"></i> {{ $m->dosen->nama ?? '-' }}

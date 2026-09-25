@@ -294,7 +294,16 @@
                                             </h4>
 
                                             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-600 font-medium pt-0.5">
-                                                <span>Kelas <strong class="text-slate-900 font-bold">{{ $item['kelas'] }}</strong></span>
+                                                @php
+                                                    $isSlotMerged = preg_match('/[&,\/+]/i', $item['kelas']) || stripos($item['kelas'], 'dan') !== false;
+                                                @endphp
+                                                @if($isSlotMerged)
+                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-100 border border-purple-200 rounded text-[10px] font-bold text-purple-900">
+                                                        <i class="fa-solid fa-layer-group text-[9px] text-purple-700"></i> Gabungan: {{ $item['kelas'] }}
+                                                    </span>
+                                                @else
+                                                    <span>Kelas <strong class="text-slate-900 font-bold">{{ $item['kelas'] }}</strong></span>
+                                                @endif
                                                 @if($item['prodi_name'])
                                                     <span>·</span>
                                                     <span>{{ $item['prodi_name'] }}</span>
@@ -645,7 +654,18 @@
                                                                 <span class="font-mono text-[10px] text-teal-300 font-bold">{{ substr($m->jam_mulai,0,5) }}-{{ substr($m->jam_selesai,0,5) }}</span>
                                                             </div>
                                                             <div class="font-bold line-clamp-2 text-xs text-white">{{ $m->mata_kuliah }}</div>
-                                                            <div class="text-[11px] text-teal-200 font-semibold mt-0.5">Kelas {{ $m->kelas }}</div>
+                                                            @php
+                                                                $isMKelasMerged = preg_match('/[&,\/+]/i', $m->kelas) || stripos($m->kelas, 'dan') !== false;
+                                                            @endphp
+                                                            @if($isMKelasMerged)
+                                                                <div class="mt-0.5">
+                                                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 bg-purple-500/30 border border-purple-300/40 rounded text-[9.5px] font-bold text-purple-100">
+                                                                        <i class="fa-solid fa-layer-group text-[8.5px]"></i> Gabungan: {{ $m->kelas }}
+                                                                    </span>
+                                                                </div>
+                                                            @else
+                                                                <div class="text-[11px] text-teal-200 font-semibold mt-0.5">Kelas {{ $m->kelas }}</div>
+                                                            @endif
                                                             <div class="text-[11px] text-slate-300 font-normal mt-0.5 truncate">
                                                                 <i class="fa-solid fa-user-tie text-[9px]"></i> {{ $m->dosen->nama ?? '-' }}
                                                             </div>
@@ -656,6 +676,7 @@
                                                         @foreach($matchesRutin as $m)
                                                             @php
                                                                 $isMySchedule = ($m->dosen_id == $dosen->id || ($m->dosen_pengampu_id ?? null) == $dosen->id);
+                                                                $isMKelasMerged = preg_match('/[&,\/+]/i', $m->kelas) || stripos($m->kelas, 'dan') !== false;
                                                             @endphp
                                                             <div class="p-2.5 rounded-xl border {{ $isMySchedule ? 'bg-teal-900 text-white border-teal-700 shadow-2xs' : 'bg-slate-800 text-white border-slate-700' }} mb-1 text-xs leading-tight">
                                                                 <div class="flex items-center justify-between mb-1">
@@ -667,7 +688,15 @@
                                                                     <span class="font-mono text-[10px] text-teal-300 font-bold">{{ substr($m->jam_mulai,0,5) }}-{{ substr($m->jam_selesai,0,5) }}</span>
                                                                 </div>
                                                                 <div class="font-bold line-clamp-2 text-xs text-white">{{ $m->mata_kuliah }}</div>
-                                                                <div class="text-[11px] text-teal-200 font-semibold mt-0.5">Kelas {{ $m->kelas }}</div>
+                                                                @if($isMKelasMerged)
+                                                                    <div class="mt-0.5">
+                                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.2 bg-purple-500/30 border border-purple-300/40 rounded text-[9.5px] font-bold text-purple-100">
+                                                                            <i class="fa-solid fa-layer-group text-[8.5px]"></i> Gabungan: {{ $m->kelas }}
+                                                                        </span>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="text-[11px] text-teal-200 font-semibold mt-0.5">Kelas {{ $m->kelas }}</div>
+                                                                @endif
                                                                 <div class="text-[11px] text-slate-300 font-normal mt-0.5 truncate">
                                                                     <i class="fa-solid fa-user-tie text-[9px]"></i> {{ $m->dosen->nama ?? '-' }}
                                                                 </div>
