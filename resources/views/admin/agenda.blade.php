@@ -986,12 +986,12 @@
                             </button>
                         </div>
 
-                        <!-- Dropdown Menu for Kelas (Pure Database Classes: A, B, C) -->
+                        <!-- Dropdown Menu for Kelas (Pure Database Classes: A, B, C & Combinations) -->
                         <div id="kelas_dropdown_menu" 
-                             class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl p-2 max-h-48 overflow-y-auto custom-scrollbar flex flex-col space-y-1"
+                             class="hidden absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-2xl p-2 max-h-56 overflow-y-auto custom-scrollbar flex flex-col space-y-1"
                              style="background-color: #ffffff !important;">
                             <div class="px-2 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 bg-slate-50 rounded">
-                                <i class="fa-solid fa-graduation-cap text-teal-600 text-[10px]"></i> Data Kelas (Database)
+                                <i class="fa-solid fa-graduation-cap text-teal-600 text-[10px]"></i> Kelas Tunggal
                             </div>
                             @if(isset($kelases) && count($kelases) > 0)
                                 @foreach($kelases as $k)
@@ -1007,6 +1007,45 @@
                                         <span class="text-[10px] text-slate-400 group-hover:text-teal-700 font-medium">Pilih</span>
                                     </div>
                                 @endforeach
+
+                                @if(count($kelases) >= 2)
+                                    <div class="px-2 py-1 mt-1 text-[10px] font-bold text-purple-800 uppercase tracking-wider flex items-center gap-1 bg-purple-50 rounded">
+                                        <i class="fa-solid fa-layer-group text-purple-600 text-[10px]"></i> Kelas Gabungan (Multi-Class)
+                                    </div>
+                                    @php
+                                        $kNames = collect($kelases)->pluck('nama_kelas')->toArray();
+                                    @endphp
+                                    @for($i = 0; $i < count($kNames); $i++)
+                                        @for($j = $i + 1; $j < count($kNames); $j++)
+                                            @php $comboVal = $kNames[$i] . ' & ' . $kNames[$j]; @endphp
+                                            <div class="agenda-kelas-item px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-purple-50 hover:text-purple-950 cursor-pointer transition flex items-center justify-between group"
+                                                 data-name="{{ $comboVal }}"
+                                                 onclick="selectAgendaKelasItem('{{ $comboVal }}')">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 font-bold text-[11px] group-hover:bg-purple-700 group-hover:text-white transition">
+                                                        {{ $comboVal }}
+                                                    </span>
+                                                    <span class="font-bold text-slate-800">Gabungan: Kelas {{ $comboVal }}</span>
+                                                </div>
+                                                <span class="text-[10px] text-purple-600 font-medium">Pilih</span>
+                                            </div>
+                                        @endfor
+                                    @endfor
+                                    @if(count($kNames) > 2)
+                                        @php $allComboVal = implode(', ', $kNames); @endphp
+                                        <div class="agenda-kelas-item px-2.5 py-2 text-xs text-slate-700 rounded-lg hover:bg-purple-50 hover:text-purple-950 cursor-pointer transition flex items-center justify-between group"
+                                             data-name="{{ $allComboVal }}"
+                                             onclick="selectAgendaKelasItem('{{ $allComboVal }}')">
+                                            <div class="flex items-center gap-2">
+                                                <span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-900 font-bold text-[11px] group-hover:bg-purple-700 group-hover:text-white transition">
+                                                    Semua
+                                                </span>
+                                                <span class="font-bold text-slate-800">Gabungan: Semua ({{ $allComboVal }})</span>
+                                            </div>
+                                            <span class="text-[10px] text-purple-600 font-medium">Pilih</span>
+                                        </div>
+                                    @endif
+                                @endif
                             @endif
                         </div>
                     </div>

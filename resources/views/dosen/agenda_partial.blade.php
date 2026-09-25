@@ -816,18 +816,51 @@
                                                 <label class="block text-sm font-extrabold text-slate-900 mb-1">Kelas <span class="text-rose-600">*</span></label>
                                                 <select name="kelas" required class="w-full p-2.5 rounded-xl bg-slate-50 border-2 border-slate-300 text-slate-900 text-base font-bold focus:border-slate-800 outline-none cursor-pointer">
                                                     @if(isset($masterKelas) && $masterKelas->isNotEmpty())
-                                                        @foreach($masterKelas as $mk)
-                                                            <option value="{{ $mk->nama_kelas }}" {{ $ag->kelas == $mk->nama_kelas ? 'selected' : '' }}>
-                                                                Kelas {{ $mk->nama_kelas }}
-                                                            </option>
-                                                        @endforeach
-                                                        @if(!$masterKelas->contains('nama_kelas', $ag->kelas) && !empty($ag->kelas))
+                                                        <optgroup label="Kelas Tunggal">
+                                                            @foreach($masterKelas as $mk)
+                                                                <option value="{{ $mk->nama_kelas }}" {{ $ag->kelas == $mk->nama_kelas ? 'selected' : '' }}>
+                                                                    Kelas {{ $mk->nama_kelas }}
+                                                                </option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                        @if($masterKelas->count() >= 2)
+                                                            <optgroup label="Kelas Gabungan (Multi-Class)">
+                                                                @php
+                                                                    $kList = $masterKelas->pluck('nama_kelas')->toArray();
+                                                                @endphp
+                                                                @for($i = 0; $i < count($kList); $i++)
+                                                                    @for($j = $i + 1; $j < count($kList); $j++)
+                                                                        @php $combo = $kList[$i] . ' & ' . $kList[$j]; @endphp
+                                                                        <option value="{{ $combo }}" {{ $ag->kelas == $combo ? 'selected' : '' }}>
+                                                                            Gabungan: Kelas {{ $combo }}
+                                                                        </option>
+                                                                    @endfor
+                                                                @endfor
+                                                                @if(count($kList) > 2)
+                                                                    @php $allCombo = implode(', ', $kList); @endphp
+                                                                    <option value="{{ $allCombo }}" {{ $ag->kelas == $allCombo ? 'selected' : '' }}>
+                                                                        Gabungan: Semua ({{ $allCombo }})
+                                                                    </option>
+                                                                @endif
+                                                            </optgroup>
+                                                        @endif
+                                                        @php
+                                                            $allPresetValues = $masterKelas->pluck('nama_kelas')->toArray();
+                                                            for($i = 0; $i < count($kList ?? []); $i++) {
+                                                                for($j = $i + 1; $j < count($kList ?? []); $j++) {
+                                                                    $allPresetValues[] = $kList[$i] . ' & ' . $kList[$j];
+                                                                }
+                                                            }
+                                                            if(isset($allCombo)) $allPresetValues[] = $allCombo;
+                                                        @endphp
+                                                        @if(!empty($ag->kelas) && !in_array($ag->kelas, $allPresetValues))
                                                             <option value="{{ $ag->kelas }}" selected>{{ $ag->kelas }}</option>
                                                         @endif
                                                     @else
                                                         <option value="A" {{ $ag->kelas == 'A' ? 'selected' : '' }}>Kelas A</option>
                                                         <option value="B" {{ $ag->kelas == 'B' ? 'selected' : '' }}>Kelas B</option>
                                                         <option value="C" {{ $ag->kelas == 'C' ? 'selected' : '' }}>Kelas C</option>
+                                                        <option value="A & B" {{ $ag->kelas == 'A & B' ? 'selected' : '' }}>Gabungan: Kelas A & B</option>
                                                     @endif
                                                 </select>
                                             </div>

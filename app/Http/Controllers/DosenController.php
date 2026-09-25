@@ -131,9 +131,11 @@ class DosenController extends Controller
             });
         });
 
+        $masterKelas = \App\Models\Kelas::orderBy('nama_kelas')->get();
+
         return view('dosen.dashboard', compact(
             'dosen', 'agendas', 'labs', 'fakultas', 'prodis', 'pengumuman', 
-            'todayAgendas', 'activeOrNextAgenda', 'jadwalPenggunaanLab', 'todayScheduledJadwal'
+            'todayAgendas', 'activeOrNextAgenda', 'jadwalPenggunaanLab', 'todayScheduledJadwal', 'masterKelas'
         ));
     }
 
@@ -570,14 +572,63 @@ class DosenController extends Controller
             abort(404, 'Agenda pertemuan tidak ditemukan.');
         }
 
-        $items = $agendas->map(function($ag) {
-            return [
-                'agenda' => $ag,
-                'details' => $ag->berita_acara_details,
-            ];
-        });
+        $items = collect();
 
-        // Urutkan Rapi berdasarkan: Dosen (A-Z) -> Mata Kuliah (A-Z) -> Kelas (A-Z) -> Tanggal/Waktu
+        foreach ($agendas as $ag) {
+            $rawKelas = trim($ag->kelas ?? '');
+            
+            // Periksa apakah agenda ini merupakan kelas gabungan (contoh: "A & B", "A / B", "A, B", "A dan B", "A + B")
+            $cleanKelas = preg_replace('/karyawan|kar|reguler|reg/i', '', $rawKelas);
+            $splitClasses = preg_split('/[\s,\/&+\-]+|\bdan\b/i', $cleanKelas, -1, PREG_SPLIT_NO_EMPTY);
+            $splitClasses = array_values(array_unique(array_filter(array_map('trim', $splitClasses))));
+
+            if (count($splitClasses) > 1) {
+                // KELAS GABUNGAN: Pecah otomatis menjadi lembar Berita Acara terpisah per masing-masing kelas
+                foreach ($splitClasses as $subKelas) {
+                    $filteredAbsensi = $ag->absensi ? $ag->absensi->filter(function($abs) use ($subKelas) {
+                        $mhsKelas = trim($abs->mahasiswa?->kelas ?? '');
+                        if (empty($mhsKelas)) {
+                            return true;
+                        }
+                        return strcasecmp($mhsKelas, $subKelas) === 0 
+                            || stripos($mhsKelas, $subKelas) !== false;
+                    })->values() : collect();
+
+                    $details = $ag->berita_acara_details;
+                    $prodi = $details['prodi'] ?? 'Sistem Informasi';
+                    $semRomawi = $details['semester_romawi'] ?? 'I';
+                    $progLabel = $details['program_kuliah'] ?? 'Reguler';
+
+                    $details['kelas'] = $subKelas;
+                    $details['semester_program_kelas'] = "{$semRomawi} {$progLabel} {$subKelas}";
+                    $details['prodi_semester_kelas'] = "{$prodi} / {$semRomawi} {$progLabel} {$subKelas}";
+                    $details['filtered_absensi'] = $filteredAbsensi;
+
+                    $clonedAgenda = clone $ag;
+                    $clonedAgenda->setRelation('absensi', $filteredAbsensi);
+                    $clonedAgenda->kelas = $subKelas;
+
+                    $items->push([
+                        'agenda' => $clonedAgenda,
+                        'details' => $details,
+                        'sub_kelas' => $subKelas,
+                        'is_merged_source' => true,
+                    ]);
+                }
+            } else {
+                // KELAS TUNGGAL: 1 lembar Berita Acara normal
+                $details = $ag->berita_acara_details;
+                $details['filtered_absensi'] = $ag->absensi ?? collect();
+                $items->push([
+                    'agenda' => $ag,
+                    'details' => $details,
+                    'sub_kelas' => $ag->kelas,
+                    'is_merged_source' => false,
+                ]);
+            }
+        }
+
+        // Urutkan Rapi berdasarkan: Dosen (A-Z) -> Mata Kuliah (A-Z) -> Tanggal/Waktu -> Kelas (A-Z)
         $items = $items->sort(function ($a, $b) {
             // 1. Nama Dosen (A-Z)
             $dosenA = strtolower(trim($a['details']['dosen'] ?? $a['agenda']->dosenPengampu?->nama ?? $a['agenda']->dosen?->nama ?? ''));
@@ -593,17 +644,17 @@ class DosenController extends Controller
                 return strcmp($mkA, $mkB);
             }
 
-            // 3. Kelas (A-Z)
-            $kelasA = strtolower(trim($a['agenda']->kelas ?? ''));
-            $kelasB = strtolower(trim($b['agenda']->kelas ?? ''));
-            if ($kelasA !== $kelasB) {
-                return strcmp($kelasA, $kelasB);
-            }
-
-            // 4. Tanggal & Jam Pertemuan (Ascending)
+            // 3. Tanggal & Jam Pertemuan (Ascending)
             $tglA = ($a['agenda']->tanggal ?? '') . ' ' . ($a['agenda']->jam_mulai ?? '');
             $tglB = ($b['agenda']->tanggal ?? '') . ' ' . ($b['agenda']->jam_mulai ?? '');
-            return strcmp($tglA, $tglB);
+            if ($tglA !== $tglB) {
+                return strcmp($tglA, $tglB);
+            }
+
+            // 4. Kelas (A-Z)
+            $kelasA = strtolower(trim($a['details']['kelas'] ?? $a['agenda']->kelas ?? ''));
+            $kelasB = strtolower(trim($b['details']['kelas'] ?? $b['agenda']->kelas ?? ''));
+            return strcmp($kelasA, $kelasB);
         })->values();
 
         $agenda = $items->first()['agenda'];
