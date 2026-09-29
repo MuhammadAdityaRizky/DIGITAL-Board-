@@ -150,6 +150,36 @@ class Agenda extends Model
     }
 
     /**
+     * Get the sequential session / meeting number (Pertemuan Ke-N).
+     * Evaluates regex from 'catatan' first, otherwise calculates based on chronological order.
+     */
+    public function getNomorPertemuanAttribute()
+    {
+        if ($this->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $this->catatan, $m)) {
+            return (int) $m[1];
+        }
+
+        $countBefore = static::where('mata_kuliah', $this->mata_kuliah)
+            ->where('kelas', $this->kelas)
+            ->where('program_kuliah', $this->program_kuliah)
+            ->where(function($q) {
+                $q->where('tanggal', '<', $this->tanggal)
+                  ->orWhere(function($sub) {
+                      $sub->where('tanggal', $this->tanggal)
+                          ->where('jam_mulai', '<', $this->jam_mulai);
+                  })
+                  ->orWhere(function($sub2) {
+                      $sub2->where('tanggal', $this->tanggal)
+                          ->where('jam_mulai', $this->jam_mulai)
+                          ->where('id', '<', $this->id);
+                  });
+            })
+            ->count();
+
+        return $countBefore + 1;
+    }
+
+    /**
      * Determine agenda status dynamically based on current date and time.
      */
     public function getStatusAgendaAttribute($value)

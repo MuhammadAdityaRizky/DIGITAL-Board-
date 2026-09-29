@@ -293,17 +293,33 @@
 
                                  <!-- DAFTAR PERTEMUAN KE-N & LAPORAN ABSENSINYA -->
                                 <div class="p-5 space-y-3 bg-slate-50/40">
+                                    @php
+                                        $chronologicalGroup = $groupItems->sortBy(function($s) {
+                                            return ($s->tanggal ?? '') . ' ' . ($s->jam_mulai ?? '');
+                                        })->values();
+                                        $adminMeetMap = [];
+                                        foreach ($chronologicalGroup as $cIdx => $cSess) {
+                                            if ($cSess->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $cSess->catatan, $m)) {
+                                                $adminMeetMap[$cSess->id] = (int)$m[1];
+                                            } else {
+                                                $adminMeetMap[$cSess->id] = $cIdx + 1;
+                                            }
+                                        }
+                                    @endphp
                                     @foreach($groupItems->take(10) as $meetIndex => $ag)
+                                        @php
+                                            $meetNum = $adminMeetMap[$ag->id] ?? $ag->nomor_pertemuan ?? ($meetIndex + 1);
+                                        @endphp
                                         <div class="pertemuan-accordion-item border border-slate-200 rounded-xl overflow-hidden bg-white shadow-2xs">
                                             <!-- Sub-Header: PERTEMUAN KE-N (ACCORDION TOGGLE HEADER) -->
                                             <div onclick="togglePertemuanAccordion(this)" class="pertemuan-header bg-slate-100/90 hover:bg-slate-200/80 border-b border-slate-200 px-5 py-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-2 cursor-pointer select-none transition">
                                                 <div class="flex items-center gap-2.5">
                                                     <span class="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
-                                                        {{ $meetIndex + 1 }}
+                                                        {{ $meetNum }}
                                                     </span>
                                                     <div>
                                                         <h4 class="font-bold text-slate-800 text-xs flex items-center gap-2 flex-wrap">
-                                                            <span>Pertemuan ke-{{ $meetIndex + 1 }}</span>
+                                                            <span>Pertemuan ke-{{ $meetNum }}</span>
                                                             <span class="text-slate-400 font-normal">|</span>
                                                             <span class="text-slate-600 font-semibold"><i class="fa-regular fa-calendar-check text-teal-700 mr-1"></i>{{ date('d F Y', strtotime($ag->tanggal)) }}</span>
                                                             <span class="text-slate-500 font-mono text-[11px]">({{ substr($ag->jam_mulai, 0, 5) }} - {{ substr($ag->jam_selesai, 0, 5) }} WIB)</span>
@@ -377,7 +393,7 @@
                                                     </div>
                                                 @else
                                                     <p class="text-center py-3 text-[11px] text-slate-400 italic">
-                                                        <i class="fa-solid fa-info-circle mr-1 text-slate-400"></i> Belum ada rekaman data presensi pada Pertemuan ke-{{ $meetIndex + 1 }}.
+                                                        <i class="fa-solid fa-info-circle mr-1 text-slate-400"></i> Belum ada rekaman data presensi pada Pertemuan ke-{{ $meetNum }}.
                                                     </p>
                                                 @endif
                                             </div>

@@ -40,6 +40,20 @@
                 $isFiltered = request()->anyFilled(['search', 'tanggal']);
                 // Default closed unless filtered
                 $isExpanded = $isFiltered;
+
+                // Bangun pemetaan nomor sesi kronologis (dari sesi terlama ke sesi terbaru)
+                $chronologicalSessions = $sessions->sortBy(function($s) {
+                    return ($s->tanggal ?? '') . ' ' . ($s->jam_mulai ?? '');
+                })->values();
+
+                $sessionNumberMap = [];
+                foreach ($chronologicalSessions as $cIdx => $cSess) {
+                    if ($cSess->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $cSess->catatan, $m)) {
+                        $sessionNumberMap[$cSess->id] = (int)$m[1];
+                    } else {
+                        $sessionNumberMap[$cSess->id] = $cIdx + 1;
+                    }
+                }
             @endphp
             <!-- Course Card Container (Wadah Kartu Mata Kuliah) -->
             <div class="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden transition-all">
@@ -150,6 +164,7 @@
                 <div id="content-{{ $courseSlug }}" class="course-accordion-content p-3.5 sm:p-5 bg-slate-100/70 space-y-4 {{ $isExpanded ? '' : 'hidden' }}">
                     @foreach($sessions->take(10) as $sessionIndex => $ag)
                         @php
+                            $sessionNum = $sessionNumberMap[$ag->id] ?? $ag->nomor_pertemuan ?? ($sessionIndex + 1);
                             $isToday = $ag->tanggal === date('Y-m-d');
                             $isFuture = $ag->tanggal > date('Y-m-d');
                             $isClashing = in_array($ag->id, $clashingAgendaIds ?? []);
@@ -159,7 +174,7 @@
                         <!-- Individual Session Card -->
                         <div class="p-4 sm:p-5 bg-white border border-slate-200/90 rounded-2xl shadow-2xs hover:border-slate-300 transition-all space-y-4 relative group item-{{ $courseSlug }}"
                              data-agenda-id="{{ $ag->id }}"
-                             data-pertemuan="{{ $sessionIndex + 1 }}"
+                             data-pertemuan="{{ $sessionNum }}"
                              data-tanggal="{{ \Carbon\Carbon::parse($ag->tanggal)->isoFormat('dddd, D MMMM Y') }}"
                              data-jam="{{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB"
                              data-status="{{ $ag->status_agenda }}"
@@ -181,7 +196,7 @@
                                         <!-- Kotak Urutan Sesi -->
                                         <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-slate-900 text-white flex flex-col items-center justify-center flex-shrink-0 shadow-2xs">
                                             <span class="text-[9px] sm:text-[10px] font-bold text-slate-300 uppercase tracking-wider leading-none">SESI</span>
-                                            <span class="text-sm sm:text-base font-black leading-none mt-1">KE-{{ $sessionIndex + 1 }}</span>
+                                            <span class="text-sm sm:text-base font-black leading-none mt-1">KE-{{ $sessionNum }}</span>
                                         </div>
 
                                         <div>
@@ -441,7 +456,7 @@
                                             </div>
                                             <div>
                                                 <h3 class="font-black text-lg text-slate-900">Realisasi Materi Praktikum</h3>
-                                                <p class="text-sm text-slate-700 font-bold mt-0.5">Pertemuan Ke-{{ $sessionIndex + 1 }} • {{ $ag->mata_kuliah }}</p>
+                                                <p class="text-sm text-slate-700 font-bold mt-0.5">Pertemuan Ke-{{ $sessionNum }} • {{ $ag->mata_kuliah }}</p>
                                             </div>
                                         </div>
                                         <button type="button" onclick="toggleModal('modal-realisasi-{{ $ag->id }}')" class="w-10 h-10 rounded-xl bg-white border border-slate-300 text-slate-700 hover:text-slate-900 flex items-center justify-center text-xl transition">
@@ -497,7 +512,7 @@
                                                     <h3 class="font-black text-lg sm:text-xl text-white">Berita Acara Praktikum</h3>
                                                     <span class="px-2.5 py-0.5 bg-white/20 text-white border border-white/30 rounded text-xs font-bold font-mono">FTS-LAB-P03-F-01</span>
                                                 </div>
-                                                <p class="text-sm text-slate-300 font-medium mt-0.5">Pertemuan Ke-{{ $sessionIndex + 1 }} • {{ $ag->mata_kuliah }} • {{ $baDetails['hari_tanggal_indo'] }}</p>
+                                                <p class="text-sm text-slate-300 font-medium mt-0.5">Pertemuan Ke-{{ $sessionNum }} • {{ $ag->mata_kuliah }} • {{ $baDetails['hari_tanggal_indo'] }}</p>
                                             </div>
                                         </div>
                                         
@@ -911,7 +926,7 @@
                     @endforeach
                     @if($sessions->count() > 10)
                         <div class="p-3 text-center text-xs text-slate-500 font-medium bg-white border border-slate-200 rounded-xl">
-                            <i class="fa-solid fa-circle-info mr-1 text-teal-600"></i> Menampilkan 10 sesi pertemuan pertama dari total <strong>{{ $sessions->count() }}</strong> Sesi.
+                            <i class="fa-solid fa-circle-info mr-1 text-teal-600"></i> Menampilkan 10 sesi pertemuan dari total <strong>{{ $sessions->count() }}</strong> Sesi.
                         </div>
                     @endif
                 </div>

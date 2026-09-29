@@ -79,15 +79,24 @@ class AuthController extends Controller
         }
 
         if ($role === 'dosen') {
-            $anggra = User::where('username', '0431088705')->first();
-            $user = $anggra ?? User::where('role', 'dosen')->first();
+            // Akun Real Dosen (Pak Anggra Triawan)
+            $user = User::where('username', '0431088705')->first() ?? User::where('role', 'dosen')->first();
         } elseif ($role === 'admin' || $role === 'super_admin') {
-            $user = User::whereIn('role', ['super_admin', 'admin'])->first();
+            // Akun Real Super Admin (admin1)
+            $user = User::where('username', 'admin1')->first() ?? User::whereIn('role', ['super_admin', 'admin'])->first();
+        } elseif ($role === 'mahasiswa') {
+            // Akun Real Mahasiswa Aktif (Muhammad Irghi Alparizi)
+            $user = User::where('username', '251106050005')->first()
+                ?? User::where('role', 'mahasiswa')->whereHas('mahasiswa', fn($q) => $q->where('status', 'aktif'))->first();
         } else {
             $user = User::where('role', $role)->first();
         }
 
         if ($user) {
+            if (strtolower($user->status ?? 'aktif') === 'nonaktif') {
+                return redirect('/login')->withErrors(['msg' => 'Akun dinonaktifkan (suspended).']);
+            }
+
             Auth::login($user);
             return match ($user->role) {
                 'super_admin', 'admin' => redirect()->route('admin.dashboard'),
@@ -97,7 +106,7 @@ class AuthController extends Controller
             };
         }
 
-        return redirect('/login')->withErrors(['msg' => 'Demo user not found.']);
+        return redirect('/login')->withErrors(['msg' => 'Akun resmi tidak ditemukan.']);
     }
 
     public function logout(Request $request)

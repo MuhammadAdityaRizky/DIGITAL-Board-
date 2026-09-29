@@ -905,10 +905,10 @@
     </div>
 
     <!-- Modal Import Excel Matriks Jadwal Lab -->
-    <div id="modal-import-jadwal-lab" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+    <div id="modal-import-jadwal-lab" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs hidden">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-xl w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
             <!-- Header -->
-            <div class="bg-slate-900 text-white px-6 py-4.5 flex items-center justify-between border-b border-slate-800 relative z-10">
+            <div class="bg-slate-900 text-white px-6 py-4.5 flex items-center justify-between border-b border-slate-800 shrink-0 relative z-10">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-2xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-teal-400 shrink-0">
                         <i class="fa-solid fa-file-excel text-lg"></i>
@@ -924,8 +924,29 @@
             </div>
 
             <!-- Form -->
-            <form id="form-import-jadwal" action="{{ route('admin.jadwal-lab.import') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4 text-xs" onsubmit="handleImportSubmit(event)">
+            <form id="form-import-jadwal" action="{{ route('admin.jadwal-lab.import') }}" method="POST" enctype="multipart/form-data" class="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto max-h-[calc(92vh-80px)] pr-2" onsubmit="handleImportSubmit(event)">
                 @csrf
+
+                <!-- Alert Panduan & Peringatan Penting Sebelum Impor -->
+                <div class="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-4 text-xs text-amber-950 space-y-2.5 shadow-2xs">
+                    <div class="flex items-center gap-2.5 font-black text-amber-900 text-xs sm:text-sm">
+                        <div class="w-7 h-7 rounded-xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-700 shrink-0">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <span>PENTING: Harap Perhatikan Sebelum Impor Berkas</span>
+                    </div>
+                    <ul class="space-y-1.5 text-[11px] text-amber-900/90 leading-relaxed list-disc list-inside">
+                        <li>
+                            <strong>Wajib Ada Nama Dosen di Kotak Excel:</strong> Setiap cell jadwal di Excel wajib memuat nama mata kuliah <em>dan</em> nama dosen (contoh: <code class="bg-amber-200/70 text-amber-950 font-bold px-1.5 py-0.5 rounded font-mono">Praktikum Web - Pak Anggra</code>). Jika hanya nama matkul tanpa nama dosen, kolom dosen pengampu akan tersimpan kosong (<strong>NULL</strong>).
+                        </li>
+                        <li>
+                            <strong>Pencegahan Data Dobel:</strong> Gunakan opsi <strong>Ganti Seluruhnya (Replace)</strong> jika Anda ingin memperbarui jadwal lama. Sistem akan membersihkan jadwal lama di lab & semester ini terlebih dahulu sehingga <strong>TIDAK AKAN DOBEL</strong>.
+                        </li>
+                        <li>
+                            <strong>Keamanan Riwayat Presensi:</strong> Sesi perkuliahan dan data absensi mahasiswa yang sudah terlaksana di minggu-minggu lalu <strong>TIDAK AKAN HILANG</strong>.
+                        </li>
+                    </ul>
+                </div>
 
                 <!-- Lab Destination -->
                 <div>
@@ -953,20 +974,34 @@
                 <div>
                     <label class="block text-slate-700 font-bold mb-2">Metode Impor Jadwal:</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <label class="relative flex items-start gap-2.5 p-3 rounded-xl border border-teal-300 bg-teal-50/50 cursor-pointer hover:bg-teal-50 transition">
-                            <input type="radio" name="mode" value="replace" checked class="mt-0.5 text-teal-700 focus:ring-teal-700">
+                        <label id="mode-label-replace" class="relative flex items-start gap-2.5 p-3 rounded-xl border-2 border-teal-600 bg-teal-50/70 cursor-pointer transition shadow-2xs" onclick="updateImportModeAlert('replace')">
+                            <input type="radio" name="mode" value="replace" checked class="mt-0.5 text-teal-700 focus:ring-teal-700" onchange="updateImportModeAlert('replace')">
                             <div>
-                                <span class="font-bold text-slate-800 block text-xs">Ganti Seluruhnya</span>
-                                <span class="text-[11px] text-slate-500 leading-tight block mt-0.5">Bersihkan jadwal lama lab ini, lalu isi dengan data baru.</span>
+                                <span class="font-bold text-slate-800 block text-xs flex items-center gap-1.5 flex-wrap">
+                                    <span>Ganti Seluruhnya</span>
+                                    <span class="px-1.5 py-0.2 bg-teal-200 text-teal-900 rounded text-[9px] font-black uppercase tracking-wider">Anti Dobel</span>
+                                </span>
+                                <span class="text-[11px] text-slate-600 leading-tight block mt-0.5">Bersihkan jadwal lama lab ini, lalu isi dengan data baru dari Excel.</span>
                             </div>
                         </label>
-                        <label class="relative flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50 transition">
-                            <input type="radio" name="mode" value="append" class="mt-0.5 text-teal-700 focus:ring-teal-700">
+                        <label id="mode-label-append" class="relative flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-100 transition" onclick="updateImportModeAlert('append')">
+                            <input type="radio" name="mode" value="append" class="mt-0.5 text-teal-700 focus:ring-teal-700" onchange="updateImportModeAlert('append')">
                             <div>
                                 <span class="font-bold text-slate-800 block text-xs">Tambahkan (Append)</span>
-                                <span class="text-[11px] text-slate-500 leading-tight block mt-0.5">Sisipkan jadwal baru jika jam tidak bentrok.</span>
+                                <span class="text-[11px] text-slate-500 leading-tight block mt-0.5">Sisipkan jadwal baru tanpa menghapus data lama.</span>
                             </div>
                         </label>
+                    </div>
+
+                    <!-- Dynamic Mode Alert Box -->
+                    <div id="dynamic-mode-alert" class="mt-2.5 p-3 rounded-xl bg-teal-50/80 border border-teal-200 text-teal-950 text-[11px] flex items-start gap-2 leading-relaxed">
+                        <i class="fa-solid fa-circle-check text-teal-600 mt-0.5 text-sm shrink-0"></i>
+                        <div>
+                            <strong class="font-bold text-teal-900">Mode Ganti Seluruhnya (Direkomendasikan):</strong>
+                            <p class="mt-0.5 text-teal-800">
+                                Jadwal lama lab ini di semester target akan dihapus bersih, kemudian digantikan total dengan data dari file Excel baru sehingga <strong>TIDAK AKAN DOBEL</strong>.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -1047,14 +1082,67 @@
             }
         }
 
+        let isImportConfirmed = false;
+
+        function updateImportModeAlert(mode) {
+            const labelReplace = document.getElementById('mode-label-replace');
+            const labelAppend = document.getElementById('mode-label-append');
+            const alertBox = document.getElementById('dynamic-mode-alert');
+
+            if (mode === 'replace') {
+                if (labelReplace) {
+                    labelReplace.className = "relative flex items-start gap-2.5 p-3 rounded-xl border-2 border-teal-600 bg-teal-50/70 cursor-pointer transition shadow-2xs";
+                }
+                if (labelAppend) {
+                    labelAppend.className = "relative flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-100 transition";
+                }
+                if (alertBox) {
+                    alertBox.className = "mt-2.5 p-3 rounded-xl bg-teal-50/80 border border-teal-200 text-teal-950 text-[11px] flex items-start gap-2 leading-relaxed animate-in fade-in duration-150";
+                    alertBox.innerHTML = `
+                        <i class="fa-solid fa-circle-check text-teal-600 mt-0.5 text-sm shrink-0"></i>
+                        <div>
+                            <strong class="font-bold text-teal-900">Mode Ganti Seluruhnya (Bebas Data Dobel):</strong>
+                            <p class="mt-0.5 text-teal-800">
+                                Jadwal lama lab ini di semester target akan dihapus bersih, kemudian digantikan total dengan data dari file Excel baru sehingga <strong>TIDAK AKAN DOBEL</strong>.
+                            </p>
+                        </div>
+                    `;
+                }
+            } else {
+                if (labelReplace) {
+                    labelReplace.className = "relative flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-100 transition";
+                }
+                if (labelAppend) {
+                    labelAppend.className = "relative flex items-start gap-2.5 p-3 rounded-xl border-2 border-amber-600 bg-amber-50/70 cursor-pointer transition shadow-2xs";
+                }
+                if (alertBox) {
+                    alertBox.className = "mt-2.5 p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-950 text-[11px] flex items-start gap-2 leading-relaxed animate-in fade-in duration-150";
+                    alertBox.innerHTML = `
+                        <i class="fa-solid fa-triangle-exclamation text-rose-600 mt-0.5 text-sm shrink-0"></i>
+                        <div>
+                            <strong class="font-bold text-rose-900">Peringatan Mode Tambahkan (Append):</strong>
+                            <p class="mt-0.5 text-rose-800">
+                                Jadwal lama <strong>TIDAK AKAN DIHAPUS</strong>. Jika file Excel Anda memuat mata kuliah yang sebelumnya sudah diinput, data jadwal di lab ini <strong>AKAN MENJADI DOBEL / BERTUMPUK</strong>.
+                            </p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
         function openImportModal() {
+            isImportConfirmed = false;
             resetImportDropzone();
+            updateImportModeAlert('replace');
+            const replaceRadio = document.querySelector('input[name="mode"][value="replace"]');
+            if (replaceRadio) replaceRadio.checked = true;
             if (modalImport) {
                 modalImport.classList.remove('hidden');
             }
         }
 
         function closeImportModal() {
+            isImportConfirmed = false;
             resetImportDropzone();
             if (modalImport) {
                 modalImport.classList.add('hidden');
@@ -1137,15 +1225,117 @@
         });
 
         function handleImportSubmit(e) {
-            const btn = document.getElementById('btn-submit-import');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Mengimpor Data...</span>';
+            if (isImportConfirmed) {
+                return true;
+            }
+            e.preventDefault();
+
+            const form = document.getElementById('form-import-jadwal');
+            const fileInput = document.getElementById('excel_import_file');
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Berkas Belum Dipilih',
+                    text: 'Silakan pilih atau tarik berkas Excel (.xlsx / .xls) jadwal terlebih dahulu!',
+                    confirmButtonColor: '#0f766e',
+                    customClass: { confirmButton: 'rounded-xl font-bold text-xs px-4 py-2.5' }
+                });
+                return false;
+            }
+
+            const mode = form.querySelector('input[name="mode"]:checked')?.value || 'replace';
+            const labSelect = document.getElementById('import_lab_id');
+            const labName = labSelect ? (labSelect.options[labSelect.selectedIndex]?.text || 'Laboratorium Target') : 'Laboratorium Target';
+            const tahunAkademikInput = document.getElementById('import_tahun_akademik');
+            const tahunAkademik = tahunAkademikInput ? tahunAkademikInput.value : '';
+            const fileName = fileInput.files[0]?.name || 'Berkas Excel';
+
+            let modeHtml = '';
+            if (mode === 'replace') {
+                modeHtml = `
+                    <div class="p-3.5 bg-amber-50/90 border border-amber-300 rounded-2xl text-left text-xs text-amber-950 space-y-1.5 mt-3">
+                        <div class="font-bold flex items-center gap-1.5 text-amber-900">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+                            <span>Mode: Ganti Seluruhnya (Replace)</span>
+                        </div>
+                        <p class="leading-relaxed text-[11px] text-amber-900/90">
+                            Seluruh jadwal lama pada <strong>${labName}</strong> (${tahunAkademik}) akan <strong>dibersihkan dan digantikan penuh</strong> dengan data baru dari file Excel.
+                        </p>
+                        <div class="pt-1.5 border-t border-amber-200/80 text-[11px] text-amber-800 font-medium">
+                            ⚠️ <strong>Penting:</strong> Pastikan cell Excel sudah memuat <strong>Nama Dosen Pengampu</strong> (misal: <em>Praktikum Web - Pak Anggra</em>). Jika hanya nama matkul tanpa dosen, data dosen akan tersimpan kosong (NULL).
+                        </div>
+                    </div>
+                `;
+            } else {
+                modeHtml = `
+                    <div class="p-3.5 bg-rose-50 border border-rose-300 rounded-2xl text-left text-xs text-rose-950 space-y-1.5 mt-3">
+                        <div class="font-bold flex items-center gap-1.5 text-rose-900">
+                            <i class="fa-solid fa-layer-group text-rose-600"></i>
+                            <span>Mode: Tambahkan (Append)</span>
+                        </div>
+                        <p class="leading-relaxed text-[11px] text-rose-900/90">
+                            Jadwal baru akan <strong>disisipkan tanpa menghapus</strong> jadwal lama di lab ini.
+                        </p>
+                        <div class="pt-1.5 border-t border-rose-200 text-[11px] text-rose-800 font-bold">
+                            ⚠️ Perhatian: Jika berkas Excel ini berisi jadwal yang sudah pernah diinput sebelumnya, jadwal akan <strong>DOBEL / BERTUMPUK</strong>!
+                        </div>
+                    </div>
+                `;
+            }
+
             Swal.fire({
-                title: 'Sedang Mengimpor Jadwal...',
-                text: 'Mohon tunggu sebentar, sistem sedang membaca dan memetakan matriks jadwal excel ke database.',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
+                title: 'Konfirmasi Impor Jadwal Lab',
+                html: `
+                    <div class="text-xs text-slate-600 text-left space-y-2 mt-2">
+                        <p class="text-slate-700">Periksa kembali detail impor berkas Anda sebelum diproses:</p>
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl text-xs space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-500 font-semibold">Berkas:</span>
+                                <span class="font-bold text-slate-800 font-mono text-[11px] truncate max-w-[200px]">${fileName}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-500 font-semibold">Laboratorium:</span>
+                                <span class="font-bold text-slate-800">${labName}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-slate-500 font-semibold">Tahun Akademik:</span>
+                                <span class="font-bold text-slate-800">${tahunAkademik}</span>
+                            </div>
+                        </div>
+                        ${modeHtml}
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa-solid fa-file-import"></i> Ya, Lanjutkan Impor',
+                cancelButtonText: '<i class="fa-solid fa-xmark"></i> Batal / Periksa Dulu',
+                confirmButtonColor: '#0f766e',
+                cancelButtonColor: '#64748b',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'rounded-3xl p-6 text-left',
+                    confirmButton: 'rounded-xl font-bold text-xs px-5 py-2.5 cursor-pointer',
+                    cancelButton: 'rounded-xl font-bold text-xs px-5 py-2.5 cursor-pointer'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    isImportConfirmed = true;
+                    const btn = document.getElementById('btn-submit-import');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Mengimpor Data...</span>';
+                    }
+                    
+                    Swal.fire({
+                        title: 'Sedang Mengimpor Jadwal...',
+                        text: 'Mohon tunggu sebentar, sistem sedang memetakan matriks jadwal excel ke database.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    form.submit();
                 }
             });
         }
@@ -1973,6 +2163,19 @@
                     }
                 });
             @endif
+
+            // Memastikan scrolling mouse wheel vertikal tetap menggulir halaman saat kursor berada di atas tabel jadwal
+            const tableContainers = document.querySelectorAll('.overflow-x-auto');
+            tableContainers.forEach(container => {
+                container.addEventListener('wheel', function(e) {
+                    if (!e.shiftKey && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                        const scrollParent = container.closest('.overflow-auto, .overflow-y-auto');
+                        if (scrollParent) {
+                            scrollParent.scrollTop += e.deltaY;
+                        }
+                    }
+                }, { passive: true });
+            });
         });
     </script>
 </body>

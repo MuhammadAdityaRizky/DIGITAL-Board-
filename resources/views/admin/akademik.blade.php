@@ -285,7 +285,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <h3 class="font-bold text-sm text-slate-800">Daftar Mata Kuliah</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Kelola daftar mata kuliah, bobot SKS, pemetaan semester, dan kategori kurikulum.</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Kelola master daftar mata kuliah praktikum lab dan bobot SKS.</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <button onclick="openModal('modal-import-matkul')" class="px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
@@ -304,7 +304,7 @@
 
                 <!-- Multi-Parameter Search & Filter Bar -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 pt-1">
-                    <div class="relative lg:col-span-4 w-full">
+                    <div class="relative lg:col-span-7 w-full">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </div>
@@ -314,9 +314,9 @@
                                placeholder="Cari nama mata kuliah atau kode..." 
                                class="w-full pl-8 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 text-slate-800 transition">
                     </div>
-                    <div class="lg:col-span-3 w-full">
+                    <div class="lg:col-span-4 w-full">
                         <select id="filter_matkul_prodi" onchange="filterMatkulTable()" class="w-full py-2 px-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 text-slate-700 transition cursor-pointer">
-                            <option value="">Semua Program Studi</option>
+                            <option value="">Semua Program Studi (Praktikum)</option>
                             <option value="umum">Semua Prodi (Mata Kuliah Umum)</option>
                             @foreach($groupedProdisAkademik as $fakultasName => $items)
                                 <optgroup label="{{ $fakultasName }}">
@@ -325,23 +325,6 @@
                                     @endforeach
                                 </optgroup>
                             @endforeach
-                        </select>
-                    </div>
-                    <div class="lg:col-span-2 w-full">
-                        <select id="filter_matkul_semester" onchange="filterMatkulTable()" class="w-full py-2 px-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 text-slate-700 transition cursor-pointer">
-                            <option value="">Semua Semester</option>
-                            @for($s=1; $s<=8; $s++)
-                                <option value="{{ $s }}">Semester {{ $s }}</option>
-                            @endfor
-                        </select>
-                    </div>
-                    <div class="lg:col-span-2 w-full">
-                        <select id="filter_matkul_kategori" onchange="filterMatkulTable()" class="w-full py-2 px-2.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 text-slate-700 transition cursor-pointer">
-                            <option value="">Semua Kategori</option>
-                            <option value="wajib">Wajib</option>
-                            <option value="pilihan">Pilihan</option>
-                            <option value="praktikum lab">Praktikum Lab</option>
-                            <option value="teori & praktikum">Teori & Praktikum</option>
                         </select>
                     </div>
                     <div class="lg:col-span-1 w-full flex items-center justify-end">
@@ -364,56 +347,26 @@
                                 </th>
                                 <th class="p-3 w-28">Kode MK</th>
                                 <th class="p-3">Nama Mata Kuliah</th>
-                                <th class="p-3 text-center w-28">Semester</th>
-                                <th class="p-3 text-center w-36">Kategori</th>
                                 <th class="p-3">Program Studi</th>
-                                <th class="p-3 text-center w-20 whitespace-nowrap">SKS</th>
+                                <th class="p-3 text-center w-24 whitespace-nowrap">SKS</th>
                                 <th class="p-3 text-center w-28">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100" id="matkul_table_body">
                             @if(isset($mataKuliahs) && count($mataKuliahs) > 0)
                                 @foreach($mataKuliahs as $mk)
-                                @php
-                                    $kat = $mk->kategori ?: 'Wajib';
-                                @endphp
                                 <tr class="matkul-row hover:bg-slate-50/50 transition"
                                     data-nama="{{ strtolower($mk->nama_mk) }}"
                                     data-kode="{{ strtolower($mk->kode_mk ?? '') }}"
                                     data-prodi-id="{{ $mk->id_prodi ?? 'umum' }}"
                                     data-prodi-name="{{ strtolower(($mk->prodi->nama_prodi ?? 'semua umum') . ' ' . ($mk->prodi->fakultas->nama_fakultas ?? '')) }}"
-                                    data-semester="{{ $mk->semester ?: 1 }}"
-                                    data-sks="{{ $mk->sks ?: 3 }}"
-                                    data-kategori="{{ strtolower($kat) }}">
+                                    data-semester="{{ $mk->semester ?: '' }}"
+                                    data-sks="{{ $mk->sks ?: 3 }}">
                                     <td class="p-3 text-center">
                                         <input type="checkbox" value="{{ $mk->id }}" class="checkbox-matkul rounded border-slate-300 text-teal-700 focus:ring-teal-700 cursor-pointer" data-name="{{ $mk->nama_mk }}">
                                     </td>
                                     <td class="p-3 font-mono text-slate-400 font-bold">{{ $mk->kode_mk ?: '-' }}</td>
                                     <td class="p-3 font-bold text-slate-800 text-sm">{{ $mk->nama_mk }}</td>
-                                    <td class="p-3 text-center whitespace-nowrap">
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-bold rounded-md">
-                                            <i class="fa-solid fa-graduation-cap text-[9px] text-slate-400"></i> Sem {{ $mk->semester ?: 1 }}
-                                        </span>
-                                    </td>
-                                    <td class="p-3 text-center whitespace-nowrap">
-                                        @if($kat === 'Praktikum Lab')
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-teal-50 border border-teal-200 text-teal-800 text-[10px] font-bold rounded-md">
-                                                <i class="fa-solid fa-flask text-[9px]"></i> Praktikum Lab
-                                            </span>
-                                        @elseif($kat === 'Pilihan')
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold rounded-md">
-                                                <i class="fa-solid fa-star text-[9px]"></i> Pilihan
-                                            </span>
-                                        @elseif($kat === 'Teori & Praktikum')
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-cyan-50 border border-cyan-200 text-cyan-800 text-[10px] font-bold rounded-md">
-                                                <i class="fa-solid fa-laptop-code text-[9px]"></i> Teori & Lab
-                                            </span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold rounded-md">
-                                                <i class="fa-solid fa-book-bookmark text-[9px]"></i> Wajib
-                                            </span>
-                                        @endif
-                                    </td>
                                     <td class="p-3">
                                         @if($mk->prodi)
                                             <span class="text-slate-800 font-medium">{{ $mk->prodi->nama_prodi }}</span>
@@ -431,7 +384,7 @@
                                     <td class="p-3 text-center">
                                         <div class="flex items-center justify-center gap-3">
                                             <button type="button" 
-                                                    onclick="openEditMatkulModal({{ $mk->id }}, '{{ addslashes($mk->nama_mk) }}', '{{ addslashes($mk->kode_mk ?? '') }}', '{{ $mk->id_prodi ?? '' }}', {{ $mk->sks ?? 3 }}, {{ $mk->semester ?? 1 }}, '{{ addslashes($kat) }}')" 
+                                                    onclick="openEditMatkulModal({{ $mk->id }}, '{{ addslashes($mk->nama_mk) }}', '{{ addslashes($mk->kode_mk ?? '') }}', '{{ $mk->id_prodi ?? '' }}', {{ $mk->sks ?? 3 }}, '{{ $mk->semester ?? '' }}')" 
                                                     class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer">
                                                 <i class="fa-solid fa-pen-to-square"></i> Edit
                                             </button>
@@ -448,13 +401,13 @@
                                 </tr>
                                 @endforeach
                                 <tr id="matkul_empty_state" style="display: none;">
-                                    <td colspan="8" class="p-8 text-center text-slate-400 italic">
+                                    <td colspan="6" class="p-8 text-center text-slate-400 italic">
                                         Tidak ada mata kuliah yang cocok dengan filter pencarian.
                                     </td>
                                 </tr>
                             @else
                                 <tr>
-                                    <td colspan="8" class="p-8 text-center text-slate-400 italic">Belum ada data mata kuliah.</td>
+                                    <td colspan="6" class="p-8 text-center text-slate-400 italic">Belum ada data mata kuliah.</td>
                                 </tr>
                             @endif
                         </tbody>
@@ -719,7 +672,14 @@
     </div>
 
     @php
-        $groupedProdisAkademik = $prodis->groupBy(function($item) {
+        $labFakultasIds = \App\Models\Laboratorium::whereNotNull('fakultas_id')->pluck('fakultas_id')->unique();
+        $jadwalProdiIds = \App\Models\JadwalPenggunaanLab::whereNotNull('id_prodi')->pluck('id_prodi')->unique();
+
+        $prodisPraktikum = $prodis->filter(function($p) use ($labFakultasIds, $jadwalProdiIds) {
+            return $labFakultasIds->contains($p->fakultas_id) || $jadwalProdiIds->contains($p->id);
+        });
+
+        $groupedProdisAkademik = $prodisPraktikum->groupBy(function($item) {
             return $item->fakultas->nama_fakultas ?? 'Fakultas Lain / Umum';
         });
     @endphp
@@ -747,25 +707,17 @@
                         <input type="number" name="sks" min="1" max="10" value="3" required placeholder="3" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
                     </div>
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Semester <span class="text-rose-500">*</span></label>
-                        <select name="semester" required class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition cursor-pointer">
+                        <label class="block text-slate-700 font-bold mb-1">Semester</label>
+                        <select name="semester" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition cursor-pointer">
+                            <option value="" selected>Semua Semester</option>
                             @for($s=1; $s<=8; $s++)
                                 <option value="{{ $s }}">Semester {{ $s }}</option>
                             @endfor
                         </select>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Kategori Kurikulum <span class="text-rose-500">*</span></label>
-                    <select name="kategori" required class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition cursor-pointer">
-                        <option value="Wajib">Wajib (Mata Kuliah Utama)</option>
-                        <option value="Praktikum Lab">Praktikum Lab (Praktikum Laboratorium)</option>
-                        <option value="Teori & Praktikum">Teori & Praktikum</option>
-                        <option value="Pilihan">Pilihan (Mata Kuliah Peminatan)</option>
-                    </select>
-                </div>
                 <div class="relative" id="add_prodi_combobox_wrapper">
-                    <label class="block text-slate-700 font-bold mb-1">Program Studi</label>
+                    <label class="block text-slate-700 font-bold mb-1">Program Studi <span class="text-slate-400 font-normal">(Praktikum Lab)</span></label>
                     <input type="hidden" name="id_prodi" id="add_matkul_id_prodi" value="">
                     <div class="relative flex items-center">
                         <input type="text" 
@@ -859,25 +811,17 @@
                         <input type="number" id="edit-matkul-sks" name="sks" min="1" max="10" required placeholder="Contoh: 3" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
                     </div>
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Semester <span class="text-rose-500">*</span></label>
-                        <select id="edit-matkul-semester" name="semester" required class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition cursor-pointer">
+                        <label class="block text-slate-700 font-bold mb-1">Semester</label>
+                        <select id="edit-matkul-semester" name="semester" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition cursor-pointer">
+                            <option value="">Semua Semester</option>
                             @for($s=1; $s<=8; $s++)
                                 <option value="{{ $s }}">Semester {{ $s }}</option>
                             @endfor
                         </select>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Kategori Kurikulum <span class="text-rose-500">*</span></label>
-                    <select id="edit-matkul-kategori" name="kategori" required class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition cursor-pointer">
-                        <option value="Wajib">Wajib (Mata Kuliah Utama)</option>
-                        <option value="Praktikum Lab">Praktikum Lab (Praktikum Laboratorium)</option>
-                        <option value="Teori & Praktikum">Teori & Praktikum</option>
-                        <option value="Pilihan">Pilihan (Mata Kuliah Peminatan)</option>
-                    </select>
-                </div>
                 <div class="relative" id="edit_prodi_combobox_wrapper">
-                    <label class="block text-slate-700 font-bold mb-1">Program Studi</label>
+                    <label class="block text-slate-700 font-bold mb-1">Program Studi <span class="text-slate-400 font-normal">(Praktikum Lab)</span></label>
                     <input type="hidden" id="edit-matkul-prodi" name="id_prodi" value="">
                     <div class="relative flex items-center">
                         <input type="text" 
@@ -983,13 +927,12 @@
             openModal('modal-edit-kelas');
         }
 
-        function openEditMatkulModal(id, nama, kode, prodiId, sks, semester, kategori) {
+        function openEditMatkulModal(id, nama, kode, prodiId, sks, semester) {
             document.getElementById('edit-matkul-form').action = `{{ url('/admin/akademik/matkul') }}/${id}`;
             document.getElementById('edit-matkul-nama').value = nama;
             document.getElementById('edit-matkul-kode').value = kode;
             document.getElementById('edit-matkul-sks').value = sks || 3;
-            document.getElementById('edit-matkul-semester').value = semester || 1;
-            document.getElementById('edit-matkul-kategori').value = kategori || 'Wajib';
+            document.getElementById('edit-matkul-semester').value = semester || '';
             document.getElementById('edit-matkul-prodi').value = prodiId || '';
             
             const matchedOption = document.querySelector(`.edit-prodi-item-option[data-id="${prodiId}"]`);
@@ -1335,8 +1278,6 @@
         function filterMatkulTable() {
             const search = (document.getElementById('filter_matkul_search')?.value || '').toLowerCase().trim();
             const prodi = document.getElementById('filter_matkul_prodi')?.value || '';
-            const semester = document.getElementById('filter_matkul_semester')?.value || '';
-            const kategori = (document.getElementById('filter_matkul_kategori')?.value || '').toLowerCase();
 
             const rows = Array.from(document.querySelectorAll('.matkul-row'));
             const emptyState = document.getElementById('matkul_empty_state');
@@ -1347,15 +1288,11 @@
                 const rowKode = row.getAttribute('data-kode') || '';
                 const rowProdiId = row.getAttribute('data-prodi-id') || '';
                 const rowProdiName = row.getAttribute('data-prodi-name') || '';
-                const rowSemester = row.getAttribute('data-semester') || '1';
-                const rowKategori = row.getAttribute('data-kategori') || 'wajib';
 
                 const matchSearch = !search || rowNama.includes(search) || rowKode.includes(search) || rowProdiName.includes(search);
                 const matchProdi = !prodi || (prodi === 'umum' ? rowProdiId === 'umum' : rowProdiId === prodi);
-                const matchSemester = !semester || rowSemester === semester;
-                const matchKategori = !kategori || rowKategori === kategori;
 
-                return matchSearch && matchProdi && matchSemester && matchKategori;
+                return matchSearch && matchProdi;
             });
 
             // Hide all rows initially
@@ -1366,7 +1303,7 @@
             }
 
             if (resetBtn) {
-                if (search || prodi || semester || kategori) {
+                if (search || prodi) {
                     resetBtn.classList.remove('hidden');
                 } else {
                     resetBtn.classList.add('hidden');
@@ -1460,12 +1397,8 @@
         function resetMatkulFilter() {
             const search = document.getElementById('filter_matkul_search');
             const prodi = document.getElementById('filter_matkul_prodi');
-            const semester = document.getElementById('filter_matkul_semester');
-            const kategori = document.getElementById('filter_matkul_kategori');
             if (search) search.value = '';
             if (prodi) prodi.value = '';
-            if (semester) semester.value = '';
-            if (kategori) kategori.value = '';
             filterMatkulTable();
         }
 
@@ -1473,14 +1406,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             filterMatkulTable();
         });
-
-        function resetMatkulFilter() {
-            const search = document.getElementById('filter_matkul_search');
-            const prodi = document.getElementById('filter_matkul_prodi');
-            if (search) search.value = '';
-            if (prodi) prodi.value = '';
-            filterMatkulTable();
-        }
     </script>
 
     <!-- GLOBAL IMPORT LOADING OVERLAY -->

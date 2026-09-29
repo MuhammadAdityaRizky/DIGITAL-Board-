@@ -19,7 +19,6 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .smooth-scroll {
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain;
         }
         .pulse-live {
             animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -733,7 +732,7 @@
     <!-- MODAL POPUP: BUAT JADWAL / KULIAH PENGGANTI (ANTI-BENTROK)   -->
     <!-- ============================================================== -->
     <div id="modal-booking-slot" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 hidden">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto smooth-scroll text-left animate-in fade-in zoom-in-95 duration-150">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto smooth-scroll text-left animate-in fade-in zoom-in-95 duration-150" style="overscroll-behavior-y: contain;">
             <!-- Modal Header -->
             <div class="bg-slate-900 text-white px-5 py-4 flex justify-between items-center sticky top-0 z-10">
                 <div class="flex items-center gap-2.5">
@@ -1181,6 +1180,19 @@
                     }
                 });
             @endif
+
+            // Memastikan scrolling mouse wheel vertikal tetap menggulir halaman saat kursor berada di atas tabel jadwal
+            const tableContainers = document.querySelectorAll('.overflow-x-auto');
+            tableContainers.forEach(container => {
+                container.addEventListener('wheel', function(e) {
+                    if (!e.shiftKey && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                        const scrollParent = container.closest('.overflow-y-auto');
+                        if (scrollParent) {
+                            scrollParent.scrollTop += e.deltaY;
+                        }
+                    }
+                }, { passive: true });
+            });
         });
     </script>
 

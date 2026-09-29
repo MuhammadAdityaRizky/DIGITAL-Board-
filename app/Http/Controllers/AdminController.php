@@ -2180,15 +2180,14 @@ class AdminController extends Controller
             'kode_mk' => 'nullable|string|max:30',
             'sks' => 'nullable|integer|min:1|max:10',
             'semester' => 'nullable|integer|min:1|max:8',
-            'kategori' => 'nullable|string|in:Wajib,Pilihan,Praktikum Lab,Teori & Praktikum',
             'id_prodi' => 'nullable|exists:prodi,id',
         ]);
         MataKuliah::create([
             'kode_mk' => $request->kode_mk,
             'nama_mk' => $request->nama_mk,
             'sks' => $request->sks ?: 3,
-            'semester' => $request->semester ?: 1,
-            'kategori' => $request->kategori ?: 'Wajib',
+            'semester' => $request->semester ?: null,
+            'kategori' => null,
             'id_prodi' => $request->id_prodi,
         ]);
         return back()->with('success', 'Mata Kuliah berhasil ditambahkan.');
@@ -2202,15 +2201,14 @@ class AdminController extends Controller
             'kode_mk' => 'nullable|string|max:30',
             'sks' => 'nullable|integer|min:1|max:10',
             'semester' => 'nullable|integer|min:1|max:8',
-            'kategori' => 'nullable|string|in:Wajib,Pilihan,Praktikum Lab,Teori & Praktikum',
             'id_prodi' => 'nullable|exists:prodi,id',
         ]);
         MataKuliah::findOrFail($id)->update([
             'kode_mk' => $request->kode_mk,
             'nama_mk' => $request->nama_mk,
             'sks' => $request->sks ?: 3,
-            'semester' => $request->semester ?: 1,
-            'kategori' => $request->kategori ?: 'Wajib',
+            'semester' => $request->semester ?: null,
+            'kategori' => null,
             'id_prodi' => $request->id_prodi,
         ]);
         return back()->with('success', 'Mata Kuliah berhasil diperbarui.');

@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Laboratorium;
 use App\Models\JadwalPenggunaanLab;
+use App\Models\Agenda;
 use App\Models\Dosen;
 use App\Models\Prodi;
 use App\Models\MataKuliah;
@@ -23,12 +24,14 @@ class JadwalLabImport
     protected $dosens;
     protected $prodis;
     protected $mataKuliahs;
+    protected array $historicalAssignments = [];
 
     public function __construct()
     {
         $this->dosens = Dosen::all();
         $this->prodis = Prodi::all();
         $this->mataKuliahs = MataKuliah::all();
+        $this->loadHistoricalAssignments();
     }
 
     /**
@@ -215,7 +218,14 @@ class JadwalLabImport
             }
 
             foreach ($recordsToInsert as $data) {
-                JadwalPenggunaanLab::create($data);
+                $createdJadwal = JadwalPenggunaanLab::create($data);
+
+                // Sambungkan kembali agenda yang sudah ada agar relasi tetap utuh
+                Agenda::where('lab_id', $lab->id)
+                    ->where('mata_kuliah', $data['mata_kuliah'])
+                    ->where('kelas', $data['kelas'])
+                    ->whereNull('jadwal_penggunaan_lab_id')
+                    ->update(['jadwal_penggunaan_lab_id' => $createdJadwal->id]);
             }
         });
 
@@ -339,8 +349,8 @@ class JadwalLabImport
             $cleanMk = str_replace($dosenNameCandidate, '', $cleanMk);
         }
         $cleanMk = preg_replace('/(?:Semester|Sem)\s*(\d+|[IVXLCDM]+)/i', '', $cleanMk);
-        $cleanMk = preg_replace('/(?:Reguler|Karyawan|Reg|Kar)\s*[A-Z0-9]*/i', '', $cleanMk);
-        $cleanMk = preg_replace('/Kelas\s*[A-Z0-9]*/i', '', $cleanMk);
+        $cleanMk = preg_replace('/(?:Reguler|Karyawan|Reg|Kar)\s*[A-Z0-9\s\-&]*/i', '', $cleanMk);
+        $cleanMk = preg_replace('/Kelas\s*[A-Z0-9\s\-&]*/i', '', $cleanMk);
         
         // Clean leading/trailing spaces and hyphens, preserve internal hyphens like E-Business
         $cleanMk = preg_replace('/\s*-\s*-\s*/', ' - ', $cleanMk);
@@ -356,18 +366,41 @@ class JadwalLabImport
         // 6. Detect Prodi
         $idProdi = $this->detectProdi($cleanMk, $dosen ?: $dosenPengampu, $fillColor);
 
-        // Fallback for dosen: if no dosen extracted, try matching by mata kuliah
+        // Fallback for dosen: if no dosen extracted, lookup who taught this course previously in DB
         if (!$dosen && !$dosenPengampu) {
-            $matchedMk = $this->mataKuliahs->first(function($mk) use ($cleanMk) {
-                return stripos($cleanMk, $mk->nama_mk) !== false || stripos($mk->nama_mk, $cleanMk) !== false;
-            });
-            if ($matchedMk && $matchedMk->dosen_id) {
-                $dosen = $this->dosens->firstWhere('id', $matchedMk->dosen_id);
+            $hist = $this->findHistoricalAssignment($cleanMk, $kelas);
+            if ($hist) {
+                if (!empty($hist['dosen_id'])) {
+                    $dosen = $this->dosens->firstWhere('id', $hist['dosen_id']);
+                }
+                if (!empty($hist['dosen_pengampu_id'])) {
+                    $dosenPengampu = $this->dosens->firstWhere('id', $hist['dosen_pengampu_id']);
+                }
+            }
+
+            // Secondary fallback: match with master MataKuliah
+            if (!$dosen && !$dosenPengampu) {
+                $matchedMk = $this->mataKuliahs->first(function($mk) use ($cleanMk) {
+                    return stripos($cleanMk, $mk->nama_mk) !== false || stripos($mk->nama_mk, $cleanMk) !== false;
+                });
+                if ($matchedMk && !empty($matchedMk->dosen_id)) {
+                    $dosen = $this->dosens->firstWhere('id', $matchedMk->dosen_id);
+                }
             }
         }
 
         $finalDosenId = $dosen ? $dosen->id : ($dosenPengampu ? $dosenPengampu->id : null);
         $finalPengampuId = $dosenPengampu ? $dosenPengampu->id : $finalDosenId;
+
+        // Remember this assignment for subsequent cells in the same import
+        if ($finalDosenId) {
+            $this->historicalAssignments[] = [
+                'mata_kuliah' => $cleanMk,
+                'kelas' => $kelas,
+                'dosen_id' => $finalDosenId,
+                'dosen_pengampu_id' => $finalPengampuId,
+            ];
+        }
 
         return [
             'mata_kuliah' => $cleanMk,
@@ -380,12 +413,108 @@ class JadwalLabImport
         ];
     }
 
+    /**
+     * Load past teaching assignments from JadwalPenggunaanLab and Agenda
+     * so that if a course in Excel has no lecturer explicitly written,
+     * the system can automatically reassign the previous lecturer.
+     */
+    protected function loadHistoricalAssignments(): void
+    {
+        $list = [];
+
+        // 1. From existing schedules in JadwalPenggunaanLab (latest first)
+        $jadwals = JadwalPenggunaanLab::whereNotNull('dosen_id')
+            ->orderByDesc('id')
+            ->get(['mata_kuliah', 'kelas', 'dosen_id', 'dosen_pengampu_id']);
+
+        foreach ($jadwals as $j) {
+            $list[] = [
+                'mata_kuliah' => $j->mata_kuliah,
+                'kelas' => $j->kelas,
+                'dosen_id' => $j->dosen_id,
+                'dosen_pengampu_id' => $j->dosen_pengampu_id,
+            ];
+        }
+
+        // 2. From historical records in Agenda (latest first)
+        $agendas = Agenda::whereNotNull('dosen_id')
+            ->orderByDesc('id')
+            ->get(['mata_kuliah', 'kelas', 'dosen_id', 'dosen_pengampu_id']);
+
+        foreach ($agendas as $a) {
+            $list[] = [
+                'mata_kuliah' => $a->mata_kuliah,
+                'kelas' => $a->kelas,
+                'dosen_id' => $a->dosen_id,
+                'dosen_pengampu_id' => $a->dosen_pengampu_id,
+            ];
+        }
+
+        $this->historicalAssignments = $list;
+    }
+
+    private function normalizeMkName(string $name): string
+    {
+        // Remove content inside parentheses e.g. (Basic Programming Language Practicum)
+        $name = preg_replace('/\(.*?\)/', '', $name);
+        // Remove non-alphanumeric except spaces
+        $name = preg_replace('/[^a-zA-Z0-9\s]/', ' ', $name);
+        return strtolower(trim(preg_replace('/\s+/', ' ', $name)));
+    }
+
+    private function findHistoricalAssignment(string $cleanMk, ?string $kelas): ?array
+    {
+        if (empty($this->historicalAssignments)) {
+            return null;
+        }
+
+        $targetNorm = $this->normalizeMkName($cleanMk);
+        if (strlen($targetNorm) < 4) {
+            return null;
+        }
+
+        // 1. Match normalized course name AND class
+        if ($kelas) {
+            foreach ($this->historicalAssignments as $item) {
+                if (empty($item['dosen_id'])) continue;
+                $itemNorm = $this->normalizeMkName($item['mata_kuliah'] ?? '');
+                if (strlen($itemNorm) < 4) continue;
+
+                $matches = ($itemNorm === $targetNorm || str_contains($targetNorm, $itemNorm) || str_contains($itemNorm, $targetNorm));
+                if ($matches && !empty($item['kelas']) && strtoupper(trim($item['kelas'])) === strtoupper(trim($kelas))) {
+                    return $item;
+                }
+            }
+        }
+
+        // 2. Match normalized course name only
+        foreach ($this->historicalAssignments as $item) {
+            if (empty($item['dosen_id'])) continue;
+            $itemNorm = $this->normalizeMkName($item['mata_kuliah'] ?? '');
+            if (strlen($itemNorm) < 4) continue;
+
+            if ($itemNorm === $targetNorm || str_contains($targetNorm, $itemNorm) || str_contains($itemNorm, $targetNorm)) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
     private function findDosen(?string $str): ?Dosen
     {
         if (!$str) return null;
         $clean = trim($str);
         $clean = preg_replace('/^(?:pak|bu|bpk|ibu)\s+/i', '', $clean);
         $clean = trim($clean);
+
+        if (strlen($clean) < 3) {
+            return null;
+        }
+
+        if (preg_match('/^(?:reg|kar|reguler|karyawan|kelas|smt|semester)\b/i', $clean)) {
+            return null;
+        }
 
         // Direct case-insensitive match
         foreach ($this->dosens as $d) {
@@ -397,7 +526,7 @@ class JadwalLabImport
         // Match first word if length >= 3
         $words = explode(' ', $clean);
         $firstWord = $words[0] ?? '';
-        if (strlen($firstWord) >= 3) {
+        if (strlen($firstWord) >= 3 && !preg_match('/^(?:reg|kar|reguler|karyawan|kelas|smt|semester)\b/i', $firstWord)) {
             foreach ($this->dosens as $d) {
                 if (stripos($d->nama, $firstWord) !== false) {
                     return $d;

@@ -213,14 +213,14 @@
                     </button>
                 </form>
 
-                <!-- Divider DEMO QUICK LOGIN -->
+                <!-- Divider QUICK LOGIN RESMI -->
                 <div class="relative flex py-3.5 items-center">
                     <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink mx-3 text-[10px] text-slate-400 uppercase tracking-widest font-extrabold">DEMO QUICK LOGIN</span>
+                    <span class="flex-shrink mx-3 text-[10px] text-slate-400 uppercase tracking-widest font-extrabold">AKSES CEPAT (AKUN RESMI)</span>
                     <div class="flex-grow border-t border-slate-200"></div>
                 </div>
 
-                <!-- Quick Demo Accounts (3 Cards) -->
+                <!-- Quick Real Accounts (3 Cards) -->
                 <div class="grid grid-cols-3 gap-2 sm:gap-3">
                     <!-- Admin Button -->
                     <a href="{{ route('demo.login', 'admin') }}" 
@@ -229,7 +229,7 @@
                             <i class="fa-solid fa-shield-halved text-xs"></i>
                         </div>
                         <span class="text-[11px] sm:text-xs font-extrabold text-slate-800 block leading-tight">Admin</span>
-                        <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5">Staf & Biro</span>
+                        <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5">admin1</span>
                     </a>
 
                     <!-- Dosen Button -->
@@ -239,7 +239,7 @@
                             <i class="fa-solid fa-id-badge text-xs"></i>
                         </div>
                         <span class="text-[11px] sm:text-xs font-extrabold text-slate-800 block leading-tight">Dosen</span>
-                        <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5">NIP / NIDN</span>
+                        <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5">Anggra Triawan</span>
                     </a>
 
                     <!-- Mahasiswa Button -->
@@ -249,7 +249,7 @@
                             <i class="fa-solid fa-graduation-cap text-xs"></i>
                         </div>
                         <span class="text-[11px] sm:text-xs font-extrabold text-slate-800 block leading-tight">Mahasiswa</span>
-                        <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5">NIM Mahasiswa</span>
+                        <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5">M. Irghi Alparizi</span>
                     </a>
                 </div>
 
