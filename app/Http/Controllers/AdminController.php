@@ -2663,6 +2663,41 @@ class AdminController extends Controller
         return back()->with('success', 'Jadwal Penggunaan Lab berhasil diperbarui dan sesi agenda terkait telah disinkronkan.');
     }
 
+    public function moveJadwalPenggunaanLab(Request $request, $id)
+    {
+        $user = Auth::user();
+        $jadwal = JadwalPenggunaanLab::with('lab')->findOrFail($id);
+
+        if (!$user->canManageLab($jadwal->lab)) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengubah jadwal laboratorium ini.'], 403);
+        }
+
+        $request->validate([
+            'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
+            'jam_mulai' => 'required|date_format:H:i',
+            'jam_selesai' => 'required|date_format:H:i',
+        ]);
+
+        $jadwal->update([
+            'hari' => $request->hari,
+            'jam_mulai' => $request->jam_mulai . ':00',
+            'jam_selesai' => $request->jam_selesai . ':00',
+        ]);
+
+        // Cascade sync updates to associated uncompleted Agenda sessions
+        Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
+            ->where('status_agenda', '!=', 'Selesai')
+            ->update([
+                'jam_mulai' => $request->jam_mulai . ':00',
+                'jam_selesai' => $request->jam_selesai . ':00',
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Jadwal ' . $jadwal->mata_kuliah . ' berhasil dipindahkan ke hari ' . $request->hari . ' (' . $request->jam_mulai . ' - ' . $request->jam_selesai . ').'
+        ]);
+    }
+
     public function deleteJadwalPenggunaanLab($id)
     {
         $user = Auth::user();

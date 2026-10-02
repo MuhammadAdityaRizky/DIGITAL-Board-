@@ -412,7 +412,7 @@
                         </button>
                         <button onclick="openAddModal()" class="px-3.5 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
                             <i class="fa-solid fa-plus text-xs"></i>
-                            <span>+ Tambah Agenda</span>
+                            <span>Tambah Agenda</span>
                         </button>
                     </div>
                 </div>

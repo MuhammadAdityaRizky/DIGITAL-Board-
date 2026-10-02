@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jadwal Penggunaan Lab - Digital Board</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,6 +21,20 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Drag & Drop Visual Styles */
+        .jadwal-card.is-dragging {
+            opacity: 0.45;
+            transform: scale(0.98);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            cursor: grabbing !important;
+        }
+        .drag-target-hover {
+            background-color: rgba(20, 184, 166, 0.18) !important;
+            outline: 2px dashed #0d9488 !important;
+            outline-offset: -2px;
+            transition: all 0.15s ease-in-out;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-slate-800">
@@ -228,8 +243,14 @@
                                                 $skipSlots[$hari] = $rowspan - 1;
                                             }
                                         @endphp
-                                        
-                                        <td class="p-1 border-r border-slate-200 hover:bg-slate-50/50 transition h-[1px]" @if($rowspan > 1) rowspan="{{ $rowspan }}" @endif>
+                                                                               <td class="p-1 border-r border-slate-200 hover:bg-slate-50/50 transition h-[1px] jadwal-drop-target relative" 
+                                            data-hari="{{ $hari }}" 
+                                            data-slot-start="{{ substr($slotStartClean, 0, 5) }}" 
+                                            data-slot-end="{{ substr($slotEndClean, 0, 5) }}"
+                                            ondragover="handleDragOver(event)" 
+                                            ondragleave="handleDragLeave(event)" 
+                                            ondrop="handleDrop(event)"
+                                            @if($rowspan > 1) rowspan="{{ $rowspan }}" @endif>
                                             @if($matches->isNotEmpty())
                                                 <div class="h-full flex flex-col gap-1 w-full">
                                                 @foreach($matches as $m)
@@ -247,8 +268,17 @@
                                                             $bgColor = 'bg-rose-800 text-white border-rose-900'; // Merah
                                                         }
                                                     @endphp
-                                                    <div class="flex-1 min-h-[4rem] p-2.5 rounded-lg border {{ $bgColor }} shadow-xs text-[11px] leading-tight relative group jadwal-card cursor-pointer flex flex-col" onmousedown="startDragSelect(event, {{ $m->id }})" onmouseenter="enterDragSelect(event, {{ $m->id }})">
-                                                        <div class="font-extrabold line-clamp-2">{{ $m->mata_kuliah }}</div>
+                                                    <div class="flex-1 min-h-[4rem] p-2.5 rounded-lg border {{ $bgColor }} shadow-xs text-[11px] leading-tight relative group jadwal-card cursor-grab active:cursor-grabbing flex flex-col transition-all duration-150" 
+                                                         id="jadwal-card-{{ $m->id }}"
+                                                         draggable="true" 
+                                                         ondragstart="handleCardDragStart(event, {{ $m->id }}, '{{ $m->hari }}', '{{ substr($m->jam_mulai,0,5) }}', '{{ substr($m->jam_selesai,0,5) }}', '{{ addslashes($m->mata_kuliah) }}')" 
+                                                         ondragend="handleCardDragEnd(event)"
+                                                         onmousedown="startDragSelect(event, {{ $m->id }})" 
+                                                         onmouseenter="enterDragSelect(event, {{ $m->id }})">
+                                                         <div class="font-extrabold line-clamp-2 pr-6 flex items-start gap-1">
+                                                             <i class="fa-solid fa-grip-vertical opacity-40 hover:opacity-100 cursor-grab text-[10px] mt-0.5 shrink-0" title="Tahan & geser untuk memindahkan jadwal"></i>
+                                                             <span>{{ $m->mata_kuliah }}</span>
+                                                         </div>
                                                         <div class="text-[10px] text-teal-200 mt-1.5 font-semibold flex items-center flex-wrap gap-1">
                                                             @php
                                                                 $isMerged = preg_match('/[&,\/+]/i', $m->kelas) || stripos($m->kelas, 'dan') !== false;
@@ -1967,44 +1997,206 @@
         }
 
         // ==========================================
-        // DRAG TO SELECT (BLOCK MULTIPLE)
+        // DRAG & DROP SCHEDULE TIME SLOTS (MOVE)
         // ==========================================
-        let isDragging = false;
-        let dragSelectState = false;
+        let draggedSchedule = null;
 
-        function startDragSelect(e, id) {
-            // Ignore if clicking on a button
-            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+        function handleCardDragStart(e, id, hari, jamMulai, jamSelesai, matkul) {
+            // Ignore drag if clicking on buttons or checkboxes
+            if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.tagName === 'INPUT') {
+                e.preventDefault();
+                return;
+            }
 
-            isDragging = true;
-            const checkbox = document.querySelector(`.jadwal-checkbox[value="${id}"]`);
-            if (checkbox) {
-                if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
-                    // Checkbox clicked: it will toggle itself, so we capture the FUTURE state
-                    dragSelectState = !checkbox.checked; 
-                } else {
-                    // Card clicked: we toggle the checkbox manually
-                    checkbox.checked = !checkbox.checked;
-                    toggleBulkDeleteButton(checkbox, id);
-                    dragSelectState = checkbox.checked;
-                    // Prevent text selection while dragging
-                    e.preventDefault();
+            // Calculate duration in minutes
+            const startParts = jamMulai.split(':');
+            const endParts = jamSelesai.split(':');
+            const startMin = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
+            const endMin = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
+            const durationMin = Math.max(endMin - startMin, 60);
+
+            draggedSchedule = {
+                id: id,
+                hari: hari,
+                jamMulai: jamMulai,
+                jamSelesai: jamSelesai,
+                durationMin: durationMin,
+                matkul: matkul
+            };
+
+            const card = document.getElementById('jadwal-card-' + id);
+            if (card) {
+                card.classList.add('is-dragging');
+            }
+
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', JSON.stringify(draggedSchedule));
+        }
+
+        function handleCardDragEnd(e) {
+            document.querySelectorAll('.jadwal-card').forEach(c => c.classList.remove('is-dragging'));
+            document.querySelectorAll('.jadwal-drop-target').forEach(t => t.classList.remove('drag-target-hover'));
+            draggedSchedule = null;
+        }
+
+        function handleDragOver(e) {
+            if (!draggedSchedule) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            const cell = e.currentTarget.closest('.jadwal-drop-target');
+            if (cell) {
+                cell.classList.add('drag-target-hover');
+            }
+        }
+
+        function handleDragLeave(e) {
+            const cell = e.currentTarget.closest('.jadwal-drop-target');
+            if (cell && !cell.contains(e.relatedTarget)) {
+                cell.classList.remove('drag-target-hover');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const cell = e.currentTarget.closest('.jadwal-drop-target');
+            if (!cell || !draggedSchedule) return;
+
+            cell.classList.remove('drag-target-hover');
+
+            const targetHari = cell.getAttribute('data-hari');
+            const targetStart = cell.getAttribute('data-slot-start'); // e.g. "20:00"
+
+            if (!targetHari || !targetStart) return;
+
+            // Calculate new jam_selesai preserving original duration
+            const [startH, startM] = targetStart.split(':').map(Number);
+            const totalEndMin = startH * 60 + startM + draggedSchedule.durationMin;
+            const endH = Math.floor(totalEndMin / 60);
+            const endM = totalEndMin % 60;
+            const targetEnd = String(endH).padStart(2, '0') + ':' + String(endM).padStart(2, '0');
+
+            // If same slot and same day, skip
+            if (draggedSchedule.hari === targetHari && draggedSchedule.jamMulai === targetStart) {
+                return;
+            }
+
+            const scheduleToMove = { ...draggedSchedule };
+
+            Swal.fire({
+                title: 'Pindahkan Jadwal?',
+                html: `
+                    <div class="text-left space-y-2 mt-2">
+                        <p class="font-bold text-slate-800 text-sm">${scheduleToMove.matkul}</p>
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1 font-medium">
+                            <div class="text-slate-500 flex items-center justify-between">
+                                <span>Dari:</span> 
+                                <span class="font-bold text-slate-700">${scheduleToMove.hari}, ${scheduleToMove.jamMulai} - ${scheduleToMove.jamSelesai}</span>
+                            </div>
+                            <div class="text-teal-700 flex items-center justify-between">
+                                <span class="font-bold">Ke:</span> 
+                                <span class="font-extrabold text-teal-800">${targetHari}, ${targetStart} - ${targetEnd}</span>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0f766e',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i class="fa-solid fa-arrows-up-down-left-right mr-1.5"></i> Ya, Pindahkan!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl',
+                    title: 'text-base font-extrabold text-slate-800',
+                    confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-bold shadow-sm',
+                    cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-bold shadow-sm'
                 }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    executeMoveSchedule(scheduleToMove.id, targetHari, targetStart, targetEnd);
+                }
+            });
+        }
+
+        function executeMoveSchedule(id, hari, jamMulai, jamSelesai) {
+            Swal.fire({
+                title: 'Memindahkan Jadwal...',
+                text: 'Mohon tunggu sebentar',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            fetch(`{{ url('admin/jadwal-lab') }}/${id}/move`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    hari: hari,
+                    jam_mulai: jamMulai,
+                    jam_selesai: jamSelesai
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Dipindahkan!',
+                        text: data.message,
+                        timer: 1500,
+                        showConfirmButton: false,
+                        customClass: {
+                            popup: 'rounded-3xl p-6',
+                            title: 'text-base font-extrabold text-slate-800'
+                        }
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Memindahkan',
+                        text: data.message || 'Terjadi kesalahan saat memindahkan jadwal.',
+                        confirmButtonColor: '#0f766e',
+                        customClass: {
+                            popup: 'rounded-3xl p-6',
+                            title: 'text-base font-extrabold text-slate-800'
+                        }
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan Jaringan',
+                    text: 'Gagal menghubungi server.',
+                    confirmButtonColor: '#0f766e',
+                    customClass: {
+                        popup: 'rounded-3xl p-6',
+                        title: 'text-base font-extrabold text-slate-800'
+                    }
+                });
+            });
+        }
+
+        // Selection support for checkboxes
+        function startDragSelect(e, id) {
+            if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+                toggleBulkDeleteButton(e.target, id);
             }
         }
 
         function enterDragSelect(e, id) {
-            if (!isDragging) return;
-            const checkbox = document.querySelector(`.jadwal-checkbox[value="${id}"]`);
-            if (checkbox && checkbox.checked !== dragSelectState) {
-                checkbox.checked = dragSelectState;
-                toggleBulkDeleteButton(checkbox, id);
-            }
+            // no-op placeholder
         }
-
-        document.addEventListener('mouseup', function() {
-            isDragging = false;
-        });
 
         function openAddModal() {
             currentEditingJadwal = null;
