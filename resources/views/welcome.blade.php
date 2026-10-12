@@ -1,28 +1,9 @@
 @php
-    // Find active agenda (current time falls between start and end time today)
-    $currentTime = now()->format('H:i:s');
-    
-    $runningAgenda = $agendas->first(function($agenda) use ($currentTime) {
-        return $currentTime >= $agenda->jam_mulai && $currentTime <= $agenda->jam_selesai && $agenda->status_agenda === 'Berlangsung';
-    });
-    
-    $activeAgenda = $runningAgenda;
-    
-    $nextAgenda = $agendas->first(function($agenda) use ($currentTime) {
-        return $agenda->jam_mulai > $currentTime && $agenda->status_agenda !== 'Dibatalkan' && $agenda->status_agenda !== 'Selesai';
-    });
-    
-    if ($activeAgenda) {
-        $nextAgenda = $agendas->first(function($agenda) use ($activeAgenda, $currentTime) {
-            return $agenda->id !== $activeAgenda->id && $agenda->jam_mulai >= $activeAgenda->jam_selesai && $agenda->jam_mulai > $currentTime && $agenda->status_agenda !== 'Dibatalkan' && $agenda->status_agenda !== 'Selesai';
-        });
-    }
-    
-    // Get latest announcement
-    $latestAnnouncement = $pengumuman->first();
-@endphp
-@php
     $themeColor = $activeLab->warna_theme ?? '#0f172a';
+    \Carbon\Carbon::setLocale('id');
+    $initialDay = strtoupper(now()->locale('id')->isoFormat('dddd'));
+    $initialDate = now()->locale('id')->isoFormat('D MMMM Y');
+    $initialTime = now()->format('H:i');
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -31,7 +12,7 @@
     <link rel="shortcut icon" href="{{ asset('images/logo-uika.png') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INFORMATION UIKA BOARD - Smart Lab</title>
+    <title>INFORMATION UIKA BOARD - {{ $activeLab->nama_lab ?? 'Smart Lab' }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -74,9 +55,9 @@
 
         <!-- Clock & Date Section -->
         <div class="text-center md:text-right shrink-0">
-            <div id="live-day" class="text-xs md:text-sm font-black tracking-widest text-teal-400 uppercase">RABU</div>
-            <div id="live-date" class="text-[10px] md:text-xs font-bold text-slate-300">12 Agustus 2026</div>
-            <div id="live-clock" class="text-2xl md:text-4xl font-extrabold text-white tracking-tight mt-0.5 leading-none">00:00 AM</div>
+            <div id="live-day" class="text-xs md:text-sm font-black tracking-widest text-teal-400 uppercase">{{ $initialDay }}</div>
+            <div id="live-date" class="text-[10px] md:text-xs font-bold text-slate-300">{{ $initialDate }}</div>
+            <div id="live-clock" class="text-2xl md:text-4xl font-extrabold text-white tracking-tight mt-0.5 leading-none">{{ $initialTime }}</div>
         </div>
     </header>
 
@@ -84,11 +65,10 @@
     <div id="main-board-container" class="flex-grow flex flex-col justify-between">
         @include('welcome_partial')
     </div>
-    </main>
 
     <!-- Footer Link Section -->
     <footer class="flex items-center justify-between text-slate-400 text-[10px] px-2">
-        <div>&copy; 2026 Computer Laboratory Digital Board System</div>
+        <div>&copy; {{ date('Y') }} Computer Laboratory Digital Board System</div>
         <div>
             @auth
                 @if(in_array(auth()->user()->role, ['admin', 'super_admin']))
@@ -117,18 +97,13 @@
         function updateClock() {
             const now = new Date();
             
-            // Format time in 24-hour format
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             
-            document.getElementById('live-clock').innerText = `${hours}:${minutes}`;
+            const clockEl = document.getElementById('live-clock');
+            if (clockEl) clockEl.innerText = `${hours}:${minutes}`;
 
-            // Format date (e.g. RABU, 12 Agustus 2026)
             const days = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
-            const months = ['Agustus', 'September', 'Oktober', 'November', 'Desember', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli'];
-            
-            // Note: date logic adjustment for year 2026/real time. 
-            // In standard JS, getMonth() returns index 0-11 representing Jan-Dec.
             const standardMonths = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
             
             const dayName = days[now.getDay()];
@@ -136,15 +111,79 @@
             const monthName = standardMonths[now.getMonth()];
             const year = now.getFullYear();
 
-            document.getElementById('live-day').innerText = dayName;
-            document.getElementById('live-date').innerText = `${date} ${monthName} ${year}`;
+            const dayEl = document.getElementById('live-day');
+            const dateEl = document.getElementById('live-date');
+            if (dayEl) dayEl.innerText = dayName;
+            if (dateEl) dateEl.innerText = `${date} ${monthName} ${year}`;
         }
 
-        // Run immediately and then every second
         updateClock();
         setInterval(updateClock, 1000);
-        
 
+        // Announcement Slideshow Controller
+        window.currentAnnouncementSlide = 0;
+        window.announcementTotalSlides = 0;
+
+        function showAnnouncementSlide(index) {
+            const slides = document.querySelectorAll('.announcement-slide-item');
+            if (!slides || slides.length === 0) return;
+            window.announcementTotalSlides = slides.length;
+            window.currentAnnouncementSlide = (index + slides.length) % slides.length;
+
+            slides.forEach((slide, idx) => {
+                if (idx === window.currentAnnouncementSlide) {
+                    slide.classList.remove('hidden');
+                    slide.classList.add('block');
+                } else {
+                    slide.classList.remove('block');
+                    slide.classList.add('hidden');
+                }
+            });
+
+            for (let i = 0; i < slides.length; i++) {
+                const dot = document.getElementById('announcement-dot-' + i);
+                if (dot) {
+                    if (i === window.currentAnnouncementSlide) {
+                        dot.className = "h-2 rounded-full transition-all duration-300 cursor-pointer bg-slate-900 w-4";
+                    } else {
+                        dot.className = "h-2 rounded-full transition-all duration-300 cursor-pointer bg-slate-300 w-2";
+                    }
+                }
+            }
+        }
+
+        function nextAnnouncementSlide() {
+            showAnnouncementSlide(window.currentAnnouncementSlide + 1);
+        }
+
+        function prevAnnouncementSlide() {
+            showAnnouncementSlide(window.currentAnnouncementSlide - 1);
+        }
+
+        function goToAnnouncementSlide(index) {
+            showAnnouncementSlide(index);
+        }
+
+        function initOrUpdateAnnouncements(targetIndex = 0) {
+            const slides = document.querySelectorAll('.announcement-slide-item');
+            window.announcementTotalSlides = slides ? slides.length : 0;
+            if (window.announcementTotalSlides > 0) {
+                showAnnouncementSlide(targetIndex);
+            }
+
+            if (window.announcementInterval) {
+                clearInterval(window.announcementInterval);
+            }
+
+            if (window.announcementTotalSlides > 1) {
+                window.announcementInterval = setInterval(() => {
+                    nextAnnouncementSlide();
+                }, 6000);
+            }
+        }
+
+        // Initialize slideshow on first load
+        initOrUpdateAnnouncements(0);
 
         // Dynamic AJAX live polling every 5 seconds
         setInterval(function() {
@@ -162,8 +201,11 @@
             .then(data => {
                 if (data.html) {
                     const container = document.getElementById('main-board-container');
-                    if (container.innerHTML !== data.html) {
+                    if (container && container.innerHTML !== data.html) {
+                        const currentSlide = window.currentAnnouncementSlide || 0;
                         container.innerHTML = data.html;
+                        // Restore slideshow state without resetting to slide 0 abruptly
+                        initOrUpdateAnnouncements(currentSlide);
                     }
                 }
             })

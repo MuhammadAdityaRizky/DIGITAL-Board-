@@ -287,60 +287,6 @@
             @endif
         </div>
 
-        <script>
-            if (typeof window.announcementTotalSlides === 'undefined') {
-                window.currentAnnouncementSlide = 0;
-            }
-            window.announcementTotalSlides = {{ isset($pengumuman) ? count($pengumuman) : 0 }};
-
-            function showAnnouncementSlide(index) {
-                if (window.announcementTotalSlides <= 0) return;
-                window.currentAnnouncementSlide = (index + window.announcementTotalSlides) % window.announcementTotalSlides;
-
-                document.querySelectorAll('.announcement-slide-item').forEach((slide, idx) => {
-                    if (idx === window.currentAnnouncementSlide) {
-                        slide.classList.remove('hidden');
-                        slide.classList.add('block');
-                    } else {
-                        slide.classList.remove('block');
-                        slide.classList.add('hidden');
-                    }
-                });
-
-                for (let i = 0; i < window.announcementTotalSlides; i++) {
-                    const dot = document.getElementById('announcement-dot-' + i);
-                    if (dot) {
-                        if (i === window.currentAnnouncementSlide) {
-                            dot.className = "h-2 rounded-full transition-all duration-300 cursor-pointer bg-slate-900 w-4";
-                        } else {
-                            dot.className = "h-2 rounded-full transition-all duration-300 cursor-pointer bg-slate-300 w-2";
-                        }
-                    }
-                }
-            }
-
-            function nextAnnouncementSlide() {
-                showAnnouncementSlide(window.currentAnnouncementSlide + 1);
-            }
-
-            function prevAnnouncementSlide() {
-                showAnnouncementSlide(window.currentAnnouncementSlide - 1);
-            }
-
-            function goToAnnouncementSlide(index) {
-                showAnnouncementSlide(index);
-            }
-
-            if (window.announcementInterval) {
-                clearInterval(window.announcementInterval);
-            }
-
-            if (window.announcementTotalSlides > 1) {
-                window.announcementInterval = setInterval(() => {
-                    nextAnnouncementSlide();
-                }, 6000);
-            }
-        </script>
 
     </div>
 
@@ -397,8 +343,8 @@
                         <div class="space-y-1 max-w-[245px]">
                             <h4 class="font-extrabold text-xs text-slate-700 uppercase tracking-wide">QR Presensi Belum Aktif</h4>
                             <p class="text-[11px] text-slate-500 leading-normal font-medium">
-                                @if($activeAgenda && $activeAgenda->jam_mulai > $currentTime)
-                                    QR Code presensi akan terbuka otomatis 15 menit sebelum jam kuliah dimulai (<strong>{{ substr($activeAgenda->jam_mulai, 0, 5) }} WIB</strong>).
+                                @if($nextAgenda)
+                                    QR Code presensi akan terbuka otomatis 15 menit sebelum jam kuliah dimulai (<strong>{{ substr($nextAgenda->jam_mulai, 0, 5) }} WIB</strong>).
                                 @else
                                     Saat ini belum ada sesi perkuliahan aktif di laboratorium ini.
                                 @endif
@@ -413,8 +359,8 @@
                 <span class="text-teal-300 font-extrabold text-xs uppercase tracking-wider">
                     @if($isQrActive && $qrAgenda)
                         Berlaku s.d. {{ substr($qrAgenda->jam_selesai, 0, 5) }} WIB
-                    @elseif($activeAgenda && $activeAgenda->jam_mulai > $currentTime)
-                        Sesi Berikutnya: {{ substr($activeAgenda->jam_mulai, 0, 5) }} - {{ substr($activeAgenda->jam_selesai, 0, 5) }} WIB
+                    @elseif($nextAgenda)
+                        Sesi Berikutnya: {{ substr($nextAgenda->jam_mulai, 0, 5) }} - {{ substr($nextAgenda->jam_selesai, 0, 5) }} WIB
                     @else
                         Belum Ada Agenda Aktif
                     @endif

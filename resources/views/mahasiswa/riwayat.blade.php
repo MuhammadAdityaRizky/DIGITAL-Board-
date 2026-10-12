@@ -145,20 +145,38 @@
                 <!-- Left Details List -->
                 <div class="xl:col-span-2 space-y-4">
                     <!-- Attendance Log -->
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden p-6 space-y-4">
-                        <div class="flex justify-between items-center text-xs">
-                            <h3 class="font-bold text-sm text-slate-800">Daftar Kehadiran Praktikum</h3>
-                            <form action="{{ route('mahasiswa.riwayat') }}" method="GET" class="relative">
-                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari praktikum..." class="pl-8 pr-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:outline-none focus:ring-1 focus:ring-teal-700">
-                                <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400"></i>
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden p-6 space-y-5">
+                        <!-- Header with Title & Search Form -->
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+                            <div>
+                                <h3 class="font-extrabold text-base text-slate-900 tracking-tight">Daftar Kehadiran Praktikum</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Riwayat presensi kelas praktikum laboratorium yang telah diikuti</p>
+                            </div>
+
+                            <!-- Search Form -->
+                            <form action="{{ route('mahasiswa.riwayat') }}" method="GET" class="relative w-full lg:w-96">
+                                <div class="relative flex items-center">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-4 text-slate-400 text-sm pointer-events-none"></i>
+                                    <input type="text" name="search" value="{{ request('search') }}" 
+                                           placeholder="Cari mata kuliah, dosen, atau lab..." 
+                                           class="w-full pl-11 pr-10 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 shadow-xs transition">
+                                    @if(request('search'))
+                                        <a href="{{ route('mahasiswa.riwayat') }}" class="absolute right-3.5 text-slate-400 hover:text-rose-500 transition text-sm p-1" title="Reset pencarian">
+                                            <i class="fa-solid fa-circle-xmark"></i>
+                                        </a>
+                                    @endif
+                                </div>
                             </form>
-                                                @if($absensiHistory->count() > 0)
+                        </div>
+
+                        <!-- Content List (Di bawah header) -->
+                        @if($absensiHistory->count() > 0)
                             <div class="space-y-4">
                                 @foreach($absensiHistory as $abs)
                                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
                                         <div class="flex flex-col md:flex-row gap-5 items-start">
                                             <!-- Time block -->
-                                            <div class="bg-teal-900 text-white rounded-xl p-3 flex flex-col items-center justify-center min-w-[120px] shadow-sm text-center">
+                                            <div class="bg-teal-900 text-white rounded-xl p-3 flex flex-col items-center justify-center min-w-[120px] shadow-sm text-center shrink-0">
                                                 <span class="text-[10px] font-semibold uppercase tracking-wider text-teal-350">{{ date('d M Y', strtotime($abs->agenda->tanggal)) }}</span>
                                                 <span class="text-xs font-bold mt-1.5">{{ substr($abs->agenda->jam_mulai,0,5) }} - {{ substr($abs->agenda->jam_selesai,0,5) }} WIB</span>
                                             </div>
@@ -191,7 +209,7 @@
                                     </div>
                                 @endforeach
                             </div>
-                            <div class="pt-4">
+                            <div class="pt-4 border-t border-slate-100">
                                 {{ $absensiHistory->links() }}
                             </div>
                         @else

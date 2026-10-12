@@ -125,7 +125,7 @@
         <div id="labGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($labs as $lab)
                 <div class="lab-card bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between gap-5 card-shadow transition duration-200 relative overflow-hidden" 
-                     data-location="{{ strtolower($lab->lokasi) }}" data-name="{{ strtolower($lab->nama_lab) }}">
+                     data-location="{{ strtolower($lab->lokasi ?? '') }}" data-name="{{ strtolower($lab->nama_lab ?? '') }}">
                     
                     <!-- Top Status Bar -->
                     <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-4">

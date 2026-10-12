@@ -1196,6 +1196,7 @@
         });
     </script>
 
+    @include('dosen.partials.modal_qr_scanner')
     @include('dosen.partials.modal_tutorial')
 </body>
 </html>

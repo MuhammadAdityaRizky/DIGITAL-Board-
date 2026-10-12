@@ -19,11 +19,19 @@ return new class extends Migration
         });
 
         // Set tahun akademik for existing agendas
-        DB::table('agenda')
-            ->leftJoin('jadwal_penggunaan_lab', 'agenda.jadwal_penggunaan_lab_id', '=', 'jadwal_penggunaan_lab.id')
-            ->update([
-                'agenda.tahun_akademik' => DB::raw('COALESCE(jadwal_penggunaan_lab.tahun_akademik, "2026/2027 Ganjil")')
-            ]);
+        if (Schema::hasColumn('jadwal_penggunaan_lab', 'tahun_akademik')) {
+            try {
+                DB::table('agenda')
+                    ->leftJoin('jadwal_penggunaan_lab', 'agenda.jadwal_penggunaan_lab_id', '=', 'jadwal_penggunaan_lab.id')
+                    ->update([
+                        'agenda.tahun_akademik' => DB::raw('COALESCE(jadwal_penggunaan_lab.tahun_akademik, "2026/2027 Ganjil")')
+                    ]);
+            } catch (\Throwable $e) {
+                DB::table('agenda')->update(['tahun_akademik' => '2026/2027 Ganjil']);
+            }
+        } else {
+            DB::table('agenda')->update(['tahun_akademik' => '2026/2027 Ganjil']);
+        }
     }
 
     /**

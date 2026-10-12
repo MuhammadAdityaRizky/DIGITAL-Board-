@@ -191,7 +191,13 @@ class MahasiswaController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('agenda', function($q) use ($search) {
-                $q->where('mata_kuliah', 'like', "%{$search}%");
+                $q->where('mata_kuliah', 'like', "%{$search}%")
+                  ->orWhereHas('dosen', function($dq) use ($search) {
+                      $dq->where('nama', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('lab', function($lq) use ($search) {
+                      $lq->where('nama_lab', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -311,6 +317,8 @@ class MahasiswaController extends Controller
         $request->validate([
             'password' => 'required|string|min:6|confirmed',
         ]);
+
+        $user = auth()->user();
 
         $user->update([
             'password' => bcrypt($request->password),

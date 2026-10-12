@@ -33,7 +33,7 @@ class DigitalBoardController extends Controller
 
         $activeLab = \App\Models\Laboratorium::with('fakultas')->findOrFail($lab_id);
 
-        $agendas = Agenda::with(['dosen.user', 'lab'])
+        $agendas = Agenda::with(['dosen.user', 'dosenPengampu', 'lab'])
             ->where('lab_id', $lab_id)
             ->whereDate('tanggal', today())
             ->orderBy('jam_mulai')
