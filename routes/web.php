@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Route;
 // Guest Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/demo-login/{role}', [AuthController::class, 'demoLogin'])->name('demo.login');
+// [TEMPORARY HIDE UNTUK HOSTING / PRODUCTION] Dinonaktifkan sementara untuk keamanan hosting
+// Route::get('/demo-login/{role}', [AuthController::class, 'demoLogin'])->name('demo.login');
 
 // Authenticated Routes (Harus login terlebih dahulu)
 Route::middleware('auth')->group(function () {

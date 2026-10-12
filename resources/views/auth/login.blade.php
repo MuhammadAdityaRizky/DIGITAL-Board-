@@ -213,6 +213,15 @@
                     </button>
                 </form>
 
+                {{-- 
+                =======================================================================
+                [CATATAN UNTUK HOSTING / PRODUCTION: FITUR AKSES CEPAT / DEMO LOGIN]
+                Fitur ini disembunyikan sementara sesuai instruksi untuk keperluan hosting.
+                Untuk MENGAKTIFKAN KEMBALI di kemudian hari:
+                Cukup hapus tanda pembuka comment {{-- di atas dan penutup --}} di bawah.
+                =======================================================================
+                --}}
+                {{--
                 <!-- Divider QUICK LOGIN RESMI -->
                 <div class="relative flex py-3.5 items-center">
                     <div class="flex-grow border-t border-slate-200"></div>
@@ -252,6 +261,7 @@
                         <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5">M. Irghi Alparizi</span>
                     </a>
                 </div>
+                --}}
 
                 <!-- Footer Help Link -->
                 <div class="text-center pt-3.5 sm:pt-4 text-xs text-slate-500 font-medium">
