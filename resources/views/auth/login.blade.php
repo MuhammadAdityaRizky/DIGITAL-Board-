@@ -213,56 +213,6 @@
                     </button>
                 </form>
 
-                {{-- 
-                =======================================================================
-                [CATATAN UNTUK HOSTING / PRODUCTION: FITUR AKSES CEPAT / DEMO LOGIN]
-                Fitur ini disembunyikan sementara sesuai instruksi untuk keperluan hosting.
-                Untuk MENGAKTIFKAN KEMBALI di kemudian hari:
-                Cukup hapus tanda pembuka comment {{-- di atas dan penutup --}} di bawah.
-                =======================================================================
-                --}}
-                {{--
-                <!-- Divider QUICK LOGIN RESMI -->
-                <div class="relative flex py-3.5 items-center">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink mx-3 text-[10px] text-slate-400 uppercase tracking-widest font-extrabold">AKSES CEPAT (AKUN RESMI)</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
-                </div>
-
-                <!-- Quick Real Accounts (3 Cards) -->
-                <div class="grid grid-cols-3 gap-2 sm:gap-3">
-                    <!-- Admin Button -->
-                    <a href="{{ route('demo.login', 'admin') }}" 
-                       class="demo-login-btn p-2.5 sm:p-3 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl sm:rounded-2xl text-center transition duration-200 group shadow-xs">
-                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-1 group-hover:scale-110 transition transform">
-                            <i class="fa-solid fa-shield-halved text-xs"></i>
-                        </div>
-                        <span class="text-[11px] sm:text-xs font-extrabold text-slate-800 block leading-tight">Admin</span>
-                        <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5">admin1</span>
-                    </a>
-
-                    <!-- Dosen Button -->
-                    <a href="{{ route('demo.login', 'dosen') }}" 
-                       class="demo-login-btn p-2.5 sm:p-3 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl sm:rounded-2xl text-center transition duration-200 group shadow-xs">
-                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-1 group-hover:scale-110 transition transform">
-                            <i class="fa-solid fa-id-badge text-xs"></i>
-                        </div>
-                        <span class="text-[11px] sm:text-xs font-extrabold text-slate-800 block leading-tight">Dosen</span>
-                        <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5">Anggra Triawan</span>
-                    </a>
-
-                    <!-- Mahasiswa Button -->
-                    <a href="{{ route('demo.login', 'mahasiswa') }}" 
-                       class="demo-login-btn p-2.5 sm:p-3 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl sm:rounded-2xl text-center transition duration-200 group shadow-xs">
-                        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center mx-auto mb-1 group-hover:scale-110 transition transform">
-                            <i class="fa-solid fa-graduation-cap text-xs"></i>
-                        </div>
-                        <span class="text-[11px] sm:text-xs font-extrabold text-slate-800 block leading-tight">Mahasiswa</span>
-                        <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium block mt-0.5">M. Irghi Alparizi</span>
-                    </a>
-                </div>
-                --}}
-
                 <!-- Footer Help Link -->
                 <div class="text-center pt-3.5 sm:pt-4 text-xs text-slate-500 font-medium">
                     Butuh bantuan kendala akun? 
