@@ -71,7 +71,7 @@
         </header>
 
         <!-- Content Area -->
-        <div class="flex-grow overflow-auto p-6 space-y-6">
+        <div class="flex-grow overflow-auto p-4 sm:p-5 space-y-4">
 
             <!-- Alerts -->
             @if(session('success'))
@@ -159,30 +159,30 @@
                 </div>
             @else
             <!-- Matriks Visual Tabel Excel Mingguan -->
-            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                <div class="bg-slate-800 text-white px-6 py-4 flex flex-wrap justify-between items-center gap-3">
+            <div id="matrix-card-container" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <div class="bg-slate-800 text-white px-5 py-3 flex flex-wrap justify-between items-center gap-3">
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-calendar-week text-teal-400 text-lg"></i>
+                        <i class="fa-solid fa-calendar-week text-teal-400 text-base"></i>
                         <div>
-                            <h3 class="font-extrabold text-sm uppercase tracking-wide">
+                            <h3 class="font-extrabold text-xs sm:text-sm uppercase tracking-wide">
                                 Jadwal Penggunaan {{ strtoupper($labs->firstWhere('id', $selectedLabId)->nama_lab ?? 'Laboratorium') }}
                             </h3>
-                            <p class="text-[11px] text-slate-300">Tahun Akademik {{ $tahunAkademik }} • Format Matriks Jadwal Mingguan</p>
+                            <p class="text-[10px] text-slate-300">Tahun Akademik {{ $tahunAkademik }} • Format Matriks Jadwal Mingguan</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 text-xs">
-                        <span class="px-2.5 py-1 bg-teal-600/90 text-white font-bold rounded-lg">{{ $jadwals->count() }} Sesi Terjadwal</span>
+                        <span id="jadwal-total-count" class="px-2.5 py-1 bg-teal-600/90 text-white font-bold rounded-lg text-[11px]">{{ $jadwals->count() }} Sesi Terjadwal</span>
                     </div>
                 </div>
 
-                <!-- Table Grid -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-xs border-collapse">
-                        <thead>
-                            <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px] text-center">
-                                <th class="p-3 border-r border-slate-200 w-32 bg-slate-200/80">Waktu</th>
+                <!-- Table Grid (Fixed Layout, Sticky Header, Compact 50px Slots) -->
+                <div id="matrix-table-wrapper" class="overflow-x-auto max-h-[calc(100vh-215px)] overflow-y-auto custom-scrollbar relative border-t border-slate-200">
+                    <table class="w-full text-xs border-collapse table-fixed min-w-[920px]">
+                        <thead class="sticky top-0 z-20 bg-slate-100 shadow-2xs">
+                            <tr class="border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px] text-center">
+                                <th class="p-2 border-r border-slate-200 w-24 bg-slate-200/90 text-slate-700">Waktu</th>
                                 @foreach($hariList as $hari)
-                                    <th class="p-3 border-r border-slate-200 min-w-[170px]">{{ $hari }}</th>
+                                    <th class="p-2 border-r border-slate-200 w-[calc((100%-6rem)/6)] min-w-[135px]">{{ $hari }}</th>
                                 @endforeach
                             </tr>
                         </thead>
@@ -199,8 +199,8 @@
                                     $slotStartClean = str_replace('.', ':', trim($slotStart)) . ':00';
                                     $slotEndClean = str_replace('.', ':', trim($slotEnd)) . ':00';
                                 @endphp
-                                <tr>
-                                    <td class="p-2.5 text-center font-mono font-bold text-slate-600 bg-slate-50 border-r border-slate-200 text-[11px]">
+                                <tr class="h-[50px]">
+                                    <td class="p-1.5 text-center font-mono font-bold text-slate-600 bg-slate-50 border-r border-slate-200 text-[10.5px] h-[50px] align-middle select-none">
                                         {{ $slot }}
                                     </td>
                                     @foreach($hariList as $hari)
@@ -243,16 +243,17 @@
                                                 $skipSlots[$hari] = $rowspan - 1;
                                             }
                                         @endphp
-                                                                               <td class="p-1 border-r border-slate-200 hover:bg-slate-50/50 transition h-[1px] jadwal-drop-target relative" 
+                                        <td class="p-1 border-r border-slate-200 hover:bg-slate-50/50 transition jadwal-drop-target relative align-top" 
                                             data-hari="{{ $hari }}" 
                                             data-slot-start="{{ substr($slotStartClean, 0, 5) }}" 
                                             data-slot-end="{{ substr($slotEndClean, 0, 5) }}"
                                             ondragover="handleDragOver(event)" 
                                             ondragleave="handleDragLeave(event)" 
                                             ondrop="handleDrop(event)"
-                                            @if($rowspan > 1) rowspan="{{ $rowspan }}" @endif>
+                                            @if($rowspan > 1) rowspan="{{ $rowspan }}" @endif
+                                            style="height: {{ $rowspan * 50 }}px;">
                                             @if($matches->isNotEmpty())
-                                                <div class="h-full flex flex-col gap-1 w-full">
+                                                <div class="h-full flex flex-col gap-1 w-full" style="min-height: calc({{ $rowspan }} * 50px - 8px); height: 100%;">
                                                 @foreach($matches as $m)
                                                     @php
                                                         // Determine background color based on Prodi
@@ -268,50 +269,79 @@
                                                             $bgColor = 'bg-rose-800 text-white border-rose-900'; // Merah
                                                         }
                                                     @endphp
-                                                    <div class="flex-1 min-h-[4rem] p-2.5 rounded-lg border {{ $bgColor }} shadow-xs text-[11px] leading-tight relative group jadwal-card cursor-grab active:cursor-grabbing flex flex-col transition-all duration-150" 
+                                                    <div class="flex-1 w-full {{ $rowspan == 1 ? 'p-1.5 px-2' : 'p-2' }} rounded-xl border {{ $bgColor }} shadow-2xs text-[11px] leading-tight relative group jadwal-card cursor-grab active:cursor-grabbing flex flex-col justify-between transition-all duration-150 overflow-hidden" 
                                                          id="jadwal-card-{{ $m->id }}"
+                                                         style="min-height: calc({{ $rowspan }} * 50px - 8px);"
                                                          draggable="true" 
                                                          ondragstart="handleCardDragStart(event, {{ $m->id }}, '{{ $m->hari }}', '{{ substr($m->jam_mulai,0,5) }}', '{{ substr($m->jam_selesai,0,5) }}', '{{ addslashes($m->mata_kuliah) }}')" 
                                                          ondragend="handleCardDragEnd(event)"
                                                          onmousedown="startDragSelect(event, {{ $m->id }})" 
                                                          onmouseenter="enterDragSelect(event, {{ $m->id }})">
-                                                         <div class="font-extrabold line-clamp-2 pr-6 flex items-start gap-1">
-                                                             <i class="fa-solid fa-grip-vertical opacity-40 hover:opacity-100 cursor-grab text-[10px] mt-0.5 shrink-0" title="Tahan & geser untuk memindahkan jadwal"></i>
-                                                             <span>{{ $m->mata_kuliah }}</span>
-                                                         </div>
-                                                        <div class="text-[10px] text-teal-200 mt-1.5 font-semibold flex items-center flex-wrap gap-1">
-                                                            @php
-                                                                $isMerged = preg_match('/[&,\/+]/i', $m->kelas) || stripos($m->kelas, 'dan') !== false;
-                                                            @endphp
-                                                            @if($isMerged)
-                                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-400/25 border border-purple-300/40 rounded text-[9.5px] font-extrabold text-purple-100 shadow-2xs">
-                                                                    <i class="fa-solid fa-layer-group text-[8.5px] text-purple-200"></i> Gabungan: Kelas {{ $m->kelas }}
-                                                                </span>
-                                                            @else
-                                                                <span>Kelas {{ $m->kelas ?: 'A' }}</span>
-                                                            @endif
-                                                            @if($m->program_kuliah)<span>• {{ $m->program_kuliah }}</span>@endif 
-                                                            @if($m->semester)<span>• Sem {{ $m->semester }}</span>@endif
-                                                        </div>
-                                                        <div class="text-[10px] text-slate-200 mt-0.5 font-medium flex items-center gap-1">
-                                                            <i class="fa-solid fa-user-tie text-[9px]"></i> {{ $m->dosen->nama ?? '-' }}
-                                                        </div>
-                                                        @if($m->dosenPengampu && $m->dosen_pengampu_id != $m->dosen_id)
-                                                            <div class="text-[9.5px] text-amber-200 mt-0.5 font-medium flex items-center gap-1 truncate" title="Dosen Instruktur/Pengampu: {{ $m->dosenPengampu->nama }}">
-                                                                <i class="fa-solid fa-chalkboard-user text-[9px]"></i> Pengampu: {{ $m->dosenPengampu->nama }}
+                                                         @if($rowspan == 1)
+                                                            <!-- Compact 1-Slot View (Fits neatly without stretching row) -->
+                                                            <div class="min-w-0 pr-14">
+                                                                <div class="font-bold truncate text-[11px] leading-tight text-white flex items-center gap-1" title="{{ $m->mata_kuliah }}">
+                                                                    <i class="fa-solid fa-grip-vertical opacity-40 hover:opacity-100 cursor-grab text-[9px] shrink-0"></i>
+                                                                    <span class="truncate">{{ $m->mata_kuliah }}</span>
+                                                                </div>
+                                                                <div class="text-[9.5px] truncate opacity-90 leading-tight mt-0.5 text-teal-100">
+                                                                    <i class="fa-solid fa-user-tie text-[8px] opacity-75"></i> {{ $m->dosen->nama ?? '-' }}@if(!empty($m->kelas)) • <span class="font-bold">Kl. {{ $m->kelas }}</span>@endif
+                                                                </div>
                                                             </div>
-                                                        @endif
-                                                        <div class="text-[9px] font-mono opacity-80 mt-auto pt-2">
-                                                            {{ substr($m->jam_mulai,0,5) }} - {{ substr($m->jam_selesai,0,5) }}
-                                                        </div>
+                                                            <div class="text-[8.5px] font-mono font-bold opacity-80 mt-auto flex items-center justify-between">
+                                                                <span>{{ substr($m->jam_mulai,0,5) }} - {{ substr($m->jam_selesai,0,5) }}</span>
+                                                            </div>
+                                                         @else
+                                                            <!-- Multi-Slot View (>= 2 Hours) -->
+                                                            <div>
+                                                                <div class="font-extrabold line-clamp-2 pr-16 flex items-start justify-between gap-1">
+                                                                    <div class="flex items-start gap-1 min-w-0">
+                                                                        <i class="fa-solid fa-grip-vertical opacity-40 hover:opacity-100 cursor-grab text-[10px] mt-0.5 shrink-0" title="Tahan & geser untuk memindahkan jadwal"></i>
+                                                                        <span class="truncate">{{ $m->mata_kuliah }}</span>
+                                                                    </div>
+                                                                    <span class="px-1.5 py-0.5 rounded bg-white/20 border border-white/25 text-[9px] font-black uppercase tracking-wider shrink-0 shadow-2xs font-mono" title="Durasi: {{ $rowspan }} Jam">
+                                                                        {{ $rowspan }} Jam
+                                                                    </span>
+                                                                </div>
+                                                                <div class="text-[10px] text-teal-200 mt-1 font-semibold flex items-center flex-wrap gap-1">
+                                                                    @if(!empty($m->kelas))
+                                                                        @php
+                                                                            $isMerged = preg_match('/[&,\/+]/i', $m->kelas) || stripos($m->kelas, 'dan') !== false;
+                                                                        @endphp
+                                                                        @if($isMerged)
+                                                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-400/25 border border-purple-300/40 rounded text-[9.5px] font-extrabold text-purple-100 shadow-2xs">
+                                                                                <i class="fa-solid fa-layer-group text-[8.5px] text-purple-200"></i> Gabungan: Kelas {{ $m->kelas }}
+                                                                            </span>
+                                                                        @else
+                                                                            <span>Kelas {{ $m->kelas }}</span>
+                                                                        @endif
+                                                                    @endif
+                                                                    @if($m->program_kuliah)<span>• {{ $m->program_kuliah }}</span>@endif 
+                                                                    @if($m->semester)<span>• Sem {{ $m->semester }}</span>@endif
+                                                                </div>
+                                                                <div class="text-[10px] text-slate-200 mt-0.5 font-medium flex items-center gap-1 truncate">
+                                                                    <i class="fa-solid fa-user-tie text-[9px]"></i> {{ $m->dosen->nama ?? '-' }}
+                                                                </div>
+                                                                @if($m->dosenPengampu && $m->dosen_pengampu_id != $m->dosen_id)
+                                                                    <div class="text-[9.5px] text-amber-200 mt-0.5 font-medium flex items-center gap-1 truncate" title="Dosen Instruktur/Pengampu: {{ $m->dosenPengampu->nama }}">
+                                                                        <i class="fa-solid fa-chalkboard-user text-[9px]"></i> Pengampu: {{ $m->dosenPengampu->nama }}
+                                                                    </div>
+                                                                @endif
+                                                            </div>
 
-                                                        <!-- Action buttons on hover -->
-                                                        <div class="absolute right-1.5 top-1.5 flex items-center gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity" id="jadwal_actions_{{ $m->id }}">
-                                                            <input type="checkbox" value="{{ $m->id }}" class="jadwal-checkbox w-4 h-4 rounded border-white/40 bg-white/20 text-rose-500 focus:ring-rose-500 focus:ring-1 cursor-pointer shadow-sm" onchange="toggleBulkDeleteButton(this, {{ $m->id }})" title="Pilih untuk hapus massal">
-                                                            <button type="button" onclick="openEditModal({{ json_encode($m) }})" class="w-6 h-6 rounded bg-white/30 hover:bg-white/50 text-white flex items-center justify-center text-[10px] shadow-sm cursor-pointer" title="Edit">
+                                                            <div class="text-[9.5px] font-mono font-bold opacity-90 mt-auto pt-1.5 border-t border-white/15 flex items-center justify-between">
+                                                                <span>{{ substr($m->jam_mulai,0,5) }} - {{ substr($m->jam_selesai,0,5) }}</span>
+                                                                <span class="text-[9px] font-normal opacity-75">({{ $rowspan * 60 }} mnt)</span>
+                                                            </div>
+                                                         @endif
+
+                                                        <!-- Action buttons on hover (Clean dark overlay badge) -->
+                                                        <div class="absolute right-1 top-1 flex items-center gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 backdrop-blur-xs p-0.5 rounded-lg border border-white/10" id="jadwal_actions_{{ $m->id }}">
+                                                            <input type="checkbox" value="{{ $m->id }}" class="jadwal-checkbox w-3.5 h-3.5 rounded border-white/40 bg-white/20 text-rose-500 focus:ring-rose-500 focus:ring-1 cursor-pointer shadow-sm" onchange="toggleBulkDeleteButton(this, {{ $m->id }})" title="Pilih untuk hapus massal">
+                                                            <button type="button" onclick="openEditModal({{ json_encode($m) }})" class="w-5 h-5 rounded bg-white/30 hover:bg-white/50 text-white flex items-center justify-center text-[9px] shadow-sm cursor-pointer" title="Edit">
                                                                 <i class="fa-solid fa-pen"></i>
                                                             </button>
-                                                            <button type="button" onclick="confirmDeleteJadwal({{ $m->id }}, {{ json_encode($m->mata_kuliah) }})" class="w-6 h-6 rounded bg-rose-600/90 hover:bg-rose-700 text-white flex items-center justify-center text-[10px] shadow-sm cursor-pointer" title="Hapus">
+                                                            <button type="button" onclick="confirmDeleteJadwal({{ $m->id }}, {{ json_encode($m->mata_kuliah) }})" class="w-5 h-5 rounded bg-rose-600/90 hover:bg-rose-700 text-white flex items-center justify-center text-[9px] shadow-sm cursor-pointer" title="Hapus">
                                                                 <i class="fa-solid fa-trash"></i>
                                                             </button>
                                                         </div>
@@ -319,7 +349,7 @@
                                                 @endforeach
                                                 </div>
                                             @else
-                                                <button onclick="openAddModalWith('{{ $hari }}', '{{ substr($slotStartClean, 0, 5) }}', '{{ substr($slotEndClean, 0, 5) }}')" class="w-full h-8 rounded border border-dashed border-slate-200 hover:border-teal-400 hover:bg-teal-50/50 text-slate-300 hover:text-teal-600 flex items-center justify-center text-[10px] transition group" title="Tambah slot di sini">
+                                                <button onclick="openAddModalWith('{{ $hari }}', '{{ substr($slotStartClean, 0, 5) }}', '{{ substr($slotEndClean, 0, 5) }}')" class="w-full h-full min-h-[36px] rounded-lg border border-dashed border-slate-200 hover:border-teal-400 hover:bg-teal-50/50 text-slate-300 hover:text-teal-600 flex items-center justify-center text-[10px] transition group" title="Tambah slot di sini">
                                                     <i class="fa-solid fa-plus opacity-0 group-hover:opacity-100 transition"></i>
                                                 </button>
                                             @endif
@@ -398,7 +428,7 @@
                                     <option value="{{ $l->id }}" {{ $selectedLabId == $l->id ? 'selected' : '' }}>{{ strtoupper($l->nama_lab) }}</option>
                                 @endforeach
                             </select>
-                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                            <i class="fa-solid fa-chevron-down absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none text-xs"></i>
                         </div>
                     </div>
                     <div>
@@ -412,7 +442,7 @@
                                     <option value="{{ $h }}">{{ $h }}</option>
                                 @endforeach
                             </select>
-                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                            <i class="fa-solid fa-chevron-down absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none text-xs"></i>
                         </div>
                     </div>
                 </div>
@@ -441,7 +471,7 @@
                             <button type="button" 
                                     onclick="toggleProdiDropdown(event)" 
                                     tabindex="-1" 
-                                    class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
                                 <i id="prodi_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
                             </button>
                         </div>
@@ -453,7 +483,7 @@
                             
                             <!-- Search filter input within dropdown -->
                             <div class="relative shrink-0">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <i class="fa-solid fa-magnifying-glass absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs pointer-events-none"></i>
                                 <input type="text" 
                                        id="prodi_search_input" 
                                        oninput="filterProdiList(this.value)" 
@@ -514,7 +544,7 @@
                                     <option value="{{ $i }}">Semester {{ $i }}</option>
                                 @endfor
                             </select>
-                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                            <i class="fa-solid fa-chevron-down absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none text-xs"></i>
                         </div>
                     </div>
                 </div>
@@ -548,7 +578,7 @@
                         <button type="button" 
                                 onclick="toggleMatkulDropdown(event)" 
                                 tabindex="-1" 
-                                class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
                             <i id="matkul_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
                         </button>
                     </div>
@@ -560,7 +590,7 @@
                         
                         <!-- Search Bar within Dropdown -->
                         <div class="relative shrink-0">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <i class="fa-solid fa-magnifying-glass absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs pointer-events-none"></i>
                             <input type="text" 
                                    id="matkul_search_input" 
                                    oninput="filterMatkulSearch(this.value)" 
@@ -596,7 +626,7 @@
                                             <i class="fa-solid fa-graduation-cap text-slate-300 group-hover:text-teal-600 text-xs shrink-0"></i>
                                             <span class="font-semibold truncate">{{ $mk->nama_mk }}</span>
                                             @if($mk->prodi)
-                                                <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded group-hover:bg-teal-100 group-hover:text-teal-700 font-medium shrink-0">{{ $mk->prodi->nama_prodi }}</span>
+                                                <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded group-hover:bg-teal-100 group-hover:text-teal-700 font-medium shrink-0">{{ $mk->prodi->nama_prodi }}</span>
                                             @endif
                                         </div>
                                         @if($mk->kode_mk)
@@ -638,7 +668,7 @@
                             <button type="button" 
                                     onclick="toggleDosenPengampuDropdown(event)" 
                                     tabindex="-1" 
-                                    class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
                                 <i id="dosen_pengampu_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
                             </button>
                         </div>
@@ -650,7 +680,7 @@
                             
                             <!-- Search Bar within Dropdown -->
                             <div class="relative shrink-0">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <i class="fa-solid fa-magnifying-glass absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs pointer-events-none"></i>
                                 <input type="text" 
                                        id="dosen_pengampu_search_input" 
                                        oninput="filterDosenPengampuSearch(this.value)" 
@@ -718,7 +748,7 @@
                             <button type="button" 
                                     onclick="toggleDosenDropdown(event)" 
                                     tabindex="-1" 
-                                    class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
                                 <i id="dosen_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
                             </button>
                         </div>
@@ -730,7 +760,7 @@
                             
                             <!-- Search Bar within Dropdown -->
                             <div class="relative shrink-0">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <i class="fa-solid fa-magnifying-glass absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs pointer-events-none"></i>
                                 <input type="text" 
                                        id="dosen_search_input" 
                                        oninput="filterDosenSearch(this.value)" 
@@ -751,7 +781,7 @@
                                             <i class="fa-solid fa-user-check text-slate-300 group-hover:text-teal-600 text-xs shrink-0"></i>
                                             <span class="font-semibold truncate">{{ $d->nama }}</span>
                                             @if($d->prodi)
-                                                <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded group-hover:bg-teal-100 group-hover:text-teal-700 font-medium shrink-0">{{ $d->prodi->nama_prodi }}</span>
+                                                <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded group-hover:bg-teal-100 group-hover:text-teal-700 font-medium shrink-0">{{ $d->prodi->nama_prodi }}</span>
                                             @endif
                                         </div>
                                         @if($d->nidn)
@@ -782,14 +812,14 @@
                     <div class="relative" id="kelas_combobox_wrapper">
                         <label class="block text-slate-700 font-bold mb-1.5 flex items-center gap-1.5">
                             <i class="fa-solid fa-users text-teal-600 text-[11px]"></i>
-                            <span>Kelas <span class="text-rose-500">*</span></span>
+                            <span>Kelas <span class="text-slate-400 font-normal text-[11px]">(Opsional)</span></span>
                         </label>
                         <div class="relative flex items-center">
                             <input type="text" 
                                    name="kelas" 
                                    id="form_kelas" 
-                                   value="A" 
-                                   placeholder="Contoh: A" 
+                                   value="" 
+                                   placeholder="Contoh: A (Opsional)" 
                                    autocomplete="off" 
                                    onclick="openKelasDropdown()" 
                                    onfocus="openKelasDropdown()" 
@@ -798,7 +828,7 @@
                             <button type="button" 
                                     onclick="toggleKelasDropdown(event)" 
                                     tabindex="-1" 
-                                    class="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
                                 <i id="kelas_chevron_icon" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
                             </button>
                         </div>
@@ -807,6 +837,13 @@
                         <div id="kelas_dropdown_menu" 
                              class="hidden absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl p-2 max-h-56 overflow-y-auto custom-scrollbar flex flex-col space-y-1" 
                              style="background-color: #ffffff !important;">
+                            <!-- Option Tanpa Kelas (Opsional) -->
+                            <div class="kelas-item-option px-2.5 py-1.5 text-xs text-slate-500 rounded-lg hover:bg-slate-100 cursor-pointer transition flex items-center justify-between" 
+                                 data-name="" 
+                                 onclick="selectKelasItem('')">
+                                <span class="font-medium italic text-slate-500">-- Tanpa Kelas (Kosongkan) --</span>
+                                <span class="text-[10px] text-slate-400 font-medium">Hapus</span>
+                            </div>
                             <div class="px-2 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 bg-slate-50 rounded">
                                 <i class="fa-solid fa-graduation-cap text-teal-600 text-[10px]"></i> Kelas Tunggal
                             </div>
@@ -897,7 +934,7 @@
                                 <option value="Reguler">Reguler</option>
                                 <option value="Karyawan">Karyawan</option>
                             </select>
-                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+                            <i class="fa-solid fa-chevron-down absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none text-xs"></i>
                         </div>
                     </div>
                 </div>
@@ -909,14 +946,27 @@
                             <i class="fa-solid fa-clock text-teal-600 text-[11px]"></i>
                             <span>Jam Mulai <span class="text-rose-500">*</span></span>
                         </label>
-                        <input type="time" name="jam_mulai" id="form_jam_mulai" required value="08:00" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition">
+                        <input type="time" name="jam_mulai" id="form_jam_mulai" required value="08:00" oninput="updateDurationBadge()" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition">
                     </div>
                     <div>
                         <label class="block text-slate-700 font-bold mb-1.5 flex items-center gap-1.5">
                             <i class="fa-solid fa-clock-rotate-left text-teal-600 text-[11px]"></i>
                             <span>Jam Selesai <span class="text-rose-500">*</span></span>
                         </label>
-                        <input type="time" name="jam_selesai" id="form_jam_selesai" required value="10:30" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition">
+                        <input type="time" name="jam_selesai" id="form_jam_selesai" required value="10:30" oninput="updateDurationBadge()" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 font-mono font-bold text-slate-800 text-xs focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none transition">
+                    </div>
+                </div>
+
+                <!-- Live Duration Feedback -->
+                <div class="pt-0.5">
+                    <div id="duration_info_badge" class="p-2.5 rounded-xl bg-teal-50/80 border border-teal-200 text-teal-950 text-[11px] font-semibold flex items-center justify-between transition-all">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-hourglass-half text-teal-600 text-xs"></i>
+                            <span id="duration_info_text">Durasi: <strong>2 Jam 30 Menit</strong> (150 Menit)</span>
+                        </div>
+                        <span id="duration_slots_badge" class="px-2 py-0.5 bg-teal-200 text-teal-950 rounded-md font-bold text-[10px]">
+                            3 Slot Matriks
+                        </span>
                     </div>
                 </div>
 
@@ -1917,14 +1967,64 @@
                     confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
                     cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
                 }
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '{{ url("admin/jadwal-lab") }}/' + jadwalId;
-                    form.innerHTML = '@csrf @method("DELETE")';
-                    document.body.appendChild(form);
-                    form.submit();
+                    Swal.fire({
+                        title: 'Menghapus Jadwal...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                    try {
+                        const res = await fetch('{{ url("admin/jadwal-lab") }}/' + jadwalId, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                _method: 'DELETE'
+                            })
+                        });
+
+                        const data = await res.json();
+                        Swal.close();
+
+                        if (res.ok && data.success) {
+                            await refreshMatrixInPlace();
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: data.message || 'Slot jadwal berhasil dihapus.',
+                                timer: 3000,
+                                showConfirmButton: false,
+                                timerProgressBar: true,
+                                customClass: {
+                                    popup: 'rounded-2xl shadow-xl border border-rose-100'
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal Menghapus',
+                                text: data.message || 'Terjadi kesalahan saat menghapus slot jadwal.',
+                                confirmButtonColor: '#0f766e'
+                            });
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Kesalahan Jaringan',
+                            text: 'Gagal menghubungi server.',
+                            confirmButtonColor: '#0f766e'
+                        });
+                    }
                 }
             });
         }
@@ -1975,23 +2075,65 @@
                     confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm',
                     cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold shadow-sm'
                 }
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '{{ route("admin.jadwal-lab.bulk-delete") }}';
-                    form.innerHTML = '@csrf @method("DELETE")';
-                    
-                    ids.forEach(id => {
-                        const input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = 'ids[]';
-                        input.value = id;
-                        form.appendChild(input);
+                    Swal.fire({
+                        title: 'Menghapus ' + ids.length + ' Jadwal...',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
                     });
 
-                    document.body.appendChild(form);
-                    form.submit();
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                    try {
+                        const res = await fetch('{{ route("admin.jadwal-lab.bulk-delete") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                _method: 'DELETE',
+                                ids: ids
+                            })
+                        });
+
+                        const data = await res.json();
+                        Swal.close();
+
+                        if (res.ok && data.success) {
+                            await refreshMatrixInPlace();
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: data.message || 'Slot jadwal terpilih berhasil dihapus.',
+                                timer: 3000,
+                                showConfirmButton: false,
+                                timerProgressBar: true,
+                                customClass: {
+                                    popup: 'rounded-2xl shadow-xl border border-rose-100'
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal Menghapus',
+                                text: data.message || 'Terjadi kesalahan saat menghapus jadwal.',
+                                confirmButtonColor: '#0f766e'
+                            });
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Kesalahan Jaringan',
+                            text: 'Gagal menghubungi server.',
+                            confirmButtonColor: '#0f766e'
+                        });
+                    }
                 }
             });
         }
@@ -2136,6 +2278,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
                 },
                 body: JSON.stringify({
@@ -2145,20 +2288,22 @@
                 })
             })
             .then(res => res.json())
-            .then(data => {
+            .then(async data => {
                 if (data.success) {
+                    Swal.close();
+                    await refreshMatrixInPlace(id);
                     Swal.fire({
+                        toast: true,
+                        position: 'top-end',
                         icon: 'success',
                         title: 'Berhasil Dipindahkan!',
                         text: data.message,
-                        timer: 1500,
+                        timer: 3000,
+                        timerProgressBar: true,
                         showConfirmButton: false,
                         customClass: {
-                            popup: 'rounded-3xl p-6',
-                            title: 'text-base font-extrabold text-slate-800'
+                            popup: 'rounded-2xl shadow-xl border border-teal-100'
                         }
-                    }).then(() => {
-                        window.location.reload();
                     });
                 } else {
                     Swal.fire({
@@ -2216,11 +2361,12 @@
             document.getElementById('form_dosen_pengampu_name').value = '';
             document.getElementById('form_dosen_id').value = '';
             document.getElementById('form_dosen_name').value = '';
-            document.getElementById('form_kelas').value = 'A';
+            document.getElementById('form_kelas').value = '';
             document.getElementById('form_semester').value = '1';
             document.getElementById('form_program_kuliah').value = 'Reguler';
             document.getElementById('form_jam_mulai').value = '08:00';
             document.getElementById('form_jam_selesai').value = '10:30';
+            updateDurationBadge();
 
             // Reset filters to show all
             filterMatkulByProdi('');
@@ -2235,6 +2381,50 @@
             document.getElementById('form_hari').value = hari;
             document.getElementById('form_jam_mulai').value = jamMulai;
             document.getElementById('form_jam_selesai').value = jamSelesai;
+            updateDurationBadge();
+        }
+
+        function updateDurationBadge() {
+            const startVal = document.getElementById('form_jam_mulai').value;
+            const endVal = document.getElementById('form_jam_selesai').value;
+            const badgeText = document.getElementById('duration_info_text');
+            const badgeSlots = document.getElementById('duration_slots_badge');
+            const badgeBox = document.getElementById('duration_info_badge');
+            if (!startVal || !endVal || !badgeText) return;
+
+            const [sh, sm] = startVal.split(':').map(Number);
+            const [eh, em] = endVal.split(':').map(Number);
+            const diff = (eh * 60 + em) - (sh * 60 + sm);
+
+            if (diff <= 0) {
+                badgeBox.className = "p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-950 text-[11px] font-semibold flex items-center justify-between";
+                badgeText.innerHTML = "Jam Selesai harus lebih besar dari Jam Mulai!";
+                badgeSlots.className = "px-2 py-0.5 bg-rose-200 text-rose-950 rounded-md font-bold text-[10px]";
+                badgeSlots.textContent = "Tidak Valid";
+                return;
+            }
+
+            const hours = Math.floor(diff / 60);
+            const mins = diff % 60;
+            const slots = Math.ceil(diff / 60);
+            let durStr = hours > 0 ? (mins > 0 ? `${hours} Jam ${mins} Mnt` : `${hours} Jam Penuh`) : `${mins} Mnt`;
+
+            badgeBox.className = "p-2.5 rounded-xl bg-teal-50/80 border border-teal-200 text-teal-950 text-[11px] font-semibold flex items-center justify-between";
+            badgeText.innerHTML = `Durasi: <strong>${durStr}</strong> (${diff} Menit)`;
+            badgeSlots.className = "px-2 py-0.5 bg-teal-200 text-teal-950 rounded-md font-bold text-[10px]";
+            badgeSlots.textContent = `${slots} Slot Matriks`;
+        }
+
+        function setQuickDuration(hours) {
+            const startVal = document.getElementById('form_jam_mulai').value || '08:00';
+            const [sh, sm] = startVal.split(':').map(Number);
+            const totalEnd = sh * 60 + sm + (hours * 60);
+            const eh = Math.floor(totalEnd / 60);
+            const em = totalEnd % 60;
+            if (eh < 24) {
+                document.getElementById('form_jam_selesai').value = String(eh).padStart(2, '0') + ':' + String(em).padStart(2, '0');
+                updateDurationBadge();
+            }
         }
 
         function openEditModal(jadwal) {
@@ -2292,12 +2482,13 @@
             }
 
             // 7. Set Kelas & Program Kuliah
-            document.getElementById('form_kelas').value = jadwal.kelas ? jadwal.kelas.replace(/^(Reg|Karyawan)\s+/i, '') : 'A';
+            document.getElementById('form_kelas').value = jadwal.kelas ? jadwal.kelas.replace(/^(Reg|Karyawan)\s+/i, '') : '';
             document.getElementById('form_program_kuliah').value = jadwal.program_kuliah || 'Reguler';
 
             // 8. Set Jam
             document.getElementById('form_jam_mulai').value = jadwal.jam_mulai ? jadwal.jam_mulai.substr(0, 5) : '08:00';
             document.getElementById('form_jam_selesai').value = jadwal.jam_selesai ? jadwal.jam_selesai.substr(0, 5) : '10:30';
+            updateDurationBadge();
 
             closeAllDropdowns();
             modal.classList.remove('hidden');
@@ -2308,8 +2499,240 @@
             modal.classList.add('hidden');
         }
 
+        // ==========================================
+        // SEAMLESS IN-PLACE MATRIX REFRESH & SCROLL PERSISTENCE
+        // ==========================================
+        function attachWheelScrollListeners() {
+            const tableContainers = document.querySelectorAll('.overflow-x-auto');
+            tableContainers.forEach(container => {
+                container.addEventListener('wheel', function(e) {
+                    if (!e.shiftKey && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                        const scrollParent = container.closest('.overflow-auto, .overflow-y-auto');
+                        if (scrollParent) {
+                            scrollParent.scrollTop += e.deltaY;
+                        }
+                    }
+                }, { passive: true });
+            });
+        }
+
+        function saveScrollPositions() {
+            const scrollContainer = document.querySelector('.flex-grow.overflow-auto');
+            const tableWrapper = document.getElementById('matrix-table-wrapper');
+            sessionStorage.setItem('matrix_winY', window.scrollY);
+            sessionStorage.setItem('matrix_winX', window.scrollX);
+            if (scrollContainer) {
+                sessionStorage.setItem('matrix_mainScrollTop', scrollContainer.scrollTop);
+                sessionStorage.setItem('matrix_mainScrollLeft', scrollContainer.scrollLeft);
+            }
+            if (tableWrapper) {
+                sessionStorage.setItem('matrix_tableScrollTop', tableWrapper.scrollTop);
+                sessionStorage.setItem('matrix_tableScrollLeft', tableWrapper.scrollLeft);
+            }
+        }
+
+        function restoreScrollPositions() {
+            const scrollContainer = document.querySelector('.flex-grow.overflow-auto');
+            const tableWrapper = document.getElementById('matrix-table-wrapper');
+
+            const winY = sessionStorage.getItem('matrix_winY');
+            const winX = sessionStorage.getItem('matrix_winX');
+            if (winY !== null && winX !== null) {
+                window.scrollTo(parseInt(winX), parseInt(winY));
+            }
+
+            const mainTop = sessionStorage.getItem('matrix_mainScrollTop');
+            const mainLeft = sessionStorage.getItem('matrix_mainScrollLeft');
+            if (scrollContainer && mainTop !== null) {
+                scrollContainer.scrollTop = parseInt(mainTop);
+                if (mainLeft !== null) scrollContainer.scrollLeft = parseInt(mainLeft);
+            }
+
+            const tableTop = sessionStorage.getItem('matrix_tableScrollTop');
+            const tableLeft = sessionStorage.getItem('matrix_tableScrollLeft');
+            if (tableWrapper && tableTop !== null) {
+                tableWrapper.scrollTop = parseInt(tableTop);
+                if (tableLeft !== null) tableWrapper.scrollLeft = parseInt(tableLeft);
+            }
+        }
+
+        async function refreshMatrixInPlace(highlightJadwalId = null) {
+            try {
+                const scrollContainer = document.querySelector('.flex-grow.overflow-auto');
+                const tableWrapper = document.getElementById('matrix-table-wrapper');
+
+                const winY = window.scrollY;
+                const winX = window.scrollX;
+                const mainScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+                const mainScrollLeft = scrollContainer ? scrollContainer.scrollLeft : 0;
+                const tableScrollTop = tableWrapper ? tableWrapper.scrollTop : 0;
+                const tableScrollLeft = tableWrapper ? tableWrapper.scrollLeft : 0;
+
+                const response = await fetch(window.location.href, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('Fetch returned non-OK status:', response.status);
+                    return;
+                }
+
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const newMatrixContainer = doc.getElementById('matrix-card-container');
+                const currentMatrixContainer = document.getElementById('matrix-card-container');
+
+                if (newMatrixContainer && currentMatrixContainer) {
+                    currentMatrixContainer.innerHTML = newMatrixContainer.innerHTML;
+                }
+
+                // Restore scroll positions accurately
+                window.scrollTo(winX, winY);
+                if (scrollContainer) {
+                    scrollContainer.scrollTop = mainScrollTop;
+                    scrollContainer.scrollLeft = mainScrollLeft;
+                }
+                const newTableWrapper = document.getElementById('matrix-table-wrapper');
+                if (newTableWrapper) {
+                    newTableWrapper.scrollTop = tableScrollTop;
+                    newTableWrapper.scrollLeft = tableScrollLeft;
+                }
+
+                // Re-attach scroll listener
+                attachWheelScrollListeners();
+
+                // Highlight updated card if ID is provided
+                if (highlightJadwalId) {
+                    const card = document.getElementById('jadwal-card-' + highlightJadwalId);
+                    if (card) {
+                        card.classList.add('ring-4', 'ring-teal-400', 'scale-[1.02]', 'shadow-lg');
+                        setTimeout(() => {
+                            card.classList.remove('ring-4', 'ring-teal-400', 'scale-[1.02]', 'shadow-lg');
+                        }, 2200);
+                    }
+                }
+
+                // Reset bulk delete UI state
+                const btnBulkDelete = document.getElementById('btn-bulk-delete');
+                if (btnBulkDelete) {
+                    btnBulkDelete.classList.add('hidden');
+                    btnBulkDelete.classList.remove('flex');
+                }
+                const bulkDeleteCount = document.getElementById('bulk-delete-count');
+                if (bulkDeleteCount) {
+                    bulkDeleteCount.textContent = '0';
+                }
+            } catch (err) {
+                console.error('Failed to refresh matrix in place:', err);
+            }
+        }
+
         // SweetAlert2 Alerts for Session & Form Submits
         document.addEventListener('DOMContentLoaded', function() {
+            // Restore scroll positions if page was reloaded
+            restoreScrollPositions();
+            attachWheelScrollListeners();
+
+            // Track scroll positions
+            window.addEventListener('beforeunload', saveScrollPositions);
+            const scrollContainer = document.querySelector('.flex-grow.overflow-auto');
+            const tableWrapper = document.getElementById('matrix-table-wrapper');
+            if (scrollContainer) {
+                scrollContainer.addEventListener('scroll', saveScrollPositions, { passive: true });
+            }
+            if (tableWrapper) {
+                tableWrapper.addEventListener('scroll', saveScrollPositions, { passive: true });
+            }
+
+            // AJAX Form Submit for Tambah / Edit Slot Jadwal (Stay in place without refresh)
+            if (form) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...';
+                    }
+
+                    try {
+                        const formData = new FormData(form);
+                        const actionUrl = form.action;
+
+                        const response = await fetch(actionUrl, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.success) {
+                            closeModal();
+
+                            const targetId = data.jadwal_id || (currentEditingJadwal ? currentEditingJadwal.id : null);
+                            await refreshMatrixInPlace(targetId);
+
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: data.message || 'Jadwal berhasil disimpan!',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
+                                customClass: {
+                                    popup: 'rounded-2xl shadow-xl border border-teal-100'
+                                }
+                            });
+                        } else {
+                            let errorMsg = data.message || 'Gagal menyimpan data jadwal.';
+                            if (data.errors) {
+                                const errorKeys = Object.keys(data.errors);
+                                if (errorKeys.length > 0) {
+                                    errorMsg = data.errors[errorKeys[0]][0];
+                                }
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal Menyimpan!',
+                                text: errorMsg,
+                                confirmButtonColor: '#0f766e',
+                                customClass: {
+                                    popup: 'rounded-3xl p-6',
+                                    title: 'text-base font-extrabold text-slate-800'
+                                }
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Submit error:', err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Terjadi Kesalahan',
+                            text: 'Gagal menghubungi server. Silakan coba lagi.',
+                            confirmButtonColor: '#0f766e',
+                            customClass: {
+                                popup: 'rounded-3xl p-6',
+                                title: 'text-base font-extrabold text-slate-800'
+                            }
+                        });
+                    } finally {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnHtml;
+                        }
+                    }
+                });
+            }
+
             @if(session('success'))
                 Swal.fire({
                     icon: 'success',
@@ -2355,19 +2778,6 @@
                     }
                 });
             @endif
-
-            // Memastikan scrolling mouse wheel vertikal tetap menggulir halaman saat kursor berada di atas tabel jadwal
-            const tableContainers = document.querySelectorAll('.overflow-x-auto');
-            tableContainers.forEach(container => {
-                container.addEventListener('wheel', function(e) {
-                    if (!e.shiftKey && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-                        const scrollParent = container.closest('.overflow-auto, .overflow-y-auto');
-                        if (scrollParent) {
-                            scrollParent.scrollTop += e.deltaY;
-                        }
-                    }
-                }, { passive: true });
-            });
         });
     </script>
 </body>

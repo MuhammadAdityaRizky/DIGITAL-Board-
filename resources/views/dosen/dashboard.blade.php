@@ -131,7 +131,7 @@
                     <p class="text-xs text-slate-600 font-semibold flex items-center gap-2 flex-wrap">
                         <span><i class="fa-solid fa-door-open text-teal-700 mr-1"></i> {{ $todayScheduledJadwal->lab->nama_lab ?? 'Lab' }}</span>
                         <span class="text-slate-300">•</span>
-                        <span>Kelas {{ $todayScheduledJadwal->kelas }} (Semester {{ $todayScheduledJadwal->semester }})</span>
+                        <span>{{ $todayScheduledJadwal->kelas ? 'Kelas ' . $todayScheduledJadwal->kelas . ' • ' : '' }}Semester {{ $todayScheduledJadwal->semester ?? '1' }}</span>
                     </p>
                 </div>
                 <div class="w-full lg:w-auto flex-shrink-0">

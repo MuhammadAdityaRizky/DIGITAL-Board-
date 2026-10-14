@@ -205,7 +205,7 @@ class DosenController extends Controller
                 'program_kuliah' => $jadwal->program_kuliah ?? 'Reguler',
                 'tahun_akademik' => $jadwal->tahun_akademik ?? '2026/2027 Ganjil',
                 'jenis_pertemuan' => 'Praktikum',
-                'kelas' => $jadwal->kelas ?? 'Reg A',
+                'kelas' => $jadwal->kelas,
                 'semester' => $jadwal->semester ?? '1',
                 'jurusan' => $jadwal->prodi->nama_prodi ?? 'Sistem Informasi',
                 'fakultas' => $jadwal->prodi->fakultas->nama_fakultas ?? 'Fakultas Teknik & Sains',
@@ -216,7 +216,8 @@ class DosenController extends Controller
                 'catatan' => $request->materi_pembelajaran ?? $request->rencana_pembelajaran ?? '',
             ]);
 
-            return back()->with('success', 'Agenda pembelajaran untuk ' . $jadwal->mata_kuliah . ' (' . $jadwal->kelas . ') berhasil dibuat.');
+            $kelasInfo = $jadwal->kelas ? ' (' . $jadwal->kelas . ')' : '';
+            return back()->with('success', 'Agenda pembelajaran untuk ' . $jadwal->mata_kuliah . $kelasInfo . ' berhasil dibuat.');
         }
 
         $request->validate([

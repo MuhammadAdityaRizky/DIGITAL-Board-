@@ -2575,26 +2575,46 @@ class AdminController extends Controller
 
         $lab = Laboratorium::findOrFail($request->lab_id);
         if (!$user->canManageLab($lab)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke laboratorium ini.'], 403);
+            }
             abort(403, 'Anda tidak memiliki akses ke laboratorium ini.');
         }
 
         $dosenPengampuId = $request->dosen_pengampu_id ?: $request->dosen_id;
+        $jamMulai = strlen($request->jam_mulai) === 5 ? $request->jam_mulai . ':00' : $request->jam_mulai;
+        $jamSelesai = strlen($request->jam_selesai) === 5 ? $request->jam_selesai . ':00' : $request->jam_selesai;
 
-        JadwalPenggunaanLab::create([
+        if ($jamSelesai <= $jamMulai) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Jam Selesai perkuliahan harus lebih besar dari Jam Mulai.'], 422);
+            }
+            return back()->withErrors(['jam_selesai' => 'Jam Selesai perkuliahan harus lebih besar dari Jam Mulai.'])->withInput();
+        }
+
+        $jadwal = JadwalPenggunaanLab::create([
             'lab_id' => $request->lab_id,
             'mata_kuliah' => $request->mata_kuliah,
             'dosen_id' => $request->dosen_id,
             'dosen_pengampu_id' => $dosenPengampuId,
             'id_prodi' => $request->id_prodi,
             'hari' => $request->hari,
-            'jam_mulai' => $request->jam_mulai,
-            'jam_selesai' => $request->jam_selesai,
-            'kelas' => $request->kelas ?? 'A',
+            'jam_mulai' => $jamMulai,
+            'jam_selesai' => $jamSelesai,
+            'kelas' => $request->filled('kelas') ? trim($request->kelas) : null,
             'semester' => $request->semester ?? '1',
             'program_kuliah' => $request->program_kuliah ?? 'Reguler',
             'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
             'is_aktif' => true,
         ]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Jadwal Penggunaan Lab berhasil ditambahkan.',
+                'jadwal_id' => $jadwal->id
+            ]);
+        }
 
         return back()->with('success', 'Jadwal Penggunaan Lab berhasil ditambahkan.');
     }
@@ -2605,6 +2625,9 @@ class AdminController extends Controller
         $jadwal = JadwalPenggunaanLab::with('lab')->findOrFail($id);
 
         if (!$user->canManageLab($jadwal->lab)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengubah jadwal laboratorium ini.'], 403);
+            }
             abort(403, 'Anda tidak memiliki akses untuk mengubah jadwal laboratorium ini.');
         }
 
@@ -2625,10 +2648,22 @@ class AdminController extends Controller
 
         $newLab = Laboratorium::findOrFail($request->lab_id);
         if (!$user->canManageLab($newLab)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke laboratorium target.'], 403);
+            }
             abort(403, 'Anda tidak memiliki akses ke laboratorium target.');
         }
 
         $dosenPengampuId = $request->dosen_pengampu_id ?: $request->dosen_id;
+        $jamMulai = strlen($request->jam_mulai) === 5 ? $request->jam_mulai . ':00' : $request->jam_mulai;
+        $jamSelesai = strlen($request->jam_selesai) === 5 ? $request->jam_selesai . ':00' : $request->jam_selesai;
+
+        if ($jamSelesai <= $jamMulai) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Jam Selesai perkuliahan harus lebih besar dari Jam Mulai.'], 422);
+            }
+            return back()->withErrors(['jam_selesai' => 'Jam Selesai perkuliahan harus lebih besar dari Jam Mulai.'])->withInput();
+        }
 
         $jadwal->update([
             'lab_id' => $request->lab_id,
@@ -2637,9 +2672,9 @@ class AdminController extends Controller
             'dosen_pengampu_id' => $dosenPengampuId,
             'id_prodi' => $request->id_prodi,
             'hari' => $request->hari,
-            'jam_mulai' => $request->jam_mulai,
-            'jam_selesai' => $request->jam_selesai,
-            'kelas' => $request->kelas ?? 'A',
+            'jam_mulai' => $jamMulai,
+            'jam_selesai' => $jamSelesai,
+            'kelas' => $request->filled('kelas') ? trim($request->kelas) : null,
             'semester' => $request->semester ?? '1',
             'program_kuliah' => $request->program_kuliah ?? 'Reguler',
             'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
@@ -2653,12 +2688,20 @@ class AdminController extends Controller
                 'mata_kuliah' => $request->mata_kuliah,
                 'dosen_id' => $request->dosen_id,
                 'dosen_pengampu_id' => $dosenPengampuId,
-                'jam_mulai' => $request->jam_mulai,
-                'jam_selesai' => $request->jam_selesai,
-                'kelas' => $request->kelas ?? 'A',
+                'jam_mulai' => $jamMulai,
+                'jam_selesai' => $jamSelesai,
+                'kelas' => $request->filled('kelas') ? trim($request->kelas) : null,
                 'semester' => $request->semester ?? '1',
                 'program_kuliah' => $request->program_kuliah ?? 'Reguler',
             ]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Jadwal Penggunaan Lab berhasil diperbarui dan sesi agenda terkait telah disinkronkan.',
+                'jadwal_id' => $jadwal->id
+            ]);
+        }
 
         return back()->with('success', 'Jadwal Penggunaan Lab berhasil diperbarui dan sesi agenda terkait telah disinkronkan.');
     }
@@ -2694,20 +2737,32 @@ class AdminController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Jadwal ' . $jadwal->mata_kuliah . ' berhasil dipindahkan ke hari ' . $request->hari . ' (' . $request->jam_mulai . ' - ' . $request->jam_selesai . ').'
+            'message' => 'Jadwal ' . $jadwal->mata_kuliah . ' berhasil dipindahkan ke hari ' . $request->hari . ' (' . $request->jam_mulai . ' - ' . $request->jam_selesai . ').',
+            'jadwal_id' => $jadwal->id
         ]);
     }
 
-    public function deleteJadwalPenggunaanLab($id)
+    public function deleteJadwalPenggunaanLab(Request $request, $id)
     {
         $user = Auth::user();
         $jadwal = JadwalPenggunaanLab::with('lab')->findOrFail($id);
 
         if (!$user->canManageLab($jadwal->lab)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk menghapus jadwal laboratorium ini.'], 403);
+            }
             abort(403, 'Anda tidak memiliki akses untuk menghapus jadwal laboratorium ini.');
         }
 
         $jadwal->delete();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Slot jadwal berhasil dihapus.'
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Slot jadwal berhasil dihapus.');
     }
 
@@ -2715,6 +2770,9 @@ class AdminController extends Controller
     {
         $ids = $request->input('ids');
         if (empty($ids)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada jadwal yang dipilih untuk dihapus.'], 422);
+            }
             return redirect()->back()->with('error', 'Tidak ada jadwal yang dipilih untuk dihapus.');
         }
 
@@ -2723,11 +2781,21 @@ class AdminController extends Controller
 
         foreach ($jadwals as $jadwal) {
             if (!$user->canManageLab($jadwal->lab)) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk menghapus beberapa jadwal laboratorium ini.'], 403);
+                }
                 abort(403, 'Anda tidak memiliki akses untuk menghapus beberapa jadwal laboratorium ini.');
             }
         }
 
         JadwalPenggunaanLab::whereIn('id', $ids)->delete();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => count($ids) . ' slot jadwal berhasil dihapus.'
+            ]);
+        }
 
         return redirect()->back()->with('success', count($ids) . ' slot jadwal berhasil dihapus.');
     }
