@@ -2876,6 +2876,105 @@ class AdminController extends Controller
         return back()->with('success', "Berhasil membuat {$totalCreated} sesi pertemuan perkuliahan 1 semester secara otomatis untuk seluruh jadwal lab!");
     }
 
+
+    /**
+     * Mulai Sesi Agenda Hari Ini dari Matriks Jadwal Lab.
+     * Mendukung kasus normal (jam sesuai jadwal) dan tukar jam khusus hari ini.
+     */
+    public function mulaiSesiHariIni(Request $request, $id)
+    {
+        $user = Auth::user();
+        $jadwal = JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu', 'dosen'])->findOrFail($id);
+
+        if ($user->isAdminFakultas() && !$user->canManageLab($jadwal->lab)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses Ditolak: Anda tidak memiliki izin untuk mengelola lab ini.',
+            ], 403);
+        }
+
+        $today      = date('Y-m-d');
+        $nowTime    = now()->format('H:i:s');
+
+        // Gunakan jam kustom jika ada (kasus tukar jam), fallback ke jam matriks
+        $jamMulai   = $request->input('jam_mulai')
+            ? ($request->input('jam_mulai') . ':00')
+            : $jadwal->jam_mulai;
+        $jamSelesai = $request->input('jam_selesai')
+            ? ($request->input('jam_selesai') . ':00')
+            : $jadwal->jam_selesai;
+
+        // Cek duplikasi: apakah sudah ada sesi hari ini untuk jadwal ini?
+        $existing = Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
+            ->where('tanggal', $today)
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'success'    => false,
+                'message'    => 'Sesi untuk jadwal ini hari ini sudah ada! (Pertemuan ke-' . preg_replace('/[^0-9]/', '', $existing->catatan ?? '') . ')',
+                'agenda_id'  => $existing->id,
+            ]);
+        }
+
+        // Hitung nomor pertemuan berikutnya (berdasarkan sesi yang sudah ada untuk MK & Kelas ini)
+        $jumlahSesiAda = Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
+            ->where('tanggal', '<', $today)
+            ->count();
+        $nomorPertemuan = $jumlahSesiAda + 1;
+
+        // Tentukan status agenda berdasarkan jam sekarang vs jam kelas
+        if ($nowTime >= $jamMulai && $nowTime <= $jamSelesai) {
+            $statusAgenda = 'Berlangsung';
+        } elseif ($nowTime < $jamMulai) {
+            $statusAgenda = 'Akan Datang';
+        } else {
+            $statusAgenda = 'Selesai';
+        }
+
+        // Tandai bahwa ini tukar jam jika jamnya berbeda dari matriks
+        $isTukarJam = ($jamMulai !== $jadwal->jam_mulai || $jamSelesai !== $jadwal->jam_selesai);
+        $catatanTukarJam = $isTukarJam
+            ? ' [Tukar Jam: ' . substr($jadwal->jam_mulai, 0, 5) . ' → ' . substr($jamMulai, 0, 5) . ']'
+            : '';
+
+        $catatan = 'Pertemuan ke-' . $nomorPertemuan . ': ' . $jadwal->mata_kuliah . $catatanTukarJam;
+        if ($request->filled('catatan')) {
+            $catatan .= ' | ' . $request->input('catatan');
+        }
+
+        $agenda = Agenda::create([
+            'jadwal_penggunaan_lab_id' => $jadwal->id,
+            'dosen_id'                 => $jadwal->dosen_id,
+            'dosen_pengampu_id'        => $jadwal->dosen_pengampu_id,
+            'lab_id'                   => $jadwal->lab_id,
+            'mata_kuliah'              => $jadwal->mata_kuliah,
+            'fakultas'                 => $jadwal->prodi->fakultas->nama_fakultas ?? '',
+            'jurusan'                  => $jadwal->prodi->nama_prodi ?? $jadwal->jurusan ?? '',
+            'program_kuliah'           => $jadwal->program_kuliah ?? 'Reguler',
+            'tahun_akademik'           => $jadwal->tahun_akademik ?? '2026/2027 Ganjil',
+            'jenis_pertemuan'          => $jadwal->jenis_pertemuan ?? 'Praktikum',
+            'kelas'                    => $jadwal->kelas,
+            'semester'                 => $jadwal->semester ?? '1',
+            'tanggal'                  => $today,
+            'jam_mulai'                => $jamMulai,
+            'jam_selesai'              => $jamSelesai,
+            'status_agenda'            => $statusAgenda,
+            'catatan'                  => $catatan,
+        ]);
+
+        return response()->json([
+            'success'         => true,
+            'message'         => 'Sesi Pertemuan ke-' . $nomorPertemuan . ' berhasil dimulai!'
+                . ($isTukarJam ? ' (Jam disesuaikan: ' . substr($jamMulai, 0, 5) . ' - ' . substr($jamSelesai, 0, 5) . ')' : ''),
+            'agenda_id'       => $agenda->id,
+            'status_agenda'   => $statusAgenda,
+            'nomor_pertemuan' => $nomorPertemuan,
+            'is_tukar_jam'    => $isTukarJam,
+            'absensi_url'     => route('admin.absensi.input', $agenda->id),
+        ]);
+    }
+
 }
 
 

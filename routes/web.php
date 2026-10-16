@@ -111,6 +111,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('/jadwal-lab/{id}/move', [AdminController::class, 'moveJadwalPenggunaanLab'])->name('jadwal-lab.move');
         Route::delete('/jadwal-lab/bulk-delete', [AdminController::class, 'bulkDeleteJadwalLab'])->name('jadwal-lab.bulk-delete');
         Route::delete('/jadwal-lab/{id}', [AdminController::class, 'deleteJadwalPenggunaanLab'])->name('jadwal-lab.delete');
+        Route::post('/jadwal-lab/{id}/mulai-hari-ini', [AdminController::class, 'mulaiSesiHariIni'])->name('jadwal-lab.mulai-hari-ini');
         
         Route::get('/akademik', [AdminController::class, 'akademik'])->name('akademik');
         Route::post('/akademik/fakultas', [AdminController::class, 'storeFakultas'])->name('akademik.fakultas.store');

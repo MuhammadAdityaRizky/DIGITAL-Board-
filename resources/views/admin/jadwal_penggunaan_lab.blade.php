@@ -338,6 +338,20 @@
                                                         <!-- Action buttons on hover (Clean dark overlay badge) -->
                                                         <div class="absolute right-1 top-1 flex items-center gap-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 backdrop-blur-xs p-0.5 rounded-lg border border-white/10" id="jadwal_actions_{{ $m->id }}">
                                                             <input type="checkbox" value="{{ $m->id }}" class="jadwal-checkbox w-3.5 h-3.5 rounded border-white/40 bg-white/20 text-rose-500 focus:ring-rose-500 focus:ring-1 cursor-pointer shadow-sm" onchange="toggleBulkDeleteButton(this, {{ $m->id }})" title="Pilih untuk hapus massal">
+                                                            <button type="button" onclick="openQuickStartModal({{ json_encode([
+                                                                'id'           => $m->id,
+                                                                'mata_kuliah'  => $m->mata_kuliah,
+                                                                'kelas'        => $m->kelas,
+                                                                'dosen_nama'   => $m->dosen->nama ?? '-',
+                                                                'pengampu_nama'=> $m->dosenPengampu->nama ?? $m->dosen->nama ?? '-',
+                                                                'lab_nama'     => $m->lab->nama_lab ?? '-',
+                                                                'hari'         => $m->hari,
+                                                                'jam_mulai'    => substr($m->jam_mulai, 0, 5),
+                                                                'jam_selesai'  => substr($m->jam_selesai, 0, 5),
+                                                                'url'          => route('admin.jadwal-lab.mulai-hari-ini', $m->id),
+                                                            ]) }})" class="w-5 h-5 rounded bg-emerald-500/90 hover:bg-emerald-400 text-white flex items-center justify-center text-[9px] shadow-sm cursor-pointer" title="Mulai Sesi Hari Ini">
+                                                                <i class="fa-solid fa-bolt"></i>
+                                                            </button>
                                                             <button type="button" onclick="openEditModal({{ json_encode($m) }})" class="w-5 h-5 rounded bg-white/30 hover:bg-white/50 text-white flex items-center justify-center text-[9px] shadow-sm cursor-pointer" title="Edit">
                                                                 <i class="fa-solid fa-pen"></i>
                                                             </button>
@@ -345,6 +359,7 @@
                                                                 <i class="fa-solid fa-trash"></i>
                                                             </button>
                                                         </div>
+
                                                     </div>
                                                 @endforeach
                                                 </div>
@@ -2779,6 +2794,180 @@
                 });
             @endif
         });
+    </script>
+
+    <!-- ⚡ MODAL MULAI SESI HARI INI (Quick Start from Matriks) -->
+    <div id="modal-quick-start" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden" onclick="if(event.target===this)closeQuickStartModal()">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-sm w-full p-6 space-y-4">
+            <!-- Header -->
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                        <i class="fa-solid fa-bolt text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-800">Mulai Sesi Hari Ini</h3>
+                        <p class="text-[10px] text-slate-500">dari Matriks Jadwal Lab</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeQuickStartModal()" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">&times;</button>
+            </div>
+
+            <!-- Info Jadwal -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5 text-xs">
+                <div class="font-extrabold text-slate-800 text-sm" id="qs-matkul">-</div>
+                <div class="flex items-center gap-1.5 text-slate-600">
+                    <i class="fa-solid fa-graduation-cap text-teal-600 text-[10px] w-3"></i>
+                    <span id="qs-kelas-dosen">-</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-slate-600">
+                    <i class="fa-solid fa-flask text-teal-600 text-[10px] w-3"></i>
+                    <span id="qs-lab">-</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-slate-600">
+                    <i class="fa-regular fa-clock text-teal-600 text-[10px] w-3"></i>
+                    <span id="qs-jam-normal">-</span>
+                    <span class="px-1.5 py-0.5 bg-teal-100 text-teal-800 rounded text-[9px] font-bold">Jadwal Normal</span>
+                </div>
+            </div>
+
+            <!-- Opsi Tukar Jam -->
+            <div class="space-y-2 text-xs">
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="qs-tukar-jam-toggle" onchange="toggleTukarJam(this)" class="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500">
+                    <span class="font-semibold text-slate-700">Tukar Jam Khusus Hari Ini</span>
+                    <span class="text-[10px] text-slate-400">(jam matriks tidak berubah)</span>
+                </label>
+                <div id="qs-tukar-jam-fields" class="hidden grid grid-cols-2 gap-2 pl-5">
+                    <div>
+                        <label class="block text-slate-600 font-medium mb-0.5">Jam Mulai</label>
+                        <input type="time" id="qs-jam-mulai" class="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none text-xs font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-slate-600 font-medium mb-0.5">Jam Selesai</label>
+                        <input type="time" id="qs-jam-selesai" class="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none text-xs font-semibold">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Catatan opsional -->
+            <div class="text-xs">
+                <label class="block text-slate-600 font-medium mb-1">
+                    Keterangan <span class="text-slate-400 font-normal">(Opsional - misal: tukar jam dengan Dosen X)</span>
+                </label>
+                <input type="text" id="qs-catatan" placeholder="Misal: Pengganti pertemuan minggu lalu..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none text-xs">
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-2.5 pt-1 border-t border-slate-100">
+                <button type="button" onclick="closeQuickStartModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-xs cursor-pointer transition">Batal</button>
+                <button type="button" id="qs-submit-btn" onclick="submitQuickStart()" class="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold text-xs shadow-sm cursor-pointer transition flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-bolt text-xs"></i>
+                    <span>Mulai Sekarang</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ─── Quick Start Modal ───────────────────────────────────────────────
+        let _qsData = null;
+
+        function openQuickStartModal(data) {
+            _qsData = data;
+            document.getElementById('qs-matkul').textContent = data.mata_kuliah + (data.kelas ? ' • Kelas ' + data.kelas : '');
+            document.getElementById('qs-kelas-dosen').textContent = 'Dosen: ' + data.pengampu_nama + (data.dosen_nama !== data.pengampu_nama ? ' (Pengajar: ' + data.dosen_nama + ')' : '');
+            document.getElementById('qs-lab').textContent = data.lab_nama;
+            document.getElementById('qs-jam-normal').textContent = data.hari + ' • ' + data.jam_mulai + ' – ' + data.jam_selesai + ' WIB';
+
+            // Reset inputs
+            document.getElementById('qs-tukar-jam-toggle').checked = false;
+            document.getElementById('qs-tukar-jam-fields').classList.add('hidden');
+            document.getElementById('qs-jam-mulai').value  = data.jam_mulai;
+            document.getElementById('qs-jam-selesai').value = data.jam_selesai;
+            document.getElementById('qs-catatan').value = '';
+
+            document.getElementById('modal-quick-start').classList.remove('hidden');
+        }
+
+        function closeQuickStartModal() {
+            document.getElementById('modal-quick-start').classList.add('hidden');
+            _qsData = null;
+        }
+
+        function toggleTukarJam(checkbox) {
+            const fields = document.getElementById('qs-tukar-jam-fields');
+            if (checkbox.checked) {
+                fields.classList.remove('hidden');
+            } else {
+                fields.classList.add('hidden');
+                if (_qsData) {
+                    document.getElementById('qs-jam-mulai').value  = _qsData.jam_mulai;
+                    document.getElementById('qs-jam-selesai').value = _qsData.jam_selesai;
+                }
+            }
+        }
+
+        async function submitQuickStart() {
+            if (!_qsData) return;
+
+            const isTukarJam    = document.getElementById('qs-tukar-jam-toggle').checked;
+            const jamMulai      = document.getElementById('qs-jam-mulai').value;
+            const jamSelesai    = document.getElementById('qs-jam-selesai').value;
+            const catatan       = document.getElementById('qs-catatan').value;
+            const btn           = document.getElementById('qs-submit-btn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Memproses...</span>';
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+            try {
+                const body = new FormData();
+                body.append('_token', csrfToken);
+                if (isTukarJam && jamMulai) body.append('jam_mulai', jamMulai);
+                if (isTukarJam && jamSelesai) body.append('jam_selesai', jamSelesai);
+                if (catatan.trim()) body.append('catatan', catatan.trim());
+
+                const res  = await fetch(_qsData.url, { method: 'POST', body });
+                const data = await res.json();
+
+                closeQuickStartModal();
+
+                if (data.success) {
+                    const tukarInfo = data.is_tukar_jam
+                        ? `<br><span class="text-xs text-emerald-700">Jam disesuaikan untuk hari ini</span>`
+                        : '';
+                    const absensiBtn = `<br><a href="${data.absensi_url}" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition"><i class="fa-solid fa-clipboard-user text-xs"></i> Buka Absensi Mahasiswa</a>`;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '🚀 Sesi Dimulai!',
+                        html: `<span class="text-sm font-semibold">${data.message}</span>${tukarInfo}${absensiBtn}`,
+                        confirmButtonText: 'Tutup',
+                        customClass: {
+                            popup: 'rounded-2xl',
+                            title: 'text-base font-extrabold text-slate-800',
+                            confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold bg-emerald-700 hover:bg-emerald-800'
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Sesi Sudah Ada!',
+                        html: `<span class="text-sm">${data.message}</span>${data.agenda_id ? `<br><a href="{{ route('admin.absensi.input', '') }}/${data.agenda_id}" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition"><i class="fa-solid fa-clipboard-user"></i> Buka Absensi</a>` : ''}`,
+                        confirmButtonText: 'OK',
+                        customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold' }
+                    });
+                }
+            } catch (err) {
+                closeQuickStartModal();
+                Swal.fire({ icon: 'error', title: 'Gagal!', text: 'Terjadi kesalahan saat memulai sesi. Coba lagi.', customClass: { popup: 'rounded-2xl' } });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-bolt text-xs"></i> <span>Mulai Sekarang</span>';
+            }
+        }
     </script>
 </body>
 </html>
