@@ -30,7 +30,7 @@
                 </button>
                 <img src="{{ asset('images/logo-uika.png') }}" alt="Logo UIKA" class="w-8 h-8 object-contain flex lg:hidden shrink-0">
                 <h2 class="font-bold text-base text-slate-800 lg:hidden">DIGITAL Board</h2>
-                <h2 class="font-bold text-base text-slate-800 hidden lg:block">Riwayat Aktivitas Sistem (CRUD)</h2>
+                <h2 class="font-bold text-base text-slate-800 hidden lg:block">Riwayat Aktivitas Sistem</h2>
             </div>
             
             <!-- Profile Avatar & Dropdown Menu -->
@@ -91,9 +91,9 @@
                         <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
                             <tr>
                                 <th class="p-4 w-48">Waktu</th>
-                                <th class="p-4 w-56">Dilakukan Oleh (Causer)</th>
+                                <th class="p-4 w-56">Dilakukan Oleh</th>
                                 <th class="p-4 w-32">Aksi</th>
-                                <th class="p-4">Objek Data (Subject)</th>
+                                <th class="p-4">Objek Data</th>
                                 <th class="p-4 text-center">Detail</th>
                             </tr>
                         </thead>
@@ -137,8 +137,26 @@
                                         </span>
                                     </td>
                                     <td class="p-4">
-                                        <div class="font-medium text-slate-700">
-                                            {{ class_basename($log->subject_type) }}
+                                        @php
+                                            $subjectBase = class_basename($log->subject_type);
+                                            $subjectLabels = [
+                                                'JadwalPenggunaanLab' => 'Jadwal Penggunaan Lab',
+                                                'Laboratorium' => 'Laboratorium',
+                                                'Agenda' => 'Agenda Perkuliahan',
+                                                'Absensi' => 'Presensi / Absensi',
+                                                'Dosen' => 'Data Dosen',
+                                                'Mahasiswa' => 'Data Mahasiswa',
+                                                'Pengumuman' => 'Pengumuman',
+                                                'MataKuliah' => 'Mata Kuliah',
+                                                'Kelas' => 'Kelas',
+                                                'Prodi' => 'Program Studi',
+                                                'Fakultas' => 'Fakultas',
+                                                'User' => 'Akun Pengguna',
+                                            ];
+                                            $subjectName = $subjectLabels[$subjectBase] ?? \Illuminate\Support\Str::headline($subjectBase);
+                                        @endphp
+                                        <div class="font-semibold text-slate-800">
+                                            {{ $subjectName }}
                                         </div>
                                         @if($log->subject_id)
                                             <div class="text-[10px] font-mono text-slate-400 mt-0.5">ID: {{ $log->subject_id }}</div>
@@ -146,7 +164,7 @@
                                     </td>
                                     <td class="p-4 text-center">
                                         <button onclick="document.getElementById('modal-{{ $log->id }}').classList.remove('hidden')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-bold transition">
-                                            Lihat Data
+                                            Lihat Detail
                                         </button>
 
                                         <!-- Modal Detail -->
@@ -172,7 +190,7 @@
                                                                 </div>
                                                             </div>
                                                         @else
-                                                            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Properti Log</div>
+                                                            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Detail Data Log</div>
                                                             <pre class="bg-slate-50 border border-slate-200 p-3 rounded-lg text-[10px] text-slate-600 overflow-x-auto font-mono leading-relaxed">{{ json_encode($log->properties, JSON_PRETTY_PRINT) }}</pre>
                                                         @endif
                                                     @else

@@ -17,6 +17,10 @@
         .custom-sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
         .custom-sidebar-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-slate-800">
@@ -133,7 +137,7 @@
                 <div class="bg-slate-50/60 border-b border-slate-200 px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                     <div>
                         <h3 class="font-bold text-sm text-slate-800">Daftar Pengumuman Resmi Laboratorium</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Kelola pengumuman resmi yang tampil pada portal informasi dan papan digital display lab.</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Kelola pengumuman resmi lab. Pengumuman yang durasinya habis otomatis tidak tampil di Digital Board, dan diberi masa tenggang 24 jam sebelum dihapus otomatis oleh sistem.</p>
                     </div>
                     <div class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
                         Total: <span class="font-bold text-slate-800">{{ $pengumumanList->total() }}</span> Pengumuman
@@ -149,6 +153,7 @@
                                     $statusLabel = 'Aktif Ditampilkan';
                                     $statusClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
                                     $statusIcon = 'fa-circle-check text-emerald-600';
+                                    $countdownGrace = null;
 
                                     if ($p->tanggal_mulai && $p->tanggal_mulai > $now) {
                                         $isAktif = false;
@@ -157,9 +162,20 @@
                                         $statusIcon = 'fa-clock text-amber-600';
                                     } elseif ($p->tanggal_selesai && $p->tanggal_selesai < $now) {
                                         $isAktif = false;
-                                        $statusLabel = 'Kedaluwarsa';
-                                        $statusClass = 'bg-slate-100 text-slate-600 border-slate-200';
-                                        $statusIcon = 'fa-calendar-xmark text-slate-400';
+                                        $selesaiTime = \Carbon\Carbon::parse($p->tanggal_selesai);
+                                        $deleteAt = $selesaiTime->copy()->addHours(24);
+                                        
+                                        if (now()->lt($deleteAt)) {
+                                            $diff = now()->diff($deleteAt);
+                                            $countdownGrace = ($diff->h > 0 ? "{$diff->h} jam {$diff->i} menit" : "{$diff->i} menit");
+                                            $statusLabel = 'Kedaluwarsa (Tenggang 24 Jam)';
+                                            $statusClass = 'bg-rose-50 text-rose-700 border-rose-200';
+                                            $statusIcon = 'fa-hourglass-half text-rose-500';
+                                        } else {
+                                            $statusLabel = 'Kedaluwarsa (Segera Terhapus)';
+                                            $statusClass = 'bg-slate-100 text-slate-600 border-slate-200';
+                                            $statusIcon = 'fa-trash-can text-slate-400';
+                                        }
                                     }
                                 @endphp
                                 <div class="bg-slate-50/80 hover:bg-slate-50 p-5 rounded-2xl border border-slate-200 relative group shadow-xs space-y-4 transition">
@@ -203,6 +219,18 @@
 
                                             <h4 class="font-bold text-sm sm:text-base text-slate-800 leading-snug">{{ $p->judul }}</h4>
                                             <p class="text-xs text-slate-650 leading-relaxed whitespace-pre-line">{{ $p->isi_pengumuman }}</p>
+
+                                            @if($countdownGrace)
+                                                <div class="mt-2.5 p-2.5 rounded-xl bg-amber-50/90 border border-amber-200 text-amber-900 text-[11px] flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                                                    <div class="flex items-center gap-2">
+                                                        <i class="fa-solid fa-clock-rotate-left text-amber-600 text-xs shrink-0"></i>
+                                                        <span class="font-medium">Durasi habis &amp; tidak tampil di Digital Board. Diberi masa tenggang 24 jam sebelum dihapus permanen.</span>
+                                                    </div>
+                                                    <span class="px-2 py-0.5 bg-amber-200/80 border border-amber-300 text-amber-950 font-bold rounded-md text-[10px] whitespace-nowrap inline-flex items-center gap-1 self-start sm:self-auto">
+                                                        <i class="fa-solid fa-hourglass-start text-[9px]"></i> Hapus otomatis dlm: {{ $countdownGrace }}
+                                                    </span>
+                                                </div>
+                                            @endif
                                         </div>
 
                                         <!-- Actions -->
@@ -323,11 +351,22 @@
                             <span>Pilih Semua</span>
                         </label>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50">
+                    <div class="space-y-1.5 max-h-[132px] overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50 custom-scrollbar">
                         @foreach($laboratoriums as $lab)
-                        <label class="flex items-center gap-2 cursor-pointer p-1 rounded-lg hover:bg-slate-100 transition">
-                            <input type="checkbox" name="laboratorium_ids[]" value="{{ $lab->id }}" class="rounded text-teal-600 focus:ring-teal-500 lab-checkbox cursor-pointer">
-                            <span class="font-medium text-slate-800">{{ $lab->nama_lab }}</span>
+                        <label class="flex items-center justify-between gap-2 cursor-pointer p-2 rounded-lg bg-white border border-slate-200/80 hover:border-teal-300 hover:bg-teal-50/40 transition shadow-2xs">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <input type="checkbox" name="laboratorium_ids[]" value="{{ $lab->id }}" class="w-4 h-4 rounded text-teal-700 focus:ring-teal-600 lab-checkbox cursor-pointer shrink-0">
+                                <span class="font-bold text-xs text-slate-800 truncate">{{ $lab->nama_lab }}</span>
+                            </div>
+                            @if($lab->fakultas)
+                                <span class="text-[10px] text-slate-500 font-medium px-2 py-0.5 bg-slate-100 rounded-md shrink-0">
+                                    {{ $lab->fakultas->nama_fakultas }}
+                                </span>
+                            @elseif($lab->lokasi)
+                                <span class="text-[10px] text-slate-400 font-medium shrink-0">
+                                    {{ $lab->lokasi }}
+                                </span>
+                            @endif
                         </label>
                         @endforeach
                     </div>

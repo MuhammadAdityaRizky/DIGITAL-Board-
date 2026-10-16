@@ -111,13 +111,47 @@
             </p>
         </div>
 
-        <!-- Search Control Bar -->
-        <div class="w-full max-w-3xl mx-auto mb-8">
-            <!-- Search Bar -->
-            <div class="relative w-full">
-                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                <input type="text" id="labSearch" placeholder="Cari nama lab atau lokasi gedung..." 
-                       class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0c4ea6]/20 focus:border-[#0c4ea6] shadow-sm transition">
+        <!-- Search & Faculty Filter Control Bar (Compact & Sleek) -->
+        <div class="w-full max-w-2xl mx-auto mb-7 space-y-2">
+            <div class="flex flex-col sm:flex-row items-center gap-2.5">
+                <!-- Search Bar -->
+                <div class="relative flex-1 w-full">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </div>
+                    <input type="text" id="labSearch" placeholder="Cari nama lab atau lokasi ruangan..." 
+                           class="w-full pl-9 pr-3.5 py-2 h-10 bg-white border border-slate-200/90 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0c4ea6]/15 focus:border-[#0c4ea6] shadow-2xs transition">
+                </div>
+
+                <!-- Faculty Filter Dropdown -->
+                <div class="relative w-full sm:w-64 shrink-0">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-building-columns text-xs"></i>
+                    </div>
+                    <select id="fakultasFilter" 
+                            class="w-full pl-9 pr-8 py-2 h-10 bg-white border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0c4ea6]/15 focus:border-[#0c4ea6] shadow-2xs transition appearance-none cursor-pointer truncate">
+                        <option value="all">Semua Fakultas / Gedung</option>
+                        @if(isset($fakultas))
+                            @foreach($fakultas as $f)
+                                <option value="{{ $f->id }}">Fakultas {{ $f->nama_fakultas }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Status & Quick Reset -->
+            <div class="flex items-center justify-between text-[11px] text-slate-400 px-1 font-medium">
+                <span>
+                    Menampilkan <strong id="labCountDisplay" class="text-slate-700 font-bold">{{ $labs->count() }}</strong> dari <span class="font-bold text-slate-700">{{ $labs->count() }}</span> lab
+                </span>
+                <button type="button" id="btnResetFilter" onclick="resetFilters()" class="text-[#0c4ea6] hover:text-[#093d84] font-bold text-[11px] inline-flex items-center gap-1 transition hidden cursor-pointer">
+                    <i class="fa-solid fa-rotate-left text-[10px]"></i>
+                    <span>Reset Filter</span>
+                </button>
             </div>
         </div>
 
@@ -125,7 +159,10 @@
         <div id="labGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($labs as $lab)
                 <div class="lab-card bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between gap-5 card-shadow transition duration-200 relative overflow-hidden" 
-                     data-location="{{ strtolower($lab->lokasi ?? '') }}" data-name="{{ strtolower($lab->nama_lab ?? '') }}">
+                     data-fakultas-id="{{ $lab->fakultas_id ?? '' }}"
+                     data-fakultas-name="{{ strtolower($lab->fakultas->nama_fakultas ?? '') }}"
+                     data-location="{{ strtolower($lab->lokasi ?? '') }}" 
+                     data-name="{{ strtolower($lab->nama_lab ?? '') }}">
                     
                     <!-- Top Status Bar -->
                     <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-4">
@@ -170,8 +207,8 @@
 
                     <!-- Action Launch Monitor -->
                     <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-                        <span class="text-[11px] font-bold text-slate-400">
-                            <i class="fa-solid fa-[#0c4ea6] fa-desktop text-slate-400 mr-1"></i> Live Kiosk Mode
+                        <span class="text-[11px] font-bold text-slate-400 flex items-center">
+                            <i class="fa-solid fa-desktop text-[#0c4ea6] mr-1.5 text-xs"></i> Live Kiosk Mode
                         </span>
                         
                         <a href="{{ route('board.lab', $lab->id) }}" 
@@ -181,6 +218,20 @@
                         </a>
                     </div>
                 </div>
+            <!-- Empty Filter Result State -->
+            <div id="emptyFilterState" class="col-span-full py-16 text-center bg-white border border-dashed border-slate-300 rounded-3xl p-8 hidden">
+                <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl shadow-2xs">
+                    <i class="fa-solid fa-filter-circle-xmark"></i>
+                </div>
+                <h4 class="font-extrabold text-slate-900 text-sm mb-1">Tidak Ada Laboratorium yang Cocok</h4>
+                <p class="text-slate-500 text-xs max-w-md mx-auto">
+                    Tidak ditemukan laboratorium untuk gedung fakultas atau kata kunci pencarian yang dipilih.
+                </p>
+                <button type="button" onclick="resetFilters()" class="mt-4 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition inline-flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Tampilkan Semua Lab</span>
+                </button>
+            </div>
             @empty
                 <div class="col-span-full py-16 text-center bg-white border border-dashed border-slate-300 rounded-3xl p-8">
                     <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
@@ -199,27 +250,62 @@
         <p class="text-slate-400 text-[11px]">Computer Laboratory Digital Information Board System</p>
     </footer>
 
-    <!-- Interactive Search JS -->
+    <!-- Interactive Search & Faculty Filter JS -->
     <script>
         const searchInput = document.getElementById('labSearch');
+        const fakultasSelect = document.getElementById('fakultasFilter');
+        const btnReset = document.getElementById('btnResetFilter');
+        const countDisplay = document.getElementById('labCountDisplay');
+        const emptyFilterState = document.getElementById('emptyFilterState');
+        const cards = document.querySelectorAll('.lab-card');
 
         function updateDisplay() {
-            const query = searchInput.value.toLowerCase().trim();
-            const cards = document.querySelectorAll('.lab-card');
+            const query = (searchInput?.value || '').toLowerCase().trim();
+            const selectedFakultas = fakultasSelect ? fakultasSelect.value : 'all';
+            let visibleCount = 0;
 
             cards.forEach(card => {
                 const name = card.dataset.name || '';
                 const location = card.dataset.location || '';
+                const fakultasId = card.dataset.fakultasId || '';
+                const fakultasName = card.dataset.fakultasName || '';
 
-                if (name.includes(query) || location.includes(query)) {
+                const matchesQuery = !query || name.includes(query) || location.includes(query) || fakultasName.includes(query);
+                const matchesFakultas = selectedFakultas === 'all' || fakultasId === selectedFakultas;
+
+                if (matchesQuery && matchesFakultas) {
                     card.style.display = 'flex';
+                    visibleCount++;
                 } else {
                     card.style.display = 'none';
                 }
             });
+
+            if (countDisplay) {
+                countDisplay.textContent = visibleCount;
+            }
+
+            if (emptyFilterState) {
+                emptyFilterState.style.display = (visibleCount === 0 && cards.length > 0) ? 'block' : 'none';
+            }
+
+            if (btnReset) {
+                if (query !== '' || selectedFakultas !== 'all') {
+                    btnReset.classList.remove('hidden');
+                } else {
+                    btnReset.classList.add('hidden');
+                }
+            }
+        }
+
+        function resetFilters() {
+            if (searchInput) searchInput.value = '';
+            if (fakultasSelect) fakultasSelect.value = 'all';
+            updateDisplay();
         }
 
         searchInput?.addEventListener('input', updateDisplay);
+        fakultasSelect?.addEventListener('change', updateDisplay);
     </script>
 </body>
 </html>

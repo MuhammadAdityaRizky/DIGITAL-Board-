@@ -1618,6 +1618,9 @@ class AdminController extends Controller
 
     public function pengumuman(Request $request)
     {
+        // Otomatis hapus pengumuman yang durasinya sudah habis dan melewati masa tenggang 24 jam
+        \App\Models\Pengumuman::cleanExpiredPengumuman();
+
         $user = Auth::user();
         $query = Pengumuman::with(['admin', 'laboratoriums'])
             ->orderBy('is_pinned', 'desc')
@@ -1886,6 +1889,13 @@ class AdminController extends Controller
         $fotoUrl = null;
         if ($request->hasFile('foto')) {
             $fotoUrl = $request->file('foto')->store('pengumuman', 'public');
+            try {
+                $publicStorageDir = public_path('storage/pengumuman');
+                if (!file_exists($publicStorageDir)) {
+                    @mkdir($publicStorageDir, 0755, true);
+                }
+                @copy(storage_path('app/public/' . $fotoUrl), public_path('storage/' . $fotoUrl));
+            } catch (\Throwable $e) {}
         }
 
         $pengumuman = Pengumuman::create([
@@ -1949,6 +1959,7 @@ class AdminController extends Controller
             if ($pengumuman->foto_url && Storage::disk('public')->exists($pengumuman->foto_url)) {
                 Storage::disk('public')->delete($pengumuman->foto_url);
             }
+            @unlink(public_path('storage/' . $pengumuman->foto_url));
             $fotoUrl = null;
         }
 
@@ -1956,7 +1967,15 @@ class AdminController extends Controller
             if ($pengumuman->foto_url && Storage::disk('public')->exists($pengumuman->foto_url)) {
                 Storage::disk('public')->delete($pengumuman->foto_url);
             }
+            @unlink(public_path('storage/' . $pengumuman->foto_url));
             $fotoUrl = $request->file('foto')->store('pengumuman', 'public');
+            try {
+                $publicStorageDir = public_path('storage/pengumuman');
+                if (!file_exists($publicStorageDir)) {
+                    @mkdir($publicStorageDir, 0755, true);
+                }
+                @copy(storage_path('app/public/' . $fotoUrl), public_path('storage/' . $fotoUrl));
+            } catch (\Throwable $e) {}
         }
 
         $pengumuman->update([
@@ -1996,6 +2015,7 @@ class AdminController extends Controller
             if ($pengumuman->foto_url && Storage::disk('public')->exists($pengumuman->foto_url)) {
                 Storage::disk('public')->delete($pengumuman->foto_url);
             }
+            @unlink(public_path('storage/' . $pengumuman->foto_url));
             $pengumuman->delete();
         }
         return back()->with('success', 'Pengumuman berhasil dihapus.');

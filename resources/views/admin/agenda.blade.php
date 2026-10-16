@@ -207,8 +207,8 @@
                         <div class="lg:col-span-2">
                             <label class="block text-slate-600 font-semibold mb-1">Urutan Tanggal</label>
                             <select name="sort" onchange="this.form.submit()" class="w-full py-2 px-3 rounded-lg bg-slate-50/80 border border-slate-200 focus:bg-white focus:ring-1 focus:ring-teal-700 focus:border-teal-700 outline-none text-xs transition font-medium cursor-pointer">
-                                <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>📅 Terbaru</option>
-                                <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>📅 Terlama</option>
+                                <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                                <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama</option>
                             </select>
                         </div>
                     </div>

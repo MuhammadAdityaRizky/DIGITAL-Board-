@@ -78,37 +78,57 @@
         <div class="flex-grow overflow-auto p-6 space-y-6">
 
             <!-- Search & Filter Bar -->
-            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm max-w-5xl">
-                <form action="{{ route('admin.absensi') }}" method="GET" class="flex flex-col sm:flex-row gap-4 items-end text-xs">
-                    <div class="flex-grow w-full">
-                        <label class="block text-slate-655 font-bold mb-1.5">Cari Agenda / Dosen</label>
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm max-w-5xl">
+                <form action="{{ route('admin.absensi') }}" method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-end text-xs">
+                    <!-- Cari Agenda / Dosen -->
+                    <div class="sm:col-span-2 lg:col-span-4">
+                        <label class="block text-slate-700 font-bold mb-1.5">Cari Agenda / Dosen</label>
                         <div class="relative">
-                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari mata kuliah atau nama dosen..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </div>
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari mata kuliah atau dosen..." class="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition">
                         </div>
                     </div>
-                    <div class="w-full sm:w-40">
-                        <label class="block text-slate-650 font-bold mb-1.5">Tanggal Mulai</label>
-                        <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+
+                    <!-- Tanggal Mulai -->
+                    <div class="lg:col-span-2">
+                        <label class="block text-slate-700 font-bold mb-1.5">Tanggal Mulai</label>
+                        <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition font-medium text-slate-700">
                     </div>
-                    <div class="w-full sm:w-40">
-                        <label class="block text-slate-650 font-bold mb-1.5">Tanggal Selesai</label>
-                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
+
+                    <!-- Tanggal Selesai -->
+                    <div class="lg:col-span-2">
+                        <label class="block text-slate-700 font-bold mb-1.5">Tanggal Selesai</label>
+                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none transition font-medium text-slate-700">
                     </div>
-                    <div class="w-full sm:w-44">
+
+                    <!-- Urutan Tanggal -->
+                    <div class="lg:col-span-2">
                         <label class="block text-slate-700 font-bold mb-1.5">Urutan Tanggal</label>
-                        <select name="sort" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none">
-                            <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>📅 Tanggal Terbaru</option>
-                            <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>📅 Tanggal Terlama</option>
-                        </select>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-teal-700">
+                                <i class="fa-solid fa-arrow-down-wide-short text-xs"></i>
+                            </div>
+                            <select name="sort" class="w-full pl-8 pr-7 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-700 cursor-pointer appearance-none transition">
+                                <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                                <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex gap-2 w-full sm:w-auto">
-                        <button type="submit" class="flex-grow sm:flex-grow-0 px-5 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition-all shadow-sm">
-                            Filter
+
+                    <!-- Tombol Aksi -->
+                    <div class="sm:col-span-2 lg:col-span-2 flex gap-2 w-full">
+                        <button type="submit" class="flex-1 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-filter text-[11px]"></i>
+                            <span>Filter</span>
                         </button>
                         @if(request()->anyFilled(['search', 'start_date', 'end_date', 'tanggal']) || request('sort') === 'terlama')
-                            <a href="{{ route('admin.absensi') }}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all border border-slate-200 text-center">
-                                Reset
+                            <a href="{{ route('admin.absensi') }}" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all border border-slate-200 text-center flex items-center justify-center" title="Reset Filter">
+                                <i class="fa-solid fa-rotate-left"></i>
                             </a>
                         @endif
                     </div>

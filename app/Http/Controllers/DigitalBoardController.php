@@ -28,7 +28,8 @@ class DigitalBoardController extends Controller
 
         if (!$lab_id) {
             $labs = \App\Models\Laboratorium::with('fakultas')->orderBy('nama_lab')->get();
-            return view('board_portal', compact('labs'));
+            $fakultas = \App\Models\Fakultas::orderBy('nama_fakultas')->get();
+            return view('board_portal', compact('labs', 'fakultas'));
         }
 
         $activeLab = \App\Models\Laboratorium::with('fakultas')->findOrFail($lab_id);
@@ -39,12 +40,20 @@ class DigitalBoardController extends Controller
             ->orderBy('jam_mulai')
             ->get();
 
+        // Otomatis hapus pengumuman yang sudah lewat 24 jam dari masa berlakunya
+        Pengumuman::cleanExpiredPengumuman();
+
         $pengumuman = Pengumuman::where(function($q) use ($lab_id) {
             $q->whereDoesntHave('laboratoriums')
               ->orWhereHas('laboratoriums', function($lq) use ($lab_id) {
                   $lq->where('laboratorium.id', $lab_id);
               });
-        })->orderByDesc('created_at')->limit(5)->get();
+        })
+        ->activeForDisplay()
+        ->orderByDesc('is_pinned')
+        ->orderByDesc('created_at')
+        ->limit(5)
+        ->get();
 
         if (request()->ajax()) {
             $html = view('welcome_partial', compact('agendas', 'pengumuman', 'activeLab'))->render();

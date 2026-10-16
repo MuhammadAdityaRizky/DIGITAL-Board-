@@ -12,7 +12,38 @@ use Illuminate\Support\Facades\Route;
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 // [TEMPORARY HIDE UNTUK HOSTING / PRODUCTION] Dinonaktifkan sementara untuk keamanan hosting
-// Route::get('/demo-login/{role}', [AuthController::class, 'demoLogin'])->name('demo.login');
+// File Storage Route (Solusi Shared Hosting/cPanel jika symlink storage:link tidak tersedia/terpisah)
+Route::get('/storage/{path}', function ($path) {
+    // Hindari directory traversal
+    $cleanPath = str_replace(['..', "\0"], '', $path);
+    $filePath = storage_path('app/public/' . $cleanPath);
+
+    if (!file_exists($filePath) || is_dir($filePath)) {
+        // Cek juga fallback di public_path('storage/...')
+        $altPath = public_path('storage/' . $cleanPath);
+        if (file_exists($altPath) && !is_dir($altPath)) {
+            $filePath = $altPath;
+        } else {
+            abort(404);
+        }
+    }
+
+    $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+    $mimeType = match ($extension) {
+        'jpg', 'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'gif' => 'image/gif',
+        'webp' => 'image/webp',
+        'svg' => 'image/svg+xml',
+        'pdf' => 'application/pdf',
+        default => @mime_content_type($filePath) ?: 'application/octet-stream',
+    };
+
+    return response()->file($filePath, [
+        'Content-Type' => $mimeType,
+        'Cache-Control' => 'public, max-age=604800, immutable',
+    ]);
+})->where('path', '.*')->name('storage.file');
 
 // Authenticated Routes (Harus login terlebih dahulu)
 Route::middleware('auth')->group(function () {
