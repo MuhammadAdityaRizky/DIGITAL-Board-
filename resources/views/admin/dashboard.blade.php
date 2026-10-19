@@ -291,7 +291,13 @@
                             @else
                                 <div class="text-center py-8 text-slate-400">
                                     <i class="fa-solid fa-door-closed text-3xl mb-2 text-slate-300"></i>
-                                    <p class="font-medium text-xs">Belum ada laboratorium terdaftar dalam sistem.</p>
+                                    <p class="font-medium text-xs">
+                                        @if(auth()->user()->isAdminFakultas())
+                                            Fakultas {{ auth()->user()->fakultas->nama_fakultas ?? 'Anda' }} belum memiliki laboratorium terdaftar.
+                                        @else
+                                            Belum ada laboratorium terdaftar dalam sistem.
+                                        @endif
+                                    </p>
                                     <a href="{{ route('admin.laboratorium') }}" class="inline-block mt-2 px-3.5 py-1.5 bg-teal-800 text-white rounded-lg font-bold text-xs">Tambah Laboratorium</a>
                                 </div>
                             @endif
