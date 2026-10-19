@@ -2796,27 +2796,100 @@ class AdminController extends Controller
             'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
             'jam_mulai' => 'required|date_format:H:i',
             'jam_selesai' => 'required|date_format:H:i',
+            'swap_with_id' => 'nullable|exists:jadwal_penggunaan_lab,id',
+            'swap_hari' => 'nullable|in:Senin,Selasa,Rabu,Kamis,Jumat,Sabtu',
+            'swap_jam_mulai' => 'nullable|date_format:H:i',
+            'swap_jam_selesai' => 'nullable|date_format:H:i',
         ]);
 
-        $jadwal->update([
-            'hari' => $request->hari,
-            'jam_mulai' => $request->jam_mulai . ':00',
-            'jam_selesai' => $request->jam_selesai . ':00',
-        ]);
+        $jamMulaiA = $request->jam_mulai . ':00';
+        $jamSelesaiA = $request->jam_selesai . ':00';
 
-        // Cascade sync updates to associated uncompleted Agenda sessions
-        Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
-            ->where('status_agenda', '!=', 'Selesai')
-            ->update([
-                'jam_mulai' => $request->jam_mulai . ':00',
-                'jam_selesai' => $request->jam_selesai . ':00',
+        // Check if a target schedule was provided or if there is an overlapping schedule at the destination
+        $swapWithId = $request->input('swap_with_id');
+        $targetJadwal = null;
+
+        if ($swapWithId) {
+            $targetJadwal = JadwalPenggunaanLab::find($swapWithId);
+        } else {
+            // Auto-detect if target slot is occupied in this lab & academic year
+            $targetJadwal = JadwalPenggunaanLab::where('lab_id', $jadwal->lab_id)
+                ->where('id', '!=', $jadwal->id)
+                ->where('tahun_akademik', $jadwal->tahun_akademik)
+                ->where('hari', $request->hari)
+                ->where(function($q) use ($jamMulaiA, $jamSelesaiA) {
+                    $q->where('jam_mulai', '<', $jamSelesaiA)
+                      ->where('jam_selesai', '>', $jamMulaiA);
+                })
+                ->first();
+        }
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            if ($targetJadwal && $targetJadwal->id !== $jadwal->id) {
+                // Determine new time for target schedule (swap to original place of dragged schedule)
+                $targetNewHari = $request->filled('swap_hari') ? $request->swap_hari : $jadwal->hari;
+                $targetNewJamMulai = $request->filled('swap_jam_mulai') ? ($request->swap_jam_mulai . ':00') : $jadwal->jam_mulai;
+
+                if ($request->filled('swap_jam_selesai')) {
+                    $targetNewJamSelesai = $request->swap_jam_selesai . ':00';
+                } else {
+                    $tMulai = \Carbon\Carbon::parse($targetJadwal->jam_mulai);
+                    $tSelesai = \Carbon\Carbon::parse($targetJadwal->jam_selesai);
+                    $durationMin = $tSelesai->diffInMinutes($tMulai);
+                    $targetNewJamSelesai = \Carbon\Carbon::parse($targetNewJamMulai)->addMinutes(max($durationMin, 60))->format('H:i:s');
+                }
+
+                $targetJadwal->update([
+                    'hari' => $targetNewHari,
+                    'jam_mulai' => $targetNewJamMulai,
+                    'jam_selesai' => $targetNewJamSelesai,
+                ]);
+
+                Agenda::where('jadwal_penggunaan_lab_id', $targetJadwal->id)
+                    ->where('status_agenda', '!=', 'Selesai')
+                    ->update([
+                        'jam_mulai' => $targetNewJamMulai,
+                        'jam_selesai' => $targetNewJamSelesai,
+                    ]);
+            }
+
+            // Update dragged schedule
+            $jadwal->update([
+                'hari' => $request->hari,
+                'jam_mulai' => $jamMulaiA,
+                'jam_selesai' => $jamSelesaiA,
             ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Jadwal ' . $jadwal->mata_kuliah . ' berhasil dipindahkan ke hari ' . $request->hari . ' (' . $request->jam_mulai . ' - ' . $request->jam_selesai . ').',
-            'jadwal_id' => $jadwal->id
-        ]);
+            // Cascade sync updates to associated uncompleted Agenda sessions
+            Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
+                ->where('status_agenda', '!=', 'Selesai')
+                ->update([
+                    'jam_mulai' => $jamMulaiA,
+                    'jam_selesai' => $jamSelesaiA,
+                ]);
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            if ($targetJadwal && $targetJadwal->id !== $jadwal->id) {
+                $message = 'Berhasil menukar waktu jadwal "' . $jadwal->mata_kuliah . '" dengan "' . $targetJadwal->mata_kuliah . '".';
+            } else {
+                $message = 'Jadwal "' . $jadwal->mata_kuliah . '" berhasil dipindahkan ke hari ' . $request->hari . ' (' . $request->jam_mulai . ' - ' . $request->jam_selesai . ').';
+            }
+
+            return response()->json([
+                'success' => true,
+                'is_swap' => (bool)($targetJadwal && $targetJadwal->id !== $jadwal->id),
+                'message' => $message,
+                'jadwal_id' => $jadwal->id
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memindahkan/menukar jadwal: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function deleteJadwalPenggunaanLab(Request $request, $id)

@@ -271,6 +271,12 @@
                                                     @endphp
                                                     <div class="flex-1 w-full {{ $rowspan == 1 ? 'p-1.5 px-2' : 'p-2' }} rounded-xl border {{ $bgColor }} shadow-2xs text-[11px] leading-tight relative group jadwal-card cursor-grab active:cursor-grabbing flex flex-col justify-between transition-all duration-150 overflow-hidden" 
                                                          id="jadwal-card-{{ $m->id }}"
+                                                         data-id="{{ $m->id }}"
+                                                         data-hari="{{ $m->hari }}"
+                                                         data-jam-mulai="{{ substr($m->jam_mulai,0,5) }}"
+                                                         data-jam-selesai="{{ substr($m->jam_selesai,0,5) }}"
+                                                         data-matkul="{{ addslashes($m->mata_kuliah) }}"
+                                                         data-dosen="{{ addslashes($m->dosen->nama ?? '-') }}"
                                                          style="min-height: calc({{ $rowspan }} * 50px - 8px);"
                                                          draggable="true" 
                                                          ondragstart="handleCardDragStart(event, {{ $m->id }}, '{{ $m->hari }}', '{{ substr($m->jam_mulai,0,5) }}', '{{ substr($m->jam_selesai,0,5) }}', '{{ addslashes($m->mata_kuliah) }}')" 
@@ -2238,8 +2244,158 @@
                 return;
             }
 
+            // Helper to extract schedule information from a card element
+            function getCardData(cardEl) {
+                if (!cardEl) return null;
+                const id = cardEl.getAttribute('data-id');
+                if (!id) return null;
+                const jamMulai = cardEl.getAttribute('data-jam-mulai');
+                const jamSelesai = cardEl.getAttribute('data-jam-selesai');
+                if (!jamMulai || !jamSelesai) return null;
+
+                const [sH, sM] = jamMulai.split(':').map(Number);
+                const [eH, eM] = jamSelesai.split(':').map(Number);
+                const dur = Math.max((eH * 60 + eM) - (sH * 60 + sM), 60);
+
+                return {
+                    id: parseInt(id),
+                    hari: cardEl.getAttribute('data-hari'),
+                    jamMulai: jamMulai,
+                    jamSelesai: jamSelesai,
+                    durationMin: dur,
+                    matkul: cardEl.getAttribute('data-matkul') || 'Jadwal Lain',
+                    dosen: cardEl.getAttribute('data-dosen') || '-'
+                };
+            }
+
+            // 1. Check if user dropped directly on another card
+            let targetSchedule = null;
+            const droppedOnCard = e.target.closest('.jadwal-card');
+            if (droppedOnCard && droppedOnCard.getAttribute('data-id') != draggedSchedule.id) {
+                targetSchedule = getCardData(droppedOnCard);
+            }
+
+            // 2. Check if the destination cell contains another card
+            if (!targetSchedule) {
+                const cardsInCell = cell.querySelectorAll('.jadwal-card');
+                for (const card of cardsInCell) {
+                    if (card.getAttribute('data-id') != draggedSchedule.id) {
+                        targetSchedule = getCardData(card);
+                        break;
+                    }
+                }
+            }
+
+            // 3. Check across all cards in the matrix that overlap with targetHari & [targetStart, targetEnd]
+            if (!targetSchedule) {
+                const allCards = document.querySelectorAll('.jadwal-card');
+                for (const card of allCards) {
+                    const cardData = getCardData(card);
+                    if (!cardData || cardData.id == draggedSchedule.id) continue;
+                    if (cardData.hari === targetHari) {
+                        if (cardData.jamMulai < targetEnd && cardData.jamSelesai > targetStart) {
+                            targetSchedule = cardData;
+                            break;
+                        }
+                    }
+                }
+            }
+
             const scheduleToMove = { ...draggedSchedule };
 
+            // CASE 1: TARGET IS OCCUPIED -> SWAP SCHEDULES (TUKAR WAKTU)
+            if (targetSchedule && targetSchedule.id !== scheduleToMove.id) {
+                const newA_hari = targetSchedule.hari;
+                const newA_start = targetSchedule.jamMulai;
+                let newA_end;
+                if (scheduleToMove.durationMin === targetSchedule.durationMin) {
+                    newA_end = targetSchedule.jamSelesai;
+                } else {
+                    const [hA, mA] = newA_start.split(':').map(Number);
+                    const totA = hA * 60 + mA + scheduleToMove.durationMin;
+                    newA_end = String(Math.floor(totA / 60)).padStart(2, '0') + ':' + String(totA % 60).padStart(2, '0');
+                }
+
+                const newB_hari = scheduleToMove.hari;
+                const newB_start = scheduleToMove.jamMulai;
+                let newB_end;
+                if (scheduleToMove.durationMin === targetSchedule.durationMin) {
+                    newB_end = scheduleToMove.jamSelesai;
+                } else {
+                    const [hB, mB] = newB_start.split(':').map(Number);
+                    const totB = hB * 60 + mB + targetSchedule.durationMin;
+                    newB_end = String(Math.floor(totB / 60)).padStart(2, '0') + ':' + String(totB % 60).padStart(2, '0');
+                }
+
+                Swal.fire({
+                    title: 'Tukar Waktu Jadwal?',
+                    html: `
+                        <div class="text-left space-y-3 mt-2">
+                            <div class="p-3 bg-teal-50 rounded-2xl border border-teal-200/80 text-xs">
+                                <p class="font-extrabold text-teal-900 flex items-center gap-1.5 mb-1 text-[13px]">
+                                    <i class="fa-solid fa-repeat text-teal-600"></i> Slot Waktu Sudah Terisi
+                                </p>
+                                <p class="text-teal-700 leading-relaxed text-[11px]">
+                                    Slot ini sudah digunakan. Sistem akan <b>menukar waktu & hari</b> kedua jadwal ini secara otomatis agar tidak tumpang tindih.
+                                </p>
+                            </div>
+                            
+                            <div class="space-y-2 text-xs">
+                                <!-- Jadwal 1 (Yang Digeser) -->
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-2xs">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-700 text-white shrink-0">Jadwal 1 (Digeser)</span>
+                                        <span class="font-bold text-slate-800 text-xs truncate" title="${scheduleToMove.matkul}">${scheduleToMove.matkul}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-slate-500 text-[11px]">
+                                        <span>Semula:</span>
+                                        <span class="font-bold text-slate-700">${scheduleToMove.hari}, ${scheduleToMove.jamMulai} - ${scheduleToMove.jamSelesai}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-teal-700 font-bold text-[11px] mt-1 pt-1 border-t border-slate-200/60">
+                                        <span>Menjadi:</span>
+                                        <span class="font-extrabold text-teal-800">${newA_hari}, ${newA_start} - ${newA_end}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Jadwal 2 (Yang Ditukar) -->
+                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-2xs">
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-600 text-white shrink-0">Jadwal 2 (Ditukar)</span>
+                                        <span class="font-bold text-slate-800 text-xs truncate" title="${targetSchedule.matkul}">${targetSchedule.matkul}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-slate-500 text-[11px]">
+                                        <span>Semula:</span>
+                                        <span class="font-bold text-slate-700">${targetSchedule.hari}, ${targetSchedule.jamMulai} - ${targetSchedule.jamSelesai}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-amber-700 font-bold text-[11px] mt-1 pt-1 border-t border-slate-200/60">
+                                        <span>Menjadi:</span>
+                                        <span class="font-extrabold text-amber-800">${newB_hari}, ${newB_start} - ${newB_end}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0f766e',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: '<i class="fa-solid fa-repeat mr-1.5"></i> Ya, Tukar Waktu!',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-3xl p-6 shadow-2xl',
+                        title: 'text-base font-extrabold text-slate-800',
+                        confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-bold shadow-sm',
+                        cancelButton: 'rounded-xl text-xs px-5 py-2.5 font-bold shadow-sm'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        executeSwapSchedule(scheduleToMove.id, newA_hari, newA_start, newA_end, targetSchedule.id, newB_hari, newB_start, newB_end);
+                    }
+                });
+                return;
+            }
+
+            // CASE 2: TARGET IS EMPTY -> MOVE TO EMPTY SLOT
             Swal.fire({
                 title: 'Pindahkan Jadwal?',
                 html: `
@@ -2251,7 +2407,7 @@
                                 <span class="font-bold text-slate-700">${scheduleToMove.hari}, ${scheduleToMove.jamMulai} - ${scheduleToMove.jamSelesai}</span>
                             </div>
                             <div class="text-teal-700 flex items-center justify-between">
-                                <span class="font-bold">Ke:</span> 
+                                <span>Ke:</span> 
                                 <span class="font-extrabold text-teal-800">${targetHari}, ${targetStart} - ${targetEnd}</span>
                             </div>
                         </div>
@@ -2273,6 +2429,81 @@
                 if (result.isConfirmed) {
                     executeMoveSchedule(scheduleToMove.id, targetHari, targetStart, targetEnd);
                 }
+            });
+        }
+
+        function executeSwapSchedule(idA, hariA, jamMulaiA, jamSelesaiA, idB, hariB, jamMulaiB, jamSelesaiB) {
+            Swal.fire({
+                title: 'Menukar Waktu Jadwal...',
+                text: 'Mohon tunggu sebentar',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            fetch(`{{ url('admin/jadwal-lab') }}/${idA}/move`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    hari: hariA,
+                    jam_mulai: jamMulaiA,
+                    jam_selesai: jamSelesaiA,
+                    swap_with_id: idB,
+                    swap_hari: hariB,
+                    swap_jam_mulai: jamMulaiB,
+                    swap_jam_selesai: jamSelesaiB
+                })
+            })
+            .then(res => res.json())
+            .then(async data => {
+                if (data.success) {
+                    Swal.close();
+                    await refreshMatrixInPlace(idA);
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Jadwal Berhasil Ditukar!',
+                        text: data.message,
+                        timer: 3500,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                        customClass: {
+                            popup: 'rounded-2xl shadow-xl border border-teal-100'
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Menukar Jadwal',
+                        text: data.message || 'Terjadi kesalahan saat menukar jadwal.',
+                        confirmButtonColor: '#0f766e',
+                        customClass: {
+                            popup: 'rounded-3xl p-6',
+                            title: 'text-base font-extrabold text-slate-800'
+                        }
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan Jaringan',
+                    text: 'Gagal menghubungi server.',
+                    confirmButtonColor: '#0f766e',
+                    customClass: {
+                        popup: 'rounded-3xl p-6',
+                        title: 'text-base font-extrabold text-slate-800'
+                    }
+                });
             });
         }
 
