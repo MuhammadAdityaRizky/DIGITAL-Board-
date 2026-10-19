@@ -2411,67 +2411,220 @@
 
         // ==========================================
         // FITUR: TUKAR JAM HARI INI (SEMENTARA)
+        // CUSTOM CARD-BASED DROPDOWN COMPONENT
         // ==========================================
+        const listJadwalHariIni = @json($jadwalHariIniJson ?? []);
+        let selectedSwap1 = null;
+        let selectedSwap2 = null;
+
+        function renderSwapDropdownList(num, query = '') {
+            const listEl = document.getElementById(`list_swap_options_${num}`);
+            if (!listEl) return;
+            
+            const otherSelectedId = num === 1 ? selectedSwap2?.id : selectedSwap1?.id;
+            const q = query.toLowerCase().trim();
+            
+            let filtered = listJadwalHariIni.filter(j => {
+                if (!q) return true;
+                return j.mata_kuliah.toLowerCase().includes(q) || 
+                       j.dosen.toLowerCase().includes(q) || 
+                       j.lab.toLowerCase().includes(q) ||
+                       j.kelas.toLowerCase().includes(q);
+            });
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div class="p-6 text-center text-xs text-slate-400">
+                        <i class="fa-regular fa-folder-open text-xl mb-1.5 text-slate-300 block"></i>
+                        Tidak ada jadwal yang cocok dengan kata kunci.
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(j => {
+                const isOther = otherSelectedId && j.id === otherSelectedId;
+                const disabledClass = isOther ? 'opacity-40 pointer-events-none bg-slate-50' : 'hover:bg-indigo-50/70 cursor-pointer active:bg-indigo-100';
+                const otherBadge = isOther ? `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-200 text-slate-600">Dipilih di Sesi ${num === 1 ? 'B' : 'A'}</span>` : '';
+                const swappedBadge = j.is_swapped ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Ditukar</span>` : '';
+
+                return `
+                    <div onclick="selectSwapCard(${num}, ${j.id})" 
+                         class="p-3 transition flex items-center justify-between gap-3 group ${disabledClass}">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="px-2.5 py-1.5 rounded-xl bg-slate-100 group-hover:bg-indigo-600 text-slate-700 group-hover:text-white font-mono font-bold text-xs border border-slate-200 group-hover:border-indigo-600 shrink-0 text-center transition">
+                                <span>${j.jam_mulai}</span>
+                                <span class="block text-[9px] opacity-75 font-normal">- ${j.jam_selesai}</span>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <h5 class="font-extrabold text-xs text-slate-800 group-hover:text-indigo-950 truncate">${j.mata_kuliah}</h5>
+                                    ${swappedBadge}
+                                    ${otherBadge}
+                                </div>
+                                <div class="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap mt-0.5">
+                                    <span class="truncate max-w-[160px]"><i class="fa-solid fa-user-tie text-[10px] text-slate-400 mr-0.5"></i> ${j.dosen}</span>
+                                    <span class="text-slate-300">•</span>
+                                    <span class="px-1.5 py-0.2 bg-slate-100 group-hover:bg-white text-slate-700 rounded text-[9px] font-semibold border border-slate-200">
+                                        <i class="fa-solid fa-door-open text-[9px] text-slate-400 mr-0.5"></i> ${j.lab}
+                                    </span>
+                                    <span class="px-1.5 py-0.2 bg-teal-50 group-hover:bg-white text-teal-800 rounded text-[9px] font-semibold border border-teal-200">
+                                        Kelas ${j.kelas}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="shrink-0 text-slate-300 group-hover:text-indigo-600 transition pr-1">
+                            <i class="fa-solid fa-circle-check text-base"></i>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleSwapDropdown(num) {
+            const menu = document.getElementById(`dropdown_menu_${num}`);
+            const otherMenu = document.getElementById(`dropdown_menu_${num === 1 ? 2 : 1}`);
+            if (otherMenu) otherMenu.classList.add('hidden');
+
+            if (menu) {
+                const isHidden = menu.classList.contains('hidden');
+                if (isHidden) {
+                    renderSwapDropdownList(num);
+                    menu.classList.remove('hidden');
+                    const searchInput = document.getElementById(`search_swap_${num}`);
+                    if (searchInput) {
+                        searchInput.value = '';
+                        setTimeout(() => searchInput.focus(), 100);
+                    }
+                } else {
+                    menu.classList.add('hidden');
+                }
+            }
+        }
+
+        function filterSwapOptions(num, query) {
+            renderSwapDropdownList(num, query);
+        }
+
+        function selectSwapCard(num, id) {
+            const item = listJadwalHariIni.find(j => j.id === id);
+            if (!item) return;
+
+            if (num === 1) {
+                selectedSwap1 = item;
+                document.getElementById('swap_jadwal_1').value = item.id;
+                document.getElementById('sel_jam_mulai_1').textContent = item.jam_mulai;
+                document.getElementById('sel_jam_selesai_1').textContent = `- ${item.jam_selesai} WIB`;
+                document.getElementById('sel_matkul_1').textContent = item.mata_kuliah;
+                document.getElementById('sel_dosen_1').textContent = item.dosen;
+                document.getElementById('sel_lab_1').textContent = item.lab;
+                document.getElementById('sel_kelas_1').textContent = `Kelas ${item.kelas}`;
+                
+                document.getElementById('btn_open_swap_1').classList.add('hidden');
+                document.getElementById('selected_card_1').classList.remove('hidden');
+                document.getElementById('dropdown_menu_1').classList.add('hidden');
+            } else {
+                selectedSwap2 = item;
+                document.getElementById('swap_jadwal_2').value = item.id;
+                document.getElementById('sel_jam_mulai_2').textContent = item.jam_mulai;
+                document.getElementById('sel_jam_selesai_2').textContent = `- ${item.jam_selesai} WIB`;
+                document.getElementById('sel_matkul_2').textContent = item.mata_kuliah;
+                document.getElementById('sel_dosen_2').textContent = item.dosen;
+                document.getElementById('sel_lab_2').textContent = item.lab;
+                document.getElementById('sel_kelas_2').textContent = `Kelas ${item.kelas}`;
+
+                document.getElementById('btn_open_swap_2').classList.add('hidden');
+                document.getElementById('selected_card_2').classList.remove('hidden');
+                document.getElementById('dropdown_menu_2').classList.add('hidden');
+            }
+
+            updateSwapPreview();
+        }
+
+        function gantiSwapSelection(num) {
+            if (num === 1) {
+                selectedSwap1 = null;
+                document.getElementById('swap_jadwal_1').value = '';
+                document.getElementById('btn_open_swap_1').classList.remove('hidden');
+                document.getElementById('selected_card_1').classList.add('hidden');
+                toggleSwapDropdown(1);
+            } else {
+                selectedSwap2 = null;
+                document.getElementById('swap_jadwal_2').value = '';
+                document.getElementById('btn_open_swap_2').classList.remove('hidden');
+                document.getElementById('selected_card_2').classList.add('hidden');
+                toggleSwapDropdown(2);
+            }
+            updateSwapPreview();
+        }
+
+        function updateSwapPreview() {
+            const previewBox = document.getElementById('swap_preview_box');
+            const submitBtn = document.getElementById('btnSubmitSwap');
+
+            if (selectedSwap1 && selectedSwap2) {
+                previewBox.classList.remove('hidden');
+                
+                document.getElementById('prev_matkul_1').textContent = selectedSwap1.mata_kuliah;
+                document.getElementById('prev_jam_lama_1').textContent = selectedSwap1.jam_str;
+                document.getElementById('prev_jam_baru_1').textContent = selectedSwap2.jam_str;
+
+                document.getElementById('prev_matkul_2').textContent = selectedSwap2.mata_kuliah;
+                document.getElementById('prev_jam_lama_2').textContent = selectedSwap2.jam_str;
+                document.getElementById('prev_jam_baru_2').textContent = selectedSwap1.jam_str;
+
+                if (submitBtn) {
+                    submitBtn.removeAttribute('disabled');
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            } else {
+                previewBox.classList.add('hidden');
+                if (submitBtn) {
+                    submitBtn.setAttribute('disabled', 'disabled');
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
         function bukaModalTukarJamHariIni() {
             const modal = document.getElementById('modalTukarJamHariIni');
             if (modal) {
                 modal.classList.remove('hidden');
+                selectedSwap1 = null;
+                selectedSwap2 = null;
                 document.getElementById('swap_jadwal_1').value = '';
                 document.getElementById('swap_jadwal_2').value = '';
-                document.getElementById('swap_preview_box').classList.add('hidden');
-                document.getElementById('preview_sesi_1').classList.add('hidden');
-                document.getElementById('preview_sesi_2').classList.add('hidden');
+                
+                document.getElementById('btn_open_swap_1').classList.remove('hidden');
+                document.getElementById('selected_card_1').classList.add('hidden');
+                document.getElementById('dropdown_menu_1').classList.add('hidden');
+
+                document.getElementById('btn_open_swap_2').classList.remove('hidden');
+                document.getElementById('selected_card_2').classList.add('hidden');
+                document.getElementById('dropdown_menu_2').classList.add('hidden');
+
+                updateSwapPreview();
             }
         }
 
         function tutupModalTukarJamHariIni() {
             const modal = document.getElementById('modalTukarJamHariIni');
-            if (modal) modal.classList.add('hidden');
-        }
-
-        function updateSwapPreview() {
-            const sel1 = document.getElementById('swap_jadwal_1');
-            const sel2 = document.getElementById('swap_jadwal_2');
-            const opt1 = sel1.options[sel1.selectedIndex];
-            const opt2 = sel2.options[sel2.selectedIndex];
-
-            if (sel1.value) {
-                document.getElementById('preview_sesi_1').classList.remove('hidden');
-                document.getElementById('jam_asli_1').textContent = opt1.dataset.jam + ' WIB (' + opt1.dataset.lab + ')';
-            } else {
-                document.getElementById('preview_sesi_1').classList.add('hidden');
-            }
-
-            if (sel2.value) {
-                document.getElementById('preview_sesi_2').classList.remove('hidden');
-                document.getElementById('jam_asli_2').textContent = opt2.dataset.jam + ' WIB (' + opt2.dataset.lab + ')';
-            } else {
-                document.getElementById('preview_sesi_2').classList.add('hidden');
-            }
-
-            if (sel1.value && sel2.value) {
-                if (sel1.value === sel2.value) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Jadwal Sama',
-                        text: 'Pilih dua mata kuliah yang berbeda untuk saling bertukar jam.',
-                        confirmButtonColor: '#4f46e5'
-                    });
-                    sel2.value = '';
-                    document.getElementById('swap_preview_box').classList.add('hidden');
-                    return;
-                }
-
-                document.getElementById('swap_preview_box').classList.remove('hidden');
-                document.getElementById('prev_matkul_1').textContent = opt1.dataset.matkul;
-                document.getElementById('prev_jam_baru_1').textContent = opt2.dataset.jam + ' WIB';
-
-                document.getElementById('prev_matkul_2').textContent = opt2.dataset.matkul;
-                document.getElementById('prev_jam_baru_2').textContent = opt1.dataset.jam + ' WIB';
-            } else {
-                document.getElementById('swap_preview_box').classList.add('hidden');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.getElementById('dropdown_menu_1')?.classList.add('hidden');
+                document.getElementById('dropdown_menu_2')?.classList.add('hidden');
             }
         }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#wrapper_swap_1')) {
+                document.getElementById('dropdown_menu_1')?.classList.add('hidden');
+            }
+            if (!e.target.closest('#wrapper_swap_2')) {
+                document.getElementById('dropdown_menu_2')?.classList.add('hidden');
+            }
+        });
 
         function submitTukarJamHariIni(e) {
             e.preventDefault();
@@ -2606,9 +2759,28 @@
         }
     </script>
 
+    @php
+        $jadwalHariIniJson = isset($allJadwalHariIni) ? $allJadwalHariIni->map(function($j) {
+            return [
+                'id' => $j->id,
+                'mata_kuliah' => $j->mata_kuliah,
+                'dosen' => $j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen Pengampu'),
+                'jam_mulai' => substr($j->jam_mulai, 0, 5),
+                'jam_selesai' => substr($j->jam_selesai, 0, 5),
+                'jam_str' => substr($j->jam_mulai, 0, 5) . ' - ' . substr($j->jam_selesai, 0, 5) . ' WIB',
+                'lab' => $j->lab?->nama_lab ?? 'Lab',
+                'kelas' => $j->kelas ?: '-',
+                'program_kuliah' => $j->program_kuliah ?? 'Reguler',
+                'is_swapped' => (bool)($j->is_swapped ?? false),
+                'jam_asli_str' => $j->jam_asli_str ?? null,
+                'swap_partner_name' => $j->swap_partner_name ?? null,
+            ];
+        })->values() : collect([]);
+    @endphp
+
     <!-- MODAL TUKAR JAM HARI INI (SEMENTARA) -->
     <div id="modalTukarJamHariIni" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in duration-200">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in duration-200">
             <!-- Modal Header -->
             <div class="flex items-start justify-between pb-3 border-b border-slate-100">
                 <div class="flex items-center gap-3">
@@ -2639,88 +2811,186 @@
             <!-- Form -->
             <form id="formTukarJamHariIni" onsubmit="submitTukarJamHariIni(event)" class="space-y-4">
                 <div class="space-y-3">
-                    <!-- Sesi A -->
-                    <div class="space-y-1.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-                        <label class="block text-xs font-bold text-slate-700">Mata Kuliah Pertama (Sesi A):</label>
-                        <select id="swap_jadwal_1" name="jadwal_1_id" required onchange="updateSwapPreview()" class="w-full text-xs bg-white border border-slate-300 rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                            <option value="">-- Pilih Sesi A --</option>
-                            @if(isset($allJadwalHariIni))
-                                @foreach($allJadwalHariIni as $j)
-                                    @php
-                                        $dName = $j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen');
-                                        $jLab = $j->lab?->nama_lab ?? 'Lab';
-                                        $jJam = substr($j->jam_mulai,0,5) . ' - ' . substr($j->jam_selesai,0,5);
-                                    @endphp
-                                    <option value="{{ $j->id }}" 
-                                            data-matkul="{{ $j->mata_kuliah }}"
-                                            data-dosen="{{ $dName }}"
-                                            data-jam="{{ $jJam }}"
-                                            data-lab="{{ $jLab }}"
-                                            data-kelas="{{ $j->kelas }}">
-                                        [{{ $jJam }}] {{ $j->mata_kuliah }} ({{ $dName }}) - {{ $jLab }}
-                                    </option>
-                                @endforeach
-                            @endif
-                        </select>
-                        <div id="preview_sesi_1" class="text-[11px] text-slate-500 pt-1 hidden flex items-center justify-between">
-                            <span>Jam Saat Ini:</span>
-                            <strong id="jam_asli_1" class="text-slate-800 font-mono font-bold">-</strong>
+                    <!-- Sesi A Custom Selector -->
+                    <div class="relative space-y-1.5 p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200/90" id="wrapper_swap_1">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wide">
+                                1. Mata Kuliah Pertama (Sesi A)
+                            </label>
+                            <span class="text-[10px] text-slate-400 font-medium">Jadwal yang akan ditukar</span>
+                        </div>
+
+                        <!-- Hidden Input for Form Submission -->
+                        <input type="hidden" id="swap_jadwal_1" name="jadwal_1_id" value="" required>
+
+                        <!-- Trigger when NOT selected -->
+                        <button type="button" 
+                                id="btn_open_swap_1" 
+                                onclick="toggleSwapDropdown(1)" 
+                                class="w-full text-left bg-white border border-slate-300 hover:border-indigo-400 focus:border-indigo-500 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-2xs transition group cursor-pointer">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-9 h-9 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white flex items-center justify-center text-sm shrink-0 transition">
+                                    <i class="fa-solid fa-calendar-check"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="block text-xs font-bold text-slate-700 group-hover:text-indigo-950">Pilih Mata Kuliah Sesi A...</span>
+                                    <span class="block text-[10px] text-slate-400">Klik untuk melihat jadwal praktikum hari ini</span>
+                                </div>
+                            </div>
+                            <div class="w-7 h-7 rounded-full bg-slate-100 group-hover:bg-indigo-50 text-slate-400 group-hover:text-indigo-600 flex items-center justify-center text-xs shrink-0 transition">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </div>
+                        </button>
+
+                        <!-- Card shown WHEN selected -->
+                        <div id="selected_card_1" class="hidden p-3 bg-white border-2 border-indigo-400 rounded-2xl shadow-xs flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="px-2.5 py-2 rounded-xl bg-indigo-600 text-white font-mono font-bold text-xs text-center shrink-0 min-w-[75px] shadow-2xs">
+                                    <span id="sel_jam_mulai_1">00:00</span>
+                                    <span class="block text-[9px] opacity-80 font-normal" id="sel_jam_selesai_1">- 00:00 WIB</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="px-1.5 py-0.2 bg-indigo-100 text-indigo-800 rounded text-[9px] font-extrabold uppercase">SESI A</span>
+                                        <h5 class="font-extrabold text-xs text-slate-900 truncate" id="sel_matkul_1">Nama Matkul</h5>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap mt-0.5">
+                                        <span class="truncate max-w-[170px]"><i class="fa-solid fa-user-tie text-[10px] text-slate-400 mr-0.5"></i> <span id="sel_dosen_1">Dosen</span></span>
+                                        <span class="text-slate-300">•</span>
+                                        <span class="px-1.5 py-0.2 bg-slate-100 text-slate-700 rounded text-[9px] font-semibold"><i class="fa-solid fa-door-open text-[9px] text-slate-400 mr-0.5"></i> <span id="sel_lab_1">Lab</span></span>
+                                        <span class="px-1.5 py-0.2 bg-teal-50 text-teal-800 rounded text-[9px] font-semibold" id="sel_kelas_1">Kelas</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="gantiSwapSelection(1)" class="shrink-0 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-indigo-200 cursor-pointer active:scale-95">
+                                <i class="fa-solid fa-rotate text-[10px]"></i>
+                                <span>Ganti</span>
+                            </button>
+                        </div>
+
+                        <!-- Dropdown Menu Popover -->
+                        <div id="dropdown_menu_1" class="absolute left-0 right-0 top-full mt-1.5 z-40 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden hidden">
+                            <div class="p-2.5 border-b border-slate-100 bg-slate-50/90 flex items-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs ml-1"></i>
+                                <input type="text" id="search_swap_1" oninput="filterSwapOptions(1, this.value)" placeholder="Ketik untuk memfilter mata kuliah atau dosen..." class="w-full text-xs bg-transparent focus:outline-none placeholder:text-slate-400 font-medium text-slate-700">
+                            </div>
+                            <div id="list_swap_options_1" class="max-h-60 overflow-y-auto divide-y divide-slate-100">
+                                <!-- Rendered by JS -->
+                            </div>
                         </div>
                     </div>
 
                     <!-- Swap Icon Indicator -->
-                    <div class="flex items-center justify-center -my-1 text-indigo-500">
-                        <div class="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-xs shadow-2xs">
-                            <i class="fa-solid fa-arrow-down-up-across-line text-[11px]"></i>
+                    <div class="flex items-center justify-center -my-1">
+                        <div class="px-3.5 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-extrabold flex items-center gap-1.5 shadow-2xs">
+                            <i class="fa-solid fa-arrow-down-up-across-line text-xs"></i>
+                            <span>Saling Bertukar Jam Hari Ini</span>
                         </div>
                     </div>
 
-                    <!-- Sesi B -->
-                    <div class="space-y-1.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-                        <label class="block text-xs font-bold text-slate-700">Mata Kuliah Kedua (Sesi B):</label>
-                        <select id="swap_jadwal_2" name="jadwal_2_id" required onchange="updateSwapPreview()" class="w-full text-xs bg-white border border-slate-300 rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-                            <option value="">-- Pilih Sesi B (Diajak Tukaran) --</option>
-                            @if(isset($allJadwalHariIni))
-                                @foreach($allJadwalHariIni as $j)
-                                    @php
-                                        $dName = $j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen');
-                                        $jLab = $j->lab?->nama_lab ?? 'Lab';
-                                        $jJam = substr($j->jam_mulai,0,5) . ' - ' . substr($j->jam_selesai,0,5);
-                                    @endphp
-                                    <option value="{{ $j->id }}" 
-                                            data-matkul="{{ $j->mata_kuliah }}"
-                                            data-dosen="{{ $dName }}"
-                                            data-jam="{{ $jJam }}"
-                                            data-lab="{{ $jLab }}"
-                                            data-kelas="{{ $j->kelas }}">
-                                        [{{ $jJam }}] {{ $j->mata_kuliah }} ({{ $dName }}) - {{ $jLab }}
-                                    </option>
-                                @endforeach
-                            @endif
-                        </select>
-                        <div id="preview_sesi_2" class="text-[11px] text-slate-500 pt-1 hidden flex items-center justify-between">
-                            <span>Jam Saat Ini:</span>
-                            <strong id="jam_asli_2" class="text-slate-800 font-mono font-bold">-</strong>
+                    <!-- Sesi B Custom Selector -->
+                    <div class="relative space-y-1.5 p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200/90" id="wrapper_swap_2">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wide">
+                                2. Mata Kuliah Kedua (Sesi B)
+                            </label>
+                            <span class="text-[10px] text-slate-400 font-medium">Jadwal yang diajak tukaran</span>
+                        </div>
+
+                        <!-- Hidden Input for Form Submission -->
+                        <input type="hidden" id="swap_jadwal_2" name="jadwal_2_id" value="" required>
+
+                        <!-- Trigger when NOT selected -->
+                        <button type="button" 
+                                id="btn_open_swap_2" 
+                                onclick="toggleSwapDropdown(2)" 
+                                class="w-full text-left bg-white border border-slate-300 hover:border-indigo-400 focus:border-indigo-500 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-2xs transition group cursor-pointer">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-9 h-9 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white flex items-center justify-center text-sm shrink-0 transition">
+                                    <i class="fa-solid fa-calendar-check"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="block text-xs font-bold text-slate-700 group-hover:text-indigo-950">Pilih Mata Kuliah Sesi B...</span>
+                                    <span class="block text-[10px] text-slate-400">Klik untuk memilih dari jadwal praktikum hari ini</span>
+                                </div>
+                            </div>
+                            <div class="w-7 h-7 rounded-full bg-slate-100 group-hover:bg-indigo-50 text-slate-400 group-hover:text-indigo-600 flex items-center justify-center text-xs shrink-0 transition">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                            </div>
+                        </button>
+
+                        <!-- Card shown WHEN selected -->
+                        <div id="selected_card_2" class="hidden p-3 bg-white border-2 border-indigo-400 rounded-2xl shadow-xs flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="px-2.5 py-2 rounded-xl bg-indigo-600 text-white font-mono font-bold text-xs text-center shrink-0 min-w-[75px] shadow-2xs">
+                                    <span id="sel_jam_mulai_2">00:00</span>
+                                    <span class="block text-[9px] opacity-80 font-normal" id="sel_jam_selesai_2">- 00:00 WIB</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="px-1.5 py-0.2 bg-indigo-100 text-indigo-800 rounded text-[9px] font-extrabold uppercase">SESI B</span>
+                                        <h5 class="font-extrabold text-xs text-slate-900 truncate" id="sel_matkul_2">Nama Matkul</h5>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap mt-0.5">
+                                        <span class="truncate max-w-[170px]"><i class="fa-solid fa-user-tie text-[10px] text-slate-400 mr-0.5"></i> <span id="sel_dosen_2">Dosen</span></span>
+                                        <span class="text-slate-300">•</span>
+                                        <span class="px-1.5 py-0.2 bg-slate-100 text-slate-700 rounded text-[9px] font-semibold"><i class="fa-solid fa-door-open text-[9px] text-slate-400 mr-0.5"></i> <span id="sel_lab_2">Lab</span></span>
+                                        <span class="px-1.5 py-0.2 bg-teal-50 text-teal-800 rounded text-[9px] font-semibold" id="sel_kelas_2">Kelas</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="gantiSwapSelection(2)" class="shrink-0 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center gap-1 border border-indigo-200 cursor-pointer active:scale-95">
+                                <i class="fa-solid fa-rotate text-[10px]"></i>
+                                <span>Ganti</span>
+                            </button>
+                        </div>
+
+                        <!-- Dropdown Menu Popover -->
+                        <div id="dropdown_menu_2" class="absolute left-0 right-0 top-full mt-1.5 z-40 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden hidden">
+                            <div class="p-2.5 border-b border-slate-100 bg-slate-50/90 flex items-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs ml-1"></i>
+                                <input type="text" id="search_swap_2" oninput="filterSwapOptions(2, this.value)" placeholder="Ketik untuk memfilter mata kuliah atau dosen..." class="w-full text-xs bg-transparent focus:outline-none placeholder:text-slate-400 font-medium text-slate-700">
+                            </div>
+                            <div id="list_swap_options_2" class="max-h-60 overflow-y-auto divide-y divide-slate-100">
+                                <!-- Rendered by JS -->
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Live Preview Pertukaran -->
-                <div id="swap_preview_box" class="p-3.5 bg-indigo-50/70 border border-indigo-200/90 rounded-2xl text-xs space-y-2 hidden">
-                    <span class="font-extrabold text-indigo-900 block text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-                        <i class="fa-solid fa-arrows-split-up-and-left text-indigo-600"></i>
-                        Preview Jadwal Baru Hari Ini:
-                    </span>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-slate-700">
-                        <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs space-y-1">
-                            <span id="prev_matkul_1" class="font-bold text-slate-900 block truncate text-xs">Sesi A</span>
-                            <span class="text-[10px] text-slate-500 block">Jam baru hari ini:</span>
-                            <span id="prev_jam_baru_1" class="font-mono font-black text-indigo-700 text-xs block">--:-- WIB</span>
+                <div id="swap_preview_box" class="p-4 bg-gradient-to-br from-indigo-50/90 via-purple-50/60 to-teal-50/40 border border-indigo-200/90 rounded-2xl text-xs space-y-2.5 hidden animate-in fade-in zoom-in duration-150">
+                    <div class="flex items-center justify-between">
+                        <span class="font-extrabold text-indigo-900 block text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrows-split-up-and-left text-indigo-600"></i>
+                            Preview Jadwal Baru Hari Ini:
+                        </span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800">
+                            Khusus Hari Ini Saja
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-700">
+                        <div class="bg-white p-3.5 rounded-xl border border-indigo-100 shadow-2xs space-y-1.5">
+                            <div class="flex items-center justify-between text-[11px]">
+                                <span class="font-extrabold text-indigo-700 uppercase tracking-wide">Sesi A</span>
+                                <span class="text-slate-400 line-through text-[10px]" id="prev_jam_lama_1">-</span>
+                            </div>
+                            <h5 class="font-bold text-xs text-slate-900 truncate" id="prev_matkul_1">Mata Kuliah A</h5>
+                            <div class="pt-1 flex items-center gap-1.5">
+                                <span class="text-[10px] text-slate-500 font-medium">Jam baru:</span>
+                                <span id="prev_jam_baru_1" class="font-mono font-black text-indigo-700 text-xs px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200">--:-- WIB</span>
+                            </div>
                         </div>
-                        <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs space-y-1">
-                            <span id="prev_matkul_2" class="font-bold text-slate-900 block truncate text-xs">Sesi B</span>
-                            <span class="text-[10px] text-slate-500 block">Jam baru hari ini:</span>
-                            <span id="prev_jam_baru_2" class="font-mono font-black text-indigo-700 text-xs block">--:-- WIB</span>
+                        <div class="bg-white p-3.5 rounded-xl border border-indigo-100 shadow-2xs space-y-1.5">
+                            <div class="flex items-center justify-between text-[11px]">
+                                <span class="font-extrabold text-indigo-700 uppercase tracking-wide">Sesi B</span>
+                                <span class="text-slate-400 line-through text-[10px]" id="prev_jam_lama_2">-</span>
+                            </div>
+                            <h5 class="font-bold text-xs text-slate-900 truncate" id="prev_matkul_2">Mata Kuliah B</h5>
+                            <div class="pt-1 flex items-center gap-1.5">
+                                <span class="text-[10px] text-slate-500 font-medium">Jam baru:</span>
+                                <span id="prev_jam_baru_2" class="font-mono font-black text-indigo-700 text-xs px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200">--:-- WIB</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2730,7 +3000,7 @@
                     <button type="button" onclick="tutupModalTukarJamHariIni()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
                         Batal
                     </button>
-                    <button type="submit" id="btnSubmitSwap" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                    <button type="submit" id="btnSubmitSwap" disabled class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer opacity-50 cursor-not-allowed">
                         <i class="fa-solid fa-arrow-right-arrow-left text-xs"></i>
                         <span>Konfirmasi Tukar Jam</span>
                     </button>
