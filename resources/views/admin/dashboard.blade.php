@@ -328,132 +328,96 @@
                                         @php
                                             $status = $item['status'];
                                             if ($status === 'berlangsung') {
-                                                $cardClass = 'border-emerald-300 bg-emerald-50/40 ring-1 ring-emerald-200 shadow-sm';
-                                                $timeClass = 'bg-emerald-600 text-white shadow-sm';
+                                                $cardClass = 'border-emerald-300 bg-emerald-50/30 ring-1 ring-emerald-200';
+                                                $timeClass = 'bg-emerald-600 text-white';
                                             } elseif ($status === 'waktunya_masuk') {
-                                                $cardClass = 'border-amber-300 bg-amber-50/40 ring-1 ring-amber-200 shadow-sm';
-                                                $timeClass = 'bg-amber-500 text-white shadow-sm';
-                                            } elseif ($status === 'terjadwal') {
-                                                $cardClass = 'border-slate-200 bg-slate-50/60 hover:bg-white hover:border-slate-300 transition shadow-2xs';
-                                                $timeClass = 'bg-slate-200 text-slate-700';
+                                                $cardClass = 'border-amber-300 bg-amber-50/30 ring-1 ring-amber-200';
+                                                $timeClass = 'bg-amber-500 text-white';
                                             } elseif ($status === 'selesai') {
-                                                $cardClass = 'border-slate-200 bg-slate-50/30 opacity-75 hover:opacity-100 transition';
-                                                $timeClass = 'bg-slate-200 text-slate-500';
-                                            } else { // terlewat
-                                                $cardClass = 'border-rose-200 bg-rose-50/20 opacity-75 hover:opacity-100 transition';
-                                                $timeClass = 'bg-slate-200 text-slate-400';
+                                                $cardClass = 'border-slate-200 bg-slate-50/50 opacity-75';
+                                                $timeClass = 'bg-slate-200 text-slate-600';
+                                            } else {
+                                                $cardClass = 'border-slate-200 bg-white hover:border-slate-300';
+                                                $timeClass = 'bg-indigo-50 text-indigo-600';
                                             }
                                         @endphp
 
-                                        <div class="p-4 rounded-2xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 {{ $cardClass }}">
-                                            <div class="flex items-start gap-3 flex-1 min-w-0">
-                                                <!-- Jam Pelaksanaan -->
-                                                <div class="px-3 py-2.5 rounded-xl {{ $timeClass }} font-mono font-bold text-center shrink-0 min-w-[74px]">
-                                                    <span class="text-xs font-black block">{{ $item['jam_mulai'] }}</span>
-                                                    <span class="text-[9px] opacity-80 block font-medium">- {{ $item['jam_selesai'] }}</span>
+                                        <div class="p-4 rounded-2xl border transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 {{ $cardClass }}">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <div class="p-2.5 rounded-xl {{ $timeClass }} font-mono font-bold text-xs text-center shrink-0 min-w-[68px]">
+                                                    <span>{{ $item['jam_mulai'] }}</span>
+                                                    <span class="block text-[9px] opacity-75">- {{ $item['jam_selesai'] }}</span>
                                                 </div>
-
-                                                <!-- Metadata & Detail -->
-                                                <div class="space-y-1.5 flex-1 min-w-0">
-                                                    <!-- Row Badges: Pertemuan, Program Kuliah, Kelas, Semester, Lab -->
-                                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-teal-50 text-teal-800 border border-teal-200/80">
-                                                            <i class="fa-solid fa-calendar-check text-[9px] mr-0.5"></i> Pertemuan {{ $item['pertemuan'] }}
+                                                <div class="min-w-0">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <h4 class="font-extrabold text-xs text-slate-900">{{ $item['mata_kuliah'] }}</h4>
+                                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                                                            Pertemuan {{ $item['pertemuan'] }}
                                                         </span>
-
-                                                        @if(strcasecmp($item['program_kuliah'], 'Karyawan') === 0)
-                                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-purple-100 text-purple-700 border border-purple-200">
-                                                                <i class="fa-solid fa-briefcase text-[9px] mr-0.5"></i> Karyawan
-                                                            </span>
-                                                        @else
-                                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-sky-100 text-sky-700 border border-sky-200">
-                                                                <i class="fa-solid fa-graduation-cap text-[9px] mr-0.5"></i> Reguler
-                                                            </span>
-                                                        @endif
-
-                                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                                            Kelas {{ $item['kelas'] }}
-                                                        </span>
-
-                                                        @if(!empty($item['semester']))
-                                                            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                                                                Sem. {{ $item['semester'] }}
-                                                            </span>
-                                                        @endif
-
-                                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white text-slate-700 border border-slate-200 shadow-2xs">
+                                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                                                             <i class="fa-solid fa-location-dot text-teal-600 mr-0.5"></i> {{ $item['lab']?->nama_lab ?? 'Lab' }}
                                                         </span>
-                                                    </div>
-
-                                                    <!-- Mata Kuliah Title -->
-                                                    <h4 class="font-extrabold text-sm text-slate-900 tracking-tight leading-snug">
-                                                        {{ $item['mata_kuliah'] }}
-                                                    </h4>
-
-                                                    <!-- Dosen & Check-in status -->
-                                                    <div class="flex items-center gap-2 flex-wrap text-xs text-slate-600">
-                                                        <span>
-                                                            <i class="fa-solid fa-chalkboard-user text-slate-400 mr-1"></i> Dosen: <strong class="text-slate-800 font-semibold">{{ $item['dosen_nama'] }}</strong>
+                                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                                            Kelas {{ $item['kelas'] }}
                                                         </span>
-                                                        <span class="text-slate-300">•</span>
-                                                        @if($item['dosen_waktu_masuk'])
-                                                            <span class="text-emerald-700 font-semibold inline-flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
-                                                                <i class="fa-solid fa-circle-check text-emerald-600"></i> Dosen Hadir ({{ substr($item['dosen_waktu_masuk'], 11, 5) }} WIB)
-                                                            </span>
-                                                        @else
-                                                            <span class="text-amber-700 font-medium inline-flex items-center gap-1 bg-amber-50/80 px-2 py-0.5 rounded border border-amber-200 text-[11px]">
-                                                                <i class="fa-solid fa-clock text-amber-600"></i> Dosen Belum Check-in
-                                                            </span>
-                                                        @endif
+                                                        <span class="px-2 py-0.5 rounded text-[9px] font-semibold {{ strcasecmp($item['program_kuliah'], 'Karyawan') === 0 ? 'bg-purple-50 text-purple-700 border border-purple-200' : 'bg-sky-50 text-sky-700 border border-sky-200' }}">
+                                                            {{ $item['program_kuliah'] }}
+                                                        </span>
                                                     </div>
+                                                    <p class="text-[11px] text-slate-600 mt-1">
+                                                        Dosen: <b>{{ $item['dosen_nama'] }}</b>
+                                                        @if($item['dosen_waktu_masuk'])
+                                                            <span class="text-emerald-700 font-semibold ml-2"><i class="fa-solid fa-circle-check"></i> Hadir ({{ substr($item['dosen_waktu_masuk'], 11, 5) }})</span>
+                                                        @else
+                                                            <span class="text-amber-700 font-semibold ml-2"><i class="fa-solid fa-clock"></i> Belum Check-in</span>
+                                                        @endif
+                                                    </p>
                                                 </div>
                                             </div>
 
-                                            <!-- Status Badge & Action Controls -->
-                                            <div class="shrink-0 flex items-center gap-2 w-full md:w-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-slate-200/60">
+                                            <div class="shrink-0 flex items-center gap-2 self-end sm:self-center">
                                                 @if($status === 'berlangsung')
-                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 uppercase tracking-wide">
-                                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Live Now
+                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1 uppercase">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> Live Now
                                                     </span>
-                                                    <a href="{{ $item['absensi_url'] }}" class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                                                        <i class="fa-solid fa-clipboard-user text-xs"></i> Kelola Presensi
+                                                    <a href="{{ $item['absensi_url'] }}" class="px-3 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+                                                        <i class="fa-solid fa-clipboard-user text-[11px]"></i> Presensi
                                                     </a>
                                                 @elseif($status === 'waktunya_masuk')
-                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1.5 uppercase tracking-wide">
-                                                        <i class="fa-solid fa-bell text-amber-600 animate-bounce"></i> Waktunya Mulai
+                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1 uppercase">
+                                                        <i class="fa-solid fa-bell text-[10px]"></i> Waktunya Mulai
                                                     </span>
-                                                    <button type="button" onclick="bukaSesiTimeline({{ $item['jadwal_id'] }}, '{{ addslashes($item['mata_kuliah']) }}', '{{ $item['kelas'] }}', '{{ $item['pertemuan'] }}')" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
-                                                        <i class="fa-solid fa-play text-xs"></i> Buka Sesi Hari Ini
+                                                    <button type="button" onclick="bukaSesiTimeline({{ $item['jadwal_id'] }}, '{{ addslashes($item['mata_kuliah']) }}', '{{ $item['kelas'] }}', '{{ $item['pertemuan'] }}')" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                                                        <i class="fa-solid fa-play text-[9px]"></i> Buka Sesi
                                                     </button>
                                                 @elseif($status === 'terjadwal')
-                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200/80 text-slate-600 border border-slate-300/60 uppercase tracking-wide">
-                                                        <i class="fa-regular fa-clock mr-1 text-slate-400"></i> Belum Waktunya
+                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200 uppercase">
+                                                        Akan Datang
                                                     </span>
                                                     @if($item['has_session'])
-                                                        <a href="{{ $item['absensi_url'] }}" class="px-3.5 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
-                                                            <i class="fa-solid fa-clipboard-user text-xs"></i> Presensi
+                                                        <a href="{{ $item['absensi_url'] }}" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
+                                                            Presensi
                                                         </a>
                                                     @else
-                                                        <button type="button" onclick="bukaSesiTimeline({{ $item['jadwal_id'] }}, '{{ addslashes($item['mata_kuliah']) }}', '{{ $item['kelas'] }}', '{{ $item['pertemuan'] }}')" class="px-3 py-1.5 bg-white hover:bg-teal-50 hover:text-teal-800 text-slate-600 border border-slate-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
-                                                            <i class="fa-solid fa-play text-slate-400"></i> Buka Awal
+                                                        <button type="button" onclick="bukaSesiTimeline({{ $item['jadwal_id'] }}, '{{ addslashes($item['mata_kuliah']) }}', '{{ $item['kelas'] }}', '{{ $item['pertemuan'] }}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold transition border border-slate-200 cursor-pointer">
+                                                            Buka Sesi
                                                         </button>
                                                     @endif
                                                 @elseif($status === 'selesai')
-                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600 uppercase tracking-wide">
-                                                        <i class="fa-solid fa-check mr-1 text-slate-400"></i> Selesai
+                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600 uppercase">
+                                                        Selesai
                                                     </span>
                                                     @if($item['has_session'])
-                                                        <a href="{{ $item['absensi_url'] }}" class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-xs">
-                                                            <i class="fa-solid fa-file-lines text-slate-500"></i> Rekap Presensi
+                                                        <a href="{{ $item['absensi_url'] }}" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
+                                                            Rekap
                                                         </a>
                                                     @endif
                                                 @else
-                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 uppercase tracking-wide">
-                                                        <i class="fa-solid fa-triangle-exclamation mr-1 text-rose-500"></i> Lewat Jadwal
+                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 uppercase">
+                                                        Lewat Jadwal
                                                     </span>
-                                                    <button type="button" onclick="bukaSesiTimeline({{ $item['jadwal_id'] }}, '{{ addslashes($item['mata_kuliah']) }}', '{{ $item['kelas'] }}', '{{ $item['pertemuan'] }}')" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-xs font-medium transition flex items-center gap-1.5 cursor-pointer">
-                                                        <i class="fa-solid fa-rotate-right text-slate-400"></i> Buka Susulan
+                                                    <button type="button" onclick="bukaSesiTimeline({{ $item['jadwal_id'] }}, '{{ addslashes($item['mata_kuliah']) }}', '{{ $item['kelas'] }}', '{{ $item['pertemuan'] }}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-semibold transition cursor-pointer">
+                                                        Buka Susulan
                                                     </button>
                                                 @endif
                                             </div>
