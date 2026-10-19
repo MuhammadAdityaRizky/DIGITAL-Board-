@@ -2413,75 +2413,6 @@
         // FITUR: TUKAR JAM HARI INI (SEMENTARA)
         // CUSTOM CARD-BASED DROPDOWN COMPONENT
         // ==========================================
-        const listJadwalHariIni = @json($jadwalHariIniJson ?? []);
-        let selectedSwap1 = null;
-        let selectedSwap2 = null;
-
-        function renderSwapDropdownList(num, query = '') {
-            const listEl = document.getElementById(`list_swap_options_${num}`);
-            if (!listEl) return;
-            
-            const otherSelectedId = num === 1 ? selectedSwap2?.id : selectedSwap1?.id;
-            const q = query.toLowerCase().trim();
-            
-            let filtered = listJadwalHariIni.filter(j => {
-                if (!q) return true;
-                return j.mata_kuliah.toLowerCase().includes(q) || 
-                       j.dosen.toLowerCase().includes(q) || 
-                       j.lab.toLowerCase().includes(q) ||
-                       j.kelas.toLowerCase().includes(q);
-            });
-
-            if (filtered.length === 0) {
-                listEl.innerHTML = `
-                    <div class="p-6 text-center text-xs text-slate-400">
-                        <i class="fa-regular fa-folder-open text-xl mb-1.5 text-slate-300 block"></i>
-                        Tidak ada jadwal yang cocok dengan kata kunci.
-                    </div>
-                `;
-                return;
-            }
-
-            listEl.innerHTML = filtered.map(j => {
-                const isOther = otherSelectedId && j.id === otherSelectedId;
-                const disabledClass = isOther ? 'opacity-40 pointer-events-none bg-slate-50' : 'hover:bg-indigo-50/70 cursor-pointer active:bg-indigo-100';
-                const otherBadge = isOther ? `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-200 text-slate-600">Dipilih di Sesi ${num === 1 ? 'B' : 'A'}</span>` : '';
-                const swappedBadge = j.is_swapped ? `<span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Ditukar</span>` : '';
-
-                return `
-                    <div onclick="selectSwapCard(${num}, ${j.id})" 
-                         class="p-3 transition flex items-center justify-between gap-3 group ${disabledClass}">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="px-2.5 py-1.5 rounded-xl bg-slate-100 group-hover:bg-indigo-600 text-slate-700 group-hover:text-white font-mono font-bold text-xs border border-slate-200 group-hover:border-indigo-600 shrink-0 text-center transition">
-                                <span>${j.jam_mulai}</span>
-                                <span class="block text-[9px] opacity-75 font-normal">- ${j.jam_selesai}</span>
-                            </div>
-                            <div class="min-w-0">
-                                <div class="flex items-center gap-1.5 flex-wrap">
-                                    <h5 class="font-extrabold text-xs text-slate-800 group-hover:text-indigo-950 truncate">${j.mata_kuliah}</h5>
-                                    ${swappedBadge}
-                                    ${otherBadge}
-                                </div>
-                                <div class="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap mt-0.5">
-                                    <span class="truncate max-w-[160px]"><i class="fa-solid fa-user-tie text-[10px] text-slate-400 mr-0.5"></i> ${j.dosen}</span>
-                                    <span class="text-slate-300">•</span>
-                                    <span class="px-1.5 py-0.2 bg-slate-100 group-hover:bg-white text-slate-700 rounded text-[9px] font-semibold border border-slate-200">
-                                        <i class="fa-solid fa-door-open text-[9px] text-slate-400 mr-0.5"></i> ${j.lab}
-                                    </span>
-                                    <span class="px-1.5 py-0.2 bg-teal-50 group-hover:bg-white text-teal-800 rounded text-[9px] font-semibold border border-teal-200">
-                                        Kelas ${j.kelas}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="shrink-0 text-slate-300 group-hover:text-indigo-600 transition pr-1">
-                            <i class="fa-solid fa-circle-check text-base"></i>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
         function toggleSwapDropdown(num) {
             const menu = document.getElementById(`dropdown_menu_${num}`);
             const otherMenu = document.getElementById(`dropdown_menu_${num === 1 ? 2 : 1}`);
@@ -2490,11 +2421,11 @@
             if (menu) {
                 const isHidden = menu.classList.contains('hidden');
                 if (isHidden) {
-                    renderSwapDropdownList(num);
                     menu.classList.remove('hidden');
                     const searchInput = document.getElementById(`search_swap_${num}`);
                     if (searchInput) {
                         searchInput.value = '';
+                        filterSwapOptions(num, '');
                         setTimeout(() => searchInput.focus(), 100);
                     }
                 } else {
@@ -2504,86 +2435,107 @@
         }
 
         function filterSwapOptions(num, query) {
-            renderSwapDropdownList(num, query);
+            const q = query.toLowerCase().trim();
+            const items = document.querySelectorAll(`.swap-opt-item-${num}`);
+            items.forEach(el => {
+                const text = (el.dataset.matkul + ' ' + el.dataset.dosen + ' ' + el.dataset.lab + ' ' + el.dataset.kelas).toLowerCase();
+                if (!q || text.includes(q)) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
         }
 
         function selectSwapCard(num, id) {
-            const item = listJadwalHariIni.find(j => j.id === id);
-            if (!item) return;
+            const opt = document.getElementById(`opt_swap_${num}_${id}`);
+            if (!opt) return;
 
-            if (num === 1) {
-                selectedSwap1 = item;
-                document.getElementById('swap_jadwal_1').value = item.id;
-                document.getElementById('sel_jam_mulai_1').textContent = item.jam_mulai;
-                document.getElementById('sel_jam_selesai_1').textContent = `- ${item.jam_selesai} WIB`;
-                document.getElementById('sel_matkul_1').textContent = item.mata_kuliah;
-                document.getElementById('sel_dosen_1').textContent = item.dosen;
-                document.getElementById('sel_lab_1').textContent = item.lab;
-                document.getElementById('sel_kelas_1').textContent = `Kelas ${item.kelas}`;
-                
-                document.getElementById('btn_open_swap_1').classList.add('hidden');
-                document.getElementById('selected_card_1').classList.remove('hidden');
-                document.getElementById('dropdown_menu_1').classList.add('hidden');
-            } else {
-                selectedSwap2 = item;
-                document.getElementById('swap_jadwal_2').value = item.id;
-                document.getElementById('sel_jam_mulai_2').textContent = item.jam_mulai;
-                document.getElementById('sel_jam_selesai_2').textContent = `- ${item.jam_selesai} WIB`;
-                document.getElementById('sel_matkul_2').textContent = item.mata_kuliah;
-                document.getElementById('sel_dosen_2').textContent = item.dosen;
-                document.getElementById('sel_lab_2').textContent = item.lab;
-                document.getElementById('sel_kelas_2').textContent = `Kelas ${item.kelas}`;
+            const matkul = opt.dataset.matkul;
+            const dosen = opt.dataset.dosen;
+            const jamMulai = opt.dataset.jamMulai;
+            const jamSelesai = opt.dataset.jamSelesai;
+            const lab = opt.dataset.lab;
+            const kelas = opt.dataset.kelas;
 
-                document.getElementById('btn_open_swap_2').classList.add('hidden');
-                document.getElementById('selected_card_2').classList.remove('hidden');
-                document.getElementById('dropdown_menu_2').classList.add('hidden');
+            document.getElementById(`swap_jadwal_${num}`).value = id;
+            document.getElementById(`sel_jam_mulai_${num}`).textContent = jamMulai;
+            document.getElementById(`sel_jam_selesai_${num}`).textContent = `- ${jamSelesai} WIB`;
+            document.getElementById(`sel_matkul_${num}`).textContent = matkul;
+            document.getElementById(`sel_dosen_${num}`).textContent = dosen;
+            document.getElementById(`sel_lab_${num}`).textContent = lab;
+            document.getElementById(`sel_kelas_${num}`).textContent = `Kelas ${kelas}`;
+
+            document.getElementById(`btn_open_swap_${num}`).classList.add('hidden');
+            document.getElementById(`selected_card_${num}`).classList.remove('hidden');
+            document.getElementById(`dropdown_menu_${num}`).classList.add('hidden');
+
+            // Disable this option in the other dropdown
+            const otherNum = num === 1 ? 2 : 1;
+            const otherOpt = document.getElementById(`opt_swap_${otherNum}_${id}`);
+            if (otherOpt) {
+                otherOpt.classList.add('opacity-40', 'pointer-events-none', 'bg-slate-50');
+                const badge = document.getElementById(`badge_other_${otherNum}_${id}`);
+                if (badge) badge.classList.remove('hidden');
             }
 
             updateSwapPreview();
         }
 
-        function gantiSwapSelection(num) {
-            if (num === 1) {
-                selectedSwap1 = null;
-                document.getElementById('swap_jadwal_1').value = '';
-                document.getElementById('btn_open_swap_1').classList.remove('hidden');
-                document.getElementById('selected_card_1').classList.add('hidden');
-                toggleSwapDropdown(1);
-            } else {
-                selectedSwap2 = null;
-                document.getElementById('swap_jadwal_2').value = '';
-                document.getElementById('btn_open_swap_2').classList.remove('hidden');
-                document.getElementById('selected_card_2').classList.add('hidden');
-                toggleSwapDropdown(2);
+        function gantiSwapSelection(num, autoOpen = true) {
+            const currentId = document.getElementById(`swap_jadwal_${num}`).value;
+            document.getElementById(`swap_jadwal_${num}`).value = '';
+            document.getElementById(`btn_open_swap_${num}`)?.classList.remove('hidden');
+            document.getElementById(`selected_card_${num}`)?.classList.add('hidden');
+
+            if (currentId) {
+                const otherNum = num === 1 ? 2 : 1;
+                const otherOpt = document.getElementById(`opt_swap_${otherNum}_${currentId}`);
+                if (otherOpt) {
+                    otherOpt.classList.remove('opacity-40', 'pointer-events-none', 'bg-slate-50');
+                    const badge = document.getElementById(`badge_other_${otherNum}_${currentId}`);
+                    if (badge) badge.classList.add('hidden');
+                }
+            }
+
+            if (autoOpen) {
+                toggleSwapDropdown(num);
             }
             updateSwapPreview();
         }
 
         function updateSwapPreview() {
+            const id1 = document.getElementById('swap_jadwal_1').value;
+            const id2 = document.getElementById('swap_jadwal_2').value;
             const previewBox = document.getElementById('swap_preview_box');
             const submitBtn = document.getElementById('btnSubmitSwap');
 
-            if (selectedSwap1 && selectedSwap2) {
-                previewBox.classList.remove('hidden');
-                
-                document.getElementById('prev_matkul_1').textContent = selectedSwap1.mata_kuliah;
-                document.getElementById('prev_jam_lama_1').textContent = selectedSwap1.jam_str;
-                document.getElementById('prev_jam_baru_1').textContent = selectedSwap2.jam_str;
+            if (id1 && id2 && id1 !== id2) {
+                const opt1 = document.getElementById(`opt_swap_1_${id1}`);
+                const opt2 = document.getElementById(`opt_swap_2_${id2}`);
 
-                document.getElementById('prev_matkul_2').textContent = selectedSwap2.mata_kuliah;
-                document.getElementById('prev_jam_lama_2').textContent = selectedSwap2.jam_str;
-                document.getElementById('prev_jam_baru_2').textContent = selectedSwap1.jam_str;
+                if (opt1 && opt2) {
+                    previewBox.classList.remove('hidden');
+                    document.getElementById('prev_matkul_1').textContent = opt1.dataset.matkul;
+                    document.getElementById('prev_jam_lama_1').textContent = opt1.dataset.jamStr;
+                    document.getElementById('prev_jam_baru_1').textContent = opt2.dataset.jamStr;
 
-                if (submitBtn) {
-                    submitBtn.removeAttribute('disabled');
-                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    document.getElementById('prev_matkul_2').textContent = opt2.dataset.matkul;
+                    document.getElementById('prev_jam_lama_2').textContent = opt2.dataset.jamStr;
+                    document.getElementById('prev_jam_baru_2').textContent = opt1.dataset.jamStr;
+
+                    if (submitBtn) {
+                        submitBtn.removeAttribute('disabled');
+                        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                    return;
                 }
-            } else {
-                previewBox.classList.add('hidden');
-                if (submitBtn) {
-                    submitBtn.setAttribute('disabled', 'disabled');
-                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                }
+            }
+
+            if (previewBox) previewBox.classList.add('hidden');
+            if (submitBtn) {
+                submitBtn.setAttribute('disabled', 'disabled');
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
             }
         }
 
@@ -2591,19 +2543,10 @@
             const modal = document.getElementById('modalTukarJamHariIni');
             if (modal) {
                 modal.classList.remove('hidden');
-                selectedSwap1 = null;
-                selectedSwap2 = null;
-                document.getElementById('swap_jadwal_1').value = '';
-                document.getElementById('swap_jadwal_2').value = '';
-                
-                document.getElementById('btn_open_swap_1').classList.remove('hidden');
-                document.getElementById('selected_card_1').classList.add('hidden');
-                document.getElementById('dropdown_menu_1').classList.add('hidden');
-
-                document.getElementById('btn_open_swap_2').classList.remove('hidden');
-                document.getElementById('selected_card_2').classList.add('hidden');
-                document.getElementById('dropdown_menu_2').classList.add('hidden');
-
+                gantiSwapSelection(1, false);
+                gantiSwapSelection(2, false);
+                document.getElementById('dropdown_menu_1')?.classList.add('hidden');
+                document.getElementById('dropdown_menu_2')?.classList.add('hidden');
                 updateSwapPreview();
             }
         }
@@ -2759,25 +2702,6 @@
         }
     </script>
 
-    @php
-        $jadwalHariIniJson = isset($allJadwalHariIni) ? $allJadwalHariIni->map(function($j) {
-            return [
-                'id' => $j->id,
-                'mata_kuliah' => $j->mata_kuliah,
-                'dosen' => $j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen Pengampu'),
-                'jam_mulai' => substr($j->jam_mulai, 0, 5),
-                'jam_selesai' => substr($j->jam_selesai, 0, 5),
-                'jam_str' => substr($j->jam_mulai, 0, 5) . ' - ' . substr($j->jam_selesai, 0, 5) . ' WIB',
-                'lab' => $j->lab?->nama_lab ?? 'Lab',
-                'kelas' => $j->kelas ?: '-',
-                'program_kuliah' => $j->program_kuliah ?? 'Reguler',
-                'is_swapped' => (bool)($j->is_swapped ?? false),
-                'jam_asli_str' => $j->jam_asli_str ?? null,
-                'swap_partner_name' => $j->swap_partner_name ?? null,
-            ];
-        })->values() : collect([]);
-    @endphp
-
     <!-- MODAL TUKAR JAM HARI INI (SEMENTARA) -->
     <div id="modalTukarJamHariIni" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in duration-200">
@@ -2875,7 +2799,62 @@
                                 <input type="text" id="search_swap_1" oninput="filterSwapOptions(1, this.value)" placeholder="Ketik untuk memfilter mata kuliah atau dosen..." class="w-full text-xs bg-transparent focus:outline-none placeholder:text-slate-400 font-medium text-slate-700">
                             </div>
                             <div id="list_swap_options_1" class="max-h-60 overflow-y-auto divide-y divide-slate-100">
-                                <!-- Rendered by JS -->
+                                @if(isset($allJadwalHariIni) && $allJadwalHariIni->count() > 0)
+                                    @foreach($allJadwalHariIni as $j)
+                                        @php
+                                            $dName = $j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen');
+                                            $jLab = $j->lab?->nama_lab ?? 'Lab';
+                                            $jJamMulai = substr($j->jam_mulai, 0, 5);
+                                            $jJamSelesai = substr($j->jam_selesai, 0, 5);
+                                            $jJamStr = $jJamMulai . ' - ' . $jJamSelesai . ' WIB';
+                                        @endphp
+                                        <div onclick="selectSwapCard(1, {{ $j->id }})" 
+                                             id="opt_swap_1_{{ $j->id }}"
+                                             data-id="{{ $j->id }}"
+                                             data-matkul="{{ $j->mata_kuliah }}"
+                                             data-dosen="{{ $dName }}"
+                                             data-jam-mulai="{{ $jJamMulai }}"
+                                             data-jam-selesai="{{ $jJamSelesai }}"
+                                             data-jam-str="{{ $jJamStr }}"
+                                             data-lab="{{ $jLab }}"
+                                             data-kelas="{{ $j->kelas ?: '-' }}"
+                                             class="swap-opt-item-1 p-3 hover:bg-indigo-50/70 cursor-pointer transition flex items-center justify-between gap-3 group active:bg-indigo-100">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <div class="px-2.5 py-1.5 rounded-xl bg-slate-100 group-hover:bg-indigo-600 text-slate-700 group-hover:text-white font-mono font-bold text-xs border border-slate-200 group-hover:border-indigo-600 shrink-0 text-center transition">
+                                                    <span>{{ $jJamMulai }}</span>
+                                                    <span class="block text-[9px] opacity-75 font-normal">- {{ $jJamSelesai }}</span>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                                        <h5 class="font-extrabold text-xs text-slate-800 group-hover:text-indigo-950 truncate">{{ $j->mata_kuliah }}</h5>
+                                                        @if(!empty($j->is_swapped))
+                                                            <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Ditukar</span>
+                                                        @endif
+                                                        <span id="badge_other_1_{{ $j->id }}" class="hidden px-2 py-0.5 rounded text-[9px] font-bold bg-slate-200 text-slate-600">Dipilih di Sesi B</span>
+                                                    </div>
+                                                    <div class="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap mt-0.5">
+                                                        <span class="truncate max-w-[160px]"><i class="fa-solid fa-user-tie text-[10px] text-slate-400 mr-0.5"></i> {{ $dName }}</span>
+                                                        <span class="text-slate-300">•</span>
+                                                        <span class="px-1.5 py-0.2 bg-slate-100 group-hover:bg-white text-slate-700 rounded text-[9px] font-semibold border border-slate-200">
+                                                            <i class="fa-solid fa-door-open text-[9px] text-slate-400 mr-0.5"></i> {{ $jLab }}
+                                                        </span>
+                                                        <span class="px-1.5 py-0.2 bg-teal-50 group-hover:bg-white text-teal-800 rounded text-[9px] font-semibold border border-teal-200">
+                                                            Kelas {{ $j->kelas ?: '-' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="shrink-0 text-slate-300 group-hover:text-indigo-600 transition pr-1">
+                                                <i class="fa-solid fa-circle-check text-base"></i>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="p-6 text-center text-xs text-slate-400">
+                                        <i class="fa-regular fa-folder-open text-xl mb-1.5 text-slate-300 block"></i>
+                                        Tidak ada jadwal praktikum yang terjadwal hari ini.
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -2952,7 +2931,62 @@
                                 <input type="text" id="search_swap_2" oninput="filterSwapOptions(2, this.value)" placeholder="Ketik untuk memfilter mata kuliah atau dosen..." class="w-full text-xs bg-transparent focus:outline-none placeholder:text-slate-400 font-medium text-slate-700">
                             </div>
                             <div id="list_swap_options_2" class="max-h-60 overflow-y-auto divide-y divide-slate-100">
-                                <!-- Rendered by JS -->
+                                @if(isset($allJadwalHariIni) && $allJadwalHariIni->count() > 0)
+                                    @foreach($allJadwalHariIni as $j)
+                                        @php
+                                            $dName = $j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen');
+                                            $jLab = $j->lab?->nama_lab ?? 'Lab';
+                                            $jJamMulai = substr($j->jam_mulai, 0, 5);
+                                            $jJamSelesai = substr($j->jam_selesai, 0, 5);
+                                            $jJamStr = $jJamMulai . ' - ' . $jJamSelesai . ' WIB';
+                                        @endphp
+                                        <div onclick="selectSwapCard(2, {{ $j->id }})" 
+                                             id="opt_swap_2_{{ $j->id }}"
+                                             data-id="{{ $j->id }}"
+                                             data-matkul="{{ $j->mata_kuliah }}"
+                                             data-dosen="{{ $dName }}"
+                                             data-jam-mulai="{{ $jJamMulai }}"
+                                             data-jam-selesai="{{ $jJamSelesai }}"
+                                             data-jam-str="{{ $jJamStr }}"
+                                             data-lab="{{ $jLab }}"
+                                             data-kelas="{{ $j->kelas ?: '-' }}"
+                                             class="swap-opt-item-2 p-3 hover:bg-indigo-50/70 cursor-pointer transition flex items-center justify-between gap-3 group active:bg-indigo-100">
+                                            <div class="flex items-center gap-3 min-w-0">
+                                                <div class="px-2.5 py-1.5 rounded-xl bg-slate-100 group-hover:bg-indigo-600 text-slate-700 group-hover:text-white font-mono font-bold text-xs border border-slate-200 group-hover:border-indigo-600 shrink-0 text-center transition">
+                                                    <span>{{ $jJamMulai }}</span>
+                                                    <span class="block text-[9px] opacity-75 font-normal">- {{ $jJamSelesai }}</span>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                                        <h5 class="font-extrabold text-xs text-slate-800 group-hover:text-indigo-950 truncate">{{ $j->mata_kuliah }}</h5>
+                                                        @if(!empty($j->is_swapped))
+                                                            <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Ditukar</span>
+                                                        @endif
+                                                        <span id="badge_other_2_{{ $j->id }}" class="hidden px-2 py-0.5 rounded text-[9px] font-bold bg-slate-200 text-slate-600">Dipilih di Sesi A</span>
+                                                    </div>
+                                                    <div class="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap mt-0.5">
+                                                        <span class="truncate max-w-[160px]"><i class="fa-solid fa-user-tie text-[10px] text-slate-400 mr-0.5"></i> {{ $dName }}</span>
+                                                        <span class="text-slate-300">•</span>
+                                                        <span class="px-1.5 py-0.2 bg-slate-100 group-hover:bg-white text-slate-700 rounded text-[9px] font-semibold border border-slate-200">
+                                                            <i class="fa-solid fa-door-open text-[9px] text-slate-400 mr-0.5"></i> {{ $jLab }}
+                                                        </span>
+                                                        <span class="px-1.5 py-0.2 bg-teal-50 group-hover:bg-white text-teal-800 rounded text-[9px] font-semibold border border-teal-200">
+                                                            Kelas {{ $j->kelas ?: '-' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="shrink-0 text-slate-300 group-hover:text-indigo-600 transition pr-1">
+                                                <i class="fa-solid fa-circle-check text-base"></i>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="p-6 text-center text-xs text-slate-400">
+                                        <i class="fa-regular fa-folder-open text-xl mb-1.5 text-slate-300 block"></i>
+                                        Tidak ada jadwal praktikum yang terjadwal hari ini.
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>

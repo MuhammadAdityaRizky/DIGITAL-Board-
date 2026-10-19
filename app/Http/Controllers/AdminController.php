@@ -1331,9 +1331,26 @@ class AdminController extends Controller
             }
         }
 
+        $jadwalHariIniJson = $allJadwalHariIni->map(function($j) {
+            return [
+                'id' => (int)$j->id,
+                'mata_kuliah' => $j->mata_kuliah,
+                'dosen' => $j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen Pengampu'),
+                'jam_mulai' => substr($j->jam_mulai, 0, 5),
+                'jam_selesai' => substr($j->jam_selesai, 0, 5),
+                'jam_str' => substr($j->jam_mulai, 0, 5) . ' - ' . substr($j->jam_selesai, 0, 5) . ' WIB',
+                'lab' => $j->lab?->nama_lab ?? 'Lab',
+                'kelas' => $j->kelas ?: '-',
+                'program_kuliah' => $j->program_kuliah ?? 'Reguler',
+                'is_swapped' => (bool)($j->is_swapped ?? false),
+                'jam_asli_str' => $j->jam_asli_str ?? null,
+                'swap_partner_name' => $j->swap_partner_name ?? null,
+            ];
+        })->values()->toArray();
+
         return view('admin.agenda', compact(
             'allAgendas', 'liveAgendas', 'upcomingAgendasToday', 'counts', 'dosens', 'labs', 'fakultas',
-            'userFakultas', 'prodis', 'kelases', 'mataKuliahs', 'unstartedJadwals', 'allJadwalHariIni', 'swapsToday', 'todayDayName'
+            'userFakultas', 'prodis', 'kelases', 'mataKuliahs', 'unstartedJadwals', 'allJadwalHariIni', 'swapsToday', 'todayDayName', 'jadwalHariIniJson'
         ));
     }
 
