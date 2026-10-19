@@ -1282,9 +1282,11 @@ class AdminController extends Controller
 
         $unstartedJadwals = $allJadwalHariIni->reject(function($j) use ($agendasTodayIds) {
             return in_array($j->id, $agendasTodayIds);
+        })->sortBy(function($j) {
+            return $j->jam_mulai_tampil ?? $j->jam_mulai;
         });
 
-        // Agenda hari ini yang berstatus 'Akan Datang' (misal hasil swap atau dijadwalkan admin)
+        // Agenda hari ini yang berstatus 'Akan Datang' (hanya sesi yang sudah dibuka/dibuat di database)
         $upcomingAgendasQuery = Agenda::with(['dosen', 'dosenPengampu', 'lab.fakultas', 'jadwalPenggunaanLab'])
             ->whereDate('tanggal', $nowDate)
             ->where('jam_mulai', '>', $nowTime)
@@ -3274,6 +3276,28 @@ class AdminController extends Controller
         $jamMulai   = $jadwal->jam_mulai;
         $jamSelesai = $jadwal->jam_selesai;
 
+        // Cek apakah jadwal ini memiliki swap sementara hari ini
+        $activeSwap = \App\Models\JadwalSwapSementara::with(['jadwal1', 'jadwal2'])
+            ->whereDate('tanggal', $today)
+            ->where(function($q) use ($jadwal) {
+                $q->where('jadwal_1_id', $jadwal->id)
+                  ->orWhere('jadwal_2_id', $jadwal->id);
+            })
+            ->first();
+
+        $swapPartnerMk = null;
+        if ($activeSwap) {
+            if ($activeSwap->jadwal_1_id == $jadwal->id) {
+                $jamMulai      = $activeSwap->jam_mulai_1_tukar;
+                $jamSelesai    = $activeSwap->jam_selesai_1_tukar;
+                $swapPartnerMk = $activeSwap->jadwal2?->mata_kuliah;
+            } else {
+                $jamMulai      = $activeSwap->jam_mulai_2_tukar;
+                $jamSelesai    = $activeSwap->jam_selesai_2_tukar;
+                $swapPartnerMk = $activeSwap->jadwal1?->mata_kuliah;
+            }
+        }
+
         // Cek duplikasi: apakah sudah ada sesi hari ini untuk jadwal ini?
         $existing = Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
             ->where('tanggal', $today)
@@ -3360,6 +3384,9 @@ class AdminController extends Controller
         }
 
         $catatan = 'Pertemuan ke-' . $nomorPertemuan . ': ' . $jadwal->mata_kuliah;
+        if ($swapPartnerMk) {
+            $catatan .= " (Ditukar Sementara dengan {$swapPartnerMk})";
+        }
 
         $agenda = Agenda::create([
             'jadwal_penggunaan_lab_id' => $jadwal->id,
@@ -3380,6 +3407,14 @@ class AdminController extends Controller
             'status_agenda'            => $statusAgenda,
             'catatan'                  => $catatan,
         ]);
+
+        if ($activeSwap) {
+            if ($activeSwap->jadwal_1_id == $jadwal->id) {
+                $activeSwap->update(['agenda_1_id' => $agenda->id]);
+            } else {
+                $activeSwap->update(['agenda_2_id' => $agenda->id]);
+            }
+        }
 
         return response()->json([
             'success'         => true,
@@ -3480,38 +3515,17 @@ class AdminController extends Controller
             'admin_id'             => $user->id,
         ]);
 
-        // Fungsi helper buat / update agenda
-        $setupAgenda = function($jadwal, &$agendaObj, $jamMulaiBaru, $jamSelesaiBaru, $lawanMk) use ($today, $nowTime) {
-            $status = ($nowTime >= $jamMulaiBaru && $nowTime <= $jamSelesaiBaru) ? 'Berlangsung' : (($nowTime < $jamMulaiBaru) ? 'Akan Datang' : 'Selesai');
+        // Update agenda HANYA jika sesi agenda sudah pernah dibuka sebelumnya (misalnya oleh admin/dosen)
+        // JANGAN buat Agenda baru secara prematur jika kelas belum dimulai!
+        // Kelas yang belum dimulai akan tetap menunggu di daftar "Belum Dimulai" dengan jam hasil tukar.
+        $setupAgenda = function($jadwal, &$agendaObj, $jamMulaiBaru, $jamSelesaiBaru, $lawanMk) use ($nowTime) {
             if ($agendaObj) {
+                $status = ($nowTime >= $jamMulaiBaru && $nowTime <= $jamSelesaiBaru) ? 'Berlangsung' : (($nowTime < $jamMulaiBaru) ? 'Akan Datang' : 'Selesai');
                 $agendaObj->update([
-                    'jam_mulai'   => $jamMulaiBaru,
-                    'jam_selesai' => $jamSelesaiBaru,
+                    'jam_mulai'     => $jamMulaiBaru,
+                    'jam_selesai'   => $jamSelesaiBaru,
                     'status_agenda' => $status,
-                    'catatan'     => preg_replace('/\s*\(Ditukar Sementara.*?\)/i', '', $agendaObj->catatan ?? '') . " (Ditukar Sementara dengan {$lawanMk})",
-                ]);
-            } else {
-                $priorCount = Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)->where('tanggal', '<', $today)->count();
-                $nomorPertemuan = $priorCount + 1;
-                $catatan = 'Pertemuan ke-' . $nomorPertemuan . ': ' . $jadwal->mata_kuliah . " (Ditukar Sementara dengan {$lawanMk})";
-                $agendaObj = Agenda::create([
-                    'jadwal_penggunaan_lab_id' => $jadwal->id,
-                    'dosen_id'                 => $jadwal->dosen_id,
-                    'dosen_pengampu_id'        => $jadwal->dosen_pengampu_id,
-                    'lab_id'                   => $jadwal->lab_id,
-                    'mata_kuliah'              => $jadwal->mata_kuliah,
-                    'fakultas'                 => $jadwal->prodi->fakultas->nama_fakultas ?? '',
-                    'jurusan'                  => $jadwal->prodi->nama_prodi ?? $jadwal->jurusan ?? '',
-                    'program_kuliah'           => $jadwal->program_kuliah ?? 'Reguler',
-                    'tahun_akademik'           => $jadwal->tahun_akademik ?? '2026/2027 Ganjil',
-                    'jenis_pertemuan'          => $jadwal->jenis_pertemuan ?? 'Praktikum',
-                    'kelas'                    => $jadwal->kelas,
-                    'semester'                 => $jadwal->semester ?? '1',
-                    'tanggal'                  => $today,
-                    'jam_mulai'                => $jamMulaiBaru,
-                    'jam_selesai'              => $jamSelesaiBaru,
-                    'status_agenda'            => $status,
-                    'catatan'                  => $catatan,
+                    'catatan'       => preg_replace('/\s*\(Ditukar Sementara.*?\)/i', '', $agendaObj->catatan ?? '') . " (Ditukar Sementara dengan {$lawanMk})",
                 ]);
             }
         };
@@ -3520,8 +3534,8 @@ class AdminController extends Controller
         $setupAgenda($j2, $agenda2, $jamMulai2Tukar, $jamSelesai2Tukar, $j1->mata_kuliah);
 
         $swap->update([
-            'agenda_1_id' => $agenda1->id,
-            'agenda_2_id' => $agenda2->id,
+            'agenda_1_id' => $agenda1?->id,
+            'agenda_2_id' => $agenda2?->id,
         ]);
 
         $jam1Str = substr($jamMulai1Tukar, 0, 5) . ' - ' . substr($jamSelesai1Tukar, 0, 5);
