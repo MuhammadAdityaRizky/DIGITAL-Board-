@@ -14,6 +14,7 @@ use App\Models\Prodi;
 use App\Models\Kelas;
 use App\Models\MataKuliah;
 use App\Models\JadwalPenggunaanLab;
+use App\Models\JadwalSwapSementara;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -125,6 +126,10 @@ class AdminController extends Controller
         }
         $agendasToday = $agendasTodayQuery->orderBy('jam_mulai', 'asc')->get();
 
+        $swapsToday = JadwalSwapSementara::with(['jadwal1', 'jadwal2'])
+            ->whereDate('tanggal', $today)
+            ->get();
+
         // 3. Susun Unified Timeline Items (Menggabungkan yang sudah dimulai & yang masih terjadwal)
         $timelineItems = [];
         $handledAgendaIds = [];
@@ -132,6 +137,20 @@ class AdminController extends Controller
         foreach ($allJadwalHariIni as $j) {
             $matchedAgenda = $agendasToday->firstWhere('jadwal_penggunaan_lab_id', $j->id);
             $labObj = $matchedAgenda->lab ?? $j->lab;
+
+            $sw = $swapsToday->first(fn($s) => $s->jadwal_1_id == $j->id || $s->jadwal_2_id == $j->id);
+            $isSwapped = (bool)$sw;
+            $jamAsliStr = null;
+            $swapPartner = null;
+            if ($sw) {
+                if ($sw->jadwal_1_id == $j->id) {
+                    $jamAsliStr = substr($sw->jam_mulai_1_asli, 0, 5) . ' - ' . substr($sw->jam_selesai_1_asli, 0, 5);
+                    $swapPartner = $sw->jadwal2?->mata_kuliah ?? 'Matkul Lain';
+                } else {
+                    $jamAsliStr = substr($sw->jam_mulai_2_asli, 0, 5) . ' - ' . substr($sw->jam_selesai_2_asli, 0, 5);
+                    $swapPartner = $sw->jadwal1?->mata_kuliah ?? 'Matkul Lain';
+                }
+            }
 
             if ($matchedAgenda) {
                 $handledAgendaIds[] = $matchedAgenda->id;
@@ -171,10 +190,18 @@ class AdminController extends Controller
                     'has_session'       => true,
                     'absensi_url'       => route('admin.absensi.input', $matchedAgenda->id),
                     'quick_start_url'   => null,
+                    'is_swapped'        => $isSwapped,
+                    'jam_asli_str'      => $jamAsliStr,
+                    'swap_partner_name' => $swapPartner,
                 ];
             } else {
-                $mulai = $j->jam_mulai;
-                $selesai = $j->jam_selesai;
+                if ($sw) {
+                    $mulai = ($sw->jadwal_1_id == $j->id) ? $sw->jam_mulai_1_tukar : $sw->jam_mulai_2_tukar;
+                    $selesai = ($sw->jadwal_1_id == $j->id) ? $sw->jam_selesai_1_tukar : $sw->jam_selesai_2_tukar;
+                } else {
+                    $mulai = $j->jam_mulai;
+                    $selesai = $j->jam_selesai;
+                }
 
                 if ($currentTime > $selesai) {
                     $itemStatus = 'terlewat';        // Lewat jam tanpa dimulai
@@ -206,6 +233,9 @@ class AdminController extends Controller
                     'has_session'       => false,
                     'absensi_url'       => null,
                     'quick_start_url'   => route('admin.jadwal-lab.mulai-hari-ini', $j->id),
+                    'is_swapped'        => $isSwapped,
+                    'jam_asli_str'      => $jamAsliStr,
+                    'swap_partner_name' => $swapPartner,
                 ];
             }
         }
@@ -228,6 +258,20 @@ class AdminController extends Controller
                     $pertemuanNum = (int)$m[1];
                 }
 
+                $sw = $swapsToday->first(fn($s) => $s->agenda_1_id == $ag->id || $s->agenda_2_id == $ag->id || $s->jadwal_1_id == $ag->jadwal_penggunaan_lab_id || $s->jadwal_2_id == $ag->jadwal_penggunaan_lab_id);
+                $isSwapped = (bool)$sw;
+                $jamAsliStr = null;
+                $swapPartner = null;
+                if ($sw) {
+                    if ($sw->jadwal_1_id == $ag->jadwal_penggunaan_lab_id || $sw->agenda_1_id == $ag->id) {
+                        $jamAsliStr = substr($sw->jam_mulai_1_asli, 0, 5) . ' - ' . substr($sw->jam_selesai_1_asli, 0, 5);
+                        $swapPartner = $sw->jadwal2?->mata_kuliah ?? 'Matkul Lain';
+                    } else {
+                        $jamAsliStr = substr($sw->jam_mulai_2_asli, 0, 5) . ' - ' . substr($sw->jam_selesai_2_asli, 0, 5);
+                        $swapPartner = $sw->jadwal1?->mata_kuliah ?? 'Matkul Lain';
+                    }
+                }
+
                 $timelineItems[] = [
                     'type'              => 'agenda',
                     'agenda_id'         => $ag->id,
@@ -246,6 +290,9 @@ class AdminController extends Controller
                     'has_session'       => true,
                     'absensi_url'       => route('admin.absensi.input', $ag->id),
                     'quick_start_url'   => null,
+                    'is_swapped'        => $isSwapped,
+                    'jam_asli_str'      => $jamAsliStr,
+                    'swap_partner_name' => $swapPartner,
                 ];
             }
         }
@@ -1204,13 +1251,89 @@ class AdminController extends Controller
             ->pluck('jadwal_penggunaan_lab_id')
             ->toArray();
 
+        $swapsToday = \App\Models\JadwalSwapSementara::with(['jadwal1', 'jadwal2'])
+            ->whereDate('tanggal', $nowDate)
+            ->get();
+
+        // Terapkan penanda tukar sementara ke master jadwal hari ini
+        foreach ($allJadwalHariIni as $j) {
+            $sw = $swapsToday->first(fn($s) => $s->jadwal_1_id == $j->id || $s->jadwal_2_id == $j->id);
+            if ($sw) {
+                $j->is_swapped = true;
+                $j->swap_id = $sw->id;
+                if ($sw->jadwal_1_id == $j->id) {
+                    $j->jam_mulai_tampil = $sw->jam_mulai_1_tukar;
+                    $j->jam_selesai_tampil = $sw->jam_selesai_1_tukar;
+                    $j->jam_asli_str = substr($sw->jam_mulai_1_asli, 0, 5) . ' - ' . substr($sw->jam_selesai_1_asli, 0, 5);
+                    $j->swap_partner_name = $sw->jadwal2?->mata_kuliah ?? 'Matkul Lain';
+                } else {
+                    $j->jam_mulai_tampil = $sw->jam_mulai_2_tukar;
+                    $j->jam_selesai_tampil = $sw->jam_selesai_2_tukar;
+                    $j->jam_asli_str = substr($sw->jam_mulai_2_asli, 0, 5) . ' - ' . substr($sw->jam_selesai_2_asli, 0, 5);
+                    $j->swap_partner_name = $sw->jadwal1?->mata_kuliah ?? 'Matkul Lain';
+                }
+            } else {
+                $j->is_swapped = false;
+                $j->swap_id = null;
+                $j->jam_mulai_tampil = $j->jam_mulai;
+                $j->jam_selesai_tampil = $j->jam_selesai;
+            }
+        }
+
         $unstartedJadwals = $allJadwalHariIni->reject(function($j) use ($agendasTodayIds) {
             return in_array($j->id, $agendasTodayIds);
         });
 
+        // Agenda hari ini yang berstatus 'Akan Datang' (misal hasil swap atau dijadwalkan admin)
+        $upcomingAgendasQuery = Agenda::with(['dosen', 'dosenPengampu', 'lab.fakultas', 'jadwalPenggunaanLab'])
+            ->whereDate('tanggal', $nowDate)
+            ->where('jam_mulai', '>', $nowTime)
+            ->where('status_agenda', '!=', 'Dibatalkan')
+            ->where('status_agenda', '!=', 'Selesai');
+        if ($user->isAdminFakultas()) {
+            $upcomingAgendasQuery->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
+        }
+        $upcomingAgendasToday = $upcomingAgendasQuery->orderBy('jam_mulai', 'asc')->get();
+
+        foreach ($upcomingAgendasToday as $uag) {
+            $sw = $swapsToday->first(fn($s) => $s->jadwal_1_id == $uag->jadwal_penggunaan_lab_id || $s->jadwal_2_id == $uag->jadwal_penggunaan_lab_id);
+            if ($sw) {
+                $uag->is_swapped = true;
+                $uag->swap_id = $sw->id;
+                if ($sw->jadwal_1_id == $uag->jadwal_penggunaan_lab_id) {
+                    $uag->jam_asli_str = substr($sw->jam_mulai_1_asli, 0, 5) . ' - ' . substr($sw->jam_selesai_1_asli, 0, 5);
+                    $uag->swap_partner_name = $sw->jadwal2?->mata_kuliah ?? 'Matkul Lain';
+                } else {
+                    $uag->jam_asli_str = substr($sw->jam_mulai_2_asli, 0, 5) . ' - ' . substr($sw->jam_selesai_2_asli, 0, 5);
+                    $uag->swap_partner_name = $sw->jadwal1?->mata_kuliah ?? 'Matkul Lain';
+                }
+            } else {
+                $uag->is_swapped = false;
+                $uag->swap_id = null;
+            }
+        }
+
+        foreach ($liveAgendas as $lag) {
+            $sw = $swapsToday->first(fn($s) => $s->jadwal_1_id == $lag->jadwal_penggunaan_lab_id || $s->jadwal_2_id == $lag->jadwal_penggunaan_lab_id);
+            if ($sw) {
+                $lag->is_swapped = true;
+                $lag->swap_id = $sw->id;
+                if ($sw->jadwal_1_id == $lag->jadwal_penggunaan_lab_id) {
+                    $lag->jam_asli_str = substr($sw->jam_mulai_1_asli, 0, 5) . ' - ' . substr($sw->jam_selesai_1_asli, 0, 5);
+                    $lag->swap_partner_name = $sw->jadwal2?->mata_kuliah ?? 'Matkul Lain';
+                } else {
+                    $lag->jam_asli_str = substr($sw->jam_mulai_2_asli, 0, 5) . ' - ' . substr($sw->jam_selesai_2_asli, 0, 5);
+                    $lag->swap_partner_name = $sw->jadwal1?->mata_kuliah ?? 'Matkul Lain';
+                }
+            } else {
+                $lag->is_swapped = false;
+                $lag->swap_id = null;
+            }
+        }
+
         return view('admin.agenda', compact(
-            'allAgendas', 'liveAgendas', 'counts', 'dosens', 'labs', 'fakultas',
-            'userFakultas', 'prodis', 'kelases', 'mataKuliahs', 'unstartedJadwals', 'todayDayName'
+            'allAgendas', 'liveAgendas', 'upcomingAgendasToday', 'counts', 'dosens', 'labs', 'fakultas',
+            'userFakultas', 'prodis', 'kelases', 'mataKuliahs', 'unstartedJadwals', 'allJadwalHariIni', 'swapsToday', 'todayDayName'
         ));
     }
 
@@ -3248,6 +3371,199 @@ class AdminController extends Controller
             'status_agenda'   => $statusAgenda,
             'nomor_pertemuan' => $nomorPertemuan,
             'absensi_url'     => route('admin.absensi.input', $agenda->id),
+        ]);
+    }
+
+    /**
+     * Tukar Jam Praktikum Hari Ini (Sementara / Khusus Hari Ini Saja).
+     */
+    public function tukarJamHariIni(Request $request)
+    {
+        $user = Auth::user();
+        $request->validate([
+            'jadwal_1_id' => 'required',
+            'jadwal_2_id' => 'required',
+        ]);
+
+        $id1 = $request->jadwal_1_id;
+        $id2 = $request->jadwal_2_id;
+
+        if ($id1 == $id2) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pilih dua mata kuliah yang berbeda untuk ditukar.',
+            ], 422);
+        }
+
+        $today = date('Y-m-d');
+        $now = \Carbon\Carbon::now();
+        $nowTime = $now->format('H:i:s');
+
+        // Ambil data jadwal 1 & 2
+        $j1 = JadwalPenggunaanLab::with(['lab', 'dosenPengampu', 'dosen', 'prodi.fakultas'])->findOrFail($id1);
+        $j2 = JadwalPenggunaanLab::with(['lab', 'dosenPengampu', 'dosen', 'prodi.fakultas'])->findOrFail($id2);
+
+        // Validasi izin akses fakultas
+        if ($user->isAdminFakultas()) {
+            if (!$user->canManageLab($j1->lab) || !$user->canManageLab($j2->lab)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akses ditolak: Anda tidak memiliki izin untuk mengelola laboratorium ini.',
+                ], 403);
+            }
+        }
+
+        // Cek apakah salah satu sesi sudah selesai
+        $agenda1 = Agenda::where('jadwal_penggunaan_lab_id', $j1->id)->whereDate('tanggal', $today)->first();
+        $agenda2 = Agenda::where('jadwal_penggunaan_lab_id', $j2->id)->whereDate('tanggal', $today)->first();
+
+        if ($agenda1 && $agenda1->status_agenda === 'Selesai') {
+            return response()->json([
+                'success' => false,
+                'message' => "Sesi \"{$j1->mata_kuliah}\" sudah selesai hari ini dan tidak dapat ditukar lagi.",
+            ], 422);
+        }
+        if ($agenda2 && $agenda2->status_agenda === 'Selesai') {
+            return response()->json([
+                'success' => false,
+                'message' => "Sesi \"{$j2->mata_kuliah}\" sudah selesai hari ini dan tidak dapat ditukar lagi.",
+            ], 422);
+        }
+
+        // Hapus pertukaran lama hari ini yang melibatkan jadwal 1 atau 2 jika ada
+        \App\Models\JadwalSwapSementara::whereDate('tanggal', $today)
+            ->where(function($q) use ($j1, $j2) {
+                $q->whereIn('jadwal_1_id', [$j1->id, $j2->id])
+                  ->orWhereIn('jadwal_2_id', [$j1->id, $j2->id]);
+            })->delete();
+
+        $jamMulai1Asli = $j1->jam_mulai;
+        $jamSelesai1Asli = $j1->jam_selesai;
+        $jamMulai2Asli = $j2->jam_mulai;
+        $jamSelesai2Asli = $j2->jam_selesai;
+
+        // Jam ditukar: Jadwal 1 dapat jam Jadwal 2, Jadwal 2 dapat jam Jadwal 1
+        $jamMulai1Tukar = $jamMulai2Asli;
+        $jamSelesai1Tukar = $jamSelesai2Asli;
+        $jamMulai2Tukar = $jamMulai1Asli;
+        $jamSelesai2Tukar = $jamSelesai1Asli;
+
+        $swap = \App\Models\JadwalSwapSementara::create([
+            'tanggal'              => $today,
+            'jadwal_1_id'          => $j1->id,
+            'jadwal_2_id'          => $j2->id,
+            'jam_mulai_1_asli'     => $jamMulai1Asli,
+            'jam_selesai_1_asli'   => $jamSelesai1Asli,
+            'jam_mulai_2_asli'     => $jamMulai2Asli,
+            'jam_selesai_2_asli'   => $jamSelesai2Asli,
+            'jam_mulai_1_tukar'    => $jamMulai1Tukar,
+            'jam_selesai_1_tukar'  => $jamSelesai1Tukar,
+            'jam_mulai_2_tukar'    => $jamMulai2Tukar,
+            'jam_selesai_2_tukar'  => $jamSelesai2Tukar,
+            'admin_id'             => $user->id,
+        ]);
+
+        // Fungsi helper buat / update agenda
+        $setupAgenda = function($jadwal, &$agendaObj, $jamMulaiBaru, $jamSelesaiBaru, $lawanMk) use ($today, $nowTime) {
+            $status = ($nowTime >= $jamMulaiBaru && $nowTime <= $jamSelesaiBaru) ? 'Berlangsung' : (($nowTime < $jamMulaiBaru) ? 'Akan Datang' : 'Selesai');
+            if ($agendaObj) {
+                $agendaObj->update([
+                    'jam_mulai'   => $jamMulaiBaru,
+                    'jam_selesai' => $jamSelesaiBaru,
+                    'status_agenda' => $status,
+                    'catatan'     => preg_replace('/\s*\(Ditukar Sementara.*?\)/i', '', $agendaObj->catatan ?? '') . " (Ditukar Sementara dengan {$lawanMk})",
+                ]);
+            } else {
+                $priorCount = Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)->where('tanggal', '<', $today)->count();
+                $nomorPertemuan = $priorCount + 1;
+                $catatan = 'Pertemuan ke-' . $nomorPertemuan . ': ' . $jadwal->mata_kuliah . " (Ditukar Sementara dengan {$lawanMk})";
+                $agendaObj = Agenda::create([
+                    'jadwal_penggunaan_lab_id' => $jadwal->id,
+                    'dosen_id'                 => $jadwal->dosen_id,
+                    'dosen_pengampu_id'        => $jadwal->dosen_pengampu_id,
+                    'lab_id'                   => $jadwal->lab_id,
+                    'mata_kuliah'              => $jadwal->mata_kuliah,
+                    'fakultas'                 => $jadwal->prodi->fakultas->nama_fakultas ?? '',
+                    'jurusan'                  => $jadwal->prodi->nama_prodi ?? $jadwal->jurusan ?? '',
+                    'program_kuliah'           => $jadwal->program_kuliah ?? 'Reguler',
+                    'tahun_akademik'           => $jadwal->tahun_akademik ?? '2026/2027 Ganjil',
+                    'jenis_pertemuan'          => $jadwal->jenis_pertemuan ?? 'Praktikum',
+                    'kelas'                    => $jadwal->kelas,
+                    'semester'                 => $jadwal->semester ?? '1',
+                    'tanggal'                  => $today,
+                    'jam_mulai'                => $jamMulaiBaru,
+                    'jam_selesai'              => $jamSelesaiBaru,
+                    'status_agenda'            => $status,
+                    'catatan'                  => $catatan,
+                ]);
+            }
+        };
+
+        $setupAgenda($j1, $agenda1, $jamMulai1Tukar, $jamSelesai1Tukar, $j2->mata_kuliah);
+        $setupAgenda($j2, $agenda2, $jamMulai2Tukar, $jamSelesai2Tukar, $j1->mata_kuliah);
+
+        $swap->update([
+            'agenda_1_id' => $agenda1->id,
+            'agenda_2_id' => $agenda2->id,
+        ]);
+
+        $jam1Str = substr($jamMulai1Tukar, 0, 5) . ' - ' . substr($jamSelesai1Tukar, 0, 5);
+        $jam2Str = substr($jamMulai2Tukar, 0, 5) . ' - ' . substr($jamSelesai2Tukar, 0, 5);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Pertukaran jam berhasil! Khusus hari ini, \"{$j1->mata_kuliah}\" berpindah ke jam {$jam1Str} WIB dan \"{$j2->mata_kuliah}\" berpindah ke jam {$jam2Str} WIB.",
+            'swap_id' => $swap->id,
+        ]);
+    }
+
+    /**
+     * Batalkan Tukar Jam Praktikum Hari Ini.
+     */
+    public function batalTukarJam(Request $request, $id)
+    {
+        $user = Auth::user();
+        $swap = \App\Models\JadwalSwapSementara::with(['jadwal1', 'jadwal2'])->findOrFail($id);
+
+        if ($user->isAdminFakultas()) {
+            if (($swap->jadwal1 && !$user->canManageLab($swap->jadwal1->lab)) || 
+                ($swap->jadwal2 && !$user->canManageLab($swap->jadwal2->lab))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akses ditolak: Anda tidak memiliki izin untuk mengelola laboratorium ini.',
+                ], 403);
+            }
+        }
+
+        $today = $swap->tanggal;
+
+        // Reset atau hapus agenda yang dibuat untuk pertukaran sementara
+        $revertAgenda = function($jadwalId, $jamMulaiAsli, $jamSelesaiAsli) use ($today) {
+            if (!$jadwalId) return;
+            $ag = Agenda::where('jadwal_penggunaan_lab_id', $jadwalId)->whereDate('tanggal', $today)->first();
+            if ($ag) {
+                $hasPresensi = \App\Models\Absensi::where('agenda_id', $ag->id)->exists();
+                // Jika belum ada mahasiswa yang absen dan belum check-in dosen, hapus agenda agar kembali murni ke master jadwal
+                if (!$hasPresensi && !$ag->dosen_waktu_masuk && $ag->status_agenda !== 'Selesai') {
+                    $ag->delete();
+                } else {
+                    $ag->update([
+                        'jam_mulai'   => $jamMulaiAsli,
+                        'jam_selesai' => $jamSelesaiAsli,
+                        'catatan'     => trim(preg_replace('/\s*\(Ditukar Sementara.*?\)/i', '', $ag->catatan ?? '')),
+                    ]);
+                }
+            }
+        };
+
+        $revertAgenda($swap->jadwal_1_id, $swap->jam_mulai_1_asli, $swap->jam_selesai_1_asli);
+        $revertAgenda($swap->jadwal_2_id, $swap->jam_mulai_2_asli, $swap->jam_selesai_2_asli);
+
+        $swap->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pertukaran jam berhasil dibatalkan. Jam perkuliahan telah dikembalikan normal sesuai matriks jadwal.',
         ]);
     }
 

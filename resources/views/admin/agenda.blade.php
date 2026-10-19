@@ -276,11 +276,13 @@
 
             @php
                 $hasLiveAgendas = isset($liveAgendas) && $liveAgendas->count() > 0;
+                $hasUpcoming = isset($upcomingAgendasToday) && $upcomingAgendasToday->count() > 0;
                 $hasUnstarted = isset($unstartedJadwals) && $unstartedJadwals->count() > 0;
+                $swapsCount = isset($swapsToday) ? $swapsToday->count() : 0;
             @endphp
 
             <!-- UNIFIED MONITORING FRAME: JADWAL & PRAKTIKUM HARI INI -->
-            @if($hasLiveAgendas || $hasUnstarted)
+            @if($hasLiveAgendas || $hasUpcoming || $hasUnstarted)
             <div class="bg-white border border-slate-200/90 rounded-2xl p-4.5 sm:p-5 shadow-xs space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
                     <div class="flex items-center gap-2.5 flex-wrap">
@@ -303,18 +305,39 @@
                                     {{ $liveAgendas->count() }} Sedang Berlangsung
                                 </span>
                             @endif
+                            @if($hasUpcoming)
+                                <span class="px-2.5 py-0.5 bg-indigo-100 text-indigo-800 border border-indigo-200 rounded-full text-[10px] font-bold flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                                    {{ $upcomingAgendasToday->count() }} Sesi Terdaftar
+                                </span>
+                            @endif
                             @if($hasUnstarted)
                                 <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-full text-[10px] font-bold flex items-center gap-1">
                                     <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
                                     {{ $unstartedJadwals->count() }} Belum Dimulai
                                 </span>
                             @endif
+                            @if($swapsCount > 0)
+                                <span class="px-2.5 py-0.5 bg-purple-100 text-purple-800 border border-purple-200 rounded-full text-[10px] font-extrabold flex items-center gap-1">
+                                    <i class="fa-solid fa-arrow-right-arrow-left text-[9px] text-purple-600"></i>
+                                    {{ $swapsCount }} Ditukar Hari Ini
+                                </span>
+                            @endif
                         </div>
                     </div>
 
-                    <span class="text-[11px] text-slate-600 font-bold bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
-                        <i class="fa-regular fa-calendar text-slate-400 mr-1"></i> {{ $todayDayName ?? 'Hari Ini' }}, {{ date('d M Y') }}
-                    </span>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button type="button" 
+                                onclick="bukaModalTukarJamHariIni()" 
+                                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                                title="Tukar slot jam perkuliahan antara 2 mata kuliah khusus untuk hari ini saja (sementara)">
+                            <i class="fa-solid fa-arrow-right-arrow-left text-xs"></i>
+                            <span>Tukar Jam Hari Ini</span>
+                        </button>
+                        <span class="text-[11px] text-slate-600 font-bold bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                            <i class="fa-regular fa-calendar text-slate-400 mr-1"></i> {{ $todayDayName ?? 'Hari Ini' }}, {{ date('d M Y') }}
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Combined Grid -->
@@ -339,6 +362,12 @@
                                                 <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
                                                 BERLANGSUNG
                                             </span>
+                                            @if($live->is_swapped)
+                                                <span class="px-2 py-0.5 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded text-[10px] font-extrabold flex items-center gap-1" title="Jam asli: {{ $live->jam_asli_str }} WIB. Ditukar sementara dengan {{ $live->swap_partner_name }}">
+                                                    <i class="fa-solid fa-arrow-right-arrow-left text-[9px] text-indigo-600"></i>
+                                                    Ditukar Sementara
+                                                </span>
+                                            @endif
                                             @if(auth()->user()->isSuperAdmin() && $liveFakultas)
                                                 <span class="px-2 py-0.5 bg-teal-50 text-teal-900 border border-teal-200 rounded text-[10px] font-bold flex items-center gap-1" title="Fakultas {{ $liveFakultas->nama_fakultas }}">
                                                     <i class="fa-solid fa-building-columns text-[9px] text-teal-700"></i>
@@ -369,6 +398,9 @@
                                         <div class="flex items-center gap-1.5 font-mono text-[11px] text-emerald-800">
                                             <i class="fa-regular fa-clock text-[11px] text-emerald-600 w-3.5 shrink-0"></i>
                                             <span class="font-bold">{{ substr($live->jam_mulai,0,5) }} - {{ substr($live->jam_selesai,0,5) }} WIB</span>
+                                            @if($live->is_swapped)
+                                                <span class="text-[10px] text-slate-400 font-sans line-through">({{ $live->jam_asli_str }})</span>
+                                            @endif
                                             <span class="text-slate-400">•</span>
                                             <span class="font-semibold text-slate-600">Pertemuan {{ $livePertemuan }}</span>
                                         </div>
@@ -379,6 +411,14 @@
                                 <div class="pt-2.5 border-t border-emerald-200/60 flex items-center justify-between gap-2">
                                     <span class="text-[10px] font-bold text-emerald-700 truncate max-w-[90px]">{{ $live->jurusan ?? 'Prodi' }}</span>
                                     <div class="flex items-center gap-1.5">
+                                        @if($live->is_swapped)
+                                            <button type="button" 
+                                                    onclick="batalTukarJamHariIni({{ $live->swap_id }})" 
+                                                    class="h-8 px-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 rounded-xl text-xs font-semibold transition flex items-center gap-1 shadow-2xs cursor-pointer" 
+                                                    title="Batalkan pertukaran jam">
+                                                <i class="fa-solid fa-rotate-left text-[10px]"></i> Batal
+                                            </button>
+                                        @endif
                                         <button type="button" 
                                                 onclick="akhiriSesiAdmin({{ $live->id }}, '{{ addslashes($live->mata_kuliah) }}')"
                                                 class="h-8 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
@@ -398,14 +438,94 @@
                         @endforeach
                     @endif
 
-                    {{-- 2. KELAS BELUM DIMULAI (KARTU ABU-ABU) --}}
+                    {{-- 2. KELAS SUDAH DIDAFTARKAN HARI INI (AKAN DATANG / HASIL SWAP) --}}
+                    @if($hasUpcoming)
+                        @foreach($upcomingAgendasToday as $uag)
+                            @php
+                                $uagPertemuan = '-';
+                                if ($uag->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $uag->catatan, $lm)) {
+                                    $uagPertemuan = $lm[1];
+                                }
+                                $uagLab = $uag->lab;
+                                $uagDosenNama = $uag->dosenPengampu?->nama ?? ($uag->dosen?->nama ?? 'Dosen Pengampu');
+                                $uagJamFormatted = substr($uag->jam_mulai,0,5) . ' - ' . substr($uag->jam_selesai,0,5);
+                            @endphp
+                            <div class="bg-indigo-50/20 border-2 border-indigo-300/80 rounded-xl p-4 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between gap-3">
+                                <div>
+                                    <!-- Badges -->
+                                    <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="px-2 py-0.5 bg-indigo-600 text-white rounded text-[10px] font-extrabold flex items-center gap-1 shadow-2xs">
+                                                <i class="fa-regular fa-clock text-[9px]"></i>
+                                                AKAN DATANG
+                                            </span>
+                                            @if($uag->is_swapped)
+                                                <span class="px-2 py-0.5 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded text-[10px] font-extrabold flex items-center gap-1" title="Jam asli: {{ $uag->jam_asli_str }} WIB. Ditukar sementara dengan {{ $uag->swap_partner_name }}">
+                                                    <i class="fa-solid fa-arrow-right-arrow-left text-[9px] text-indigo-600"></i>
+                                                    Ditukar Sementara
+                                                </span>
+                                            @endif
+                                            <span class="px-2 py-0.5 bg-white text-slate-700 border border-slate-200 rounded text-[10px] font-bold flex items-center gap-1">
+                                                <i class="fa-solid fa-door-open text-[9px] text-slate-400"></i>
+                                                {{ $uagLab?->nama_lab ?? 'Lab' }}
+                                            </span>
+                                        </div>
+                                        <span class="text-[10px] font-bold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                            Kelas {{ $uag->kelas ?: '-' }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Title -->
+                                    <h5 class="font-extrabold text-slate-900 text-xs sm:text-sm tracking-tight leading-snug line-clamp-2">
+                                        {{ $uag->mata_kuliah }}
+                                    </h5>
+
+                                    <!-- Details -->
+                                    <div class="mt-2.5 space-y-1 text-xs text-slate-600">
+                                        <div class="flex items-center gap-1.5">
+                                            <i class="fa-solid fa-user-tie text-[11px] text-slate-400 w-3.5 shrink-0"></i>
+                                            <span class="truncate font-semibold text-slate-800">{{ $uagDosenNama }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5 font-mono text-[11px] text-indigo-900">
+                                            <i class="fa-regular fa-clock text-[11px] text-indigo-600 w-3.5 shrink-0"></i>
+                                            <span class="font-bold">{{ $uagJamFormatted }} WIB</span>
+                                            @if($uag->is_swapped)
+                                                <span class="text-[10px] text-slate-400 font-sans line-through">({{ $uag->jam_asli_str }})</span>
+                                            @endif
+                                            <span class="text-slate-400">•</span>
+                                            <span class="font-semibold text-slate-600">Pertemuan {{ $uagPertemuan }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="pt-2.5 border-t border-slate-200/70 flex items-center justify-between gap-2">
+                                    <span class="text-[10px] font-medium text-slate-400 truncate max-w-[100px]">{{ $uag->program_kuliah ?? 'Reguler' }}</span>
+                                    <div class="flex items-center gap-1.5">
+                                        @if($uag->is_swapped)
+                                            <button type="button" onclick="batalTukarJamHariIni({{ $uag->swap_id }})" class="h-8 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition border border-slate-200 flex items-center gap-1 cursor-pointer" title="Batalkan pertukaran jam">
+                                                <i class="fa-solid fa-rotate-left text-[10px]"></i> Batal
+                                            </button>
+                                        @endif
+                                        <a href="{{ route('admin.absensi.input', $uag->id) }}" class="h-8 px-3 bg-teal-800 hover:bg-teal-900 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs">
+                                            <i class="fa-solid fa-clipboard-user text-[10px]"></i> Absensi
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+
+                    {{-- 3. KELAS BELUM DIMULAI (KARTU ABU-ABU) --}}
                     @if($hasUnstarted)
                         @foreach($unstartedJadwals as $j)
                             @php
                                 $dosenNama = $j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen Pengampu');
-                                $jamFormatted = substr($j->jam_mulai, 0, 5) . ' - ' . substr($j->jam_selesai, 0, 5);
+                                $jamMulaiTampil = $j->jam_mulai_tampil ?? $j->jam_mulai;
+                                $jamSelesaiTampil = $j->jam_selesai_tampil ?? $j->jam_selesai;
+                                $jamFormatted = substr($jamMulaiTampil, 0, 5) . ' - ' . substr($jamSelesaiTampil, 0, 5);
                                 $nowTimeStr = date('H:i:s');
-                                $isTimeNow = ($nowTimeStr >= $j->jam_mulai && $nowTimeStr <= $j->jam_selesai);
+                                $isTimeNow = ($nowTimeStr >= $jamMulaiTampil && $nowTimeStr <= $jamSelesaiTampil);
                             @endphp
                             <div class="bg-slate-50/80 border border-slate-200/90 rounded-xl p-4 shadow-2xs hover:shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between gap-3">
                                 <div>
@@ -416,6 +536,12 @@
                                                 <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
                                                 BELUM DIMULAI
                                             </span>
+                                            @if($j->is_swapped)
+                                                <span class="px-2 py-0.5 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded text-[10px] font-extrabold flex items-center gap-1" title="Jam asli: {{ $j->jam_asli_str }} WIB. Ditukar sementara dengan {{ $j->swap_partner_name }}">
+                                                    <i class="fa-solid fa-arrow-right-arrow-left text-[9px] text-indigo-600"></i>
+                                                    Ditukar Sementara
+                                                </span>
+                                            @endif
                                             <span class="px-2 py-0.5 bg-white text-slate-600 border border-slate-200 rounded text-[10px] font-bold flex items-center gap-1">
                                                 <i class="fa-solid fa-door-open text-[9px] text-slate-400"></i>
                                                 {{ $j->lab?->nama_lab ?? 'Lab' }}
@@ -439,7 +565,10 @@
                                         </div>
                                         <div class="flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
                                             <i class="fa-regular fa-clock text-[11px] text-slate-400 w-3.5 shrink-0"></i>
-                                            <span class="font-semibold text-slate-600">{{ $jamFormatted }} WIB</span>
+                                            <span class="font-semibold {{ $j->is_swapped ? 'text-indigo-700 font-bold' : 'text-slate-600' }}">{{ $jamFormatted }} WIB</span>
+                                            @if($j->is_swapped)
+                                                <span class="text-[10px] text-slate-400 font-sans line-through">({{ $j->jam_asli_str }})</span>
+                                            @endif
                                             @if($isTimeNow)
                                                 <span class="text-slate-300">•</span>
                                                 <span class="px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded text-[9px] font-bold animate-pulse">Waktunya Masuk</span>
@@ -453,12 +582,19 @@
                                     <span class="text-[10px] font-medium text-slate-400">
                                         {{ $j->program_kuliah ?? 'Reguler' }}
                                     </span>
-                                    <button type="button" 
-                                            onclick="mulaiSesiAgendaAdmin({{ $j->id }}, '{{ addslashes($j->mata_kuliah) }}', '{{ addslashes($dosenNama) }}', '{{ $jamFormatted }}', '{{ addslashes($j->lab?->nama_lab ?? 'Lab') }}')"
-                                            class="h-8 px-3.5 bg-slate-700 hover:bg-teal-800 active:scale-95 text-white font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
-                                        <i class="fa-solid fa-play text-[9px]"></i>
-                                        <span>Buka Sesi</span>
-                                    </button>
+                                    <div class="flex items-center gap-1.5">
+                                        @if($j->is_swapped)
+                                            <button type="button" onclick="batalTukarJamHariIni({{ $j->swap_id }})" class="h-8 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition border border-slate-200 flex items-center gap-1 cursor-pointer" title="Batalkan pertukaran jam">
+                                                <i class="fa-solid fa-rotate-left text-[10px]"></i> Batal
+                                            </button>
+                                        @endif
+                                        <button type="button" 
+                                                onclick="mulaiSesiAgendaAdmin({{ $j->id }}, '{{ addslashes($j->mata_kuliah) }}', '{{ addslashes($dosenNama) }}', '{{ $jamFormatted }}', '{{ addslashes($j->lab?->nama_lab ?? 'Lab') }}')"
+                                                class="h-8 px-3.5 bg-slate-700 hover:bg-teal-800 active:scale-95 text-white font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
+                                            <i class="fa-solid fa-play text-[9px]"></i>
+                                            <span>Buka Sesi</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -2272,7 +2408,336 @@
                 }
             });
         }
+
+        // ==========================================
+        // FITUR: TUKAR JAM HARI INI (SEMENTARA)
+        // ==========================================
+        function bukaModalTukarJamHariIni() {
+            const modal = document.getElementById('modalTukarJamHariIni');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.getElementById('swap_jadwal_1').value = '';
+                document.getElementById('swap_jadwal_2').value = '';
+                document.getElementById('swap_preview_box').classList.add('hidden');
+                document.getElementById('preview_sesi_1').classList.add('hidden');
+                document.getElementById('preview_sesi_2').classList.add('hidden');
+            }
+        }
+
+        function tutupModalTukarJamHariIni() {
+            const modal = document.getElementById('modalTukarJamHariIni');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function updateSwapPreview() {
+            const sel1 = document.getElementById('swap_jadwal_1');
+            const sel2 = document.getElementById('swap_jadwal_2');
+            const opt1 = sel1.options[sel1.selectedIndex];
+            const opt2 = sel2.options[sel2.selectedIndex];
+
+            if (sel1.value) {
+                document.getElementById('preview_sesi_1').classList.remove('hidden');
+                document.getElementById('jam_asli_1').textContent = opt1.dataset.jam + ' WIB (' + opt1.dataset.lab + ')';
+            } else {
+                document.getElementById('preview_sesi_1').classList.add('hidden');
+            }
+
+            if (sel2.value) {
+                document.getElementById('preview_sesi_2').classList.remove('hidden');
+                document.getElementById('jam_asli_2').textContent = opt2.dataset.jam + ' WIB (' + opt2.dataset.lab + ')';
+            } else {
+                document.getElementById('preview_sesi_2').classList.add('hidden');
+            }
+
+            if (sel1.value && sel2.value) {
+                if (sel1.value === sel2.value) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Jadwal Sama',
+                        text: 'Pilih dua mata kuliah yang berbeda untuk saling bertukar jam.',
+                        confirmButtonColor: '#4f46e5'
+                    });
+                    sel2.value = '';
+                    document.getElementById('swap_preview_box').classList.add('hidden');
+                    return;
+                }
+
+                document.getElementById('swap_preview_box').classList.remove('hidden');
+                document.getElementById('prev_matkul_1').textContent = opt1.dataset.matkul;
+                document.getElementById('prev_jam_baru_1').textContent = opt2.dataset.jam + ' WIB';
+
+                document.getElementById('prev_matkul_2').textContent = opt2.dataset.matkul;
+                document.getElementById('prev_jam_baru_2').textContent = opt1.dataset.jam + ' WIB';
+            } else {
+                document.getElementById('swap_preview_box').classList.add('hidden');
+            }
+        }
+
+        function submitTukarJamHariIni(e) {
+            e.preventDefault();
+            const id1 = document.getElementById('swap_jadwal_1').value;
+            const id2 = document.getElementById('swap_jadwal_2').value;
+
+            if (!id1 || !id2 || id1 === id2) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Pilihan Belum Lengkap',
+                    text: 'Silakan pilih dua jadwal mata kuliah yang berbeda.',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Menerapkan Tukar Jam...',
+                text: 'Sedang memproses pertukaran jadwal khusus hari ini.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(`{{ route('admin.agenda.tukar-jam-hari-ini') }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    jadwal_1_id: id1,
+                    jadwal_2_id: id2
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Ditukar!',
+                        text: data.message,
+                        confirmButtonColor: '#0f766e'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Menukar Jam',
+                        text: data.message,
+                        confirmButtonColor: '#0f766e'
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan Sistem',
+                    text: 'Tidak dapat menghubungi server. Silakan coba lagi.',
+                    confirmButtonColor: '#0f766e'
+                });
+            });
+        }
+
+        function batalTukarJamHariIni(swapId) {
+            Swal.fire({
+                title: 'Batalkan Pertukaran Jam?',
+                text: 'Jadwal perkuliahan akan dikembalikan normal sesuai matriks jadwal asli.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i class="fa-solid fa-rotate-left mr-1"></i> Ya, Batalkan Tukar',
+                cancelButtonText: 'Kembali',
+                customClass: {
+                    popup: 'rounded-2xl p-6 shadow-xl border border-slate-100',
+                    title: 'text-base font-extrabold text-slate-800',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Membatalkan...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    fetch(`/admin/agenda/batal-tukar-jam/${swapId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Pertukaran Dibatalkan!',
+                                text: data.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: data.message,
+                                confirmButtonColor: '#0f766e'
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Kesalahan Sistem',
+                            text: 'Tidak dapat membatalkan pertukaran.',
+                            confirmButtonColor: '#0f766e'
+                        });
+                    });
+                }
+            });
+        }
     </script>
+
+    <!-- MODAL TUKAR JAM HARI INI (SEMENTARA) -->
+    <div id="modalTukarJamHariIni" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in duration-200">
+            <!-- Modal Header -->
+            <div class="flex items-start justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg font-bold shrink-0">
+                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-sm sm:text-base text-slate-800">Tukar Jam Praktikum Hari Ini</h3>
+                        <p class="text-[11px] text-slate-400">Khusus hari {{ $todayDayName ?? 'Hari Ini' }}, {{ date('d M Y') }}. Otomatis kembali normal minggu depan.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="tutupModalTukarJamHariIni()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Notice Banner -->
+            <div class="bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-3.5 text-xs text-indigo-900 flex items-start gap-2.5">
+                <i class="fa-solid fa-circle-info text-indigo-600 mt-0.5 shrink-0 text-sm"></i>
+                <div class="space-y-0.5 text-[11px]">
+                    <span class="font-bold">Pertukaran Bersifat Sementara:</span>
+                    <p class="text-indigo-800/80 leading-relaxed">
+                        Pilih 2 mata kuliah hari ini untuk saling bertukar jam tayang & presensi. Perubahan ini <b>tidak mengubah matriks jadwal semester</b> dan minggu depan otomatis kembali ke jam semula.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="formTukarJamHariIni" onsubmit="submitTukarJamHariIni(event)" class="space-y-4">
+                <div class="space-y-3">
+                    <!-- Sesi A -->
+                    <div class="space-y-1.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                        <label class="block text-xs font-bold text-slate-700">Mata Kuliah Pertama (Sesi A):</label>
+                        <select id="swap_jadwal_1" name="jadwal_1_id" required onchange="updateSwapPreview()" class="w-full text-xs bg-white border border-slate-300 rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                            <option value="">-- Pilih Sesi A --</option>
+                            @if(isset($allJadwalHariIni))
+                                @foreach($allJadwalHariIni as $j)
+                                    @php
+                                        $dName = $j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen');
+                                        $jLab = $j->lab?->nama_lab ?? 'Lab';
+                                        $jJam = substr($j->jam_mulai,0,5) . ' - ' . substr($j->jam_selesai,0,5);
+                                    @endphp
+                                    <option value="{{ $j->id }}" 
+                                            data-matkul="{{ $j->mata_kuliah }}"
+                                            data-dosen="{{ $dName }}"
+                                            data-jam="{{ $jJam }}"
+                                            data-lab="{{ $jLab }}"
+                                            data-kelas="{{ $j->kelas }}">
+                                        [{{ $jJam }}] {{ $j->mata_kuliah }} ({{ $dName }}) - {{ $jLab }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                        <div id="preview_sesi_1" class="text-[11px] text-slate-500 pt-1 hidden flex items-center justify-between">
+                            <span>Jam Saat Ini:</span>
+                            <strong id="jam_asli_1" class="text-slate-800 font-mono font-bold">-</strong>
+                        </div>
+                    </div>
+
+                    <!-- Swap Icon Indicator -->
+                    <div class="flex items-center justify-center -my-1 text-indigo-500">
+                        <div class="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-xs shadow-2xs">
+                            <i class="fa-solid fa-arrow-down-up-across-line text-[11px]"></i>
+                        </div>
+                    </div>
+
+                    <!-- Sesi B -->
+                    <div class="space-y-1.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                        <label class="block text-xs font-bold text-slate-700">Mata Kuliah Kedua (Sesi B):</label>
+                        <select id="swap_jadwal_2" name="jadwal_2_id" required onchange="updateSwapPreview()" class="w-full text-xs bg-white border border-slate-300 rounded-xl p-2.5 font-medium focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                            <option value="">-- Pilih Sesi B (Diajak Tukaran) --</option>
+                            @if(isset($allJadwalHariIni))
+                                @foreach($allJadwalHariIni as $j)
+                                    @php
+                                        $dName = $j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen');
+                                        $jLab = $j->lab?->nama_lab ?? 'Lab';
+                                        $jJam = substr($j->jam_mulai,0,5) . ' - ' . substr($j->jam_selesai,0,5);
+                                    @endphp
+                                    <option value="{{ $j->id }}" 
+                                            data-matkul="{{ $j->mata_kuliah }}"
+                                            data-dosen="{{ $dName }}"
+                                            data-jam="{{ $jJam }}"
+                                            data-lab="{{ $jLab }}"
+                                            data-kelas="{{ $j->kelas }}">
+                                        [{{ $jJam }}] {{ $j->mata_kuliah }} ({{ $dName }}) - {{ $jLab }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                        <div id="preview_sesi_2" class="text-[11px] text-slate-500 pt-1 hidden flex items-center justify-between">
+                            <span>Jam Saat Ini:</span>
+                            <strong id="jam_asli_2" class="text-slate-800 font-mono font-bold">-</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Preview Pertukaran -->
+                <div id="swap_preview_box" class="p-3.5 bg-indigo-50/70 border border-indigo-200/90 rounded-2xl text-xs space-y-2 hidden">
+                    <span class="font-extrabold text-indigo-900 block text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrows-split-up-and-left text-indigo-600"></i>
+                        Preview Jadwal Baru Hari Ini:
+                    </span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-slate-700">
+                        <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs space-y-1">
+                            <span id="prev_matkul_1" class="font-bold text-slate-900 block truncate text-xs">Sesi A</span>
+                            <span class="text-[10px] text-slate-500 block">Jam baru hari ini:</span>
+                            <span id="prev_jam_baru_1" class="font-mono font-black text-indigo-700 text-xs block">--:-- WIB</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-2xs space-y-1">
+                            <span id="prev_matkul_2" class="font-bold text-slate-900 block truncate text-xs">Sesi B</span>
+                            <span class="text-[10px] text-slate-500 block">Jam baru hari ini:</span>
+                            <span id="prev_jam_baru_2" class="font-mono font-black text-indigo-700 text-xs block">--:-- WIB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="tutupModalTukarJamHariIni()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit" id="btnSubmitSwap" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-arrow-right-arrow-left text-xs"></i>
+                        <span>Konfirmasi Tukar Jam</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
 

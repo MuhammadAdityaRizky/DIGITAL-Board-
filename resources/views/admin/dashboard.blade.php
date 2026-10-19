@@ -354,6 +354,11 @@
                                                         <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
                                                             Pertemuan {{ $item['pertemuan'] }}
                                                         </span>
+                                                        @if(!empty($item['is_swapped']))
+                                                            <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1" title="Khusus hari ini jam ditukar (Asli: {{ $item['jam_asli_str'] ?? '' }})">
+                                                                <i class="fa-solid fa-arrow-right-arrow-left text-[8px] text-amber-700"></i> Ditukar Hari Ini
+                                                            </span>
+                                                        @endif
                                                         <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                                                             <i class="fa-solid fa-location-dot text-teal-600 mr-0.5"></i> {{ $item['lab']?->nama_lab ?? 'Lab' }}
                                                         </span>

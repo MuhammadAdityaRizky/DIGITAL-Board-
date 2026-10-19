@@ -93,6 +93,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/agenda/bulk-delete', [AdminController::class, 'bulkDeleteAgendas'])->name('agenda.bulk-delete');
         Route::delete('/agenda/{id}', [AdminController::class, 'deleteAgenda'])->name('agenda.delete');
         Route::post('/agenda/import', [AdminController::class, 'importAgenda'])->name('agenda.import');
+        Route::post('/agenda/tukar-jam-hari-ini', [AdminController::class, 'tukarJamHariIni'])->name('agenda.tukar-jam-hari-ini');
+        Route::post('/agenda/batal-tukar-jam/{id}', [AdminController::class, 'batalTukarJam'])->name('agenda.batal-tukar-jam');
         
         Route::get('/absensi', [AdminController::class, 'absensi'])->name('absensi');
         Route::post('/absensi/import-global', [AdminController::class, 'importAbsensiGlobal'])->name('absensi.import-global');
