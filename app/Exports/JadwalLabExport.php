@@ -365,15 +365,38 @@ class JadwalLabExport
         $sheet->setCellValue('E30', 'Bogor, ' . $nowDate);
         $sheet->getStyle('E30')->getFont()->setName('Times New Roman')->setSize(12);
 
-        $sheet->setCellValue('E31', 'Kepala Laboratorium ' . ($lab ? $lab->nama_lab : 'Komputer Sistem Informasi') . ',');
+        $rawLabTitle = $lab ? trim($lab->nama_lab) : 'Komputer Sistem Informasi';
+        $cleanLabTitle = preg_replace('/^(laboratorium|lab\.?)\s+/i', '', $rawLabTitle);
+        $sheet->setCellValue('E31', 'Kepala Laboratorium ' . $cleanLabTitle . ',');
         $sheet->getStyle('E31')->getFont()->setName('Times New Roman')->setSize(12);
 
-        $kepalaLab = Dosen::where('nama', 'LIKE', '%Jejen%')->first();
-        $namaKepala = $kepalaLab ? $kepalaLab->nama : 'Jejen Jaenudin, S.Kom., M.Kom.';
-        $nipKepala = $kepalaLab ? ($kepalaLab->nip ?: '410100470') : '410100470';
+        if ($lab && !empty(trim($lab->nama_kepala_lab ?? ''))) {
+            $namaKepala = trim($lab->nama_kepala_lab);
+            $rawNic = trim($lab->nip_kepala_lab ?? '');
+            if (!empty($rawNic)) {
+                $upper = strtoupper($rawNic);
+                if (str_contains($upper, 'NIC') || str_contains($upper, 'NIP') || str_contains($upper, 'NIDN')) {
+                    $nipKepala = $rawNic;
+                } else {
+                    $nipKepala = 'NIC. ' . $rawNic;
+                }
+            } else {
+                $nipKepala = '';
+            }
+        } else {
+            $kepalaLab = Dosen::where('nama', 'LIKE', '%Jejen%')->first();
+            $namaKepala = $kepalaLab ? $kepalaLab->nama : 'Jejen Jaenudin, S.Kom., M.Kom.';
+            $rawNic = $kepalaLab ? ($kepalaLab->nip ?: '410100470') : '410100470';
+            $upper = strtoupper($rawNic);
+            if (str_contains($upper, 'NIC') || str_contains($upper, 'NIP') || str_contains($upper, 'NIDN')) {
+                $nipKepala = $rawNic;
+            } else {
+                $nipKepala = 'NIC. ' . $rawNic;
+            }
+        }
 
         $sheet->setCellValue('E36', $namaKepala);
-        $sheet->getStyle('E36')->getFont()->setName('Times New Roman')->setSize(12)->setBold(true);
+        $sheet->getStyle('E36')->getFont()->setName('Times New Roman')->setSize(12)->setBold(true)->setUnderline(true);
 
         $sheet->setCellValue('E37', $nipKepala);
         $sheet->getStyle('E37')->getFont()->setName('Times New Roman')->setSize(12);

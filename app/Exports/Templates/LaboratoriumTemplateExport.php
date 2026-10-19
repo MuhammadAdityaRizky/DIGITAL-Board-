@@ -21,7 +21,7 @@ class LaboratoriumTemplateExport implements FromArray, WithHeadings, WithEvents,
         $defaultLokasi = Laboratorium::whereNotNull('lokasi')->pluck('lokasi')->first() ?? 'Gedung FTS';
 
         return [
-            ['Lab Komputer Dasar', 40, $defaultLokasi, 'Kurniawan, S.T.', $defaultFakultas, 'aktif'],
+            ['Lab Komputer Dasar', 40, $defaultLokasi, 'Kurniawan, S.T.', 'Jejen Jaenudin, S.Kom., M.Kom.', '410100470', $defaultFakultas, 'aktif'],
         ];
     }
 
@@ -32,6 +32,8 @@ class LaboratoriumTemplateExport implements FromArray, WithHeadings, WithEvents,
             'kapasitas',
             'lokasi',
             'nama_laboran',
+            'nama_kepala_lab',
+            'nip_kepala_lab',
             'fakultas',
             'status',
         ];
@@ -53,11 +55,11 @@ class LaboratoriumTemplateExport implements FromArray, WithHeadings, WithEvents,
             AfterSheet::class => function(AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                // Dynamic Dropdown for Fakultas from Database
+                // Dynamic Dropdown for Fakultas from Database (Column G)
                 $fakultas = Fakultas::pluck('nama_fakultas')->toArray();
                 if (!empty($fakultas)) {
                     $fakultasList = '"' . implode(',', $fakultas) . '"';
-                    $validationFak = $sheet->getCell('E2')->getDataValidation();
+                    $validationFak = $sheet->getCell('G2')->getDataValidation();
                     $validationFak->setType(DataValidation::TYPE_LIST);
                     $validationFak->setErrorStyle(DataValidation::STYLE_INFORMATION);
                     $validationFak->setAllowBlank(false);
@@ -70,11 +72,11 @@ class LaboratoriumTemplateExport implements FromArray, WithHeadings, WithEvents,
                     $validationFak->setPrompt('Pilih nama Fakultas naungan dari daftar.');
                     $validationFak->setFormula1($fakultasList);
 
-                    $sheet->setDataValidation('E2:E1000', $validationFak);
+                    $sheet->setDataValidation('G2:G1000', $validationFak);
                 }
 
-                // Dropdown for Status
-                $validationStatus = $sheet->getCell('F2')->getDataValidation();
+                // Dropdown for Status (Column H)
+                $validationStatus = $sheet->getCell('H2')->getDataValidation();
                 $validationStatus->setType(DataValidation::TYPE_LIST);
                 $validationStatus->setErrorStyle(DataValidation::STYLE_INFORMATION);
                 $validationStatus->setAllowBlank(false);
@@ -87,15 +89,17 @@ class LaboratoriumTemplateExport implements FromArray, WithHeadings, WithEvents,
                 $validationStatus->setPrompt('Pilih status keaktifan lab.');
                 $validationStatus->setFormula1('"aktif,nonaktif"');
 
-                $sheet->setDataValidation('F2:F1000', $validationStatus);
+                $sheet->setDataValidation('H2:H1000', $validationStatus);
 
                 // Tooltip / Comments on Headers
                 $sheet->getComment('A1')->getText()->createTextRun("Nama unik dari Laboratorium. Wajib diisi.");
                 $sheet->getComment('B1')->getText()->createTextRun("Angka jumlah kapasitas maksimal mahasiswa.");
                 $sheet->getComment('C1')->getText()->createTextRun("Gedung / Lokasi laboratorium berada (Dinamis dari database).");
                 $sheet->getComment('D1')->getText()->createTextRun("Nama Laboran / Teknisi Penanggung Jawab Ruang (Opsional).");
-                $sheet->getComment('E1')->getText()->createTextRun("Fakultas naungan laboratorium (Dinamis dari database).");
-                $sheet->getComment('F1')->getText()->createTextRun("Pilih status 'aktif' atau 'nonaktif'.");
+                $sheet->getComment('E1')->getText()->createTextRun("Nama Kepala Laboratorium untuk tanda tangan jadwal Excel (Opsional).");
+                $sheet->getComment('F1')->getText()->createTextRun("NIP / NIDN / NIC Kepala Laboratorium (Opsional).");
+                $sheet->getComment('G1')->getText()->createTextRun("Fakultas naungan laboratorium (Dinamis dari database).");
+                $sheet->getComment('H1')->getText()->createTextRun("Pilih status 'aktif' atau 'nonaktif'.");
             },
         ];
     }

@@ -268,9 +268,9 @@
                             @php
                                 $firstAgenda = $groupItems->first();
                             @endphp
-                            <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+                            <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm matkul-wrapper">
                                 <!-- HEADER JUDUL MATA KULIAH & KELAS -->
-                                <div class="px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #042f2e 60%, #0f172a 100%);">
+                                <div onclick="toggleMatkulAccordion(this)" class="matkul-header px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-white cursor-pointer select-none transition hover:brightness-105" style="background: linear-gradient(135deg, #0f172a 0%, #042f2e 60%, #0f172a 100%);">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 font-bold text-lg">
                                             <i class="fa-solid fa-book-bookmark"></i>
@@ -300,7 +300,7 @@
                                         <span class="px-3 py-1.5 bg-white/10 text-slate-200 border border-white/20 rounded-lg text-xs font-semibold">
                                             <i class="fa-solid fa-list-check mr-1 text-teal-300"></i> {{ $groupItems->count() }} Pertemuan
                                         </span>
-                                        <form action="{{ route('admin.absensi.export') }}" method="GET" target="_blank" class="inline">
+                                        <form action="{{ route('admin.absensi.export') }}" method="GET" target="_blank" class="inline" onclick="event.stopPropagation()">
                                             @foreach($groupItems as $agItem)
                                                 <input type="hidden" name="agenda_ids[]" value="{{ $agItem->id }}">
                                             @endforeach
@@ -308,11 +308,14 @@
                                                 <i class="fa-solid fa-print"></i> Cetak Presensi Matkul Ini (1-16)
                                             </button>
                                         </form>
+                                        <div class="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-teal-300 matkul-chevron">
+                                            <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200 {{ request()->filled('search') ? 'rotate-180' : '' }}"></i>
+                                        </div>
                                     </div>
                                 </div>
 
                                  <!-- DAFTAR PERTEMUAN KE-N & LAPORAN ABSENSINYA -->
-                                <div class="p-5 space-y-3 bg-slate-50/40">
+                                <div class="matkul-body p-5 space-y-3 bg-slate-50/40 {{ request()->filled('search') ? '' : 'hidden' }}">
                                     @php
                                         $chronologicalGroup = $groupItems->sortBy(function($s) {
                                             return ($s->tanggal ?? '') . ' ' . ($s->jam_mulai ?? '');
@@ -593,31 +596,64 @@
             }
         });
 
-        // Pertemuan Accordion Handler (Buka/Tutup Pertemuan secara Otomatis)
+        // Mata Kuliah Accordion Handler (Buka/Tutup Daftar Pertemuan dengan Auto-Close Matkul Lain)
+        function toggleMatkulAccordion(headerElement) {
+            const wrapper = headerElement.closest('.matkul-wrapper');
+            if (!wrapper) return;
+            const body = wrapper.querySelector('.matkul-body');
+            const icon = headerElement.querySelector('.matkul-chevron i');
+
+            if (!body) return;
+            const isAlreadyOpen = !body.classList.contains('hidden');
+
+            // Otomatis tutup SEMUA mata kuliah lain yang sedang terbuka
+            document.querySelectorAll('.matkul-wrapper').forEach(otherWrapper => {
+                if (otherWrapper !== wrapper) {
+                    const otherBody = otherWrapper.querySelector('.matkul-body');
+                    const otherIcon = otherWrapper.querySelector('.matkul-chevron i');
+                    if (otherBody) otherBody.classList.add('hidden');
+                    if (otherIcon) otherIcon.classList.remove('rotate-180');
+
+                    // Tutup juga pertemuan di dalam matkul lain tersebut agar rapi
+                    otherWrapper.querySelectorAll('.pertemuan-body').forEach(pb => pb.classList.add('hidden'));
+                    otherWrapper.querySelectorAll('.accordion-icon').forEach(ai => ai.classList.remove('rotate-180'));
+                }
+            });
+
+            if (isAlreadyOpen) {
+                body.classList.add('hidden');
+                if (icon) icon.classList.remove('rotate-180');
+            } else {
+                body.classList.remove('hidden');
+                if (icon) icon.classList.add('rotate-180');
+            }
+        }
+
+        // Pertemuan Accordion Handler (Buka/Tutup Pertemuan dengan Auto-Close Pertemuan Lain)
         function togglePertemuanAccordion(headerElement) {
-            const parentContainer = headerElement.closest('.space-y-3');
             const currentItem = headerElement.closest('.pertemuan-accordion-item');
+            if (!currentItem) return;
             const currentBody = currentItem.querySelector('.pertemuan-body');
             const currentIcon = headerElement.querySelector('.accordion-icon');
 
             if (!currentBody) return;
             const isAlreadyOpen = !currentBody.classList.contains('hidden');
 
-            // Tutup semua pertemuan lain di mata kuliah ini
-            if (parentContainer) {
-                const allItems = parentContainer.querySelectorAll('.pertemuan-accordion-item');
-                allItems.forEach(item => {
+            // Otomatis tutup SEMUA pertemuan lain di seluruh halaman
+            document.querySelectorAll('.pertemuan-accordion-item').forEach(item => {
+                if (item !== currentItem) {
                     const body = item.querySelector('.pertemuan-body');
                     const icon = item.querySelector('.accordion-icon');
-                    if (body && icon) {
-                        body.classList.add('hidden');
-                        icon.classList.remove('rotate-180');
-                    }
-                });
-            }
+                    if (body) body.classList.add('hidden');
+                    if (icon) icon.classList.remove('rotate-180');
+                }
+            });
 
-            // Buka jika sebelumnya tertutup
-            if (!isAlreadyOpen) {
+            // Buka atau tutup pertemuan yang diklik
+            if (isAlreadyOpen) {
+                currentBody.classList.add('hidden');
+                if (currentIcon) currentIcon.classList.remove('rotate-180');
+            } else {
                 currentBody.classList.remove('hidden');
                 if (currentIcon) currentIcon.classList.add('rotate-180');
             }

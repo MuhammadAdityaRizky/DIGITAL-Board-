@@ -97,9 +97,13 @@ class DosenController extends Controller
         $fakultas = \App\Models\Fakultas::all();
         $prodis = \App\Models\Prodi::with('fakultas')->get();
 
-        $pengumuman = Pengumuman::with('admin')
-            ->orderBy('created_at', 'desc')
+        $urgentPengumuman = Pengumuman::with(['admin', 'laboratoriums'])
+            ->activeForDisplay()
+            ->whereIn('prioritas', ['Penting', 'Urgen'])
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('created_at')
             ->get();
+        $pengumuman = $urgentPengumuman;
 
         $todayAgendas = $allAgendas->filter(function($ag) use ($today) {
             return $ag->tanggal === $today;
@@ -134,7 +138,7 @@ class DosenController extends Controller
         $masterKelas = \App\Models\Kelas::orderBy('nama_kelas')->get();
 
         return view('dosen.dashboard', compact(
-            'dosen', 'agendas', 'labs', 'fakultas', 'prodis', 'pengumuman', 
+            'dosen', 'agendas', 'labs', 'fakultas', 'prodis', 'pengumuman', 'urgentPengumuman',
             'todayAgendas', 'activeOrNextAgenda', 'jadwalPenggunaanLab', 'todayScheduledJadwal', 'masterKelas'
         ));
     }

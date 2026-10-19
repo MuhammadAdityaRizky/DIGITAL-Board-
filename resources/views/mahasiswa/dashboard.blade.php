@@ -170,7 +170,8 @@
                 </div>
             @endif
 
-
+            <!-- Pengumuman Penting & Urgen Banner -->
+            @include('partials.urgent_pengumuman_banner')
 
             <!-- Hidden form for attendance submission -->
             <form action="{{ route('mahasiswa.absensi.submit') }}" method="POST" id="mahasiswa-absensi-form" class="hidden">

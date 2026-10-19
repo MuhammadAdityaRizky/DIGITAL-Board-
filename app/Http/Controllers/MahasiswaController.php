@@ -78,7 +78,14 @@ class MahasiswaController extends Controller
             ->orderBy('waktu_masuk', 'desc')
             ->get();
 
-        return view('mahasiswa.dashboard', compact('mahasiswa', 'todayAgendas', 'absensiHistory', 'profileIncomplete'));
+        $urgentPengumuman = Pengumuman::with(['admin', 'laboratoriums'])
+            ->activeForDisplay()
+            ->whereIn('prioritas', ['Penting', 'Urgen'])
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('mahasiswa.dashboard', compact('mahasiswa', 'todayAgendas', 'absensiHistory', 'profileIncomplete', 'urgentPengumuman'));
     }
 
     public function submitAttendance(Request $request)

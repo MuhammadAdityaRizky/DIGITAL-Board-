@@ -2831,31 +2831,10 @@
                 </div>
             </div>
 
-            <!-- Opsi Tukar Jam -->
-            <div class="space-y-2 text-xs">
-                <label class="flex items-center gap-2 cursor-pointer select-none">
-                    <input type="checkbox" id="qs-tukar-jam-toggle" onchange="toggleTukarJam(this)" class="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500">
-                    <span class="font-semibold text-slate-700">Tukar Jam Khusus Hari Ini</span>
-                    <span class="text-[10px] text-slate-400">(jam matriks tidak berubah)</span>
-                </label>
-                <div id="qs-tukar-jam-fields" class="hidden grid grid-cols-2 gap-2 pl-5">
-                    <div>
-                        <label class="block text-slate-600 font-medium mb-0.5">Jam Mulai</label>
-                        <input type="time" id="qs-jam-mulai" class="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none text-xs font-semibold">
-                    </div>
-                    <div>
-                        <label class="block text-slate-600 font-medium mb-0.5">Jam Selesai</label>
-                        <input type="time" id="qs-jam-selesai" class="w-full p-2 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none text-xs font-semibold">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Catatan opsional -->
-            <div class="text-xs">
-                <label class="block text-slate-600 font-medium mb-1">
-                    Keterangan <span class="text-slate-400 font-normal">(Opsional - misal: tukar jam dengan Dosen X)</span>
-                </label>
-                <input type="text" id="qs-catatan" placeholder="Misal: Pengganti pertemuan minggu lalu..." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none text-xs">
+            <!-- Info Sesi -->
+            <div class="text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-200 leading-relaxed">
+                <i class="fa-solid fa-circle-info text-teal-600 mr-1"></i>
+                Sesi praktikum akan langsung dibuka untuk mahasiswa agar dapat presensi barcode. Kehadiran dosen akan tercatat otomatis saat dosen check-in mandiri.
             </div>
 
             <!-- Actions -->
@@ -2880,13 +2859,6 @@
             document.getElementById('qs-lab').textContent = data.lab_nama;
             document.getElementById('qs-jam-normal').textContent = data.hari + ' • ' + data.jam_mulai + ' – ' + data.jam_selesai + ' WIB';
 
-            // Reset inputs
-            document.getElementById('qs-tukar-jam-toggle').checked = false;
-            document.getElementById('qs-tukar-jam-fields').classList.add('hidden');
-            document.getElementById('qs-jam-mulai').value  = data.jam_mulai;
-            document.getElementById('qs-jam-selesai').value = data.jam_selesai;
-            document.getElementById('qs-catatan').value = '';
-
             document.getElementById('modal-quick-start').classList.remove('hidden');
         }
 
@@ -2895,28 +2867,10 @@
             _qsData = null;
         }
 
-        function toggleTukarJam(checkbox) {
-            const fields = document.getElementById('qs-tukar-jam-fields');
-            if (checkbox.checked) {
-                fields.classList.remove('hidden');
-            } else {
-                fields.classList.add('hidden');
-                if (_qsData) {
-                    document.getElementById('qs-jam-mulai').value  = _qsData.jam_mulai;
-                    document.getElementById('qs-jam-selesai').value = _qsData.jam_selesai;
-                }
-            }
-        }
-
         async function submitQuickStart() {
             if (!_qsData) return;
 
-            const isTukarJam    = document.getElementById('qs-tukar-jam-toggle').checked;
-            const jamMulai      = document.getElementById('qs-jam-mulai').value;
-            const jamSelesai    = document.getElementById('qs-jam-selesai').value;
-            const catatan       = document.getElementById('qs-catatan').value;
-            const btn           = document.getElementById('qs-submit-btn');
-
+            const btn = document.getElementById('qs-submit-btn');
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Memproses...</span>';
 
@@ -2925,9 +2879,6 @@
             try {
                 const body = new FormData();
                 body.append('_token', csrfToken);
-                if (isTukarJam && jamMulai) body.append('jam_mulai', jamMulai);
-                if (isTukarJam && jamSelesai) body.append('jam_selesai', jamSelesai);
-                if (catatan.trim()) body.append('catatan', catatan.trim());
 
                 const res  = await fetch(_qsData.url, { method: 'POST', body });
                 const data = await res.json();
@@ -2935,15 +2886,12 @@
                 closeQuickStartModal();
 
                 if (data.success) {
-                    const tukarInfo = data.is_tukar_jam
-                        ? `<br><span class="text-xs text-emerald-700">Jam disesuaikan untuk hari ini</span>`
-                        : '';
                     const absensiBtn = `<br><a href="${data.absensi_url}" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition"><i class="fa-solid fa-clipboard-user text-xs"></i> Buka Absensi Mahasiswa</a>`;
 
                     Swal.fire({
                         icon: 'success',
                         title: '🚀 Sesi Dimulai!',
-                        html: `<span class="text-sm font-semibold">${data.message}</span>${tukarInfo}${absensiBtn}`,
+                        html: `<span class="text-sm font-semibold">${data.message}</span>${absensiBtn}`,
                         confirmButtonText: 'Tutup',
                         customClass: {
                             popup: 'rounded-2xl',
@@ -2952,10 +2900,11 @@
                         }
                     });
                 } else {
+                    const absensiExistingUrl = data.absensi_url || (data.agenda_id ? `{{ url('admin/absensi') }}/${data.agenda_id}/input` : '');
                     Swal.fire({
                         icon: 'warning',
                         title: 'Sesi Sudah Ada!',
-                        html: `<span class="text-sm">${data.message}</span>${data.agenda_id ? `<br><a href="{{ route('admin.absensi.input', '') }}/${data.agenda_id}" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition"><i class="fa-solid fa-clipboard-user"></i> Buka Absensi</a>` : ''}`,
+                        html: `<span class="text-sm">${data.message}</span>${absensiExistingUrl ? `<br><a href="${absensiExistingUrl}" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition"><i class="fa-solid fa-clipboard-user"></i> Buka Absensi</a>` : ''}`,
                         confirmButtonText: 'OK',
                         customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold' }
                     });

@@ -241,6 +241,34 @@
                                                     {{ strtoupper($l->warna_theme ?? '#0f172a') }}
                                                 </span>
                                             </p>
+
+                                            <!-- KEPALA LAB & NIC (TANDA TANGAN EXCEL) CARD BLOCK -->
+                                            <div class="mt-2.5 p-2.5 bg-gradient-to-r from-indigo-50/70 via-slate-50 to-teal-50/40 border border-indigo-100/90 rounded-xl flex items-center justify-between gap-2 shadow-2xs">
+                                                <div class="min-w-0 flex items-center gap-2">
+                                                    <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 text-xs shadow-2xs">
+                                                        <i class="fa-solid fa-user-tie"></i>
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <div class="flex items-center gap-1.5">
+                                                            <span class="text-[9px] uppercase tracking-wider font-extrabold text-indigo-950">Kepala Lab (Ttd Excel)</span>
+                                                            @if(!empty($l->nama_kepala_lab))
+                                                                <span class="text-[8px] px-1 py-0.2 rounded font-bold bg-emerald-100 text-emerald-800">Kustom</span>
+                                                            @else
+                                                                <span class="text-[8px] px-1 py-0.2 rounded font-medium bg-slate-200/80 text-slate-600">Default</span>
+                                                            @endif
+                                                        </div>
+                                                        <p class="text-xs font-bold text-slate-900 truncate" title="{{ $l->nama_kepala_lab ?? 'Jejen Jaenudin, S.Kom., M.Kom. (Default)' }}">
+                                                            {{ $l->nama_kepala_lab ?? 'Jejen Jaenudin, S.Kom., M.Kom.' }}
+                                                        </p>
+                                                        <p class="text-[10px] text-slate-600 font-mono font-medium truncate">
+                                                            {{ !empty($l->nip_kepala_lab) ? (str_contains(strtoupper($l->nip_kepala_lab), 'NIC') || str_contains(strtoupper($l->nip_kepala_lab), 'NIP') ? $l->nip_kepala_lab : 'NIC. ' . $l->nip_kepala_lab) : 'NIC. 410100470' }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button type="button" onclick='openModalTtdLab(@json($l))' class="px-2.5 py-1.5 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 hover:border-indigo-300 rounded-lg text-[10px] font-bold shadow-2xs transition shrink-0 flex items-center gap-1" title="Ubah Kepala Lab & NIC untuk Tanda Tangan Excel">
+                                                    <i class="fa-solid fa-file-signature text-[10px]"></i> Edit Ttd
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -290,7 +318,8 @@
                                         <th class="px-5 py-3.5">Nama Laboratorium</th>
                                         <th class="px-5 py-3.5">Fakultas</th>
                                         <th class="px-5 py-3.5">Lokasi / Ruang</th>
-                                        <th class="px-5 py-3.5">Laboran Penanggung Jawab</th>
+                                        <th class="px-5 py-3.5">Laboran</th>
+                                        <th class="px-5 py-3.5">Kepala Lab & NIC (Ttd Excel)</th>
                                         <th class="px-5 py-3.5">Kapasitas</th>
                                         <th class="px-5 py-3.5">Status Saat Ini</th>
                                         <th class="px-5 py-3.5 text-center">Aksi</th>
@@ -319,6 +348,28 @@
                                                     <span>{{ $l->nama_laboran ?? '-' }}</span>
                                                 </div>
                                             </td>
+                                            <td class="px-5 py-3.5">
+                                                <div class="space-y-1">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="w-5 h-5 rounded-md bg-indigo-50 text-indigo-700 flex items-center justify-center text-[10px] shrink-0">
+                                                            <i class="fa-solid fa-user-tie"></i>
+                                                        </span>
+                                                        <span class="font-extrabold text-slate-800 text-xs truncate max-w-[170px]" title="{{ $l->nama_kepala_lab ?? 'Jejen Jaenudin, S.Kom., M.Kom. (Default)' }}">
+                                                            {{ $l->nama_kepala_lab ?? 'Jejen Jaenudin, S.Kom., M.Kom.' }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="flex items-center gap-1.5 pl-6 text-[10px]">
+                                                        <span class="font-mono text-slate-600 font-bold bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                                            {{ !empty($l->nip_kepala_lab) ? (str_contains(strtoupper($l->nip_kepala_lab), 'NIC') || str_contains(strtoupper($l->nip_kepala_lab), 'NIP') ? $l->nip_kepala_lab : 'NIC. ' . $l->nip_kepala_lab) : 'NIC. 410100470' }}
+                                                        </span>
+                                                        @if(!empty($l->nama_kepala_lab))
+                                                            <span class="px-1.5 py-0.2 rounded font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">Kustom</span>
+                                                        @else
+                                                            <span class="px-1.5 py-0.2 rounded font-semibold bg-slate-100 text-slate-400 border border-slate-200">Default</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </td>
                                             <td class="px-5 py-3.5 font-bold text-slate-800">
                                                 {{ $l->kapasitas }} Kursi
                                             </td>
@@ -339,6 +390,9 @@
                                             </td>
                                             <td class="px-5 py-3.5">
                                                 <div class="flex items-center justify-center gap-1.5">
+                                                    <button type="button" onclick='openModalTtdLab(@json($l))' class="w-7 h-7 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center justify-center transition shadow-2xs" title="Ubah Kepala Lab & NIC (Tanda Tangan Excel)">
+                                                        <i class="fa-solid fa-file-signature text-xs"></i>
+                                                    </button>
                                                     <button type="button" onclick='openLabDetail(@json($l))' class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-teal-50 hover:text-teal-700 border border-slate-200 flex items-center justify-center text-slate-600 transition" title="Detail Lab">
                                                         <i class="fa-solid fa-eye text-xs"></i>
                                                     </button>
@@ -412,7 +466,7 @@
             <div class="overflow-y-auto space-y-5 flex-grow pr-1 text-xs">
                 
                 <!-- Quick Metric Cards -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-1">
                         <p class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider">Gedung / Ruang</p>
                         <p id="detail-lab-lokasi" class="font-bold text-slate-800 truncate">Gedung FTS / 209</p>
@@ -421,9 +475,14 @@
                         <p class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider">Kapasitas Kursi</p>
                         <p id="detail-lab-kapasitas" class="font-bold text-slate-800">40 Workstation</p>
                     </div>
-                    <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-1 col-span-2 sm:col-span-1">
-                        <p class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider">Laboran / Penanggung Jawab</p>
+                    <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-1">
+                        <p class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider">Laboran</p>
                         <p id="detail-lab-pic" class="font-bold text-slate-800 truncate">-</p>
+                    </div>
+                    <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-1">
+                        <p class="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider">Kepala Lab (ttd Excel)</p>
+                        <p id="detail-lab-kepala" class="font-bold text-slate-800 truncate">-</p>
+                        <p id="detail-lab-nip" class="text-[10px] text-slate-500 font-mono truncate">-</p>
                     </div>
                 </div>
 
@@ -489,20 +548,28 @@
             </div>
 
             <!-- Modal Footer -->
-            <div class="flex items-center justify-between gap-3 pt-3 border-t border-slate-100 flex-shrink-0">
-                <button type="button" onclick="toggleModal('modal-detail-lab')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition">
+            <div class="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-slate-100 flex-shrink-0">
+                <button type="button" onclick="toggleModal('modal-detail-lab')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition">
                     Tutup
                 </button>
-                <a href="{{ route('admin.jadwal-lab') }}" class="px-5 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-extrabold text-xs shadow-sm transition flex items-center gap-2">
-                    <i class="fa-solid fa-calendar-days"></i> Lihat Jadwal Penggunaan Lab
-                </a>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="openTtdFromDetail()" class="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl font-bold text-xs transition flex items-center gap-1.5 shadow-2xs">
+                        <i class="fa-solid fa-file-signature text-xs"></i> Atur Ttd Excel
+                    </button>
+                    <a id="detail-lab-export-btn" href="#" target="_blank" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl font-bold text-xs transition flex items-center gap-1.5 shadow-2xs" title="Download Excel Jadwal Lab dengan format ttd ini">
+                        <i class="fa-solid fa-file-excel text-xs"></i> Ekspor Jadwal
+                    </a>
+                    <a id="detail-lab-jadwal-btn" href="{{ route('admin.jadwal-lab') }}" class="px-4 py-2 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-extrabold text-xs shadow-xs transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-days text-xs"></i> Matriks Jadwal
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- LAB MODAL (ADD & EDIT) -->
     <div id="modal-lab" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full max-h-[92vh] overflow-y-auto p-6 space-y-5">
             <div class="flex justify-between items-center pb-3 border-b border-slate-100">
                 <h3 id="modal-lab-title" class="font-bold text-base text-slate-800">Tambah Laboratorium</h3>
                 <button onclick="toggleModal('modal-lab')" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
@@ -543,6 +610,21 @@
                     <input type="text" id="lab-nama_laboran" name="nama_laboran" placeholder="Contoh: Kurniawan, S.T." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
                     <span class="text-[10px] text-slate-400 mt-0.5 block">Nama ini akan otomatis digunakan pada tanda tangan lembar Berita Acara & Realisasi Praktikum di lab ini.</span>
                 </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">Nama Kepala Laboratorium</label>
+                        <input type="text" id="lab-nama_kepala_lab" name="nama_kepala_lab" placeholder="Contoh: Jejen Jaenudin, S.Kom., M.Kom." class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-bold mb-1">NIP / NIDN / NIC Kepala Lab</label>
+                        <input type="text" id="lab-nip_kepala_lab" name="nip_kepala_lab" placeholder="Contoh: 410100470" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <span class="text-[11px] text-teal-800 bg-teal-50 px-3 py-2 rounded-xl border border-teal-200/80 block font-medium">
+                            <i class="fa-solid fa-file-excel mr-1 text-teal-700"></i> <strong>Tanda Tangan Ekspor Excel:</strong> Nama & NIP/NIC Kepala Lab di atas akan otomatis digunakan pada kolom tanda tangan (ttd) saat ekspor Excel Jadwal Penggunaan Lab.
+                        </span>
+                    </div>
+                </div>
                 <div>
                     <label class="block text-slate-700 font-bold mb-1 flex items-center justify-between">
                         <span>Warna Tema RGB Digital Board</span>
@@ -567,6 +649,95 @@
                 <div class="flex gap-2.5 pt-3 border-t border-slate-100">
                     <button type="button" onclick="toggleModal('modal-lab')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Batal</button>
                     <button type="submit" class="flex-1 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-lg font-bold shadow-sm">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL KHUSUS QUICK CRUD KEPALA LAB & NIC (TANDA TANGAN EXCEL) -->
+    <div id="modal-edit-ttd-lab" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 space-y-5 overflow-hidden">
+            <div class="flex justify-between items-start pb-3 border-b border-slate-100">
+                <div class="space-y-0.5">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold text-sm border border-indigo-200/80 shadow-2xs">
+                            <i class="fa-solid fa-file-signature"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-base text-slate-900">Tanda Tangan Ekspor Excel</h3>
+                            <p id="ttd-lab-title-sub" class="text-xs text-slate-500 font-semibold">Atur Nama Kepala Lab & NIC untuk Lab</p>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" onclick="toggleModal('modal-edit-ttd-lab')" class="text-slate-400 hover:text-slate-600 text-xl font-bold p-1 leading-none">&times;</button>
+            </div>
+
+            <form id="form-edit-ttd-lab" onsubmit="submitTtdLab(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="ttd-lab-id" name="lab_id" value="">
+
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1 flex items-center justify-between">
+                        <span>Nama Kepala Laboratorium</span>
+                        <span class="text-[10px] text-slate-400 font-normal">Beserta gelar akademik</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 pointer-events-none">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </span>
+                        <input type="text" id="ttd-nama_kepala_lab" name="nama_kepala_lab" oninput="updateTtdPreview()" placeholder="Contoh: Jejen Jaenudin, S.Kom., M.Kom." class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-600/30 focus:border-indigo-600 outline-none font-bold text-slate-800">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-700 font-bold mb-1 flex items-center justify-between">
+                        <span>NIC / NIP / NIDN Kepala Lab</span>
+                        <span class="text-[10px] text-slate-400 font-normal">Nomor Induk Resmi UIKA</span>
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 pointer-events-none">
+                            <i class="fa-solid fa-id-card"></i>
+                        </span>
+                        <input type="text" id="ttd-nip_kepala_lab" name="nip_kepala_lab" oninput="updateTtdPreview()" placeholder="Contoh: 410100470 atau NIC. 410100470" class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-600/30 focus:border-indigo-600 outline-none font-mono font-bold text-slate-800">
+                    </div>
+                </div>
+
+                <!-- Preset / Reset Quick Buttons -->
+                <div class="flex items-center gap-2 pt-1 flex-wrap">
+                    <button type="button" onclick="setTtdDefaultUIKA()" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 shadow-2xs">
+                        <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> Isi Default (Pak Jejen - 410100470)
+                    </button>
+                    <button type="button" onclick="resetTtdKosong()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 shadow-2xs">
+                        <i class="fa-solid fa-trash-can text-[10px]"></i> Kosongkan
+                    </button>
+                </div>
+
+                <!-- LIVE PREVIEW BOX EXCEL -->
+                <div class="p-4 bg-gradient-to-b from-slate-50 to-white border border-slate-200/90 rounded-2xl space-y-2">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[10px] font-extrabold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-excel text-emerald-600 text-xs"></i> Preview Format Tanda Tangan Excel:
+                        </p>
+                        <span class="text-[9px] font-mono text-slate-400">Sel E30 - E37</span>
+                    </div>
+                    <div class="p-3.5 bg-white border border-slate-200 rounded-xl font-serif text-slate-800 text-xs shadow-2xs space-y-1">
+                        <p id="preview-ttd-date" class="text-slate-600">Bogor, {{ \Carbon\Carbon::now()->translatedFormat('j F Y') }}</p>
+                        <p id="preview-ttd-jabatan" class="text-slate-700 font-normal">Kepala Laboratorium Komputer,</p>
+                        <div class="h-8 flex items-center text-[10px] text-slate-300 italic select-none font-sans">
+                            (Area Tanda Tangan & Stempel Lab)
+                        </div>
+                        <p id="preview-ttd-nama" class="font-bold underline text-slate-900">Jejen Jaenudin, S.Kom., M.Kom.</p>
+                        <p id="preview-ttd-nip" class="text-[11px] font-mono text-slate-700">NIC. 410100470</p>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="toggleModal('modal-edit-ttd-lab')" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold transition">
+                        Batal
+                    </button>
+                    <button type="submit" id="btn-save-ttd-lab" class="px-5 py-2.5 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white font-bold transition shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i> Simpan Tanda Tangan
+                    </button>
                 </div>
             </form>
         </div>
@@ -646,13 +817,27 @@
             }
         }
 
+        let currentSelectedLab = null;
+
         // Open Detail Modal
         function openLabDetail(lab) {
+            currentSelectedLab = lab;
             document.getElementById('detail-lab-nama').innerText = lab.nama_lab || 'Laboratorium';
             document.getElementById('detail-lab-lokasi').innerText = lab.lokasi || '-';
             document.getElementById('detail-lab-kapasitas').innerText = (lab.kapasitas || '30') + ' Workstation';
             document.getElementById('detail-lab-fakultas').innerHTML = `<i class="fa-solid fa-building-columns text-slate-400"></i> ${lab.fakultas ? lab.fakultas.nama_fakultas : 'Fakultas Umum'}`;
-            document.getElementById('detail-lab-pic').innerText = lab.nama_laboran ? `${lab.nama_laboran} (Laboran)` : (lab.fakultas ? 'Admin Lab ' + lab.fakultas.nama_fakultas : 'Belum Ditentukan');
+            document.getElementById('detail-lab-pic').innerText = lab.nama_laboran ? `${lab.nama_laboran}` : '-';
+            document.getElementById('detail-lab-kepala').innerText = lab.nama_kepala_lab || 'Default (Jejen Jaenudin, S.Kom., M.Kom.)';
+            document.getElementById('detail-lab-nip').innerText = lab.nip_kepala_lab ? (lab.nip_kepala_lab.toUpperCase().includes('NIP') || lab.nip_kepala_lab.toUpperCase().includes('NIC') || lab.nip_kepala_lab.toUpperCase().includes('NIDN') ? lab.nip_kepala_lab : `NIC. ${lab.nip_kepala_lab}`) : 'NIC. 410100470';
+
+            const jadwalBtn = document.getElementById('detail-lab-jadwal-btn');
+            if (jadwalBtn) {
+                jadwalBtn.href = `{{ url('admin/jadwal-lab') }}?lab_id=${lab.id}`;
+            }
+            const exportBtn = document.getElementById('detail-lab-export-btn');
+            if (exportBtn) {
+                exportBtn.href = `{{ route('admin.jadwal-lab.export') }}?lab_id=${lab.id}`;
+            }
 
             // Status Badge
             const statusContainer = document.getElementById('detail-lab-status-badge');
@@ -698,6 +883,131 @@
             }
 
             toggleModal('modal-detail-lab');
+        }
+
+        function openTtdFromDetail() {
+            if (currentSelectedLab) {
+                toggleModal('modal-detail-lab');
+                openModalTtdLab(currentSelectedLab);
+            }
+        }
+
+        function openModalTtdLab(lab) {
+            currentSelectedLab = lab;
+            document.getElementById('ttd-lab-id').value = lab.id;
+            document.getElementById('ttd-lab-title-sub').innerText = `Atur Kepala Lab & NIC untuk ${lab.nama_lab}`;
+            document.getElementById('ttd-nama_kepala_lab').value = lab.nama_kepala_lab || '';
+            document.getElementById('ttd-nip_kepala_lab').value = lab.nip_kepala_lab || '';
+            updateTtdPreview();
+            toggleModal('modal-edit-ttd-lab');
+        }
+
+        function updateTtdPreview() {
+            const labName = (currentSelectedLab && currentSelectedLab.nama_lab) ? currentSelectedLab.nama_lab.replace(/^(laboratorium|lab\.?)\s+/i, '') : 'Komputer';
+            const jabatanElem = document.getElementById('preview-ttd-jabatan');
+            if (jabatanElem) {
+                jabatanElem.innerText = `Kepala Laboratorium ${labName},`;
+            }
+            
+            const inputNama = document.getElementById('ttd-nama_kepala_lab').value.trim();
+            const namaElem = document.getElementById('preview-ttd-nama');
+            if (namaElem) {
+                namaElem.innerText = inputNama || 'Jejen Jaenudin, S.Kom., M.Kom.';
+            }
+
+            const inputNip = document.getElementById('ttd-nip_kepala_lab').value.trim();
+            const nipElem = document.getElementById('preview-ttd-nip');
+            if (nipElem) {
+                if (inputNip) {
+                    const upper = inputNip.toUpperCase();
+                    if (upper.includes('NIC') || upper.includes('NIP') || upper.includes('NIDN')) {
+                        nipElem.innerText = inputNip;
+                    } else {
+                        nipElem.innerText = `NIC. ${inputNip}`;
+                    }
+                } else {
+                    nipElem.innerText = 'NIC. 410100470';
+                }
+            }
+        }
+
+        function setTtdDefaultUIKA() {
+            document.getElementById('ttd-nama_kepala_lab').value = 'Jejen Jaenudin, S.Kom., M.Kom.';
+            document.getElementById('ttd-nip_kepala_lab').value = '410100470';
+            updateTtdPreview();
+        }
+
+        function resetTtdKosong() {
+            document.getElementById('ttd-nama_kepala_lab').value = '';
+            document.getElementById('ttd-nip_kepala_lab').value = '';
+            updateTtdPreview();
+        }
+
+        function submitTtdLab(event) {
+            event.preventDefault();
+            const labId = document.getElementById('ttd-lab-id').value;
+            const namaKepala = document.getElementById('ttd-nama_kepala_lab').value;
+            const nipKepala = document.getElementById('ttd-nip_kepala_lab').value;
+            const submitBtn = document.getElementById('btn-save-ttd-lab');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin mr-1"></i> Menyimpan...';
+
+            fetch(`{{ url('admin/laboratorium') }}/${labId}/kepala-lab`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    nama_kepala_lab: namaKepala,
+                    nip_kepala_lab: nipKepala
+                })
+            })
+            .then(response => {
+                return response.json().then(data => {
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.message || 'Gagal menyimpan tanda tangan Kepala Lab.');
+                    }
+                    return data;
+                });
+            })
+            .then(data => {
+                toggleModal('modal-edit-ttd-lab');
+                Swal.fire({
+                    title: 'Tanda Tangan Diperbarui!',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonColor: '#0f766e',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'rounded-3xl p-6 shadow-2xl border border-slate-100',
+                        title: 'text-base font-extrabold text-slate-800',
+                        confirmButton: 'rounded-xl font-bold text-xs px-5 py-2.5 cursor-pointer'
+                    }
+                }).then(() => {
+                    window.location.reload();
+                });
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Gagal Menyimpan',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonColor: '#e11d48',
+                    confirmButtonText: 'Tutup',
+                    customClass: {
+                        popup: 'rounded-3xl p-6 shadow-2xl border border-slate-100',
+                        title: 'text-base font-extrabold text-slate-800',
+                        confirmButton: 'rounded-xl font-bold text-xs px-5 py-2.5 cursor-pointer'
+                    }
+                });
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk text-xs"></i> Simpan Tanda Tangan';
+            });
         }
 
         function showImportLoading(form) {
@@ -759,6 +1069,8 @@
             document.getElementById('lab-lokasi').value = "";
             document.getElementById('lab-kapasitas').value = "30";
             document.getElementById('lab-nama_laboran').value = "";
+            document.getElementById('lab-nama_kepala_lab').value = "";
+            document.getElementById('lab-nip_kepala_lab').value = "";
             setLabColor('#0f172a');
             if (document.getElementById('lab-fakultas_id')) {
                 const fakSelect = document.getElementById('lab-fakultas_id');
@@ -791,6 +1103,8 @@
             document.getElementById('lab-lokasi').value = lab.lokasi;
             document.getElementById('lab-kapasitas').value = lab.kapasitas || "30";
             document.getElementById('lab-nama_laboran').value = lab.nama_laboran || "";
+            document.getElementById('lab-nama_kepala_lab').value = lab.nama_kepala_lab || "";
+            document.getElementById('lab-nip_kepala_lab').value = lab.nip_kepala_lab || "";
             setLabColor(lab.warna_theme || "#0f172a");
             if (document.getElementById('lab-fakultas_id')) {
                 document.getElementById('lab-fakultas_id').value = lab.fakultas_id || "";

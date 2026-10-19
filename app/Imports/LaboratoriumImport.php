@@ -38,6 +38,9 @@ class LaboratoriumImport implements ToModel, WithHeadingRow
 
         // Avoid duplicates
         $existing = Laboratorium::where('nama_lab', $row['nama_lab'])->first();
+        $kepalaVal = $row['nama_kepala_lab'] ?? ($row['kepala_lab'] ?? ($row['kepala_laboratorium'] ?? null));
+        $nipVal = $row['nip_kepala_lab'] ?? ($row['nip_kalab'] ?? ($row['nic'] ?? ($row['nip'] ?? null)));
+
         if ($existing) {
             $updates = [];
             if ($fakultasId && !$existing->fakultas_id) {
@@ -46,6 +49,12 @@ class LaboratoriumImport implements ToModel, WithHeadingRow
             $laboranVal = $row['nama_laboran'] ?? ($row['laboran'] ?? null);
             if (!empty($laboranVal)) {
                 $updates['nama_laboran'] = trim($laboranVal);
+            }
+            if (!empty($kepalaVal)) {
+                $updates['nama_kepala_lab'] = trim($kepalaVal);
+            }
+            if (!empty($nipVal)) {
+                $updates['nip_kepala_lab'] = trim($nipVal);
             }
             if (!empty($updates)) {
                 $existing->update($updates);
@@ -59,6 +68,8 @@ class LaboratoriumImport implements ToModel, WithHeadingRow
             'lokasi' => $row['lokasi'] ?? '-',
             'kapasitas' => $row['kapasitas'] ?? 30,
             'nama_laboran' => !empty($row['nama_laboran'] ?? ($row['laboran'] ?? null)) ? trim($row['nama_laboran'] ?? $row['laboran']) : null,
+            'nama_kepala_lab' => !empty($kepalaVal) ? trim($kepalaVal) : null,
+            'nip_kepala_lab' => !empty($nipVal) ? trim($nipVal) : null,
         ]);
     }
 }

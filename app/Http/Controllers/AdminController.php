@@ -704,6 +704,8 @@ class AdminController extends Controller
             'lokasi' => 'required|string|max:100',
             'kapasitas' => 'required|integer|min:1',
             'nama_laboran' => 'nullable|string|max:100',
+            'nama_kepala_lab' => 'nullable|string|max:150',
+            'nip_kepala_lab' => 'nullable|string|max:50',
             'warna_theme' => 'nullable|string|max:20',
         ];
 
@@ -731,6 +733,8 @@ class AdminController extends Controller
             'lokasi' => $request->lokasi,
             'kapasitas' => $request->kapasitas,
             'nama_laboran' => $request->nama_laboran,
+            'nama_kepala_lab' => $request->nama_kepala_lab,
+            'nip_kepala_lab' => $request->nip_kepala_lab,
             'warna_theme' => $request->warna_theme ?? '#0f172a',
         ]);
 
@@ -755,6 +759,8 @@ class AdminController extends Controller
             'lokasi' => 'required|string|max:100',
             'kapasitas' => 'required|integer|min:1',
             'nama_laboran' => 'nullable|string|max:100',
+            'nama_kepala_lab' => 'nullable|string|max:150',
+            'nip_kepala_lab' => 'nullable|string|max:50',
             'warna_theme' => 'nullable|string|max:20',
         ];
 
@@ -782,10 +788,60 @@ class AdminController extends Controller
             'lokasi' => $request->lokasi,
             'kapasitas' => $request->kapasitas,
             'nama_laboran' => $request->nama_laboran,
+            'nama_kepala_lab' => $request->nama_kepala_lab,
+            'nip_kepala_lab' => $request->nip_kepala_lab,
             'warna_theme' => $request->warna_theme ?? ($lab->warna_theme ?? '#0f172a'),
         ]);
 
         return back()->with('success', 'Data laboratorium berhasil diperbarui.');
+    }
+
+    public function updateKepalaLab(Request $request, $id)
+    {
+        $user = Auth::user();
+        $lab = Laboratorium::findOrFail($id);
+
+        if (!$user->canManageLab($lab)) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses untuk mengubah data laboratorium ini.',
+                ], 403);
+            }
+            abort(403, 'Anda tidak memiliki akses untuk mengubah data laboratorium ini.');
+        }
+
+        $request->validate([
+            'nama_kepala_lab' => 'nullable|string|max:150',
+            'nip_kepala_lab' => 'nullable|string|max:50',
+        ], [
+            'nama_kepala_lab.max' => 'Nama Kepala Lab maksimal 150 karakter.',
+            'nip_kepala_lab.max'  => 'NIC/NIP Kepala Lab maksimal 50 karakter.',
+        ]);
+
+        $namaKepala = $request->filled('nama_kepala_lab') ? trim($request->nama_kepala_lab) : null;
+        $nipKepala  = $request->filled('nip_kepala_lab') ? trim($request->nip_kepala_lab) : null;
+
+        $lab->update([
+            'nama_kepala_lab' => $namaKepala,
+            'nip_kepala_lab'  => $nipKepala,
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Tanda tangan Kepala Lab & NIC untuk ' . $lab->nama_lab . ' berhasil diperbarui.',
+                'data' => [
+                    'id'              => $lab->id,
+                    'nama_lab'        => $lab->nama_lab,
+                    'nama_kepala_lab' => $lab->nama_kepala_lab,
+                    'nip_kepala_lab'  => $lab->nip_kepala_lab,
+                    'is_custom'       => !empty($lab->nama_kepala_lab),
+                ],
+            ]);
+        }
+
+        return back()->with('success', 'Tanda tangan Kepala Lab & NIC untuk ' . $lab->nama_lab . ' berhasil diperbarui.');
     }
 
     public function deleteLab($id)
@@ -978,6 +1034,7 @@ class AdminController extends Controller
             ->where('jam_mulai', '<=', $nowTime)
             ->where('jam_selesai', '>=', $nowTime)
             ->where('status_agenda', '!=', 'Dibatalkan')
+            ->where('status_agenda', '!=', 'Selesai')
             ->orderBy('jam_mulai', 'asc')
             ->get();
 
@@ -1011,7 +1068,36 @@ class AdminController extends Controller
         $kelases = Kelas::all();
         $mataKuliahs = MataKuliah::with('prodi.fakultas')->orderBy('nama_mk', 'asc')->get();
 
-        return view('admin.agenda', compact('allAgendas', 'liveAgendas', 'counts', 'dosens', 'labs', 'fakultas', 'userFakultas', 'prodis', 'kelases', 'mataKuliahs'));
+        // Jadwal Penggunaan Lab Hari Ini yang Belum Dimulai (Siap Dibuka oleh Admin jika Dosen Telat)
+        $now = \Carbon\Carbon::now();
+        $daysIndo = [
+            'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
+        ];
+        $todayDayName = $daysIndo[$now->format('l')] ?? 'Senin';
+
+        $jadwalHariIniQuery = \App\Models\JadwalPenggunaanLab::with(['lab.fakultas', 'prodi.fakultas', 'dosenPengampu', 'dosen'])
+            ->where('hari', $todayDayName)
+            ->where('is_aktif', true);
+
+        if ($user->isAdminFakultas()) {
+            $jadwalHariIniQuery->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
+        }
+
+        $allJadwalHariIni = $jadwalHariIniQuery->orderBy('jam_mulai', 'asc')->get();
+        $agendasTodayIds = Agenda::whereDate('tanggal', $nowDate)
+            ->whereNotNull('jadwal_penggunaan_lab_id')
+            ->pluck('jadwal_penggunaan_lab_id')
+            ->toArray();
+
+        $unstartedJadwals = $allJadwalHariIni->reject(function($j) use ($agendasTodayIds) {
+            return in_array($j->id, $agendasTodayIds);
+        });
+
+        return view('admin.agenda', compact(
+            'allAgendas', 'liveAgendas', 'counts', 'dosens', 'labs', 'fakultas',
+            'userFakultas', 'prodis', 'kelases', 'mataKuliahs', 'unstartedJadwals', 'todayDayName'
+        ));
     }
 
     public function storeAgenda(Request $request)
@@ -1279,6 +1365,33 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', 'Agenda berhasil diperbarui.');
+    }
+
+    public function selesaiAgenda(Request $request, $id)
+    {
+        $user = Auth::user();
+        $agenda = Agenda::with('lab')->findOrFail($id);
+
+        if ($user->isAdminFakultas() && !$user->canManageLab($agenda->lab)) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akses Ditolak: Anda tidak memiliki izin untuk mengelola agenda di lab ini.',
+                ], 403);
+            }
+            abort(403, 'Akses Ditolak: Anda tidak memiliki izin untuk mengelola agenda di lab ini.');
+        }
+
+        $agenda->update(['status_agenda' => 'Selesai']);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Sesi perkuliahan "' . $agenda->mata_kuliah . '" berhasil diakhiri (Selesai).',
+            ]);
+        }
+
+        return back()->with('success', 'Sesi perkuliahan berhasil diakhiri (Selesai).');
     }
 
     public function deleteAgenda($id)
@@ -2878,8 +2991,7 @@ class AdminController extends Controller
 
 
     /**
-     * Mulai Sesi Agenda Hari Ini dari Matriks Jadwal Lab.
-     * Mendukung kasus normal (jam sesuai jadwal) dan tukar jam khusus hari ini.
+     * Mulai Sesi Agenda Hari Ini dari Matriks Jadwal Lab (saat Dosen Telat).
      */
     public function mulaiSesiHariIni(Request $request, $id)
     {
@@ -2895,14 +3007,8 @@ class AdminController extends Controller
 
         $today      = date('Y-m-d');
         $nowTime    = now()->format('H:i:s');
-
-        // Gunakan jam kustom jika ada (kasus tukar jam), fallback ke jam matriks
-        $jamMulai   = $request->input('jam_mulai')
-            ? ($request->input('jam_mulai') . ':00')
-            : $jadwal->jam_mulai;
-        $jamSelesai = $request->input('jam_selesai')
-            ? ($request->input('jam_selesai') . ':00')
-            : $jadwal->jam_selesai;
+        $jamMulai   = $jadwal->jam_mulai;
+        $jamSelesai = $jadwal->jam_selesai;
 
         // Cek duplikasi: apakah sudah ada sesi hari ini untuk jadwal ini?
         $existing = Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
@@ -2911,10 +3017,67 @@ class AdminController extends Controller
 
         if ($existing) {
             return response()->json([
-                'success'    => false,
-                'message'    => 'Sesi untuk jadwal ini hari ini sudah ada! (Pertemuan ke-' . preg_replace('/[^0-9]/', '', $existing->catatan ?? '') . ')',
-                'agenda_id'  => $existing->id,
+                'success'     => false,
+                'message'     => 'Sesi untuk jadwal ini hari ini sudah ada! (Pertemuan ke-' . preg_replace('/[^0-9]/', '', $existing->catatan ?? '') . ')',
+                'agenda_id'   => $existing->id,
+                'absensi_url' => route('admin.absensi.input', $existing->id),
             ]);
+        }
+
+        if ($jamSelesai <= $jamMulai) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Jam selesai perkuliahan harus lebih besar dari jam mulai.',
+            ], 422);
+        }
+
+        // 1. Cek Bentrok Ruang Laboratorium Hari Ini (Anti-Bentrok Ruangan)
+        $bentrokLab = Agenda::with(['dosen', 'dosenPengampu', 'lab'])
+            ->where('lab_id', $jadwal->lab_id)
+            ->where('tanggal', $today)
+            ->where('status_agenda', '!=', 'Dibatalkan')
+            ->where(function($q) use ($jamMulai, $jamSelesai) {
+                $q->where('jam_mulai', '<', $jamSelesai)
+                  ->where('jam_selesai', '>', $jamMulai);
+            })
+            ->first();
+
+        if ($bentrokLab) {
+            $labNama = $jadwal->lab?->nama_lab ?? 'Lab';
+            $jamBentrok = substr($bentrokLab->jam_mulai, 0, 5) . ' - ' . substr($bentrokLab->jam_selesai, 0, 5);
+            $dosenBentrok = $bentrokLab->dosenPengampu?->nama ?? ($bentrokLab->dosen?->nama ?? 'Dosen Lain');
+            return response()->json([
+                'success'     => false,
+                'is_conflict' => true,
+                'message'     => "⛔ BENTROK RUANGAN! Ruang {$labNama} pada jam {$jamBentrok} WIB sudah digunakan untuk mata kuliah \"{$bentrokLab->mata_kuliah}\" ({$dosenBentrok}).",
+            ], 422);
+        }
+
+        // 2. Cek Bentrok Dosen Pengampu Hari Ini (Anti-Bentrok Dosen)
+        $dosenId = $jadwal->dosen_pengampu_id ?: $jadwal->dosen_id;
+        if ($dosenId) {
+            $bentrokDosen = Agenda::with(['lab'])
+                ->where(function($q) use ($dosenId) {
+                    $q->where('dosen_id', $dosenId)
+                      ->orWhere('dosen_pengampu_id', $dosenId);
+                })
+                ->where('tanggal', $today)
+                ->where('status_agenda', '!=', 'Dibatalkan')
+                ->where(function($q) use ($jamMulai, $jamSelesai) {
+                    $q->where('jam_mulai', '<', $jamSelesai)
+                      ->where('jam_selesai', '>', $jamMulai);
+                })
+                ->first();
+
+            if ($bentrokDosen) {
+                $labBentrok = $bentrokDosen->lab?->nama_lab ?? 'Lab';
+                $jamBentrok = substr($bentrokDosen->jam_mulai, 0, 5) . ' - ' . substr($bentrokDosen->jam_selesai, 0, 5);
+                return response()->json([
+                    'success'     => false,
+                    'is_conflict' => true,
+                    'message'     => "⛔ BENTROK JADWAL DOSEN! Dosen pengampu sudah memiliki agenda mengajar aktif di {$labBentrok} pada jam {$jamBentrok} WIB (\"{$bentrokDosen->mata_kuliah}\").",
+                ], 422);
+            }
         }
 
         // Hitung nomor pertemuan berikutnya (berdasarkan sesi yang sudah ada untuk MK & Kelas ini)
@@ -2932,16 +3095,7 @@ class AdminController extends Controller
             $statusAgenda = 'Selesai';
         }
 
-        // Tandai bahwa ini tukar jam jika jamnya berbeda dari matriks
-        $isTukarJam = ($jamMulai !== $jadwal->jam_mulai || $jamSelesai !== $jadwal->jam_selesai);
-        $catatanTukarJam = $isTukarJam
-            ? ' [Tukar Jam: ' . substr($jadwal->jam_mulai, 0, 5) . ' → ' . substr($jamMulai, 0, 5) . ']'
-            : '';
-
-        $catatan = 'Pertemuan ke-' . $nomorPertemuan . ': ' . $jadwal->mata_kuliah . $catatanTukarJam;
-        if ($request->filled('catatan')) {
-            $catatan .= ' | ' . $request->input('catatan');
-        }
+        $catatan = 'Pertemuan ke-' . $nomorPertemuan . ': ' . $jadwal->mata_kuliah;
 
         $agenda = Agenda::create([
             'jadwal_penggunaan_lab_id' => $jadwal->id,
@@ -2965,12 +3119,10 @@ class AdminController extends Controller
 
         return response()->json([
             'success'         => true,
-            'message'         => 'Sesi Pertemuan ke-' . $nomorPertemuan . ' berhasil dimulai!'
-                . ($isTukarJam ? ' (Jam disesuaikan: ' . substr($jamMulai, 0, 5) . ' - ' . substr($jamSelesai, 0, 5) . ')' : ''),
+            'message'         => 'Sesi Pertemuan ke-' . $nomorPertemuan . ' berhasil dimulai! Mahasiswa dapat langsung melakukan presensi.',
             'agenda_id'       => $agenda->id,
             'status_agenda'   => $statusAgenda,
             'nomor_pertemuan' => $nomorPertemuan,
-            'is_tukar_jam'    => $isTukarJam,
             'absensi_url'     => route('admin.absensi.input', $agenda->id),
         ]);
     }

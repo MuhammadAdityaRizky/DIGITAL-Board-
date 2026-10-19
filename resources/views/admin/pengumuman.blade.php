@@ -304,10 +304,11 @@
                     <div>
                         <label class="block text-slate-700 font-bold mb-1">Tingkat Prioritas</label>
                         <select id="ann-prioritas" name="prioritas" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition cursor-pointer">
-                            <option value="Normal">Normal</option>
-                            <option value="Penting">Penting</option>
-                            <option value="Urgen">Urgen / Darurat</option>
+                            <option value="Normal">Normal (Digital Board Ruang Saja)</option>
+                            <option value="Penting">Penting (Siarkan ke Dashboard Dosen & Mahasiswa)</option>
+                            <option value="Urgen">Urgen / Darurat (Siarkan ke Dashboard Dosen & Mahasiswa)</option>
                         </select>
+                        <p class="text-[10px] text-slate-400 mt-1"><i class="fa-solid fa-circle-info mr-1 text-teal-600"></i> Penting/Urgen otomatis tayang di Dashboard Dosen & Mahasiswa.</p>
                     </div>
                     <div>
                         <label class="block text-slate-700 font-bold mb-1">Opsi Sematkan</label>

@@ -80,6 +80,7 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/laboratorium', [AdminController::class, 'laboratorium'])->name('laboratorium');
         Route::put('/laboratorium/{id}', [AdminController::class, 'updateLab'])->name('laboratorium.update');
+        Route::post('/laboratorium/{id}/kepala-lab', [AdminController::class, 'updateKepalaLab'])->name('laboratorium.kepala-lab');
         Route::delete('/laboratorium/{id}', [AdminController::class, 'deleteLab'])->name('laboratorium.delete');
         Route::post('/laboratorium/import', [AdminController::class, 'importLaboratorium'])->name('laboratorium.import');
         
@@ -89,6 +90,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/agenda/{id}/absen-dosen', [AdminController::class, 'absenDosen'])->name('agenda.absen-dosen');
         Route::post('/agenda', [AdminController::class, 'storeAgenda'])->name('agenda.store');
         Route::put('/agenda/{id}', [AdminController::class, 'updateAgenda'])->name('agenda.update');
+        Route::post('/agenda/{id}/selesai', [AdminController::class, 'selesaiAgenda'])->name('agenda.selesai');
         Route::delete('/agenda/bulk-delete', [AdminController::class, 'bulkDeleteAgendas'])->name('agenda.bulk-delete');
         Route::delete('/agenda/{id}', [AdminController::class, 'deleteAgenda'])->name('agenda.delete');
         Route::post('/agenda/import', [AdminController::class, 'importAgenda'])->name('agenda.import');

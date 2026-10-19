@@ -113,6 +113,9 @@
                 </div>
             </div>
 
+            <!-- Pengumuman Penting & Urgen Banner -->
+            @include('partials.urgent_pengumuman_banner')
+
             <!-- Auto-Detect Sesi Hari Ini Banner -->
             @if(isset($todayScheduledJadwal))
             <div class="bg-white border border-teal-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">

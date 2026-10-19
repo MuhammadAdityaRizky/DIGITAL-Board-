@@ -274,94 +274,195 @@
                 </div>
             </div>
 
-            <!-- SECTION HIGHLIGHT: MATKUL SEDANG BERLANGSUNG -->
-            @if(isset($liveAgendas) && $liveAgendas->count() > 0)
-            <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-emerald-500/10 border-y-2 border-emerald-500/80 rounded-2xl p-4.5 sm:p-5 shadow-xs space-y-3.5">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div class="flex items-center gap-2.5">
+            @php
+                $hasLiveAgendas = isset($liveAgendas) && $liveAgendas->count() > 0;
+                $hasUnstarted = isset($unstartedJadwals) && $unstartedJadwals->count() > 0;
+            @endphp
+
+            <!-- UNIFIED MONITORING FRAME: JADWAL & PRAKTIKUM HARI INI -->
+            @if($hasLiveAgendas || $hasUnstarted)
+            <div class="bg-white border border-slate-200/90 rounded-2xl p-4.5 sm:p-5 shadow-xs space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2.5 flex-wrap">
                         <span class="relative flex h-3 w-3">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-600"></span>
+                            @if($hasLiveAgendas)
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-600"></span>
+                            @else
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-slate-400"></span>
+                            @endif
                         </span>
-                        <h4 class="font-black text-xs sm:text-sm text-emerald-950 uppercase tracking-wide flex items-center gap-2">
-                            <span>Mata Kuliah Sedang Berlangsung</span>
-                            <span class="px-2 py-0.5 bg-emerald-600 text-white rounded-full text-[10px] font-bold">{{ $liveAgendas->count() }} Kelas Aktif</span>
+                        <h4 class="font-black text-xs sm:text-sm text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                            <span>Jadwal Praktikum Hari Ini</span>
                         </h4>
+
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            @if($hasLiveAgendas)
+                                <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full text-[10px] font-extrabold flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                                    {{ $liveAgendas->count() }} Sedang Berlangsung
+                                </span>
+                            @endif
+                            @if($hasUnstarted)
+                                <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-full text-[10px] font-bold flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                    {{ $unstartedJadwals->count() }} Belum Dimulai
+                                </span>
+                            @endif
+                        </div>
                     </div>
-                    <span class="text-[11px] text-emerald-800 font-medium flex items-center gap-1">
-                        <i class="fa-solid fa-clock text-emerald-600"></i> Live Monitor Realtime
+
+                    <span class="text-[11px] text-slate-600 font-bold bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                        <i class="fa-regular fa-calendar text-slate-400 mr-1"></i> {{ $todayDayName ?? 'Hari Ini' }}, {{ date('d M Y') }}
                     </span>
                 </div>
 
-                <!-- Live Cards Grid -->
+                <!-- Combined Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">
-                    @foreach($liveAgendas as $live)
-                        @php
-                            $livePertemuan = '-';
-                            if ($live->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $live->catatan, $lm)) {
-                                $livePertemuan = $lm[1];
-                            }
-                            $liveLab = $live->lab;
-                            $liveFakultas = $liveLab?->fakultas;
-                        @endphp
-                        <div class="bg-white border border-emerald-200/90 rounded-xl p-4 shadow-sm hover:shadow-md transition-all space-y-3 flex flex-col justify-between">
-                            <div>
-                                <!-- Header Badges -->
-                                <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
-                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded text-[10px] font-extrabold flex items-center gap-1">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span> BERLANGSUNG
-                                        </span>
-                                        @if(auth()->user()->isSuperAdmin() && $liveFakultas)
-                                            <span class="px-2 py-0.5 bg-teal-50 text-teal-900 border border-teal-200 rounded text-[10px] font-bold flex items-center gap-1" title="Fakultas {{ $liveFakultas->nama_fakultas }}">
-                                                <i class="fa-solid fa-building-columns text-[9px] text-teal-700"></i>
-                                                {{ $liveFakultas->nama_fakultas }}
+                    {{-- 1. KELAS SUDAH MULAI (KARTU HIJAU) --}}
+                    @if($hasLiveAgendas)
+                        @foreach($liveAgendas as $live)
+                            @php
+                                $livePertemuan = '-';
+                                if ($live->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $live->catatan, $lm)) {
+                                    $livePertemuan = $lm[1];
+                                }
+                                $liveLab = $live->lab;
+                                $liveFakultas = $liveLab?->fakultas;
+                            @endphp
+                            <div class="bg-emerald-50/30 border-2 border-emerald-400/80 rounded-xl p-4 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between gap-3">
+                                <div>
+                                    <!-- Badges -->
+                                    <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="px-2 py-0.5 bg-emerald-500 text-white rounded text-[10px] font-extrabold flex items-center gap-1 shadow-2xs">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                                                BERLANGSUNG
                                             </span>
-                                        @endif
-                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-800 border border-slate-200 rounded text-[10px] font-bold flex items-center gap-1">
-                                            <i class="fa-solid fa-flask text-[9px] text-teal-700"></i>
-                                            {{ $liveLab->nama_lab ?? 'Lab' }}
+                                            @if(auth()->user()->isSuperAdmin() && $liveFakultas)
+                                                <span class="px-2 py-0.5 bg-teal-50 text-teal-900 border border-teal-200 rounded text-[10px] font-bold flex items-center gap-1" title="Fakultas {{ $liveFakultas->nama_fakultas }}">
+                                                    <i class="fa-solid fa-building-columns text-[9px] text-teal-700"></i>
+                                                    {{ $liveFakultas->nama_fakultas }}
+                                                </span>
+                                            @endif
+                                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded text-[10px] font-bold flex items-center gap-1">
+                                                <i class="fa-solid fa-door-open text-[9px] text-emerald-700"></i>
+                                                {{ $liveLab->nama_lab ?? 'Lab' }}
+                                            </span>
+                                        </div>
+                                        <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-200">
+                                            Kelas {{ $live->kelas ?: '-' }}
                                         </span>
                                     </div>
-                                    <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                                        Kelas {{ $live->kelas ?: '-' }}
-                                    </span>
+
+                                    <!-- Title -->
+                                    <h5 class="font-black text-slate-900 text-xs sm:text-sm tracking-tight leading-snug line-clamp-2">
+                                        {{ $live->mata_kuliah }}
+                                    </h5>
+
+                                    <!-- Details -->
+                                    <div class="mt-2.5 space-y-1 text-xs text-slate-600">
+                                        <div class="flex items-center gap-1.5">
+                                            <i class="fa-solid fa-user-tie text-[11px] text-emerald-700 w-3.5 shrink-0"></i>
+                                            <span class="truncate font-semibold text-slate-800">{{ $live->dosenPengampu->nama ?? $live->dosen->nama ?? '-' }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5 font-mono text-[11px] text-emerald-800">
+                                            <i class="fa-regular fa-clock text-[11px] text-emerald-600 w-3.5 shrink-0"></i>
+                                            <span class="font-bold">{{ substr($live->jam_mulai,0,5) }} - {{ substr($live->jam_selesai,0,5) }} WIB</span>
+                                            <span class="text-slate-400">•</span>
+                                            <span class="font-semibold text-slate-600">Pertemuan {{ $livePertemuan }}</span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <!-- Course Title -->
-                                <h5 class="font-bold text-slate-900 text-sm tracking-tight leading-snug line-clamp-2">
-                                    {{ $live->mata_kuliah }}
-                                </h5>
-
-                                <!-- Info Meta -->
-                                <div class="mt-2.5 space-y-1 text-xs text-slate-600">
+                                <!-- Actions -->
+                                <div class="pt-2.5 border-t border-emerald-200/60 flex items-center justify-between gap-2">
+                                    <span class="text-[10px] font-bold text-emerald-700 truncate max-w-[90px]">{{ $live->jurusan ?? 'Prodi' }}</span>
                                     <div class="flex items-center gap-1.5">
-                                        <i class="fa-solid fa-user-tie text-[11px] text-slate-400 w-4"></i>
-                                        <span class="truncate font-medium text-slate-800">{{ $live->dosenPengampu->nama ?? $live->dosen->nama ?? '-' }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
-                                        <i class="fa-regular fa-clock text-[11px] text-teal-600 w-4"></i>
-                                        <span class="font-semibold text-teal-800">{{ substr($live->jam_mulai,0,5) }} - {{ substr($live->jam_selesai,0,5) }} WIB</span>
-                                        <span>•</span>
-                                        <span>Pertemuan {{ $livePertemuan }}</span>
+                                        <button type="button" 
+                                                onclick="akhiriSesiAdmin({{ $live->id }}, '{{ addslashes($live->mata_kuliah) }}')"
+                                                class="h-8 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
+                                                title="Akhiri sesi sekarang jika perkuliahan sudah selesai lebih awal">
+                                            <i class="fa-solid fa-flag-checkered text-[10px] text-rose-600"></i>
+                                            <span>Akhiri</span>
+                                        </button>
+                                        <a href="{{ route('admin.absensi.input', $live->id) }}" class="h-8 px-3 bg-teal-800 hover:bg-teal-900 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs">
+                                            <i class="fa-solid fa-clipboard-user text-[10px]"></i> Absensi
+                                        </a>
+                                        <a href="{{ route('admin.agenda.berita-acara.cetak', $live->id) }}" target="_blank" class="h-8 px-2.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition border border-emerald-200 flex items-center justify-center shadow-2xs" title="Cetak Berita Acara">
+                                            <i class="fa-regular fa-file-lines text-[10px]"></i>
+                                        </a>
                                     </div>
                                 </div>
                             </div>
+                        @endforeach
+                    @endif
 
-                            <!-- CTA Actions -->
-                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-                                <span class="text-[10px] text-slate-400">{{ $live->jurusan ?? 'Prodi' }}</span>
-                                <div class="flex items-center gap-1.5">
-                                    <a href="{{ route('admin.absensi.input', $live->id) }}" class="px-2.5 py-1 bg-teal-800 hover:bg-teal-900 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs">
-                                        <i class="fa-solid fa-clipboard-user text-[10px]"></i> Absensi
-                                    </a>
-                                    <a href="{{ route('admin.agenda.berita-acara.cetak', $live->id) }}" target="_blank" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition border border-slate-200" title="Cetak Berita Acara">
-                                        <i class="fa-regular fa-file-lines text-[10px]"></i>
-                                    </a>
+                    {{-- 2. KELAS BELUM DIMULAI (KARTU ABU-ABU) --}}
+                    @if($hasUnstarted)
+                        @foreach($unstartedJadwals as $j)
+                            @php
+                                $dosenNama = $j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen Pengampu');
+                                $jamFormatted = substr($j->jam_mulai, 0, 5) . ' - ' . substr($j->jam_selesai, 0, 5);
+                                $nowTimeStr = date('H:i:s');
+                                $isTimeNow = ($nowTimeStr >= $j->jam_mulai && $nowTimeStr <= $j->jam_selesai);
+                            @endphp
+                            <div class="bg-slate-50/80 border border-slate-200/90 rounded-xl p-4 shadow-2xs hover:shadow-xs hover:border-slate-300 transition-all flex flex-col justify-between gap-3">
+                                <div>
+                                    <!-- Badges -->
+                                    <div class="flex items-center justify-between gap-2 flex-wrap mb-2">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="px-2 py-0.5 bg-slate-200 text-slate-600 rounded text-[10px] font-extrabold flex items-center gap-1 border border-slate-300">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                                BELUM DIMULAI
+                                            </span>
+                                            <span class="px-2 py-0.5 bg-white text-slate-600 border border-slate-200 rounded text-[10px] font-bold flex items-center gap-1">
+                                                <i class="fa-solid fa-door-open text-[9px] text-slate-400"></i>
+                                                {{ $j->lab?->nama_lab ?? 'Lab' }}
+                                            </span>
+                                        </div>
+                                        <span class="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                            Kelas {{ $j->kelas ?: '-' }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Title -->
+                                    <h5 class="font-bold text-slate-700 text-xs sm:text-sm tracking-tight leading-snug line-clamp-2">
+                                        {{ $j->mata_kuliah }}
+                                    </h5>
+
+                                    <!-- Details -->
+                                    <div class="mt-2.5 space-y-1 text-xs text-slate-500">
+                                        <div class="flex items-center gap-1.5">
+                                            <i class="fa-solid fa-user-tie text-[11px] text-slate-400 w-3.5 shrink-0"></i>
+                                            <span class="truncate font-medium text-slate-700">{{ $dosenNama }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
+                                            <i class="fa-regular fa-clock text-[11px] text-slate-400 w-3.5 shrink-0"></i>
+                                            <span class="font-semibold text-slate-600">{{ $jamFormatted }} WIB</span>
+                                            @if($isTimeNow)
+                                                <span class="text-slate-300">•</span>
+                                                <span class="px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded text-[9px] font-bold animate-pulse">Waktunya Masuk</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="pt-2.5 border-t border-slate-200/70 flex items-center justify-between gap-2">
+                                    <span class="text-[10px] font-medium text-slate-400">
+                                        {{ $j->program_kuliah ?? 'Reguler' }}
+                                    </span>
+                                    <button type="button" 
+                                            onclick="mulaiSesiAgendaAdmin({{ $j->id }}, '{{ addslashes($j->mata_kuliah) }}', '{{ addslashes($dosenNama) }}', '{{ $jamFormatted }}', '{{ addslashes($j->lab?->nama_lab ?? 'Lab') }}')"
+                                            class="h-8 px-3.5 bg-slate-700 hover:bg-teal-800 active:scale-95 text-white font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
+                                        <i class="fa-solid fa-play text-[9px]"></i>
+                                        <span>Buka Sesi</span>
+                                    </button>
                                 </div>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    @endif
                 </div>
             </div>
             @endif
@@ -2028,6 +2129,149 @@
                 Swal.close();
             }
         });
+
+        // Quick Start Sesi Praktikum Hari Ini oleh Admin di Menu Agenda (Dosen Telat)
+        function mulaiSesiAgendaAdmin(jadwalId, matkul, dosen, jam, lab) {
+            Swal.fire({
+                title: 'Mulai Sesi Praktikum Hari Ini?',
+                html: `
+                    <div class="text-left text-xs text-slate-700 space-y-2 mt-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <div class="flex justify-between gap-2"><span class="text-slate-400">Mata Kuliah:</span> <b class="text-slate-900 font-bold">${matkul}</b></div>
+                        <div class="flex justify-between gap-2"><span class="text-slate-400">Dosen Pengampu:</span> <b class="text-slate-900 font-bold">${dosen}</b></div>
+                        <div class="flex justify-between gap-2"><span class="text-slate-400">Laboratorium:</span> <b class="text-teal-800 font-bold">${lab}</b></div>
+                        <div class="flex justify-between gap-2"><span class="text-slate-400">Waktu Jadwal:</span> <b class="font-mono text-slate-900 font-bold">${jam} WIB</b></div>
+                    </div>
+
+                    <p class="text-[11px] text-slate-500 mt-3 text-left leading-relaxed">
+                        <i class="fa-solid fa-circle-info text-teal-600 mr-1"></i>
+                        Sesi akan dibuka agar mahasiswa dapat langsung melakukan presensi barcode. Presensi dosen akan tercatat otomatis saat dosen check-in mandiri.
+                    </p>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0f766e',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i class="fa-solid fa-play mr-1.5 text-xs"></i> Ya, Buka Sesi Sekarang',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl border border-slate-100 max-w-lg',
+                    title: 'text-base font-extrabold text-slate-800',
+                    confirmButton: 'rounded-xl font-bold text-xs px-4 py-2.5 cursor-pointer',
+                    cancelButton: 'rounded-xl font-bold text-xs px-4 py-2.5 cursor-pointer'
+                },
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return fetch(`{{ url('admin/jadwal-lab') }}/${jadwalId}/mulai-hari-ini`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        return response.json().then(data => {
+                            if (!response.ok || !data.success) {
+                                throw new Error(data.message || 'Terjadi kesalahan sistem');
+                            }
+                            return data;
+                        });
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(error.message);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    Swal.fire({
+                        title: 'Sesi Berhasil Dimulai!',
+                        text: result.value.message,
+                        icon: 'success',
+                        showCancelButton: true,
+                        confirmButtonColor: '#0f766e',
+                        cancelButtonColor: '#334155',
+                        confirmButtonText: '<i class="fa-solid fa-clipboard-user mr-1.5"></i> Buka Lembar Absensi',
+                        cancelButtonText: 'Tetap di Halaman Agenda',
+                        customClass: {
+                            popup: 'rounded-3xl p-6 shadow-2xl border border-slate-100',
+                            title: 'text-base font-extrabold text-slate-800',
+                            confirmButton: 'rounded-xl font-bold text-xs px-4 py-2.5 cursor-pointer',
+                            cancelButton: 'rounded-xl font-bold text-xs px-4 py-2.5 cursor-pointer'
+                        }
+                    }).then((action) => {
+                        if (action.isConfirmed && result.value.absensi_url) {
+                            window.location.href = result.value.absensi_url;
+                        } else {
+                            window.location.reload();
+                        }
+                    });
+                }
+            });
+        }
+
+        // Akhiri Sesi Praktikum Lebih Awal oleh Admin
+        function akhiriSesiAdmin(agendaId, matkul) {
+            Swal.fire({
+                title: 'Akhiri Sesi Praktikum?',
+                html: `
+                    <div class="text-left text-xs text-slate-700 space-y-2 mt-2 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <div class="flex justify-between gap-2"><span class="text-slate-400">Mata Kuliah:</span> <b class="text-slate-900 font-bold">${matkul}</b></div>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-3 text-left leading-relaxed">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500 mr-1"></i>
+                        Status sesi akan diubah menjadi <b>Selesai</b>. QR Code presensi di Smart Board akan langsung ditutup.
+                    </p>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: '<i class="fa-solid fa-flag-checkered mr-1.5 text-xs"></i> Ya, Akhiri Sesi',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl p-6 shadow-2xl border border-slate-100 max-w-md',
+                    title: 'text-base font-extrabold text-slate-800',
+                    confirmButton: 'rounded-xl font-bold text-xs px-4 py-2.5 cursor-pointer',
+                    cancelButton: 'rounded-xl font-bold text-xs px-4 py-2.5 cursor-pointer'
+                },
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return fetch(`{{ url('admin/agenda') }}/${agendaId}/selesai`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        return response.json().then(data => {
+                            if (!response.ok || !data.success) {
+                                throw new Error(data.message || 'Gagal mengakhiri sesi.');
+                            }
+                            return data;
+                        });
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(error.message);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    Swal.fire({
+                        title: 'Sesi Selesai!',
+                        text: result.value.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                }
+            });
+        }
     </script>
 </body>
 </html>
