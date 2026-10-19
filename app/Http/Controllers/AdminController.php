@@ -107,7 +107,17 @@ class AdminController extends Controller
         }
         $laboratoriums = $labsQuery->orderBy('nama_lab')->get();
 
-        // Agendas Today
+        // 1. Ambil master jadwal untuk HARI INI berdasarkan nama hari (Senin, Selasa, dst)
+        $todayDayName = $daysIndo[$now->format('l')] ?? $now->format('l');
+        $jadwalHariIniQuery = JadwalPenggunaanLab::with(['lab.fakultas', 'dosenPengampu', 'dosen', 'prodi'])
+            ->where('hari', $todayDayName)
+            ->where('is_aktif', true);
+        if ($user->isAdminFakultas()) {
+            $jadwalHariIniQuery->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
+        }
+        $allJadwalHariIni = $jadwalHariIniQuery->orderBy('jam_mulai', 'asc')->get();
+
+        // 2. Agendas yang sudah dibuat untuk hari ini di tabel agenda
         $agendasTodayQuery = Agenda::with(['dosen', 'dosenPengampu', 'lab.fakultas'])
             ->whereDate('tanggal', $today);
         if ($user->isAdminFakultas()) {
@@ -115,9 +125,142 @@ class AdminController extends Controller
         }
         $agendasToday = $agendasTodayQuery->orderBy('jam_mulai', 'asc')->get();
 
-        // If no agenda today, get upcoming agendas
+        // 3. Susun Unified Timeline Items (Menggabungkan yang sudah dimulai & yang masih terjadwal)
+        $timelineItems = [];
+        $handledAgendaIds = [];
+
+        foreach ($allJadwalHariIni as $j) {
+            $matchedAgenda = $agendasToday->firstWhere('jadwal_penggunaan_lab_id', $j->id);
+            $labObj = $matchedAgenda->lab ?? $j->lab;
+
+            if ($matchedAgenda) {
+                $handledAgendaIds[] = $matchedAgenda->id;
+                $mulai = $matchedAgenda->jam_mulai;
+                $selesai = $matchedAgenda->jam_selesai;
+
+                if ($currentTime >= $mulai && $currentTime <= $selesai) {
+                    $itemStatus = 'berlangsung'; // Hijau Live Now
+                } elseif ($currentTime > $selesai) {
+                    $itemStatus = 'selesai';     // Abu-abu / Biru Selesai
+                } else {
+                    $itemStatus = 'akan_datang'; // Menunggu Jam Masuk
+                }
+
+                $pertemuanNum = null;
+                if ($matchedAgenda->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $matchedAgenda->catatan, $m)) {
+                    $pertemuanNum = (int)$m[1];
+                } else {
+                    $pertemuanNum = Agenda::where('jadwal_penggunaan_lab_id', $j->id)->where('tanggal', '<=', $today)->count();
+                }
+
+                $timelineItems[] = [
+                    'type'              => 'agenda',
+                    'agenda_id'         => $matchedAgenda->id,
+                    'jadwal_id'         => $j->id,
+                    'mata_kuliah'       => $matchedAgenda->mata_kuliah,
+                    'kelas'             => $matchedAgenda->kelas ?: ($j->kelas ?: '-'),
+                    'program_kuliah'    => $matchedAgenda->program_kuliah ?? ($j->program_kuliah ?? 'Reguler'),
+                    'semester'          => $matchedAgenda->semester ?? ($j->semester ?? '1'),
+                    'lab'               => $labObj,
+                    'jam_mulai'         => substr($mulai, 0, 5),
+                    'jam_selesai'       => substr($selesai, 0, 5),
+                    'dosen_nama'        => $matchedAgenda->dosenPengampu?->nama ?? ($matchedAgenda->dosen?->nama ?? ($j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen Pengampu'))),
+                    'dosen_waktu_masuk' => $matchedAgenda->dosen_waktu_masuk,
+                    'pertemuan'         => $pertemuanNum ?: 1,
+                    'status'            => $itemStatus,
+                    'has_session'       => true,
+                    'absensi_url'       => route('admin.absensi.input', $matchedAgenda->id),
+                    'quick_start_url'   => null,
+                ];
+            } else {
+                $mulai = $j->jam_mulai;
+                $selesai = $j->jam_selesai;
+
+                if ($currentTime > $selesai) {
+                    $itemStatus = 'terlewat';        // Lewat jam tanpa dimulai
+                } elseif ($currentTime >= $mulai && $currentTime <= $selesai) {
+                    $itemStatus = 'waktunya_masuk';  // Waktunya masuk sekarang
+                } else {
+                    $itemStatus = 'terjadwal';       // Belum waktunya masuk (Abu-abu)
+                }
+
+                $priorCount = Agenda::where('jadwal_penggunaan_lab_id', $j->id)->where('tanggal', '<', $today)->count();
+                $pertemuanNum = $priorCount + 1;
+                $dosenNama = $j->dosenPengampu?->nama ?? ($j->dosen?->nama ?? 'Dosen Pengampu');
+
+                $timelineItems[] = [
+                    'type'              => 'jadwal',
+                    'agenda_id'         => null,
+                    'jadwal_id'         => $j->id,
+                    'mata_kuliah'       => $j->mata_kuliah,
+                    'kelas'             => $j->kelas ?: '-',
+                    'program_kuliah'    => $j->program_kuliah ?? 'Reguler',
+                    'semester'          => $j->semester ?? '1',
+                    'lab'               => $labObj,
+                    'jam_mulai'         => substr($mulai, 0, 5),
+                    'jam_selesai'       => substr($selesai, 0, 5),
+                    'dosen_nama'        => $dosenNama,
+                    'dosen_waktu_masuk' => null,
+                    'pertemuan'         => $pertemuanNum,
+                    'status'            => $itemStatus,
+                    'has_session'       => false,
+                    'absensi_url'       => null,
+                    'quick_start_url'   => route('admin.jadwal-lab.mulai-hari-ini', $j->id),
+                ];
+            }
+        }
+
+        // Tambahkan sesi agenda mandiri hari ini yang tidak terikat master jadwal
+        foreach ($agendasToday as $ag) {
+            if (!in_array($ag->id, $handledAgendaIds)) {
+                $mulai = $ag->jam_mulai;
+                $selesai = $ag->jam_selesai;
+                if ($currentTime >= $mulai && $currentTime <= $selesai) {
+                    $itemStatus = 'berlangsung';
+                } elseif ($currentTime > $selesai) {
+                    $itemStatus = 'selesai';
+                } else {
+                    $itemStatus = 'akan_datang';
+                }
+
+                $pertemuanNum = 1;
+                if ($ag->catatan && preg_match('/Pertemuan\s*(?:ke-)?(\d+)/i', $ag->catatan, $m)) {
+                    $pertemuanNum = (int)$m[1];
+                }
+
+                $timelineItems[] = [
+                    'type'              => 'agenda',
+                    'agenda_id'         => $ag->id,
+                    'jadwal_id'         => null,
+                    'mata_kuliah'       => $ag->mata_kuliah,
+                    'kelas'             => $ag->kelas ?: '-',
+                    'program_kuliah'    => $ag->program_kuliah ?? 'Reguler',
+                    'semester'          => $ag->semester ?? '1',
+                    'lab'               => $ag->lab,
+                    'jam_mulai'         => substr($mulai, 0, 5),
+                    'jam_selesai'       => substr($selesai, 0, 5),
+                    'dosen_nama'        => $ag->dosenPengampu?->nama ?? ($ag->dosen?->nama ?? 'Dosen Pengampu'),
+                    'dosen_waktu_masuk' => $ag->dosen_waktu_masuk,
+                    'pertemuan'         => $pertemuanNum,
+                    'status'            => $itemStatus,
+                    'has_session'       => true,
+                    'absensi_url'       => route('admin.absensi.input', $ag->id),
+                    'quick_start_url'   => null,
+                ];
+            }
+        }
+
+        // Urutkan Timeline berdasarkan Jam Mulai secara kronologis
+        usort($timelineItems, function($a, $b) {
+            return strcmp($a['jam_mulai'], $b['jam_mulai']);
+        });
+
+        // Total Sesi Hari Ini mencakup semua jadwal yang direncanakan & berjalan hari ini
+        $totalSesiHariIni = count($timelineItems);
+
+        // If no agenda today, get upcoming agendas for other days
         $agendasUpcomingQuery = Agenda::with(['dosen', 'dosenPengampu', 'lab.fakultas'])
-            ->whereDate('tanggal', '>=', $today);
+            ->whereDate('tanggal', '>', $today);
         if ($user->isAdminFakultas()) {
             $agendasUpcomingQuery->whereHas('lab', fn($q) => $q->where('fakultas_id', $user->fakultas_id));
         }
@@ -148,6 +291,29 @@ class AdminController extends Controller
                 ->orderBy('tanggal', 'asc')
                 ->orderBy('jam_mulai', 'asc')
                 ->first();
+
+            // Jika belum ada record agenda di database, periksa dari master jadwal lab hari ini
+            if (!$nextAgenda) {
+                $nextJadwal = JadwalPenggunaanLab::with(['dosen', 'dosenPengampu'])
+                    ->where('lab_id', $lab->id)
+                    ->where('hari', $todayDayName)
+                    ->where('jam_selesai', '>', $currentTime)
+                    ->orderBy('jam_mulai', 'asc')
+                    ->first();
+                if ($nextJadwal) {
+                    $nextAgenda = (object)[
+                        'mata_kuliah'       => $nextJadwal->mata_kuliah,
+                        'jam_mulai'         => $nextJadwal->jam_mulai,
+                        'jam_selesai'       => $nextJadwal->jam_selesai,
+                        'tanggal'           => $today,
+                        'dosen'             => $nextJadwal->dosen,
+                        'dosenPengampu'     => $nextJadwal->dosenPengampu,
+                        'dosen_waktu_masuk' => null,
+                        'kelas'             => $nextJadwal->kelas,
+                        'is_from_master'    => true,
+                    ];
+                }
+            }
 
             $isOccupied = !empty($currentAgenda);
             if ($isOccupied) {
@@ -186,8 +352,6 @@ class AdminController extends Controller
                 'next_agenda' => $nextAgenda,
             ];
         }
-
-        $totalSesiHariIni = $agendasToday->count();
         $totalPresensiHariIni = $todayHadir + $todayIzin + $todayAlpa;
         $attendanceRate = $totalPresensiHariIni > 0 ? round(($todayHadir / $totalPresensiHariIni) * 100) : 0;
 
@@ -211,7 +375,7 @@ class AdminController extends Controller
             'todayFormatted', 'laboratoriums', 'agendasToday', 'agendasUpcoming',
             'labStatusList', 'labAktifSaatIni', 'alertDosenBelumHadir',
             'totalSesiHariIni', 'attendanceRate', 'totalPresensiHariIni',
-            'pengumumanAktifCount'
+            'pengumumanAktifCount', 'timelineItems'
         ));
     }
 

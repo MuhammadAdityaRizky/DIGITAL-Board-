@@ -322,56 +322,140 @@
                         </div>
 
                         <div class="p-6">
-                            @if($agendasToday->count() > 0)
+                            @if(count($timelineItems) > 0)
                                 <div class="space-y-3">
-                                    @foreach($agendasToday as $agenda)
+                                    @foreach($timelineItems as $item)
                                         @php
-                                            $nowTime = date('H:i:s');
-                                            $isLive = ($agenda->jam_mulai <= $nowTime && $agenda->jam_selesai >= $nowTime);
-                                            $isPassed = ($agenda->jam_selesai < $nowTime);
+                                            $status = $item['status'];
+                                            if ($status === 'berlangsung') {
+                                                $cardClass = 'border-emerald-300 bg-emerald-50/40 ring-1 ring-emerald-200 shadow-sm';
+                                                $timeClass = 'bg-emerald-600 text-white shadow-sm';
+                                            } elseif ($status === 'waktunya_masuk') {
+                                                $cardClass = 'border-amber-300 bg-amber-50/40 ring-1 ring-amber-200 shadow-sm';
+                                                $timeClass = 'bg-amber-500 text-white shadow-sm';
+                                            } elseif ($status === 'terjadwal') {
+                                                $cardClass = 'border-slate-200 bg-slate-50/60 hover:bg-white hover:border-slate-300 transition shadow-2xs';
+                                                $timeClass = 'bg-slate-200 text-slate-700';
+                                            } elseif ($status === 'selesai') {
+                                                $cardClass = 'border-slate-200 bg-slate-50/30 opacity-75 hover:opacity-100 transition';
+                                                $timeClass = 'bg-slate-200 text-slate-500';
+                                            } else { // terlewat
+                                                $cardClass = 'border-rose-200 bg-rose-50/20 opacity-75 hover:opacity-100 transition';
+                                                $timeClass = 'bg-slate-200 text-slate-400';
+                                            }
                                         @endphp
-                                        <div class="p-4 rounded-2xl border transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 {{ $isLive ? 'border-emerald-300 bg-emerald-50/30 ring-1 ring-emerald-200' : ($isPassed ? 'border-slate-200 bg-slate-50/50 opacity-75' : 'border-slate-200 bg-white hover:border-slate-300') }}">
-                                            <div class="flex items-start gap-3">
-                                                <div class="p-2.5 rounded-xl {{ $isLive ? 'bg-emerald-600 text-white' : ($isPassed ? 'bg-slate-200 text-slate-600' : 'bg-indigo-50 text-indigo-600') }} font-mono font-bold text-xs text-center shrink-0">
-                                                    <span>{{ substr($agenda->jam_mulai, 0, 5) }}</span>
-                                                    <span class="block text-[9px] opacity-75">- {{ substr($agenda->jam_selesai, 0, 5) }}</span>
+
+                                        <div class="p-4 rounded-2xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-4 {{ $cardClass }}">
+                                            <div class="flex items-start gap-3 flex-1 min-w-0">
+                                                <!-- Jam Pelaksanaan -->
+                                                <div class="px-3 py-2.5 rounded-xl {{ $timeClass }} font-mono font-bold text-center shrink-0 min-w-[74px]">
+                                                    <span class="text-xs font-black block">{{ $item['jam_mulai'] }}</span>
+                                                    <span class="text-[9px] opacity-80 block font-medium">- {{ $item['jam_selesai'] }}</span>
                                                 </div>
-                                                <div>
-                                                    <div class="flex items-center gap-2 flex-wrap">
-                                                        <h4 class="font-extrabold text-xs text-slate-900">{{ $agenda->mata_kuliah }}</h4>
-                                                        <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                                            <i class="fa-solid fa-location-dot text-teal-600 mr-0.5"></i> {{ $agenda->lab?->nama_lab ?? 'Lab' }}
+
+                                                <!-- Metadata & Detail -->
+                                                <div class="space-y-1.5 flex-1 min-w-0">
+                                                    <!-- Row Badges: Pertemuan, Program Kuliah, Kelas, Semester, Lab -->
+                                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-teal-50 text-teal-800 border border-teal-200/80">
+                                                            <i class="fa-solid fa-calendar-check text-[9px] mr-0.5"></i> Pertemuan {{ $item['pertemuan'] }}
                                                         </span>
-                                                        <span class="text-[10px] text-slate-500 font-medium">Kelas {{ $agenda->kelas }}</span>
-                                                    </div>
-                                                    <p class="text-[11px] text-slate-600 mt-1">
-                                                        Dosen: <b>{{ $agenda->dosen?->nama ?? 'Dosen Pengampu' }}</b>
-                                                        @if($agenda->dosen_waktu_masuk)
-                                                            <span class="text-emerald-700 font-semibold ml-2"><i class="fa-solid fa-circle-check"></i> Hadir ({{ substr($agenda->dosen_waktu_masuk, 11, 5) }})</span>
+
+                                                        @if(strcasecmp($item['program_kuliah'], 'Karyawan') === 0)
+                                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-purple-100 text-purple-700 border border-purple-200">
+                                                                <i class="fa-solid fa-briefcase text-[9px] mr-0.5"></i> Karyawan
+                                                            </span>
                                                         @else
-                                                            <span class="text-amber-700 font-semibold ml-2"><i class="fa-solid fa-clock"></i> Belum Check-in</span>
+                                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-sky-100 text-sky-700 border border-sky-200">
+                                                                <i class="fa-solid fa-graduation-cap text-[9px] mr-0.5"></i> Reguler
+                                                            </span>
                                                         @endif
-                                                    </p>
+
+                                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                                            Kelas {{ $item['kelas'] }}
+                                                        </span>
+
+                                                        @if(!empty($item['semester']))
+                                                            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                                                Sem. {{ $item['semester'] }}
+                                                            </span>
+                                                        @endif
+
+                                                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white text-slate-700 border border-slate-200 shadow-2xs">
+                                                            <i class="fa-solid fa-location-dot text-teal-600 mr-0.5"></i> {{ $item['lab']?->nama_lab ?? 'Lab' }}
+                                                        </span>
+                                                    </div>
+
+                                                    <!-- Mata Kuliah Title -->
+                                                    <h4 class="font-extrabold text-sm text-slate-900 tracking-tight leading-snug">
+                                                        {{ $item['mata_kuliah'] }}
+                                                    </h4>
+
+                                                    <!-- Dosen & Check-in status -->
+                                                    <div class="flex items-center gap-2 flex-wrap text-xs text-slate-600">
+                                                        <span>
+                                                            <i class="fa-solid fa-chalkboard-user text-slate-400 mr-1"></i> Dosen: <strong class="text-slate-800 font-semibold">{{ $item['dosen_nama'] }}</strong>
+                                                        </span>
+                                                        <span class="text-slate-300">•</span>
+                                                        @if($item['dosen_waktu_masuk'])
+                                                            <span class="text-emerald-700 font-semibold inline-flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
+                                                                <i class="fa-solid fa-circle-check text-emerald-600"></i> Dosen Hadir ({{ substr($item['dosen_waktu_masuk'], 11, 5) }} WIB)
+                                                            </span>
+                                                        @else
+                                                            <span class="text-amber-700 font-medium inline-flex items-center gap-1 bg-amber-50/80 px-2 py-0.5 rounded border border-amber-200 text-[11px]">
+                                                                <i class="fa-solid fa-clock text-amber-600"></i> Dosen Belum Check-in
+                                                            </span>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <div class="shrink-0 flex items-center gap-2">
-                                                @if($isLive)
-                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1 uppercase">
-                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> Live Now
+                                            <!-- Status Badge & Action Controls -->
+                                            <div class="shrink-0 flex items-center gap-2 w-full md:w-auto justify-end pt-2 md:pt-0 border-t md:border-t-0 border-slate-200/60">
+                                                @if($status === 'berlangsung')
+                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1.5 uppercase tracking-wide">
+                                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Live Now
                                                     </span>
-                                                @elseif($isPassed)
-                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600 uppercase">
-                                                        Selesai
+                                                    <a href="{{ $item['absensi_url'] }}" class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                                        <i class="fa-solid fa-clipboard-user text-xs"></i> Kelola Presensi
+                                                    </a>
+                                                @elseif($status === 'waktunya_masuk')
+                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1.5 uppercase tracking-wide">
+                                                        <i class="fa-solid fa-bell text-amber-600 animate-bounce"></i> Waktunya Mulai
                                                     </span>
+                                                    <button type="button" onclick="bukaSesiTimeline({{ $item['jadwal_id'] }}, '{{ addslashes($item['mata_kuliah']) }}', '{{ $item['kelas'] }}', '{{ $item['pertemuan'] }}')" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                                                        <i class="fa-solid fa-play text-xs"></i> Buka Sesi Hari Ini
+                                                    </button>
+                                                @elseif($status === 'terjadwal')
+                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200/80 text-slate-600 border border-slate-300/60 uppercase tracking-wide">
+                                                        <i class="fa-regular fa-clock mr-1 text-slate-400"></i> Belum Waktunya
+                                                    </span>
+                                                    @if($item['has_session'])
+                                                        <a href="{{ $item['absensi_url'] }}" class="px-3.5 py-1.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                                                            <i class="fa-solid fa-clipboard-user text-xs"></i> Presensi
+                                                        </a>
+                                                    @else
+                                                        <button type="button" onclick="bukaSesiTimeline({{ $item['jadwal_id'] }}, '{{ addslashes($item['mata_kuliah']) }}', '{{ $item['kelas'] }}', '{{ $item['pertemuan'] }}')" class="px-3 py-1.5 bg-white hover:bg-teal-50 hover:text-teal-800 text-slate-600 border border-slate-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                                                            <i class="fa-solid fa-play text-slate-400"></i> Buka Awal
+                                                        </button>
+                                                    @endif
+                                                @elseif($status === 'selesai')
+                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-600 uppercase tracking-wide">
+                                                        <i class="fa-solid fa-check mr-1 text-slate-400"></i> Selesai
+                                                    </span>
+                                                    @if($item['has_session'])
+                                                        <a href="{{ $item['absensi_url'] }}" class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-xs">
+                                                            <i class="fa-solid fa-file-lines text-slate-500"></i> Rekap Presensi
+                                                        </a>
+                                                    @endif
                                                 @else
-                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase">
-                                                        Akan Datang
+                                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 uppercase tracking-wide">
+                                                        <i class="fa-solid fa-triangle-exclamation mr-1 text-rose-500"></i> Lewat Jadwal
                                                     </span>
+                                                    <button type="button" onclick="bukaSesiTimeline({{ $item['jadwal_id'] }}, '{{ addslashes($item['mata_kuliah']) }}', '{{ $item['kelas'] }}', '{{ $item['pertemuan'] }}')" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-xs font-medium transition flex items-center gap-1.5 cursor-pointer">
+                                                        <i class="fa-solid fa-rotate-right text-slate-400"></i> Buka Susulan
+                                                    </button>
                                                 @endif
-                                                <a href="{{ route('admin.absensi') }}" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition">
-                                                    Absensi
-                                                </a>
                                             </div>
                                         </div>
                                     @endforeach
@@ -379,7 +463,10 @@
                             @else
                                 <!-- Empty state for today + Upcoming Schedule preview -->
                                 <div class="space-y-4">
-                                    <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl text-center space-y-1">
+                                    <div class="p-6 bg-slate-50 border border-slate-200/80 rounded-2xl text-center space-y-1">
+                                        <div class="w-10 h-10 rounded-full bg-slate-200/70 text-slate-400 flex items-center justify-center mx-auto mb-2">
+                                            <i class="fa-regular fa-calendar-xmark text-lg"></i>
+                                        </div>
                                         <p class="text-xs font-bold text-slate-700">Hari ini tidak ada sesi praktikum yang terjadwal.</p>
                                         <p class="text-[11px] text-slate-500">Seluruh ruangan laboratorium saat ini berada dalam status standby / bebas praktikum.</p>
                                     </div>
@@ -799,6 +886,96 @@
                 Swal.close();
             }
         });
+
+        // Buka Sesi Hari Ini dari Timeline Perkuliahan
+        function bukaSesiTimeline(jadwalId, matkul, kelas, pertemuan) {
+            Swal.fire({
+                title: 'Buka Sesi Praktikum Hari Ini?',
+                html: `
+                    <div class="text-left text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2 mt-2">
+                        <div class="flex justify-between border-b border-slate-200 pb-1.5">
+                            <span class="text-slate-500 font-medium">Mata Kuliah:</span>
+                            <strong class="text-slate-800 text-right truncate max-w-[220px]">${matkul}</strong>
+                        </div>
+                        <div class="flex justify-between border-b border-slate-200 pb-1.5">
+                            <span class="text-slate-500 font-medium">Kelas:</span>
+                            <strong class="text-slate-800">Kelas ${kelas}</strong>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500 font-medium">Pertemuan:</span>
+                            <span class="px-2 py-0.5 rounded bg-teal-100 text-teal-800 font-bold">Pertemuan ke-${pertemuan}</span>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-3 text-left">
+                        Sistem akan otomatis membuka agenda praktikum hari ini dan langsung mengarahkan Anda ke form presensi mahasiswa.
+                    </p>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa-solid fa-play mr-1"></i> Ya, Buka Sesi',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#0f766e',
+                cancelButtonColor: '#64748b',
+                customClass: {
+                    popup: 'rounded-2xl p-6 shadow-xl border border-slate-100',
+                    title: 'text-base font-extrabold text-slate-800',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Membuka Sesi...',
+                        text: 'Sedang menyiapkan sesi agenda dan QR presensi.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    fetch(`/admin/jadwal-lab/${jadwalId}/mulai-hari-ini`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Sesi Berhasil Dimulai!',
+                                text: data.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                if (data.absensi_url) {
+                                    window.location.href = data.absensi_url;
+                                } else {
+                                    window.location.reload();
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: data.is_conflict ? 'warning' : 'error',
+                                title: data.is_conflict ? 'Jadwal Bentrok!' : 'Gagal Membuka Sesi',
+                                text: data.message,
+                                confirmButtonColor: '#0f766e'
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Kesalahan Sistem',
+                            text: 'Tidak dapat menghubungi server. Silakan coba lagi.',
+                            confirmButtonColor: '#0f766e'
+                        });
+                    });
+                }
+            });
+        }
 
         // Profile Dropdown Handler
         function toggleProfileDropdown(event) {
