@@ -1006,18 +1006,14 @@
                                             <span class="text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200 font-bold text-[11px]"><i class="fa-solid fa-door-open mr-1 text-teal-700"></i>{{ $j->lab->nama_lab ?? 'Lab' }}</span>
                                         </div>
                                         <div class="pt-2 border-t border-slate-200/70 flex items-center justify-between text-xs font-medium">
-                                            <span class="text-slate-500">Status Pertemuan:</span>
-                                            @if($createdSessions >= 16)
-                                                <span class="font-bold text-emerald-800 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 text-[11px]">
-                                                    <i class="fa-solid fa-circle-check text-emerald-600"></i> 16 Sesi Siap
-                                                </span>
-                                            @elseif($createdSessions > 0)
-                                                <span class="font-bold text-slate-700 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 text-[11px]">
-                                                    <i class="fa-solid fa-calendar-days text-slate-500"></i> {{ $createdSessions }} dari 16 Sesi
+                                            <span class="text-slate-500">Total Sesi:</span>
+                                            @if($createdSessions > 0)
+                                                <span class="font-bold text-teal-800 flex items-center gap-1 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200 text-[11px]">
+                                                    <i class="fa-solid fa-calendar-check text-teal-600"></i> {{ $createdSessions }} Pertemuan
                                                 </span>
                                             @else
-                                                <span class="text-slate-500 italic bg-slate-200/60 px-2 py-0.5 rounded-md text-[11px]">
-                                                    Disiapkan Admin
+                                                <span class="text-slate-400 italic bg-slate-100 px-2 py-0.5 rounded-md text-[11px]">
+                                                    Belum ada agenda
                                                 </span>
                                             @endif
                                         </div>

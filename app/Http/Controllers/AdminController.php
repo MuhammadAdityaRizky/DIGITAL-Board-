@@ -880,56 +880,6 @@ class AdminController extends Controller
         }
     }
 
-    public function generate16Pertemuan($id)
-    {
-        $jadwal = \App\Models\JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu'])->findOrFail($id);
-
-        $dayMap = [
-            'Senin' => 1, 'Selasa' => 2, 'Rabu' => 3, 'Kamis' => 4, 'Jumat' => 5, 'Sabtu' => 6, 'Minggu' => 0
-        ];
-        
-        $targetDayIndex = $dayMap[$jadwal->hari] ?? 1;
-        $startDate = \Carbon\Carbon::today();
-
-        while ($startDate->dayOfWeek !== $targetDayIndex) {
-            $startDate->addDay();
-        }
-
-        $createdCount = 0;
-        for ($i = 0; $i < 16; $i++) {
-            $date = $startDate->copy()->addWeeks($i)->format('Y-m-d');
-
-            $exists = Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
-                ->where('tanggal', $date)
-                ->exists();
-
-            if (!$exists) {
-                Agenda::create([
-                    'jadwal_penggunaan_lab_id' => $jadwal->id,
-                    'dosen_id' => $jadwal->dosen_id,
-                    'dosen_pengampu_id' => $jadwal->dosen_pengampu_id,
-                    'lab_id' => $jadwal->lab_id,
-                    'mata_kuliah' => $jadwal->mata_kuliah,
-                    'fakultas' => $jadwal->prodi->fakultas->nama_fakultas ?? 'Teknik',
-                    'jurusan' => $jadwal->prodi->nama_prodi ?? $jadwal->jurusan ?? 'Sistem Informasi',
-                    'program_kuliah' => $jadwal->program_kuliah ?? 'Reguler',
-                    'tahun_akademik' => $jadwal->tahun_akademik ?? '2026/2027 Ganjil',
-                    'jenis_pertemuan' => $jadwal->jenis_pertemuan ?? 'Praktikum',
-                    'kelas' => $jadwal->kelas,
-                    'semester' => $jadwal->semester ?? '1',
-                    'tanggal' => $date,
-                    'jam_mulai' => $jadwal->jam_mulai,
-                    'jam_selesai' => $jadwal->jam_selesai,
-                    'status_agenda' => $date < date('Y-m-d') ? 'Selesai' : ($date === date('Y-m-d') ? 'Berlangsung' : 'Akan Datang'),
-                    'catatan' => 'Pertemuan ke-' . ($i + 1) . ': ' . $jadwal->mata_kuliah,
-                ]);
-                $createdCount++;
-            }
-        }
-
-        return back()->with('success', "Berhasil membuat {$createdCount} sesi pertemuan (Pertemuan 1 s/d 16) untuk " . $jadwal->mata_kuliah);
-    }
-
     public function agenda(Request $request)
     {
         $user = Auth::user();
@@ -1195,32 +1145,26 @@ class AdminController extends Controller
             }
         }
 
-        $startDateCarbon = \Carbon\Carbon::parse($request->tanggal);
-        for ($i = 0; $i < 16; $i++) {
-            $meetDate = $startDateCarbon->copy()->addWeeks($i)->format('Y-m-d');
-            $statusAg = $meetDate < date('Y-m-d') ? 'Selesai' : ($meetDate === date('Y-m-d') ? 'Berlangsung' : 'Akan Datang');
+        Agenda::create([
+            'dosen_id' => $dosenId,
+            'dosen_pengampu_id' => $dosenPengampuId,
+            'lab_id' => $request->lab_id,
+            'mata_kuliah' => $mataKuliah,
+            'program_kuliah' => $request->program_kuliah,
+            'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
+            'jenis_pertemuan' => $request->jenis_pertemuan ?? 'Praktikum',
+            'kelas' => $request->kelas ?? '',
+            'semester' => $request->semester,
+            'jurusan' => $request->jurusan,
+            'fakultas' => $request->fakultas,
+            'tanggal' => $request->tanggal,
+            'jam_mulai' => $request->waktu_masuk,
+            'jam_selesai' => $request->waktu_keluar,
+            'status_agenda' => $statusAgenda,
+            'catatan' => $materi ? $materi : $mataKuliah,
+        ]);
 
-            Agenda::create([
-                'dosen_id' => $dosenId,
-                'dosen_pengampu_id' => $dosenPengampuId,
-                'lab_id' => $request->lab_id,
-                'mata_kuliah' => $mataKuliah,
-                'program_kuliah' => $request->program_kuliah,
-                'tahun_akademik' => $request->tahun_akademik ?? '2026/2027 Ganjil',
-                'jenis_pertemuan' => $request->jenis_pertemuan ?? 'Praktikum',
-                'kelas' => $request->kelas ?? '',
-                'semester' => $request->semester,
-                'jurusan' => $request->jurusan,
-                'fakultas' => $request->fakultas,
-                'tanggal' => $meetDate,
-                'jam_mulai' => $request->waktu_masuk,
-                'jam_selesai' => $request->waktu_keluar,
-                'status_agenda' => $statusAg,
-                'catatan' => "Pertemuan ke-" . ($i + 1) . ($materi ? ": {$materi}" : ": {$mataKuliah}"),
-            ]);
-        }
-
-        return back()->with('success', "Berhasil membuat 16 sesi pertemuan perkuliahan secara otomatis untuk mata kuliah {$mataKuliah}.");
+        return back()->with('success', "Agenda perkuliahan berhasil ditambahkan untuk mata kuliah {$mataKuliah}.");
     }
 
     public function absenDosen($id)
@@ -2932,63 +2876,6 @@ class AdminController extends Controller
 
         return redirect()->back()->with('success', count($ids) . ' slot jadwal berhasil dihapus.');
     }
-
-    public function bulkGenerate16Pertemuan(Request $request)
-    {
-        $labId = $request->input('lab_id');
-        $query = JadwalPenggunaanLab::with(['lab', 'prodi.fakultas', 'dosenPengampu', 'dosen'])->where('is_aktif', true);
-        if ($labId) {
-            $query->where('lab_id', $labId);
-        }
-        $jadwals = $query->get();
-
-        $dayMap = [
-            'Senin' => 1, 'Selasa' => 2, 'Rabu' => 3, 'Kamis' => 4, 'Jumat' => 5, 'Sabtu' => 6, 'Minggu' => 0
-        ];
-
-        $totalCreated = 0;
-        foreach ($jadwals as $jadwal) {
-            $targetDayIndex = $dayMap[$jadwal->hari] ?? 1;
-            $startDate = \Carbon\Carbon::today();
-
-            while ($startDate->dayOfWeek !== $targetDayIndex) {
-                $startDate->addDay();
-            }
-
-            for ($i = 0; $i < 16; $i++) {
-                $date = $startDate->copy()->addWeeks($i)->format('Y-m-d');
-
-                $exists = Agenda::where('jadwal_penggunaan_lab_id', $jadwal->id)
-                    ->where('tanggal', $date)
-                    ->exists();
-
-                if (!$exists) {
-                    Agenda::create([
-                        'jadwal_penggunaan_lab_id' => $jadwal->id,
-                        'dosen_id' => $jadwal->dosen_id,
-                        'dosen_pengampu_id' => $jadwal->dosen_pengampu_id ?: $jadwal->dosen_id,
-                        'lab_id' => $jadwal->lab_id,
-                        'mata_kuliah' => $jadwal->mata_kuliah,
-                        'fakultas' => $jadwal->prodi->fakultas->nama_fakultas ?? 'Teknik',
-                        'jurusan' => $jadwal->prodi->nama_prodi ?? $jadwal->jurusan ?? 'Sistem Informasi',
-                        'program_kuliah' => $jadwal->program_kuliah ?? 'Reguler',
-                        'jenis_pertemuan' => $jadwal->jenis_pertemuan ?? 'Praktikum',
-                        'kelas' => $jadwal->kelas,
-                        'semester' => $jadwal->semester ?? '1',
-                        'tanggal' => $date,
-                        'jam_mulai' => $jadwal->jam_mulai,
-                        'jam_selesai' => $jadwal->jam_selesai,
-                        'status_agenda' => $date < date('Y-m-d') ? 'Selesai' : ($date === date('Y-m-d') ? 'Berlangsung' : 'Akan Datang'),
-                        'catatan' => 'Pertemuan ke-' . ($i + 1) . ': ' . $jadwal->mata_kuliah,
-                    ]);
-                    $totalCreated++;
-                }
-            }
-        }
-
-        return back()->with('success', "Berhasil membuat {$totalCreated} sesi pertemuan perkuliahan 1 semester secara otomatis untuk seluruh jadwal lab!");
-    }
-
 
     /**
      * Mulai Sesi Agenda Hari Ini dari Matriks Jadwal Lab (saat Dosen Telat).

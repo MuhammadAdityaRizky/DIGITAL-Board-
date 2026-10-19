@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Route;
 // Guest Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
-// [TEMPORARY HIDE UNTUK HOSTING / PRODUCTION] Dinonaktifkan sementara untuk keamanan hosting
 // File Storage Route (Solusi Shared Hosting/cPanel jika symlink storage:link tidak tersedia/terpisah)
 Route::get('/storage/{path}', function ($path) {
     // Hindari directory traversal
@@ -143,14 +142,12 @@ Route::middleware('auth')->group(function () {
     Route::prefix('dosen')->name('dosen.')->group(function () {
         Route::get('/dashboard', [DosenController::class, 'dashboard'])->name('dashboard');
         Route::post('/agenda', [DosenController::class, 'storeAgenda'])->name('agenda.store');
-        Route::post('/agenda/generate-16/{jadwal_id}', [DosenController::class, 'generate16Pertemuan'])->name('agenda.generate-16');
         Route::put('/agenda/{id}', [DosenController::class, 'updateAgenda'])->name('agenda.update');
         Route::delete('/agenda/bulk-delete', [DosenController::class, 'bulkDeleteAgendas'])->name('agenda.bulk-delete');
         Route::delete('/agenda/{id}', [DosenController::class, 'deleteAgenda'])->name('agenda.delete');
         Route::put('/agenda/{id}/realisasi', [DosenController::class, 'updateRealisasi'])->name('agenda.realisasi');
         Route::put('/agenda/{id}/berita-acara', [DosenController::class, 'updateBeritaAcara'])->name('agenda.berita-acara');
         Route::post('/agenda/{id}/selesai', [DosenController::class, 'selesaiAgenda'])->name('agenda.selesai');
-        Route::post('/agenda/{id}/qr-new', [DosenController::class, 'generateNewQrToken'])->name('agenda.qr');
         Route::post('/absensi', [DosenController::class, 'submitAttendance'])->name('absensi.submit');
         Route::post('/absensi/import-global', [DosenController::class, 'importAbsensiGlobal'])->name('absensi.import-global');
         Route::get('/absensi/{id}/input', [DosenController::class, 'inputAbsensi'])->name('absensi.input');
