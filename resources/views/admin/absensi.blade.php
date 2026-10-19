@@ -262,53 +262,61 @@
                         </form>
                     </div>
                 </div>
-                <div class="p-6 space-y-6">
+                <div class="p-6 space-y-4">
                     @if(isset($groupedAgendas) && $groupedAgendas->count() > 0)
                         @foreach($groupedAgendas as $groupKey => $groupItems)
                             @php
                                 $firstAgenda = $groupItems->first();
                             @endphp
-                            <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm matkul-wrapper">
+                            <div class="border border-slate-200/80 rounded-2xl overflow-hidden bg-white shadow-2xs hover:shadow-xs transition-all matkul-wrapper">
                                 <!-- HEADER JUDUL MATA KULIAH & KELAS -->
-                                <div onclick="toggleMatkulAccordion(this)" class="matkul-header px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-white cursor-pointer select-none transition hover:brightness-105" style="background: linear-gradient(135deg, #0f172a 0%, #042f2e 60%, #0f172a 100%);">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 font-bold text-lg">
+                                <div onclick="toggleMatkulAccordion(this)" class="matkul-header px-5 sm:px-6 py-3.5 sm:py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3.5 md:gap-4 text-white cursor-pointer select-none transition hover:brightness-105" style="background: linear-gradient(135deg, #0f172a 0%, #042f2e 60%, #0f172a 100%);">
+                                    <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                                        <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 font-bold text-base shrink-0 shadow-2xs">
                                             <i class="fa-solid fa-book-bookmark"></i>
                                         </div>
-                                        <div>
+                                        <div class="min-w-0 flex-1">
                                             <div class="flex items-center gap-2 flex-wrap">
-                                                <h3 class="font-extrabold text-base text-white tracking-tight">{{ $firstAgenda->mata_kuliah }}</h3>
-                                                <span class="px-2.5 py-0.5 bg-teal-500/30 text-teal-200 border border-teal-400/40 rounded-md text-[10px] font-bold uppercase">
-                                                    Kelas {{ $firstAgenda->kelas ?: '-' }}
-                                                </span>
-                                                @if(strtolower($firstAgenda->program_kuliah ?? '') === 'karyawan')
-                                                    <span class="px-2.5 py-0.5 bg-purple-500/40 text-purple-200 border border-purple-400/50 rounded-md text-[10px] font-bold uppercase flex items-center gap-1 shadow-2xs">
-                                                        <i class="fa-solid fa-moon text-[9px]"></i> Karyawan (Kelas Malam)
+                                                <h3 class="font-extrabold text-sm sm:text-base text-white tracking-tight leading-snug">
+                                                    {{ $firstAgenda->mata_kuliah }}
+                                                </h3>
+                                                <div class="inline-flex items-center gap-1.5 shrink-0">
+                                                    <span class="px-2.5 py-0.5 bg-teal-500/25 text-teal-200 border border-teal-400/35 rounded-md text-[10px] font-bold uppercase whitespace-nowrap tracking-wide">
+                                                        Kelas {{ $firstAgenda->kelas ?: '-' }}
                                                     </span>
-                                                @elseif($firstAgenda->program_kuliah)
-                                                    <span class="px-2.5 py-0.5 bg-blue-500/30 text-blue-200 border border-blue-400/50 rounded-md text-[10px] font-bold uppercase">
-                                                        {{ $firstAgenda->program_kuliah }}
-                                                    </span>
-                                                @endif
+                                                    @if(strtolower($firstAgenda->program_kuliah ?? '') === 'karyawan')
+                                                        <span class="px-2.5 py-0.5 bg-purple-500/35 text-purple-200 border border-purple-400/40 rounded-md text-[10px] font-bold uppercase flex items-center gap-1 whitespace-nowrap shadow-2xs">
+                                                            <i class="fa-solid fa-moon text-[9px]"></i> Karyawan
+                                                        </span>
+                                                    @elseif($firstAgenda->program_kuliah)
+                                                        <span class="px-2.5 py-0.5 bg-blue-500/25 text-blue-200 border border-blue-400/35 rounded-md text-[10px] font-bold uppercase whitespace-nowrap tracking-wide">
+                                                            {{ $firstAgenda->program_kuliah }}
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
-                                            <p class="text-xs text-slate-300 mt-0.5">
-                                                Dosen: <strong class="text-white">{{ $firstAgenda->dosen->nama ?? 'Dosen Pengampu' }}</strong> • {{ $firstAgenda->lab->nama_lab ?? '-' }}
+                                            <p class="text-xs text-slate-300 mt-1 flex items-center gap-2 flex-wrap">
+                                                <span>Dosen: <strong class="text-white font-semibold">{{ $firstAgenda->dosen->nama ?? 'Dosen Pengampu' }}</strong></span>
+                                                <span class="text-slate-500">•</span>
+                                                <span class="text-teal-300 font-medium whitespace-nowrap">{{ $firstAgenda->lab->nama_lab ?? '-' }}</span>
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                                        <span class="px-3 py-1.5 bg-white/10 text-slate-200 border border-white/20 rounded-lg text-xs font-semibold">
-                                            <i class="fa-solid fa-list-check mr-1 text-teal-300"></i> {{ $groupItems->count() }} Pertemuan
+                                    <div class="flex items-center gap-2 shrink-0 self-end md:self-center w-full md:w-auto justify-between md:justify-end">
+                                        <span class="h-9 px-3 bg-white/10 text-slate-200 border border-white/15 rounded-lg text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 shrink-0">
+                                            <i class="fa-solid fa-list-check text-teal-300"></i>
+                                            <span>{{ $groupItems->count() }} Pertemuan</span>
                                         </span>
-                                        <form action="{{ route('admin.absensi.export') }}" method="GET" target="_blank" class="inline" onclick="event.stopPropagation()">
+                                        <form action="{{ route('admin.absensi.export') }}" method="GET" target="_blank" class="inline shrink-0" onclick="event.stopPropagation()">
                                             @foreach($groupItems as $agItem)
                                                 <input type="hidden" name="agenda_ids[]" value="{{ $agItem->id }}">
                                             @endforeach
-                                            <button type="submit" class="px-3.5 py-1.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold rounded-lg text-xs transition flex items-center gap-1.5 shadow-md cursor-pointer">
-                                                <i class="fa-solid fa-print"></i> Cetak Presensi Matkul Ini (1-16)
+                                            <button type="submit" class="h-9 px-3.5 bg-teal-500 hover:bg-teal-400 active:scale-95 text-slate-950 font-bold rounded-lg text-xs transition flex items-center gap-1.5 shadow-sm cursor-pointer whitespace-nowrap shrink-0">
+                                                <i class="fa-solid fa-print"></i>
+                                                <span>Cetak Presensi Matkul Ini (1-16)</span>
                                             </button>
                                         </form>
-                                        <div class="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-teal-300 matkul-chevron">
+                                        <div class="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-teal-300 matkul-chevron shrink-0 transition">
                                             <i class="fa-solid fa-chevron-down text-xs transition-transform duration-200 {{ request()->filled('search') ? 'rotate-180' : '' }}"></i>
                                         </div>
                                     </div>
