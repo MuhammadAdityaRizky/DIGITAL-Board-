@@ -11,6 +11,34 @@ class JadwalSwapSementara extends Model
 
     protected $table = 'jadwal_swap_sementara';
 
+    protected static function booted()
+    {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('jadwal_swap_sementara')) {
+                \Illuminate\Support\Facades\Schema::create('jadwal_swap_sementara', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->id();
+                    $table->date('tanggal')->index();
+                    $table->foreignId('jadwal_1_id')->nullable()->constrained('jadwal_penggunaan_lab')->nullOnDelete();
+                    $table->foreignId('jadwal_2_id')->nullable()->constrained('jadwal_penggunaan_lab')->nullOnDelete();
+                    $table->foreignId('agenda_1_id')->nullable()->constrained('agenda')->nullOnDelete();
+                    $table->foreignId('agenda_2_id')->nullable()->constrained('agenda')->nullOnDelete();
+                    $table->time('jam_mulai_1_asli')->nullable();
+                    $table->time('jam_selesai_1_asli')->nullable();
+                    $table->time('jam_mulai_2_asli')->nullable();
+                    $table->time('jam_selesai_2_asli')->nullable();
+                    $table->time('jam_mulai_1_tukar');
+                    $table->time('jam_selesai_1_tukar');
+                    $table->time('jam_mulai_2_tukar');
+                    $table->time('jam_selesai_2_tukar');
+                    $table->foreignId('admin_id')->nullable()->constrained('users')->nullOnDelete();
+                    $table->timestamps();
+                });
+            }
+        } catch (\Throwable $e) {
+            // Silently ignore if already created or permission issues
+        }
+    }
+
     protected $fillable = [
         'tanggal',
         'jadwal_1_id',

@@ -15,6 +15,20 @@ class Laboratorium extends Model
     public $timestamps = false;
     protected $guarded = [];
 
+    protected static function booted()
+    {
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('laboratorium') && !\Illuminate\Support\Facades\Schema::hasColumn('laboratorium', 'nama_kepala_lab')) {
+                \Illuminate\Support\Facades\Schema::table('laboratorium', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('nama_kepala_lab', 150)->nullable();
+                    $table->string('nip_kepala_lab', 50)->nullable();
+                });
+            }
+        } catch (\Throwable $e) {
+            // Silently ignore
+        }
+    }
+
     public function agendas()
     {
         return $this->hasMany(Agenda::class, 'lab_id');
