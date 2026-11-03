@@ -5,6 +5,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DigitalBoardController;
 use App\Http\Controllers\DosenController;
 use App\Http\Controllers\MahasiswaController;
+use App\Http\Controllers\PropertiLabController;
+use App\Http\Controllers\RecoveryLedgerController;
 use App\Http\Controllers\TemplateController;
 use Illuminate\Support\Facades\Route;
 
@@ -104,6 +106,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/absensi/{id}/input', [AdminController::class, 'storeInputAbsensi'])->name('absensi.store-input');
         Route::get('/pengumuman', [AdminController::class, 'pengumuman'])->name('pengumuman');
         Route::get('/aktivitas', [AdminController::class, 'aktivitas'])->name('aktivitas');
+        Route::get('/recovery', [RecoveryLedgerController::class, 'index'])->name('recovery');
+        Route::post('/recovery/{id}/restore', [RecoveryLedgerController::class, 'restore'])->name('recovery.restore');
+        Route::get('/recovery/verify', [RecoveryLedgerController::class, 'verifyApi'])->name('recovery.verify');
         
         // Master Jadwal Penggunaan Lab
         Route::get('/jadwal-lab', [AdminController::class, 'jadwalPenggunaanLab'])->name('jadwal-lab');
@@ -138,6 +143,30 @@ Route::middleware('auth')->group(function () {
         Route::delete('/akademik/matkul/bulk-delete', [AdminController::class, 'bulkDeleteMataKuliah'])->name('akademik.matkul.bulk-delete');
         Route::delete('/akademik/matkul/{id}', [AdminController::class, 'deleteMataKuliah'])->name('akademik.matkul.delete');
         Route::post('/akademik/matkul/import', [AdminController::class, 'importMataKuliah'])->name('akademik.matkul.import');
+
+        // Properti Lab (Inventaris Fasilitas UIKA)
+        Route::prefix('properti')->name('properti.')->group(function () {
+            Route::get('/', [PropertiLabController::class, 'index'])->name('index');
+            Route::get('/fakultas/{fakultasId}', [PropertiLabController::class, 'fakultas'])->name('fakultas');
+            Route::get('/lab/{labId}', [PropertiLabController::class, 'lab'])->name('lab');
+            Route::post('/lab/{labId}/dokumen', [PropertiLabController::class, 'storeDokumen'])->name('dokumen.store');
+            Route::delete('/dokumen/{dokumenId}', [PropertiLabController::class, 'destroyDokumen'])->name('dokumen.destroy');
+
+            // Kategori CRUD
+            Route::get('/kategori', [PropertiLabController::class, 'kategoriIndex'])->name('kategori.index');
+            Route::get('/kategori/create', [PropertiLabController::class, 'kategoriCreate'])->name('kategori.create');
+            Route::post('/kategori', [PropertiLabController::class, 'kategoriStore'])->name('kategori.store');
+            Route::get('/kategori/{id}/edit', [PropertiLabController::class, 'kategoriEdit'])->name('kategori.edit');
+            Route::put('/kategori/{id}', [PropertiLabController::class, 'kategoriUpdate'])->name('kategori.update');
+            Route::delete('/kategori/{id}', [PropertiLabController::class, 'kategoriDestroy'])->name('kategori.destroy');
+
+            // Dokumen Detail & Item Properti (Layout 4)
+            Route::get('/dokumen/{dokumenId}', [PropertiLabController::class, 'dokumenShow'])->name('dokumen.show');
+            Route::get('/dokumen/{dokumenId}/generate-kode', [PropertiLabController::class, 'generateKode'])->name('dokumen.generate-kode');
+            Route::post('/dokumen/{dokumenId}/item', [PropertiLabController::class, 'itemStore'])->name('item.store');
+            Route::put('/item/{itemId}/inline-update', [PropertiLabController::class, 'itemInlineUpdate'])->name('item.inline-update');
+            Route::delete('/item/{itemId}', [PropertiLabController::class, 'itemDestroy'])->name('item.destroy');
+        });
     });
 
     // Dosen Routes

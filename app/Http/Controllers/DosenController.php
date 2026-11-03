@@ -1152,12 +1152,15 @@ class DosenController extends Controller
             return back()->with('error', 'Data profil Dosen tidak ditemukan.');
         }
 
-        $deletedCount = Agenda::whereIn('id', $request->agenda_ids)
+        $agendasToDelete = Agenda::whereIn('id', $request->agenda_ids)
             ->where(function($q) use ($dosen) {
                 $q->where('dosen_id', $dosen->id)
                   ->orWhere('dosen_pengampu_id', $dosen->id);
             })
-            ->delete();
+            ->get();
+
+        $deletedCount = $agendasToDelete->count();
+        $agendasToDelete->each->delete();
 
         return back()->with('success', $deletedCount . ' agenda perkuliahan berhasil dihapus.');
     }

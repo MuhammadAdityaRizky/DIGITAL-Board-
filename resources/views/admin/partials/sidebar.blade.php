@@ -7,11 +7,13 @@
     $isDashboard = request()->routeIs('admin.dashboard');
     $isPengguna = request()->routeIs('admin.pengguna*');
     $isLab = request()->routeIs('admin.laboratorium*');
+    $isProperti = request()->routeIs('admin.properti*');
     $isAgenda = request()->routeIs('admin.agenda*') || request()->routeIs('admin.jadwal-lab*');
     $isAbsensi = request()->routeIs('admin.absensi*');
     $isAkademik = request()->routeIs('admin.akademik*');
     $isPengumuman = request()->routeIs('admin.pengumuman*');
     $isAktivitas = request()->routeIs('admin.aktivitas*');
+    $isRecovery = request()->routeIs('admin.recovery*');
 @endphp
 
 <!-- Desktop Sidebar Admin -->
@@ -51,6 +53,12 @@
             <span class="text-xs">Manajemen Lab</span>
         </a>
 
+        <!-- 3.1. Properti Lab (Inventaris) -->
+        <a href="{{ route('admin.properti.index') }}" class="flex items-center gap-3 px-4 py-2.5 {{ $isProperti ? 'bg-teal-800 text-white font-bold shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium' }} rounded-xl w-full transition">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <span class="text-xs">Properti Lab</span>
+        </a>
+
         <!-- 4. Jadwal & Agenda -->
         <a href="{{ route('admin.agenda') }}" class="flex items-center gap-3 px-4 py-2.5 {{ $isAgenda ? 'bg-teal-800 text-white font-bold shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium' }} rounded-xl w-full transition">
             <i class="fa-solid fa-calendar-days"></i>
@@ -81,6 +89,12 @@
         <a href="{{ route('admin.aktivitas') }}" class="flex items-center gap-3 px-4 py-2.5 {{ $isAktivitas ? 'bg-teal-800 text-white font-bold shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium' }} rounded-xl w-full transition">
             <i class="fa-solid fa-clock-rotate-left"></i>
             <span class="text-xs">Riwayat Aktivitas</span>
+        </a>
+
+        <!-- 10. Data Terhapus & Ledger Recovery -->
+        <a href="{{ route('admin.recovery') }}" class="flex items-center gap-3 px-4 py-2.5 {{ $isRecovery ? 'bg-teal-800 text-white font-bold shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium' }} rounded-xl w-full transition">
+            <i class="fa-solid fa-trash-can-arrow-up text-amber-400"></i>
+            <span class="text-xs">Data Terhapus & Ledger</span>
         </a>
 
         <!-- External Link: Portal Display Board -->
@@ -139,6 +153,12 @@
             <span class="text-xs">Manajemen Lab</span>
         </a>
 
+        <!-- 3.1. Properti Lab (Inventaris) -->
+        <a href="{{ route('admin.properti.index') }}" class="flex items-center gap-3 px-4 py-3 {{ $isProperti ? 'bg-teal-800 text-white font-bold shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium' }} rounded-xl w-full transition">
+            <i class="fa-solid fa-boxes-stacked text-sm"></i>
+            <span class="text-xs">Properti Lab</span>
+        </a>
+
         <!-- 4. Jadwal & Agenda -->
         <a href="{{ route('admin.agenda') }}" class="flex items-center gap-3 px-4 py-3 {{ $isAgenda ? 'bg-teal-800 text-white font-bold shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium' }} rounded-xl w-full transition">
             <i class="fa-solid fa-calendar-days text-sm"></i>
@@ -169,6 +189,12 @@
         <a href="{{ route('admin.aktivitas') }}" class="flex items-center gap-3 px-4 py-3 {{ $isAktivitas ? 'bg-teal-800 text-white font-bold shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium' }} rounded-xl w-full transition">
             <i class="fa-solid fa-clock-rotate-left text-sm"></i>
             <span class="text-xs">Riwayat Aktivitas</span>
+        </a>
+
+        <!-- 10. Data Terhapus & Ledger Recovery -->
+        <a href="{{ route('admin.recovery') }}" class="flex items-center gap-3 px-4 py-3 {{ $isRecovery ? 'bg-teal-800 text-white font-bold shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium' }} rounded-xl w-full transition">
+            <i class="fa-solid fa-trash-can-arrow-up text-amber-400 text-sm"></i>
+            <span class="text-xs">Data Terhapus & Ledger</span>
         </a>
 
         <!-- External Link: Portal Display Board -->

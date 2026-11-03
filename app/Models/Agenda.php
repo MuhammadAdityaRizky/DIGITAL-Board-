@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Traits\SemiBlockchainLedger;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Agenda extends Model
 {
-    use LogsActivity;
+    use LogsActivity, SemiBlockchainLedger;
 
     protected $table = 'agenda';
     public $timestamps = false;

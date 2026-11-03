@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Traits\SemiBlockchainLedger;
 
 class JadwalPenggunaanLab extends Model
 {
-    use LogsActivity;
+    use LogsActivity, SemiBlockchainLedger;
 
     protected $table = 'jadwal_penggunaan_lab';
     public $timestamps = false;

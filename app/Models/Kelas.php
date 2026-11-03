@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Traits\SemiBlockchainLedger;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Kelas extends Model
 {
-    use LogsActivity;
+    use LogsActivity, SemiBlockchainLedger;
 
     protected $table = 'kelas';
     public $timestamps = false;

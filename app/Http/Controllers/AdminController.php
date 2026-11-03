@@ -772,7 +772,7 @@ class AdminController extends Controller
             return back()->withErrors(['msg' => 'Tidak ada pengguna yang dapat Anda hapus dalam pilihan ini.']);
         }
 
-        User::whereIn('id', $validIds)->delete();
+        User::whereIn('id', $validIds)->get()->each->delete();
         
         return back()->with('success', count($validIds) . ' akun pengguna berhasil dihapus.');
     }
@@ -1675,7 +1675,7 @@ class AdminController extends Controller
             return back()->withErrors(['msg' => 'Tidak ada agenda yang diizinkan untuk Anda hapus.']);
         }
 
-        Agenda::whereIn('id', $validIds)->delete();
+        Agenda::whereIn('id', $validIds)->get()->each->delete();
 
         return back()->with('success', count($validIds) . ' agenda praktikum berhasil dihapus.');
     }
@@ -2611,7 +2611,7 @@ class AdminController extends Controller
         if (!$ids || empty($ids)) {
             return back()->withErrors(['msg' => 'Tidak ada mata kuliah yang dipilih untuk dihapus.']);
         }
-        MataKuliah::whereIn('id', $ids)->delete();
+        MataKuliah::whereIn('id', $ids)->get()->each->delete();
         return back()->with('success', count($ids) . ' mata kuliah berhasil dihapus.');
     }
 
@@ -2622,7 +2622,7 @@ class AdminController extends Controller
         if (!$ids || empty($ids)) {
             return back()->withErrors(['msg' => 'Tidak ada kelas yang dipilih untuk dihapus.']);
         }
-        Kelas::whereIn('id', $ids)->delete();
+        Kelas::whereIn('id', $ids)->get()->each->delete();
         return back()->with('success', count($ids) . ' kelas berhasil dihapus.');
     }
 
@@ -3244,7 +3244,7 @@ class AdminController extends Controller
             }
         }
 
-        JadwalPenggunaanLab::whereIn('id', $ids)->delete();
+        JadwalPenggunaanLab::whereIn('id', $ids)->get()->each->delete();
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([

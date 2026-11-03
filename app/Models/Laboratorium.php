@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Traits\SemiBlockchainLedger;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Laboratorium extends Model
 {
-    use LogsActivity;
+    use LogsActivity, SemiBlockchainLedger;
 
     protected $table = 'laboratorium';
     public $timestamps = false;
@@ -59,6 +60,11 @@ class Laboratorium extends Model
         }
 
         return $query;
+    }
+
+    public function dokumenProperti()
+    {
+        return $this->hasMany(DokumenPropertiLab::class, 'lab_id');
     }
 
     public function getActivitylogOptions(): LogOptions

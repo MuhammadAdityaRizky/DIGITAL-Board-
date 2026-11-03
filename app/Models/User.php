@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Traits\SemiBlockchainLedger;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsActivity, SemiBlockchainLedger;
 
     public $timestamps = false;
 
