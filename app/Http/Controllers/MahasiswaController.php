@@ -208,6 +208,16 @@ class MahasiswaController extends Controller
             });
         }
 
+        if ($request->filled('tanggal')) {
+            $tgl = $request->tanggal;
+            $query->where(function($q) use ($tgl) {
+                $q->whereDate('waktu_masuk', $tgl)
+                  ->orWhereHas('agenda', function($aq) use ($tgl) {
+                      $aq->where('tanggal', $tgl);
+                  });
+            });
+        }
+
         $absensiHistory = $query->paginate(10)->withQueryString();
 
         $hadirCount = Absensi::where('mahasiswa_id', $mahasiswa->id)->where('status_kehadiran', 'Hadir')->count();
@@ -229,7 +239,9 @@ class MahasiswaController extends Controller
 
         $scope = $request->get('scope', 'untuk-saya');
 
-        $query = Agenda::with(['dosen', 'lab']);
+        $query = Agenda::with(['dosen', 'lab', 'absensi' => function($q) use ($mahasiswa) {
+            $q->where('mahasiswa_id', $mahasiswa->id);
+        }]);
 
         if ($scope === 'untuk-saya') {
             if ($mahasiswa->fakultas) {
@@ -288,7 +300,7 @@ class MahasiswaController extends Controller
         return view('mahasiswa.agenda', compact('mahasiswa', 'agendas', 'scope', 'fakultas', 'prodis'));
     }
 
-    public function pengumuman()
+    public function pengumuman(Request $request)
     {
         $mahasiswa = $this->getMahasiswaUser();
 
@@ -296,7 +308,22 @@ class MahasiswaController extends Controller
             return $this->handleMissingMahasiswaProfile();
         }
 
-        $pengumuman = Pengumuman::with(['admin', 'laboratoriums'])->orderBy('created_at', 'desc')->get();
+        $query = Pengumuman::with(['admin', 'laboratoriums'])
+            ->orderByDesc('is_pinned')
+            ->orderBy('created_at', 'desc');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%")
+                  ->orWhere('isi_pengumuman', 'like', "%{$search}%")
+                  ->orWhereHas('laboratoriums', function($lq) use ($search) {
+                      $lq->where('nama_lab', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $pengumuman = $query->get();
         return view('mahasiswa.pengumuman', compact('mahasiswa', 'pengumuman'));
     }
 

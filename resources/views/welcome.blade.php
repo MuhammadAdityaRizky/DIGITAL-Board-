@@ -133,9 +133,9 @@
             slides.forEach((slide, idx) => {
                 if (idx === window.currentAnnouncementSlide) {
                     slide.classList.remove('hidden');
-                    slide.classList.add('block');
+                    slide.classList.add('flex');
                 } else {
-                    slide.classList.remove('block');
+                    slide.classList.remove('flex');
                     slide.classList.add('hidden');
                 }
             });
@@ -211,6 +211,46 @@
             })
             .catch(err => console.error("Error polling Digital Board updates: ", err));
         }, 5000);
+
+        // Poster Lightbox Modal
+        function openPosterModal(imageUrl, title) {
+            const modal = document.getElementById('posterModal');
+            const img = document.getElementById('posterModalImg');
+            const titleEl = document.getElementById('posterModalTitle');
+            if (modal && img) {
+                img.src = imageUrl;
+                if (titleEl) titleEl.textContent = title || 'Poster Pengumuman';
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closePosterModal() {
+            const modal = document.getElementById('posterModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
     </script>
+
+    <!-- Modal Preview Poster Pengumuman (Full Resolution Lightbox) -->
+    <div id="posterModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md hidden p-4 transition-all" onclick="closePosterModal()">
+        <div class="relative max-w-4xl max-h-[90vh] bg-slate-900 rounded-3xl p-3 border border-slate-700 shadow-2xl flex flex-col items-center justify-center" onclick="event.stopPropagation()">
+            <!-- Close Button -->
+            <button type="button" onclick="closePosterModal()" class="absolute -top-3 -right-3 w-9 h-9 bg-rose-600 hover:bg-rose-700 text-white rounded-full flex items-center justify-center transition shadow-lg cursor-pointer">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+
+            <!-- Image Full -->
+            <div class="overflow-hidden rounded-2xl max-h-[78vh] flex items-center justify-center bg-black/50">
+                <img id="posterModalImg" src="" alt="Poster Pengumuman" class="max-w-full max-h-[78vh] object-contain rounded-xl">
+            </div>
+
+            <!-- Title Footer -->
+            <div class="w-full text-center pt-2.5 px-4">
+                <p id="posterModalTitle" class="text-sm font-bold text-white truncate"></p>
+                <p class="text-[10px] text-slate-400">Klik tombol silang atau area gelap untuk menutup</p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -11,6 +11,7 @@
         "laravel/tinker": "^3.0",
         "maatwebsite/excel": "^4.0",
         "opcodesio/log-viewer": "^3.24",
+        "phpoffice/phpword": "*",
         "spatie/laravel-activitylog": "^4.12"
     },
     "require-dev": {
@@ -76,7 +77,7 @@
         }
     },
     "config": {
-        "optimize-autoloader": true,
+        "optimize-autoloader": false,
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {

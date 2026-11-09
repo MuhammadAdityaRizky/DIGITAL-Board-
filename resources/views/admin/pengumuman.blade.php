@@ -281,101 +281,162 @@
     </main>
 
     <!-- ANNOUNCEMENT MODAL -->
-    <div id="modal-announcement" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 space-y-5">
-            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
-                <h3 id="modal-ann-title" class="font-bold text-base text-slate-800">Terbitkan Pengumuman Resmi</h3>
-                <button onclick="toggleModal('modal-announcement')" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">&times;</button>
+    <div id="modal-announcement" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 hidden transition-all">
+        <div class="bg-white rounded-3xl border border-slate-200/90 shadow-2xl max-w-xl sm:max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-150">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-teal-50 text-teal-800 border border-teal-200/60 flex items-center justify-center text-base shrink-0 shadow-xs">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <div>
+                        <h3 id="modal-ann-title" class="font-black text-base text-slate-800 tracking-tight">Terbitkan Pengumuman Resmi</h3>
+                        <p class="text-[11px] text-slate-400 font-medium">Siarkan informasi ke Smart Board TV laboratorium dan portal pengguna</p>
+                    </div>
+                </div>
+                <button type="button" onclick="toggleModal('modal-announcement')" class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer" title="Tutup Modal">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
             </div>
             
-            <form id="ann-form" action="{{ route('admin.pengumuman.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+            <!-- Modal Form Wrapper -->
+            <form id="ann-form" action="{{ route('admin.pengumuman.store') }}" method="POST" enctype="multipart/form-data" class="flex-1 flex flex-col overflow-hidden text-xs">
                 @csrf
                 <input type="hidden" id="ann-method" name="_method" value="POST">
                 
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Judul Pengumuman <span class="text-rose-500">*</span></label>
-                    <input type="text" id="ann-judul" name="judul" required placeholder="Masukkan judul pengumuman..." class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
-                </div>
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Isi Detail Pengumuman <span class="text-rose-500">*</span></label>
-                    <textarea id="ann-isi_pengumuman" name="isi_pengumuman" rows="4" required placeholder="Tulis rincian penjelasan pengumuman di sini..." class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-medium text-slate-800 text-xs transition leading-relaxed"></textarea>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
+                <!-- Scrollable Form Fields -->
+                <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                    <!-- Judul Pengumuman -->
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Tingkat Prioritas</label>
-                        <select id="ann-prioritas" name="prioritas" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition cursor-pointer">
-                            <option value="Normal">Normal (Digital Board Ruang Saja)</option>
-                            <option value="Penting">Penting (Siarkan ke Dashboard Dosen & Mahasiswa)</option>
-                            <option value="Urgen">Urgen / Darurat (Siarkan ke Dashboard Dosen & Mahasiswa)</option>
-                        </select>
-                        <p class="text-[10px] text-slate-400 mt-1"><i class="fa-solid fa-circle-info mr-1 text-teal-600"></i> Penting/Urgen otomatis tayang di Dashboard Dosen & Mahasiswa.</p>
-                    </div>
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Opsi Sematkan</label>
-                        <label class="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 transition mt-0.5">
-                            <input type="checkbox" id="ann-is_pinned" name="is_pinned" value="1" class="rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
-                            <span class="font-bold text-slate-700 text-xs">Pin ke Paling Atas</span>
+                        <label class="block text-slate-700 font-extrabold mb-1.5">
+                            Judul Pengumuman <span class="text-rose-500">*</span>
                         </label>
+                        <input type="text" id="ann-judul" name="judul" required placeholder="Masukkan judul pengumuman..." class="w-full py-2.5 px-3.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none font-bold text-slate-800 text-xs transition placeholder:text-slate-400">
                     </div>
-                </div>
-                <div>
-                    <label class="block text-slate-700 font-bold mb-1">Foto / Gambar Pengumuman (Opsional)</label>
-                    <input type="file" id="ann-foto" name="foto" accept="image/*" class="w-full p-2 text-xs rounded-xl bg-slate-50 border border-slate-200 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-teal-100 file:text-teal-800 hover:file:bg-teal-200 cursor-pointer">
-                    <p class="text-[10px] text-slate-400 mt-1">* Format: JPG, PNG, WEBP, GIF, SVG (Maks. 5MB)</p>
-                    
-                    <div id="ann-foto-preview-container" class="mt-2.5 hidden p-2 bg-slate-100/80 rounded-xl border border-slate-200 flex items-center gap-3">
-                        <img id="ann-foto-preview" src="" alt="Pratinjau Foto" class="w-14 h-14 object-cover rounded-lg border border-slate-300 shadow-xs">
-                        <div class="space-y-1">
-                            <span class="text-[11px] font-bold text-slate-700 block">Foto Pengumuman Saat Ini</span>
-                            <label class="inline-flex items-center gap-1.5 text-[10px] text-rose-600 font-bold cursor-pointer hover:text-rose-700">
+
+                    <!-- Isi Detail Pengumuman -->
+                    <div>
+                        <label class="block text-slate-700 font-extrabold mb-1.5">
+                            Isi Detail Pengumuman <span class="text-rose-500">*</span>
+                        </label>
+                        <textarea id="ann-isi_pengumuman" name="isi_pengumuman" rows="3" required placeholder="Tulis rincian penjelasan pengumuman di sini..." class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none font-medium text-slate-800 text-xs transition leading-relaxed placeholder:text-slate-400 resize-y"></textarea>
+                    </div>
+
+                    <!-- Grid: Tingkat Prioritas & Opsi Sematkan -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-start">
+                        <!-- Tingkat Prioritas -->
+                        <div>
+                            <label class="block text-slate-700 font-extrabold mb-1.5">Tingkat Prioritas</label>
+                            <select id="ann-prioritas" name="prioritas" class="w-full h-[42px] px-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none font-bold text-slate-800 text-xs transition cursor-pointer">
+                                <option value="Normal">Normal (Digital Board Ruang Saja)</option>
+                                <option value="Penting">Penting (Tayang di Dosen & Mahasiswa)</option>
+                                <option value="Urgen">Urgen / Darurat (Prioritas Paling Utama)</option>
+                            </select>
+                            <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-info text-teal-600"></i> Penting/Urgen otomatis tayang di dashboard.
+                            </p>
+                        </div>
+
+                        <!-- Opsi Sematkan -->
+                        <div>
+                            <label class="block text-slate-700 font-extrabold mb-1.5">Opsi Sematkan</label>
+                            <label class="flex items-center justify-between px-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100 hover:border-slate-300 transition h-[42px]">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-thumbtack text-amber-500 text-xs"></i>
+                                    <span class="font-bold text-slate-700 text-xs">Pin ke Paling Atas</span>
+                                </div>
+                                <input type="checkbox" id="ann-is_pinned" name="is_pinned" value="1" class="w-4 h-4 rounded text-teal-700 focus:ring-teal-600 cursor-pointer">
+                            </label>
+                            <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-check text-slate-400"></i> Pengumuman disematkan di posisi teratas.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Foto / Gambar Pengumuman (Opsional) -->
+                    <div>
+                        <label class="block text-slate-700 font-extrabold mb-1.5">Foto / Gambar Pengumuman (Opsional)</label>
+                        <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
+                            <input type="file" id="ann-foto" name="foto" accept="image/*" class="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:bg-teal-100 file:text-teal-900 hover:file:bg-teal-200 file:cursor-pointer cursor-pointer">
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                            <i class="fa-regular fa-image text-slate-400"></i> Format: JPG, PNG, WEBP, GIF, SVG (Maks. 5 MB).
+                        </p>
+                        
+                        <div id="ann-foto-preview-container" class="mt-2.5 hidden p-2.5 bg-slate-100/90 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <img id="ann-foto-preview" src="" alt="Pratinjau Foto" class="w-12 h-12 object-cover rounded-lg border border-slate-300 shadow-2xs">
+                                <div>
+                                    <span class="text-xs font-extrabold text-slate-800 block">Foto Pengumuman Terlampir</span>
+                                    <span class="text-[10px] text-slate-400">Gambar saat ini tersimpan di server</span>
+                                </div>
+                            </div>
+                            <label class="inline-flex items-center gap-1.5 text-xs text-rose-600 font-bold cursor-pointer hover:text-rose-700 bg-rose-50 px-2.5 py-1.5 rounded-lg border border-rose-200/80 transition">
                                 <input type="checkbox" id="ann-hapus-foto" name="hapus_foto" value="1" class="rounded text-rose-600 focus:ring-rose-500">
-                                <span>Hapus foto saat ini</span>
+                                <span>Hapus Foto</span>
                             </label>
                         </div>
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
+
+                    <!-- Grid: Mulai Berlaku & Berakhir Pada -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div>
+                            <label class="block text-slate-700 font-extrabold mb-1.5">Mulai Berlaku (Opsional)</label>
+                            <input type="datetime-local" id="ann-tanggal_mulai" name="tanggal_mulai" class="w-full h-[42px] px-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
+                        </div>
+                        <div>
+                            <label class="block text-slate-700 font-extrabold mb-1.5">Berakhir Pada (Opsional)</label>
+                            <input type="datetime-local" id="ann-tanggal_selesai" name="tanggal_selesai" class="w-full h-[42px] px-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none font-semibold text-slate-800 text-xs transition">
+                        </div>
+                    </div>
+
+                    <!-- Target Ruangan Laboratorium -->
                     <div>
-                        <label class="block text-slate-700 font-bold mb-1">Mulai Berlaku (Opsional)</label>
-                        <input type="datetime-local" id="ann-tanggal_mulai" name="tanggal_mulai" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-slate-800 transition">
-                    </div>
-                    <div>
-                        <label class="block text-slate-700 font-bold mb-1">Berakhir Pada (Opsional)</label>
-                        <input type="datetime-local" id="ann-tanggal_selesai" name="tanggal_selesai" class="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-slate-800 transition">
-                    </div>
-                </div>
-                <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-slate-700 font-bold">Target Ruangan Laboratorium</label>
-                        <label class="inline-flex items-center gap-1.5 text-[10px] font-bold text-teal-800 cursor-pointer select-none hover:text-teal-900">
-                            <input type="checkbox" id="select-all-labs" class="rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
-                            <span>Pilih Semua</span>
-                        </label>
-                    </div>
-                    <div class="space-y-1.5 max-h-[132px] overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50 custom-scrollbar">
-                        @foreach($laboratoriums as $lab)
-                        <label class="flex items-center justify-between gap-2 cursor-pointer p-2 rounded-lg bg-white border border-slate-200/80 hover:border-teal-300 hover:bg-teal-50/40 transition shadow-2xs">
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <input type="checkbox" name="laboratorium_ids[]" value="{{ $lab->id }}" class="w-4 h-4 rounded text-teal-700 focus:ring-teal-600 lab-checkbox cursor-pointer shrink-0">
-                                <span class="font-bold text-xs text-slate-800 truncate">{{ $lab->nama_lab }}</span>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <div class="flex items-center gap-1.5">
+                                <label class="block text-slate-700 font-extrabold text-xs">Target Ruangan Laboratorium</label>
+                                <span class="text-[10px] text-slate-400 font-normal">(opsional)</span>
                             </div>
-                            @if($lab->fakultas)
-                                <span class="text-[10px] text-slate-500 font-medium px-2 py-0.5 bg-slate-100 rounded-md shrink-0">
-                                    {{ $lab->fakultas->nama_fakultas }}
-                                </span>
-                            @elseif($lab->lokasi)
-                                <span class="text-[10px] text-slate-400 font-medium shrink-0">
-                                    {{ $lab->lokasi }}
-                                </span>
-                            @endif
-                        </label>
-                        @endforeach
+                            <label class="inline-flex items-center gap-1.5 text-[11px] font-bold text-teal-800 cursor-pointer select-none hover:text-teal-900 bg-teal-50 hover:bg-teal-100/70 px-2.5 py-1 rounded-lg border border-teal-200/70 transition">
+                                <input type="checkbox" id="select-all-labs" class="rounded text-teal-700 focus:ring-teal-600 cursor-pointer w-3.5 h-3.5">
+                                <span>Pilih Semua</span>
+                            </label>
+                        </div>
+
+                        <div class="space-y-1.5 max-h-[140px] overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50 custom-scrollbar">
+                            @foreach($laboratoriums as $lab)
+                            <label class="flex items-center justify-between gap-2 cursor-pointer p-2 rounded-lg bg-white border border-slate-200/80 hover:border-teal-300 hover:bg-teal-50/40 transition shadow-2xs">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <input type="checkbox" name="laboratorium_ids[]" value="{{ $lab->id }}" class="w-4 h-4 rounded text-teal-700 focus:ring-teal-600 lab-checkbox cursor-pointer shrink-0">
+                                    <span class="font-bold text-xs text-slate-800 truncate">{{ $lab->nama_lab }}</span>
+                                </div>
+                                @if($lab->fakultas)
+                                    <span class="text-[10px] text-slate-500 font-medium px-2 py-0.5 bg-slate-100 rounded-md shrink-0">
+                                        {{ $lab->fakultas->nama_fakultas }}
+                                    </span>
+                                @elseif($lab->lokasi)
+                                    <span class="text-[10px] text-slate-400 font-medium shrink-0">
+                                        {{ $lab->lokasi }}
+                                    </span>
+                                @endif
+                            </label>
+                            @endforeach
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-info text-slate-400"></i> Kosongkan jika pengumuman ini ditujukan untuk semua laboratorium / umum.
+                        </p>
                     </div>
-                    <p class="text-[10px] text-slate-400 mt-1">* Kosongkan jika pengumuman ini ditujukan untuk semua laboratorium / umum.</p>
                 </div>
-                <div class="flex gap-2.5 pt-3 border-t border-slate-100">
-                    <button type="button" onclick="toggleModal('modal-announcement')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition cursor-pointer">Batal</button>
-                    <button type="submit" id="ann-submit-btn" class="flex-1 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold shadow-sm transition cursor-pointer">Terbitkan</button>
+
+                <!-- Modal Footer (Fixed at bottom) -->
+                <div class="px-6 py-3.5 border-t border-slate-100 flex items-center justify-end gap-2.5 bg-slate-50/70 shrink-0">
+                    <button type="button" onclick="toggleModal('modal-announcement')" class="px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-bold text-xs transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit" id="ann-submit-btn" class="px-6 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                        <span>Terbitkan</span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -475,6 +536,21 @@
         if (selectAllLabs) {
             selectAllLabs.addEventListener('change', function() {
                 labCbs.forEach(cb => cb.checked = selectAllLabs.checked);
+            });
+        }
+
+        const annFotoInput = document.getElementById('ann-foto');
+        if (annFotoInput) {
+            annFotoInput.addEventListener('change', function(e) {
+                const file = e.target.files ? e.target.files[0] : null;
+                const previewContainer = document.getElementById('ann-foto-preview-container');
+                const previewImg = document.getElementById('ann-foto-preview');
+                if (file && file.type.startsWith('image/')) {
+                    previewImg.src = URL.createObjectURL(file);
+                    previewContainer.classList.remove('hidden');
+                    const hapusCb = document.getElementById('ann-hapus-foto');
+                    if (hapusCb) hapusCb.checked = false;
+                }
             });
         }
 

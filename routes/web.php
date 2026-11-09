@@ -12,11 +12,11 @@ use Illuminate\Support\Facades\Route;
 
 // Guest Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 // File Storage Route (Solusi Shared Hosting/cPanel jika symlink storage:link tidak tersedia/terpisah)
 Route::get('/storage/{path}', function ($path) {
-    // Hindari directory traversal
-    $cleanPath = str_replace(['..', "\0"], '', $path);
+    // Hindari directory traversal & null byte injection
+    $cleanPath = str_replace(["\0"], '', $path);
     $filePath = storage_path('app/public/' . $cleanPath);
 
     if (!file_exists($filePath) || is_dir($filePath)) {
@@ -29,7 +29,19 @@ Route::get('/storage/{path}', function ($path) {
         }
     }
 
-    $extension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+    // Validasi keamanan Path Traversal (mencegah manipulasi ../ untuk membaca file lain di server)
+    $realFile = realpath($filePath);
+    $allowedDir1 = realpath(storage_path('app/public'));
+    $allowedDir2 = realpath(public_path('storage'));
+
+    $isAllowed = ($allowedDir1 && str_starts_with($realFile, $allowedDir1))
+        || ($allowedDir2 && str_starts_with($realFile, $allowedDir2));
+
+    if (!$realFile || !$isAllowed) {
+        abort(403, 'Akses dilarang.');
+    }
+
+    $extension = strtolower(pathinfo($realFile, PATHINFO_EXTENSION));
     $mimeType = match ($extension) {
         'jpg', 'jpeg' => 'image/jpeg',
         'png' => 'image/png',
@@ -37,10 +49,10 @@ Route::get('/storage/{path}', function ($path) {
         'webp' => 'image/webp',
         'svg' => 'image/svg+xml',
         'pdf' => 'application/pdf',
-        default => @mime_content_type($filePath) ?: 'application/octet-stream',
+        default => @mime_content_type($realFile) ?: 'application/octet-stream',
     };
 
-    return response()->file($filePath, [
+    return response()->file($realFile, [
         'Content-Type' => $mimeType,
         'Cache-Control' => 'public, max-age=604800, immutable',
     ]);
@@ -56,8 +68,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/template/download/{type}', [TemplateController::class, 'download'])->name('template.download');
 
-    // Admin Routes
-    Route::prefix('admin')->name('admin.')->group(function () {
+    // Admin Routes (Hanya untuk Role Admin & Super Admin)
+    Route::prefix('admin')->middleware('role:admin,super_admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/users', fn () => redirect()->route('admin.pengguna'));
         Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
@@ -106,7 +118,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/absensi/{id}/input', [AdminController::class, 'storeInputAbsensi'])->name('absensi.store-input');
         Route::get('/pengumuman', [AdminController::class, 'pengumuman'])->name('pengumuman');
         Route::get('/aktivitas', [AdminController::class, 'aktivitas'])->name('aktivitas');
-        Route::get('/recovery', [RecoveryLedgerController::class, 'index'])->name('recovery');
+        Route::get('/recovery', fn () => redirect()->route('admin.dashboard'))->name('recovery');
         Route::post('/recovery/{id}/restore', [RecoveryLedgerController::class, 'restore'])->name('recovery.restore');
         Route::get('/recovery/verify', [RecoveryLedgerController::class, 'verifyApi'])->name('recovery.verify');
         
@@ -150,6 +162,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/fakultas/{fakultasId}', [PropertiLabController::class, 'fakultas'])->name('fakultas');
             Route::get('/lab/{labId}', [PropertiLabController::class, 'lab'])->name('lab');
             Route::post('/lab/{labId}/dokumen', [PropertiLabController::class, 'storeDokumen'])->name('dokumen.store');
+            Route::put('/dokumen/{dokumenId}', [PropertiLabController::class, 'updateDokumen'])->name('dokumen.update');
             Route::delete('/dokumen/{dokumenId}', [PropertiLabController::class, 'destroyDokumen'])->name('dokumen.destroy');
 
             // Kategori CRUD
@@ -164,13 +177,23 @@ Route::middleware('auth')->group(function () {
             Route::get('/dokumen/{dokumenId}', [PropertiLabController::class, 'dokumenShow'])->name('dokumen.show');
             Route::get('/dokumen/{dokumenId}/generate-kode', [PropertiLabController::class, 'generateKode'])->name('dokumen.generate-kode');
             Route::post('/dokumen/{dokumenId}/item', [PropertiLabController::class, 'itemStore'])->name('item.store');
+            Route::post('/dokumen/{dokumenId}/import', [PropertiLabController::class, 'importDokumen'])->name('dokumen.import');
+            Route::get('/dokumen/{dokumenId}/export', [PropertiLabController::class, 'exportDokumen'])->name('dokumen.export');
             Route::put('/item/{itemId}/inline-update', [PropertiLabController::class, 'itemInlineUpdate'])->name('item.inline-update');
             Route::delete('/item/{itemId}', [PropertiLabController::class, 'itemDestroy'])->name('item.destroy');
+
+            // Kartu Riwayat Alat (Khusus Alat Elektronik)
+            Route::get('/dokumen/{dokumenId}/riwayat-alat', [PropertiLabController::class, 'riwayatAlatIndex'])->name('riwayat-alat.index');
+            Route::post('/dokumen/{dokumenId}/riwayat-alat', [PropertiLabController::class, 'riwayatAlatStore'])->name('riwayat-alat.store');
+            Route::post('/riwayat-alat/item/{itemId}/quick-store', [PropertiLabController::class, 'riwayatAlatQuickStore'])->name('riwayat-alat.quick-store');
+            Route::put('/riwayat-alat/{id}', [PropertiLabController::class, 'riwayatAlatUpdate'])->name('riwayat-alat.update');
+            Route::delete('/riwayat-alat/{id}', [PropertiLabController::class, 'riwayatAlatDestroy'])->name('riwayat-alat.destroy');
+            Route::get('/dokumen/{dokumenId}/riwayat-alat/export', [PropertiLabController::class, 'riwayatAlatExportDocx'])->name('riwayat-alat.export');
         });
     });
 
-    // Dosen Routes
-    Route::prefix('dosen')->name('dosen.')->group(function () {
+    // Dosen Routes (Hanya untuk Role Dosen, Admin, & Super Admin)
+    Route::prefix('dosen')->middleware('role:dosen,admin,super_admin')->name('dosen.')->group(function () {
         Route::get('/dashboard', [DosenController::class, 'dashboard'])->name('dashboard');
         Route::post('/agenda', [DosenController::class, 'storeAgenda'])->name('agenda.store');
         Route::put('/agenda/{id}', [DosenController::class, 'updateAgenda'])->name('agenda.update');
@@ -194,10 +217,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/pengaturan', [DosenController::class, 'updatePengaturan'])->name('pengaturan.update');
     });
 
-    // Mahasiswa Routes
-    Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
+    // Mahasiswa Routes (Hanya untuk Role Mahasiswa)
+    Route::prefix('mahasiswa')->middleware('role:mahasiswa')->name('mahasiswa.')->group(function () {
         Route::get('/dashboard', [MahasiswaController::class, 'dashboard'])->name('dashboard');
-        Route::post('/absensi', [MahasiswaController::class, 'submitAttendance'])->name('absensi.submit');
+        Route::post('/absensi', [MahasiswaController::class, 'submitAttendance'])->middleware('throttle:10,1')->name('absensi.submit');
 
 
         

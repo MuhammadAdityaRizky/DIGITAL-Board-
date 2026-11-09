@@ -236,9 +236,11 @@
                                                     </span>
                                                 @endif
                                             @else
-                                                <span class="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-100 text-xs font-bold rounded-xl flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-circle-xmark"></i> Belum Absen
-                                                </span>
+                                                <button type="button" onclick="startMahasiswaQRScanner()" class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition shadow-2xs group cursor-pointer" title="Klik untuk Scan QR Presensi Sekarang">
+                                                    <i class="fa-solid fa-camera group-hover:scale-110 transition text-rose-600"></i>
+                                                    <span>Belum Absen</span>
+                                                    <span class="text-[9px] bg-rose-600 text-white font-extrabold px-1.5 py-0.2 rounded uppercase ml-0.5 tracking-wider">Scan</span>
+                                                </button>
                                             @endif
                                         </div>
                                     </div>
@@ -254,45 +256,93 @@
                         </div>
                     </div>
 
-                    <!-- Attendance History -->
+                    <!-- Riwayat Kehadiran Terakhir (Mobile-Friendly Stacked Card List) -->
                     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                        <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4">
-                            <h3 class="font-bold text-sm text-slate-800">Riwayat Kehadiran Terakhir</h3>
-                        </div>
-                        <div class="p-6">
+                        <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-clock-rotate-left text-teal-800 text-sm"></i>
+                                <h3 class="font-bold text-sm text-slate-800">Riwayat Kehadiran Terakhir</h3>
+                            </div>
                             @if(count($absensiHistory) > 0)
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-xs text-left text-slate-600">
-                                        <thead class="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider">
-                                            <tr>
-                                                <th class="p-3">Mata Kuliah / Praktikum</th>
-                                                <th class="p-3">Lab / Lokasi</th>
-                                                <th class="p-3">Waktu Presensi</th>
-                                                <th class="p-3">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-slate-100">
-                                            @foreach($absensiHistory as $h)
-                                                <tr class="hover:bg-slate-50/50 transition">
-                                                    <td class="p-3 font-bold text-slate-800">
-                                                        {{ $h->agenda->mata_kuliah }}
-                                                        <span class="block text-[10px] text-slate-400 font-normal mt-0.5">Dosen: {{ $h->agenda->dosen->nama }}</span>
-                                                    </td>
-                                                    <td class="p-3">{{ $h->agenda->lab->nama_lab }}</td>
-                                                    <td class="p-3 text-slate-550 font-mono">{{ $h->waktu_masuk }}</td>
-                                                    <td class="p-3">
-                                                        <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold rounded">
-                                                            {{ $h->status_kehadiran }}
+                                <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                                    {{ count($absensiHistory) }} Total
+                                </span>
+                            @endif
+                        </div>
+                        <div class="p-4 sm:p-6 space-y-3">
+                            @if(count($absensiHistory) > 0)
+                                <div class="space-y-2.5">
+                                    @foreach($absensiHistory->take(3) as $h)
+                                        @php
+                                            $status = strtolower($h->status_kehadiran);
+                                            $tglAgenda = ($h->agenda && $h->agenda->tanggal) 
+                                                ? \Carbon\Carbon::parse($h->agenda->tanggal)->translatedFormat('d M Y') 
+                                                : \Carbon\Carbon::parse($h->waktu_masuk)->translatedFormat('d M Y');
+                                            $jamStr = ($h->agenda && $h->agenda->jam_mulai) 
+                                                ? substr($h->agenda->jam_mulai, 0, 5) . ' - ' . substr($h->agenda->jam_selesai, 0, 5) . ' WIB'
+                                                : \Carbon\Carbon::parse($h->waktu_masuk)->format('H:i') . ' WIB';
+                                        @endphp
+                                        <div class="bg-slate-50/70 hover:bg-slate-50 border border-slate-200/90 hover:border-teal-700/30 rounded-xl p-3.5 sm:p-4 transition shadow-2xs">
+                                            <div class="flex items-start justify-between gap-3">
+                                                <!-- Kiri: Judul Praktikum & Tanggal/Waktu -->
+                                                <div class="space-y-1 flex-1 min-w-0">
+                                                    <h4 class="font-bold text-slate-900 text-xs sm:text-sm leading-snug truncate" title="{{ $h->agenda->mata_kuliah ?? 'Praktikum' }}">
+                                                        {{ $h->agenda->mata_kuliah ?? 'Praktikum' }}
+                                                    </h4>
+                                                    
+                                                    <div class="flex items-center gap-2 text-[11px] text-slate-500 font-medium flex-wrap">
+                                                        <span class="flex items-center gap-1 text-slate-600">
+                                                            <i class="fa-regular fa-calendar text-[10px] text-slate-400"></i>
+                                                            <span>{{ $tglAgenda }}</span>
                                                         </span>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
+                                                        <span>•</span>
+                                                        <span class="font-mono text-slate-500">
+                                                            {{ $jamStr }}
+                                                        </span>
+                                                        @if($h->agenda && $h->agenda->lab)
+                                                            <span>•</span>
+                                                            <span class="text-slate-600 font-semibold">{{ $h->agenda->lab->nama_lab }}</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                <!-- Kanan Atas: Badge Status -->
+                                                <div class="shrink-0">
+                                                    @if($status === 'hadir')
+                                                        <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-extrabold rounded-lg inline-flex items-center gap-1 uppercase tracking-wider shadow-2xs">
+                                                            <i class="fa-solid fa-circle-check text-[9px]"></i> Hadir
+                                                        </span>
+                                                    @elseif($status === 'izin')
+                                                        <span class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-extrabold rounded-lg inline-flex items-center gap-1 uppercase tracking-wider shadow-2xs">
+                                                            <i class="fa-solid fa-circle-info text-[9px]"></i> Izin
+                                                        </span>
+                                                    @elseif($status === 'sakit')
+                                                        <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-extrabold rounded-lg inline-flex items-center gap-1 uppercase tracking-wider shadow-2xs">
+                                                            <i class="fa-solid fa-notes-medical text-[9px]"></i> Sakit
+                                                        </span>
+                                                    @else
+                                                        <span class="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-extrabold rounded-lg inline-flex items-center gap-1 uppercase tracking-wider shadow-2xs">
+                                                            <i class="fa-solid fa-circle-xmark text-[9px]"></i> {{ strtoupper($h->status_kehadiran ?: 'ALPA') }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <!-- Link Lihat Semua Riwayat -->
+                                <div class="pt-2 text-center border-t border-slate-100">
+                                    <a href="{{ route('mahasiswa.riwayat') }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-teal-800 hover:text-teal-950 transition hover:underline py-1">
+                                        <span>Lihat Semua Riwayat</span>
+                                        <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                    </a>
                                 </div>
                             @else
                                 <div class="text-center py-6 text-slate-400 text-xs">
-                                    <i class="fa-solid fa-clock-rotate-left text-lg block mb-2"></i>
+                                    <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300 mb-2">
+                                        <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                                    </div>
                                     Belum ada riwayat kehadiran tercatat.
                                 </div>
                             @endif

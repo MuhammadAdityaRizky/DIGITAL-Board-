@@ -83,10 +83,10 @@
                     <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border-b border-slate-100 pb-4">
                         <div>
                             <div class="flex items-center gap-2 mb-1">
-                                <button type="button" onclick="history.back()" class="text-xs font-bold text-teal-700 hover:text-teal-900 flex items-center gap-1.5 transition cursor-pointer">
+                                <a href="{{ (url()->previous() && url()->previous() !== url()->current()) ? url()->previous() : route('admin.properti.index') }}" class="text-xs font-bold text-teal-700 hover:text-teal-900 flex items-center gap-1.5 transition">
                                     <i class="fa-solid fa-arrow-left text-xs"></i>
-                                    <span>Kembali ke Dokumen Lab</span>
-                                </button>
+                                    <span>Kembali ke Properti Lab</span>
+                                </a>
                             </div>
                             <h3 class="font-extrabold text-base text-slate-800">Kumpulan Kategori & Sub Kategori</h3>
                             <p class="text-xs text-slate-500 mt-0.5">Saring jenis kategori untuk penomoran otomatis dan pengelompokan inventaris fasilitas lab.</p>

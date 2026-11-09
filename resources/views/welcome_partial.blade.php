@@ -188,101 +188,135 @@
             </div>
         </div>
 
-        <!-- Important Info Panel -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col gap-4 relative overflow-hidden">
-            <!-- Header with Slide Controls -->
-            <div class="flex items-center justify-between border-b-2 border-slate-200 pb-3.5">
-                <div class="flex items-center gap-2.5 text-slate-900 font-extrabold text-sm tracking-wider uppercase">
-                    <i class="fa-solid fa-bullhorn text-teal-700 text-base"></i>
-                    <span>Informasi Penting</span>
+        <!-- Important Info Panel (Compact Clean Strip - TV Standard) -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-5 shadow-sm flex flex-col gap-3 relative overflow-hidden">
+            <!-- Header Row -->
+            <div class="flex items-center justify-between pb-1">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn text-teal-600 text-sm"></i>
+                    <span class="font-extrabold text-slate-800 text-xs sm:text-sm tracking-wide">INFORMASI PENTING</span>
                     @if(isset($pengumuman) && count($pengumuman) > 0)
-                        <span class="ml-2 px-2.5 py-0.5 bg-teal-50 text-teal-800 text-[10px] font-extrabold rounded-full border border-teal-200">
+                        <span class="px-2.5 py-0.5 bg-teal-50 text-teal-700 text-[10px] font-black rounded-full border border-teal-200/80">
                             {{ count($pengumuman) }} Berita
                         </span>
                     @endif
                 </div>
 
-                @if(isset($pengumuman) && count($pengumuman) > 1)
-                    <!-- Controls (Prev / Next & Dots) -->
-                    <div class="flex items-center gap-2">
-                        <div class="flex items-center gap-1 mr-1">
+                <div class="flex items-center gap-2.5">
+                    @if(isset($pengumuman) && count($pengumuman) > 1)
+                        <!-- Multi-slide Controls & Dots -->
+                        <div class="flex items-center gap-1.5 mr-1">
                             @foreach($pengumuman as $index => $item)
                                 <button type="button" onclick="goToAnnouncementSlide({{ $index }})" 
                                         id="announcement-dot-{{ $index }}"
-                                        class="h-2 rounded-full transition-all duration-300 cursor-pointer {{ $index === 0 ? 'bg-slate-900 w-4' : 'bg-slate-300 w-2' }}" 
+                                        class="h-1.5 rounded-full transition-all duration-300 cursor-pointer {{ $index === 0 ? 'bg-slate-900 w-3.5' : 'bg-slate-300 w-1.5' }}" 
                                         title="Slide {{ $index + 1 }}"></button>
                             @endforeach
                         </div>
-                        <button type="button" onclick="prevAnnouncementSlide()" 
-                                class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition cursor-pointer text-xs" title="Sebelumnya">
-                            <i class="fa-solid fa-chevron-left"></i>
-                        </button>
-                        <button type="button" onclick="nextAnnouncementSlide()" 
-                                class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition cursor-pointer text-xs" title="Berikutnya">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </button>
-                    </div>
-                @endif
+                    @endif
+                    <span class="text-xs text-slate-400 font-bold">
+                        Update {{ $activeLab->nama_lab ?? 'Lab' }}
+                    </span>
+                </div>
             </div>
 
-            <!-- Slides Container -->
+            <!-- Slides Container (Compact Clean Strip) -->
             @if(isset($pengumuman) && count($pengumuman) > 0)
                 @foreach($pengumuman as $index => $p)
                     @php
                         \Carbon\Carbon::setLocale('id');
                         $tglIndo = \Carbon\Carbon::parse($p->created_at)->locale('id')->isoFormat('dddd, D MMMM Y');
+                        
+                        // Badge Tag Style
+                        $isDanger = in_array(strtolower($p->prioritas ?? ''), ['penting', 'urgen', 'wajib']) || $p->is_pinned;
+                        $badgeLabel = $p->is_pinned ? 'WAJIB' : strtoupper($p->prioritas ?: 'INFO');
                     @endphp
                     <div id="announcement-slide-{{ $index }}" 
-                         class="announcement-slide-item border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-slate-50/50 shadow-xs transition-all duration-300 {{ $index === 0 ? 'block' : 'hidden' }}">
+                         class="announcement-slide-item border border-slate-200/90 rounded-2xl p-3 sm:p-3.5 items-center gap-4 bg-slate-50/40 hover:bg-slate-50 transition shadow-2xs {{ $index === 0 ? 'flex' : 'hidden' }}">
                         
-                        <!-- Photo box or UIKA Logo -->
-                        <div class="w-20 h-20 md:w-28 md:h-28 bg-white border border-slate-200 rounded-xl flex items-center justify-center p-1 shrink-0 overflow-hidden shadow-xs">
+                        <!-- 1. Thumbnail Image (Anti-Crop: 100% Utuh & Proporsional) -->
+                        <div class="w-20 h-20 sm:w-24 sm:h-20 rounded-xl overflow-hidden relative shrink-0 shadow-2xs border border-slate-200/90 bg-slate-950 flex items-center justify-center group cursor-pointer" 
+                             @if($p->foto_url) onclick="openPosterModal('{{ asset('storage/' . $p->foto_url) }}', '{{ addslashes($p->judul) }}')" title="Klik untuk lihat poster penuh" @endif>
                             @if($p->foto_url)
+                                <!-- Ambient Blurred Backdrop (Mencegah ruang kosong terlihat kaku) -->
+                                <img src="{{ asset('storage/' . $p->foto_url) }}" alt="" class="absolute inset-0 w-full h-full object-cover blur-md opacity-40 scale-125">
+                                
+                                <!-- Foto Utama 100% Utuh (object-contain: TIDAK TERPOTONG) -->
                                 <img src="{{ asset('storage/' . $p->foto_url) }}" 
-                                     alt="Foto Pengumuman" 
-                                     class="w-full h-full object-cover rounded-lg">
+                                     alt="{{ $p->judul }}" 
+                                     class="relative z-10 max-w-full max-h-full object-contain p-0.5 drop-shadow-md transition-transform duration-300 group-hover:scale-105">
+                                
+                                <!-- Hover Zoom Icon -->
+                                <div class="absolute inset-0 z-20 bg-slate-900/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                    <i class="fa-solid fa-magnifying-glass-plus text-white text-xs drop-shadow-md"></i>
+                                </div>
                             @else
-                                <img src="{{ asset('images/logo-uika.png') }}" 
-                                     alt="UIKA Logo Box" 
-                                     class="w-full h-full object-contain p-1">
+                                <div class="w-full h-full bg-linear-to-br from-teal-800 to-slate-900 flex flex-col items-center justify-center p-1.5">
+                                    <img src="{{ asset('images/logo-uika.png') }}" alt="Logo UIKA" class="w-7 h-7 object-contain opacity-90 drop-shadow-xs">
+                                </div>
                             @endif
+                            <span class="absolute bottom-1 left-1.5 z-20 px-1.5 py-0.2 bg-black/60 backdrop-blur-xs text-white text-[8px] font-bold rounded">
+                                Poster Lab
+                            </span>
                         </div>
-                        
-                        <!-- Content on the right -->
-                        <div class="flex-grow min-w-0 space-y-1.5">
+
+                        <!-- 2. Center Content (Meta, Title, Excerpt) -->
+                        <div class="flex-1 min-w-0">
+                            <!-- Meta Tag & Date -->
                             <div class="flex items-center gap-2">
-                                @if($p->is_pinned || in_array($p->prioritas, ['Penting', 'Urgen']))
-                                    <span class="px-2 py-0.5 bg-rose-100 text-rose-800 text-[10px] font-extrabold rounded-md uppercase tracking-wider inline-flex items-center gap-1 border border-rose-200">
-                                        <i class="fa-solid fa-thumbtack text-[9px]"></i> {{ $p->prioritas ?: 'PENTING' }}
-                                    </span>
-                                @endif
-                                <span class="text-[10px] md:text-xs font-bold text-slate-400">
+                                <span class="px-2 py-0.5 {{ $isDanger ? 'bg-rose-50 text-rose-600 border-rose-200/80' : 'bg-teal-50 text-teal-700 border-teal-200/80' }} text-[9.5px] font-black rounded border uppercase tracking-wider">
+                                    {{ $badgeLabel }}
+                                </span>
+                                <span class="text-[11px] font-semibold text-slate-400">
                                     {{ $tglIndo }}
                                 </span>
                             </div>
 
-                            <h3 class="font-extrabold text-sm md:text-base text-slate-850 leading-snug">
+                            <!-- Headline / Judul -->
+                            <h3 class="font-extrabold text-xs sm:text-[13.5px] text-slate-900 truncate leading-snug tracking-tight mt-1" title="{{ $p->judul }}">
                                 {{ $p->judul }}
                             </h3>
-                            
-                            <p class="text-xs md:text-sm text-slate-600 leading-relaxed whitespace-pre-line line-clamp-3">
-                                {{ $p->isi_pengumuman }}
+
+                            <!-- Excerpt / Deskripsi Singkat -->
+                            <p class="text-[11.5px] text-slate-500 truncate leading-normal mt-0.5">
+                                {{ Str::limit(strip_tags($p->isi_pengumuman), 95) }}
                             </p>
                         </div>
+
+                        <!-- 3. Publisher & Sesi Status (Right Column with Divider) -->
+                        <div class="border-l border-slate-200/80 pl-4 sm:pl-6 shrink-0 flex flex-col items-end justify-center text-right">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                                DITERBITKAN OLEH
+                            </span>
+                            <p class="font-black text-xs sm:text-[12.5px] text-slate-800 mt-0.5">
+                                {{ $activeLab->nama_lab ?? 'Lab' }} {{ $activeLab->fakultas->singkatan ?? 'FTS UIKA' }}
+                            </p>
+                            <span class="inline-flex items-center gap-1.5 text-[10.5px] font-extrabold text-teal-600 mt-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span> Sesi Aktif
+                            </span>
+                        </div>
+
                     </div>
                 @endforeach
             @else
                 <!-- Empty state when DB has no announcements -->
-                <div class="border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center bg-slate-50/50 shadow-xs text-center py-8">
-                    <div class="w-12 h-12 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center mb-3">
-                        <i class="fa-solid fa-bullhorn text-slate-400 text-lg"></i>
+                <div class="border border-slate-200/90 rounded-2xl p-4 flex items-center justify-between gap-4 bg-slate-50/40">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-10 h-10 bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 shrink-0">
+                            <i class="fa-solid fa-bullhorn text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-extrabold text-xs sm:text-sm text-slate-700">Belum Ada Pengumuman Resmi</h4>
+                            <p class="text-[11px] text-slate-400">Saat ini belum ada pengumuman terbaru yang diterbitkan untuk laboratorium ini.</p>
+                        </div>
                     </div>
-                    <h3 class="font-bold text-sm md:text-base text-slate-700">
-                        Belum Ada Pengumuman Resmi
-                    </h3>
-                    <p class="text-xs text-slate-500 mt-1 max-w-md">
-                        Saat ini belum ada pengumuman terbaru yang diterbitkan untuk laboratorium ini.
-                    </p>
+                    <div class="border-l border-slate-200/80 pl-4 shrink-0 flex flex-col items-end justify-center text-right">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">STATUS LAB</span>
+                        <p class="font-bold text-xs text-slate-700 mt-0.5">{{ $activeLab->nama_lab ?? 'Lab' }} UIKA</p>
+                        <span class="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-emerald-600 mt-0.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Siaga
+                        </span>
+                    </div>
                 </div>
             @endif
         </div>
@@ -371,57 +405,64 @@
         <!-- Tata Tertib Ruangan Card -->
         <div class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm flex flex-col">
             <!-- Banner Header (Dynamic Theme Color matching Admin Lab RGB) -->
-            <div class="px-5 py-3.5 border-b border-slate-800 flex items-center gap-2.5 text-white transition-all duration-500" style="background: linear-gradient(135deg, {{ $themeColor }} 0%, #090d16 100%);">
-                <i class="fa-solid fa-list-check text-teal-400 text-base"></i>
-                <span class="font-extrabold text-white text-xs uppercase tracking-wider">Tata Tertib Ruangan</span>
+            <div class="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between text-white transition-all duration-500" style="background: linear-gradient(135deg, {{ $themeColor }} 0%, #090d16 100%);">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-list-check text-teal-400 text-base"></i>
+                    <span class="font-extrabold text-white text-xs uppercase tracking-wider">Tata Tertib Ruangan</span>
+                </div>
+                <span class="text-[10px] font-bold text-slate-300 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/10 uppercase tracking-wide">
+                    {{ $activeLab->nama_lab ?? 'Lab' }}
+                </span>
             </div>
 
-            <!-- Rules List -->
-            <div class="p-6 bg-white flex flex-col gap-4">
-                <div class="flex items-start gap-4">
-                    <div class="w-7 h-7 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                        <i class="fa-solid fa-ban text-rose-600 text-xs"></i>
+            <!-- 3 Poin Aturan Utama (Format Card Icon Elegan) -->
+            <div class="p-5 sm:p-6 flex flex-col gap-3.5">
+                
+                <!-- Card 1: Dilarang Makan & Minum -->
+                <div class="flex items-center gap-3.5 p-3.5 rounded-2xl bg-rose-50/60 border border-rose-100 hover:border-rose-200 transition shadow-2xs">
+                    <div class="w-10 h-10 rounded-xl bg-rose-100 border border-rose-200/80 flex items-center justify-center shrink-0 shadow-xs">
+                        <i class="fa-solid fa-ban text-rose-600 text-base"></i>
                     </div>
-                    <p class="text-xs text-slate-700 leading-normal font-medium mt-0.5">
-                        Wajib menjaga kebersihan dan ketertiban selama berada di laboratorium.
-                    </p>
+                    <div class="flex-1">
+                        <p class="text-xs sm:text-[13px] font-extrabold text-slate-800 leading-snug">
+                            Dilarang makan & minum di dalam lab.
+                        </p>
+                        <p class="text-[10.5px] font-semibold text-rose-600/90 mt-0.5">
+                            Menjaga kebersihan & mencegah tumpahan pada perangkat elektronik.
+                        </p>
+                    </div>
                 </div>
 
-                <div class="flex items-start gap-4">
-                    <div class="w-7 h-7 rounded-full bg-teal-50 border border-teal-100 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                        <i class="fa-solid fa-desktop text-teal-700 text-xs"></i>
+                <!-- Card 2: Jaga & Jangan Merusak Perangkat -->
+                <div class="flex items-center gap-3.5 p-3.5 rounded-2xl bg-teal-50/60 border border-teal-100 hover:border-teal-200 transition shadow-2xs">
+                    <div class="w-10 h-10 rounded-xl bg-teal-100 border border-teal-200/80 flex items-center justify-center shrink-0 shadow-xs">
+                        <i class="fa-solid fa-shield-halved text-teal-700 text-base"></i>
                     </div>
-                    <p class="text-xs text-slate-700 leading-normal font-medium mt-0.5">
-                        Gunakan komputer sesuai absen.
-                    </p>
+                    <div class="flex-1">
+                        <p class="text-xs sm:text-[13px] font-extrabold text-slate-800 leading-snug">
+                            Jaga dan dilarang merusak perangkat/fasilitas lab.
+                        </p>
+                        <p class="text-[10.5px] font-semibold text-teal-700/90 mt-0.5">
+                            Gunakan komputer dan peralatan fasilitas dengan baik & bertanggung jawab.
+                        </p>
+                    </div>
                 </div>
 
-                <div class="flex items-start gap-4">
-                    <div class="w-7 h-7 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                        <i class="fa-solid fa-power-off text-amber-600 text-xs"></i>
+                <!-- Card 3: Matikan PC & Rapikan Kursi -->
+                <div class="flex items-center gap-3.5 p-3.5 rounded-2xl bg-amber-50/60 border border-amber-100 hover:border-amber-200 transition shadow-2xs">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 border border-amber-200/80 flex items-center justify-center shrink-0 shadow-xs">
+                        <i class="fa-solid fa-power-off text-amber-700 text-base"></i>
                     </div>
-                    <p class="text-xs text-slate-700 leading-normal font-medium mt-0.5">
-                        Matikan komputer & rapikan kursi.
-                    </p>
+                    <div class="flex-1">
+                        <p class="text-xs sm:text-[13px] font-extrabold text-slate-800 leading-snug">
+                            Matikan PC & rapikan kursi sebelum keluar.
+                        </p>
+                        <p class="text-[10.5px] font-semibold text-amber-700/90 mt-0.5">
+                            Pastikan komputer shutdown normal dan posisi meja kursi kembali rapi.
+                        </p>
+                    </div>
                 </div>
 
-                <div class="flex items-start gap-4">
-                    <div class="w-7 h-7 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                        <i class="fa-solid fa-burger text-rose-500 text-xs"></i>
-                    </div>
-                    <p class="text-xs text-slate-700 leading-normal font-medium mt-0.5">
-                        Dilarang membawa makanan dan minuman ke dalam laboratorium.
-                    </p>
-                </div>
-
-                <div class="flex items-start gap-4">
-                    <div class="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                        <i class="fa-solid fa-shield-halved text-emerald-600 text-xs"></i>
-                    </div>
-                    <p class="text-xs text-slate-700 leading-normal font-medium mt-0.5">
-                        Gunakan komputer dan fasilitas laboratorium dengan baik dan bertanggung jawab.
-                    </p>
-                </div>
             </div>
         </div>
 

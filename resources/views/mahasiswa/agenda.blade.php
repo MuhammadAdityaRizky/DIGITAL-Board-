@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-uika.png') }}">
@@ -161,134 +161,237 @@
                     </a>
                 </div>
 
-                <!-- Filter Panel -->
-                <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                    <form action="{{ route('mahasiswa.agenda') }}" method="GET" class="space-y-4">
+                <!-- Filter Panel (Hemat Ruang & Responsif Mobile) -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm">
+                    <form id="filterAgendaForm" action="{{ route('mahasiswa.agenda') }}" method="GET" class="space-y-3">
                         <input type="hidden" name="scope" value="{{ $scope }}">
                         
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end text-xs">
+                        <!-- Baris Utama: Cari & Tanggal Berdampingan (Auto-Filter onchange) -->
+                        <div class="flex flex-col sm:flex-row gap-2.5 items-center text-xs">
                             <!-- Keyword Search -->
-                            <div class="{{ $scope === 'untuk-saya' ? 'md:col-span-7' : 'md:col-span-2' }} w-full">
-                                <label class="block text-slate-655 font-bold mb-1.5">Cari Mata Kuliah</label>
-                                <div class="relative">
-                                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan nama kelas/praktikum..." class="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs">
-                                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
-                                </div>
+                            <div class="relative flex-1 w-full">
+                                <input type="text" name="search" value="{{ request('search') }}" 
+                                       placeholder="Cari mata kuliah, lab, dosen..." 
+                                       class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none text-xs text-slate-800 transition">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+                                @if(request('search'))
+                                    <a href="{{ route('mahasiswa.agenda', array_merge(request()->except('search'), ['scope' => $scope])) }}" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-rose-500 text-xs p-0.5" title="Hapus cari">
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                    </a>
+                                @endif
                             </div>
 
-                            <!-- Date filter -->
-                            <div class="{{ $scope === 'untuk-saya' ? 'md:col-span-3' : 'md:col-span-2' }} w-full">
-                                <label class="block text-slate-655 font-bold mb-1.5">Tanggal</label>
-                                <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs text-slate-700">
+                            <!-- Date Picker (Auto-Submit onchange) -->
+                            <div class="relative w-full sm:w-48 shrink-0">
+                                <input type="date" name="tanggal" value="{{ request('tanggal') }}" 
+                                       onchange="this.form.submit()" 
+                                       class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none text-xs text-slate-700 cursor-pointer font-medium"
+                                       title="Pilih tanggal (otomatis memfilter)">
                             </div>
 
-                            @if($scope === 'semua')
-                                <!-- Fakultas filter -->
-                                <div class="md:col-span-2 w-full">
-                                    <label class="block text-slate-655 font-bold mb-1.5">Fakultas</label>
-                                    <select name="filter_fakultas" id="filter-fakultas" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs text-slate-700">
+                            <!-- Tombol Reset / Submit Mobile -->
+                            <div class="flex items-center gap-1.5 w-full sm:w-auto shrink-0 justify-end">
+                                <button type="submit" class="sm:hidden flex-1 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold text-xs transition shadow-xs flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-filter text-[10px]"></i> Cari
+                                </button>
+                                @if(request()->anyFilled(['search', 'tanggal', 'filter_fakultas', 'filter_jurusan', 'filter_kelas', 'filter_semester']))
+                                    <a href="{{ route('mahasiswa.agenda', ['scope' => $scope]) }}" 
+                                       class="px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl font-bold text-xs transition border border-rose-200 flex items-center gap-1.5 shadow-2xs" 
+                                       title="Reset Semua Filter">
+                                        <i class="fa-solid fa-rotate-left text-[11px]"></i>
+                                        <span class="text-[11px]">Reset</span>
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+
+                        @if($scope === 'semua')
+                            <!-- Dropdown Filter Lanjutan (Compact 4 Kolom, Auto-Submit onchange) -->
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5 border-t border-slate-100 text-xs">
+                                <div>
+                                    <select name="filter_fakultas" id="filter-fakultas" onchange="this.form.submit()" class="w-full py-2 px-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:border-teal-700 outline-none text-[11px] text-slate-700 font-medium">
                                         <option value="">Semua Fakultas</option>
                                         @foreach($fakultas as $fak)
                                             <option value="{{ $fak->nama_fakultas }}" {{ request('filter_fakultas') == $fak->nama_fakultas ? 'selected' : '' }}>{{ $fak->nama_fakultas }}</option>
                                         @endforeach
                                     </select>
                                 </div>
-
-                                <!-- Prodi filter -->
-                                <div class="md:col-span-2 w-full">
-                                    <label class="block text-slate-655 font-bold mb-1.5">Program Studi</label>
-                                    <select name="filter_jurusan" id="filter-jurusan" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs text-slate-700">
+                                <div>
+                                    <select name="filter_jurusan" id="filter-jurusan" onchange="this.form.submit()" class="w-full py-2 px-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:border-teal-700 outline-none text-[11px] text-slate-700 font-medium">
                                         <option value="">Semua Prodi</option>
                                         @foreach($prodis as $prod)
                                             <option value="{{ $prod->nama_prodi }}" data-fakultas="{{ $prod->fakultas->nama_fakultas }}" {{ request('filter_jurusan') == $prod->nama_prodi ? 'selected' : '' }}>{{ $prod->nama_prodi }}</option>
                                         @endforeach
                                     </select>
                                 </div>
-
-                                <!-- Kelas filter -->
-                                <div class="md:col-span-1 w-full">
-                                    <label class="block text-slate-655 font-bold mb-1.5">Kelas</label>
-                                    <select name="filter_kelas" class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs text-slate-700">
-                                        <option value="">Semua</option>
-                                        <option value="A" {{ request('filter_kelas') == 'A' ? 'selected' : '' }}>A</option>
-                                        <option value="B" {{ request('filter_kelas') == 'B' ? 'selected' : '' }}>B</option>
-                                        <option value="C" {{ request('filter_kelas') == 'C' ? 'selected' : '' }}>C</option>
-                                        <option value="D" {{ request('filter_kelas') == 'D' ? 'selected' : '' }}>D</option>
+                                <div>
+                                    <select name="filter_kelas" onchange="this.form.submit()" class="w-full py-2 px-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:border-teal-700 outline-none text-[11px] text-slate-700 font-medium">
+                                        <option value="">Semua Kelas</option>
+                                        <option value="A" {{ request('filter_kelas') == 'A' ? 'selected' : '' }}>Kelas A</option>
+                                        <option value="B" {{ request('filter_kelas') == 'B' ? 'selected' : '' }}>Kelas B</option>
+                                        <option value="C" {{ request('filter_kelas') == 'C' ? 'selected' : '' }}>Kelas C</option>
+                                        <option value="D" {{ request('filter_kelas') == 'D' ? 'selected' : '' }}>Kelas D</option>
                                     </select>
                                 </div>
-                                
-                                <!-- Semester filter -->
-                                <div class="md:col-span-1 w-full">
-                                    <label class="block text-slate-655 font-bold mb-1.5">Sem</label>
-                                    <select name="filter_semester" class="w-full py-2.5 px-2 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/30 focus:border-teal-700 outline-none text-xs text-slate-700">
-                                        <option value="">Semua</option>
+                                <div>
+                                    <select name="filter_semester" onchange="this.form.submit()" class="w-full py-2 px-2.5 rounded-lg bg-slate-50 border border-slate-200 focus:border-teal-700 outline-none text-[11px] text-slate-700 font-medium">
+                                        <option value="">Semua Sem.</option>
                                         @foreach(['1','2','3','4','5','6','7','8'] as $semOpt)
-                                            <option value="{{ $semOpt }}" {{ request('filter_semester') == $semOpt ? 'selected' : '' }}>{{ $semOpt }}</option>
+                                            <option value="{{ $semOpt }}" {{ request('filter_semester') == $semOpt ? 'selected' : '' }}>Sem. {{ $semOpt }}</option>
                                         @endforeach
                                     </select>
                                 </div>
-                            @endif
-
-                            <!-- Filter Button -->
-                            <div class="md:col-span-2 flex gap-2 w-full">
-                                <button type="submit" class="flex-1 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold transition-all shadow-sm">
-                                    Filter
-                                </button>
-                                @if(request()->anyFilled(['search', 'tanggal', 'filter_fakultas', 'filter_jurusan', 'filter_kelas']))
-                                    <a href="{{ route('mahasiswa.agenda', ['scope' => $scope]) }}" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-750 rounded-xl font-bold transition-all border border-slate-200 text-center flex items-center justify-center">
-                                        <i class="fa-solid fa-rotate-left"></i>
-                                    </a>
-                                @endif
                             </div>
-                        </div>
+                        @endif
                     </form>
                 </div>
             </div>
 
             <!-- Agendas List -->
             <div class="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
-                <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4">
+                <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
                     <h3 class="font-bold text-xs text-slate-800">
                         {{ $scope === 'untuk-saya' ? 'Jadwal Praktikum & Kelas Saya' : 'Semua Jadwal Praktikum & Kelas' }}
                     </h3>
+                    <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                        {{ $agendas->total() }} Agenda Ditemukan
+                    </span>
                 </div>
                 
-                <div class="p-6 space-y-4">
+                <div class="p-4 sm:p-6 space-y-4">
                     @if($agendas->count() > 0)
                         @foreach($agendas as $ag)
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
-                            <div class="flex flex-col md:flex-row gap-5 items-start">
-                                <!-- Time block -->
-                                <div class="bg-teal-900 text-white rounded-xl p-3 flex flex-col items-center justify-center min-w-[120px] shadow-sm text-center">
+                        <div class="bg-slate-50/70 hover:bg-slate-50 border border-slate-200/90 hover:border-teal-700/30 rounded-2xl p-4 sm:p-5 space-y-3.5 transition shadow-2xs">
+                            <div class="flex flex-col sm:flex-row gap-4 sm:gap-5 items-start">
+                                <!-- Time block (Blok Tanggal Hijau Tua Tegas) -->
+                                <div class="bg-teal-900 text-white rounded-xl p-3 flex flex-row sm:flex-col items-center justify-between sm:justify-center w-full sm:w-auto sm:min-w-[125px] shadow-sm text-center shrink-0">
                                     <span class="text-[10px] font-semibold uppercase tracking-wider text-teal-350">{{ date('d M Y', strtotime($ag->tanggal)) }}</span>
-                                    <span class="text-xs font-bold mt-1.5">{{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB</span>
+                                    <span class="text-xs font-bold sm:mt-1.5">{{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB</span>
                                 </div>
                                 
                                 <!-- Details -->
                                 <div class="flex-1 space-y-3 w-full">
-                                    <div>
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <h4 class="font-bold text-slate-800 text-base">{{ $ag->mata_kuliah }}</h4>
-                                            @if($ag->status_agenda === 'Berlangsung')
-                                                <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded text-[9px] font-bold uppercase tracking-wider">Berlangsung</span>
-                                            @elseif($ag->status_agenda === 'Selesai')
-                                                <span class="px-2 py-0.5 bg-slate-100 text-slate-655 border border-slate-200 rounded text-[9px] font-bold uppercase tracking-wider">Selesai</span>
-                                            @elseif($ag->status_agenda === 'Dibatalkan')
-                                                <span class="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-100 rounded text-[9px] font-bold uppercase tracking-wider">Dibatalkan</span>
-                                            @else
-                                                <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9px] font-bold uppercase tracking-wider">Mendatang</span>
+                                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+                                        <!-- Info Praktikum & Dosen -->
+                                        <div class="space-y-1">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <h4 class="font-bold text-slate-900 text-base leading-snug">{{ $ag->mata_kuliah }}</h4>
+                                                @if($ag->status_agenda === 'Berlangsung')
+                                                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[9.5px] font-extrabold uppercase tracking-wider inline-flex items-center gap-1">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Berlangsung
+                                                    </span>
+                                                @elseif($ag->status_agenda === 'Selesai')
+                                                    <span class="px-2 py-0.5 bg-slate-100 text-slate-655 border border-slate-200 rounded text-[9.5px] font-bold uppercase tracking-wider">Selesai</span>
+                                                @elseif($ag->status_agenda === 'Dibatalkan')
+                                                    <span class="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-100 rounded text-[9.5px] font-bold uppercase tracking-wider">Dibatalkan</span>
+                                                @else
+                                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9.5px] font-bold uppercase tracking-wider">Mendatang</span>
+                                                @endif
+                                            </div>
+                                            <p class="text-xs text-slate-500">
+                                                <i class="fa-solid fa-location-dot mr-1 text-slate-400"></i>{{ $ag->lab->nama_lab }}
+                                                • Dosen: <span class="font-semibold text-slate-700">{{ $ag->dosen->nama }}</span>
+                                                @if($ag->kelas) • Kelas: <span class="font-semibold text-slate-700">{{ $ag->kelas }}</span> @endif
+                                                @if($ag->semester) • Semester: {{ $ag->semester }} @endif
+                                            </p>
+                                        </div>
+
+                                        <!-- Kolom Kanan: Status Kehadiran Personal (Masuk / Izin / Sakit / Alpa) & Badge Identitas -->
+                                        <div class="shrink-0 flex flex-wrap sm:flex-col items-start sm:items-end gap-2 self-start">
+                                            @if($scope === 'semua')
+                                                <!-- Badge Identitas Kelas & Prodi Kontras (Pojok Kanan Atas di Tab Semua Agenda) -->
+                                                <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg text-[10.5px] font-extrabold uppercase tracking-wide inline-flex items-center gap-1.5 shadow-2xs">
+                                                    <i class="fa-solid fa-graduation-cap text-[10px] text-indigo-500"></i>
+                                                    <span>{{ $ag->jurusan ?: 'Umum' }} • KELAS {{ $ag->kelas ?: '-' }}</span>
+                                                    @if($ag->semester)
+                                                        <span class="text-indigo-400 font-semibold">(Sm. {{ $ag->semester }})</span>
+                                                    @endif
+                                                </span>
+                                            @endif
+
+                                            @php
+                                                $mhsAbsen = $ag->absensi ? $ag->absensi->first() : null;
+                                                $statusK = $mhsAbsen ? strtolower($mhsAbsen->status_kehadiran) : null;
+                                                
+                                                // Cek apakah ini kelas milik mahasiswa yang login
+                                                $isMyClass = ($scope === 'untuk-saya') 
+                                                    || ($mhsAbsen !== null)
+                                                    || (
+                                                        (!empty($mahasiswa->prodi) && $ag->jurusan === $mahasiswa->prodi->nama_prodi)
+                                                        && (!empty($mahasiswa->kelas) && ($ag->kelas === $mahasiswa->kelas || str_contains($ag->kelas, $mahasiswa->kelas)))
+                                                    );
+
+                                                // Cek status waktu kelas
+                                                $currentTimeStr = now()->format('H:i');
+                                                $jamSelesaiStr = substr($ag->jam_selesai, 0, 5);
+                                                $jamMulaiStr = substr($ag->jam_mulai, 0, 5);
+
+                                                $isPast = ($ag->status_agenda === 'Selesai') 
+                                                    || ($ag->tanggal < date('Y-m-d')) 
+                                                    || ($ag->tanggal == date('Y-m-d') && $currentTimeStr > $jamSelesaiStr);
+                                                
+                                                $isCurrent = ($ag->status_agenda === 'Berlangsung') 
+                                                    || ($ag->tanggal == date('Y-m-d') && $currentTimeStr >= $jamMulaiStr && $currentTimeStr <= $jamSelesaiStr);
+                                            @endphp
+
+                                            @if($mhsAbsen)
+                                                {{-- 1. Mahasiswa Sudah Tercatat Presensi --}}
+                                                @if($statusK === 'hadir')
+                                                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[10.5px] font-extrabold uppercase tracking-wide inline-flex items-center gap-1.5 shadow-2xs">
+                                                        <i class="fa-solid fa-circle-check text-[10px] text-emerald-600"></i>
+                                                        <span>Masuk (Hadir)</span>
+                                                        @if($mhsAbsen->waktu_masuk)
+                                                            <span class="text-[9.5px] text-emerald-600/80 font-mono font-semibold">{{ date('H:i', strtotime($mhsAbsen->waktu_masuk)) }}</span>
+                                                        @endif
+                                                    </span>
+                                                @elseif($statusK === 'izin')
+                                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-[10.5px] font-extrabold uppercase tracking-wide inline-flex items-center gap-1.5 shadow-2xs">
+                                                        <i class="fa-solid fa-circle-info text-[10px] text-blue-600"></i>
+                                                        <span>Izin</span>
+                                                    </span>
+                                                @elseif($statusK === 'sakit')
+                                                    <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[10.5px] font-extrabold uppercase tracking-wide inline-flex items-center gap-1.5 shadow-2xs">
+                                                        <i class="fa-solid fa-notes-medical text-[10px] text-amber-600"></i>
+                                                        <span>Sakit</span>
+                                                    </span>
+                                                @else
+                                                    <span class="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-[10.5px] font-extrabold uppercase tracking-wide inline-flex items-center gap-1.5 shadow-2xs">
+                                                        <i class="fa-solid fa-circle-xmark text-[10px] text-rose-600"></i>
+                                                        <span>Alpa</span>
+                                                    </span>
+                                                @endif
+                                            @elseif($isMyClass)
+                                                {{-- 2. Jadwal Kelas Mahasiswa Tapi Belum Ada Record Absen --}}
+                                                @if($ag->status_agenda === 'Dibatalkan')
+                                                    <span class="px-2 py-0.5 bg-slate-100 text-slate-500 border border-slate-200 rounded-lg text-[10px] font-bold uppercase tracking-wide">
+                                                        Dibatalkan
+                                                    </span>
+                                                @elseif($isCurrent)
+                                                    <!-- Kelas Sedang Berlangsung: Tombol Aksi Cepat Scan Presensi -->
+                                                    <button type="button" onclick="startMahasiswaQRScanner()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer group" title="Klik untuk Presensi Praktikum Sekarang">
+                                                        <i class="fa-solid fa-camera text-[10px] text-rose-600 group-hover:scale-110 transition"></i>
+                                                        <span>Belum Absen</span>
+                                                        <span class="text-[9px] bg-rose-600 text-white font-extrabold px-1.5 py-0.2 rounded uppercase ml-0.5">Scan</span>
+                                                    </button>
+                                                @elseif($isPast)
+                                                    <!-- Kelas Sudah Selesai/Lewat & Tidak Ada Presensi = ALPA -->
+                                                    <span class="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-[10.5px] font-extrabold uppercase tracking-wide inline-flex items-center gap-1.5 shadow-2xs" title="Tidak hadir pada sesi praktikum ini">
+                                                        <i class="fa-solid fa-circle-xmark text-[10px] text-rose-600"></i>
+                                                        <span>Alpa</span>
+                                                        <span class="text-[9px] text-rose-500 font-semibold">(Tidak Hadir)</span>
+                                                    </span>
+                                                @else
+                                                    <!-- Jadwal Mendatang -->
+                                                    <span class="px-2 py-0.5 bg-slate-100 text-slate-500 border border-slate-200 rounded-lg text-[10px] font-semibold inline-flex items-center gap-1">
+                                                        <i class="fa-regular fa-clock text-[9px] text-slate-400"></i> Belum Dimulai
+                                                    </span>
+                                                @endif
                                             @endif
                                         </div>
-                                        <p class="text-[11px] text-slate-500 mt-1">
-                                            <i class="fa-solid fa-location-dot mr-1"></i>{{ $ag->lab->nama_lab }}
-                                            • Dosen: {{ $ag->dosen->nama }}
-                                            @if($ag->kelas) • Kelas: {{ $ag->kelas }} @endif
-                                            @if($ag->semester) • Semester: {{ $ag->semester }} @endif
-                                        </p>
                                     </div>
                                     
                                     @if($ag->materi_realisasi)
-                                        <div class="p-3 bg-white border border-slate-150 rounded-lg text-[11px]">
+                                        <div class="p-3 bg-white border border-slate-150 rounded-xl text-[11px] shadow-2xs">
                                             <span class="font-bold text-slate-700 block mb-0.5">Materi Praktikum / Realisasi:</span>
                                             <p class="text-slate-600 font-medium leading-relaxed">{{ $ag->materi_realisasi }}</p>
                                         </div>

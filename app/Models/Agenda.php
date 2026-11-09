@@ -216,14 +216,25 @@ class Agenda extends Model
     }
 
     /**
-     * Generate a 5-second dynamic QR token for an agenda.
-     * Example output: AGENDA_ID_15_A8F3
+     * Kunci rahasia server untuk enkripsi token QR dinamis (HMAC-SHA256).
+     * Menggunakan APP_KEY server dari file .env sehingga token tidak bisa di-reverse engineer dari luar.
+     */
+    protected static function getQrSecretSalt(): string
+    {
+        return (string) (config('app.key') ?: 'DIGITAL_BOARD_SALT_SECURE_FTS_UIKA_2026');
+    }
+
+    /**
+     * Generate dynamic anti-cheat QR attendance token for an agenda.
+     * Changes periodically (e.g. every 5 seconds) using HMAC-SHA256 secret salt.
+     * Example output: AGENDA_ID_15_A8F3C
      */
     public static function generateDynamicQrToken($agendaId, $timestamp = null, $interval = 5)
     {
         $ts = $timestamp ?? time();
         $timeBlock = (int) floor($ts / $interval);
-        $hash = strtoupper(substr(md5("DIGITAL_BOARD_SALT_{$agendaId}_{$timeBlock}"), 0, 4));
+        $salt = self::getQrSecretSalt();
+        $hash = strtoupper(substr(hash_hmac('sha256', "AGENDA_{$agendaId}_{$timeBlock}", $salt), 0, 5));
         return "AGENDA_ID_{$agendaId}_{$hash}";
     }
 
@@ -272,11 +283,14 @@ class Agenda extends Model
 
         $currentTs = time();
         $currentBlock = (int) floor($currentTs / $interval);
+        $salt = self::getQrSecretSalt();
 
         for ($i = -$tolerance; $i <= 1; $i++) {
             $checkBlock = $currentBlock + $i;
-            $expectedHash = strtoupper(substr(md5("DIGITAL_BOARD_SALT_{$agendaId}_{$checkBlock}"), 0, 4));
-            if ($providedHash === $expectedHash) {
+            $expectedHash = strtoupper(substr(hash_hmac('sha256', "AGENDA_{$agendaId}_{$checkBlock}", $salt), 0, 5));
+            $expectedHash4 = strtoupper(substr(hash_hmac('sha256', "AGENDA_{$agendaId}_{$checkBlock}", $salt), 0, 4));
+            
+            if ($providedHash === $expectedHash || $providedHash === $expectedHash4) {
                 return ['agenda' => $agenda, 'error' => null];
             }
         }

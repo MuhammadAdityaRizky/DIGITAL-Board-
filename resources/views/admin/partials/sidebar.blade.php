@@ -91,12 +91,6 @@
             <span class="text-xs">Riwayat Aktivitas</span>
         </a>
 
-        <!-- 10. Data Terhapus & Ledger Recovery -->
-        <a href="{{ route('admin.recovery') }}" class="flex items-center gap-3 px-4 py-2.5 {{ $isRecovery ? 'bg-teal-800 text-white font-bold shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium' }} rounded-xl w-full transition">
-            <i class="fa-solid fa-trash-can-arrow-up text-amber-400"></i>
-            <span class="text-xs">Data Terhapus & Ledger</span>
-        </a>
-
         <!-- External Link: Portal Display Board -->
         <div class="pt-2 border-t border-slate-800/80 my-2"></div>
         <a href="{{ route('board') }}" target="_blank" class="flex items-center justify-between px-4 py-2.5 bg-[#0c4ea6]/40 hover:bg-[#0c4ea6] text-teal-300 hover:text-white rounded-xl w-full transition font-bold border border-teal-500/20">
@@ -189,12 +183,6 @@
         <a href="{{ route('admin.aktivitas') }}" class="flex items-center gap-3 px-4 py-3 {{ $isAktivitas ? 'bg-teal-800 text-white font-bold shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium' }} rounded-xl w-full transition">
             <i class="fa-solid fa-clock-rotate-left text-sm"></i>
             <span class="text-xs">Riwayat Aktivitas</span>
-        </a>
-
-        <!-- 10. Data Terhapus & Ledger Recovery -->
-        <a href="{{ route('admin.recovery') }}" class="flex items-center gap-3 px-4 py-3 {{ $isRecovery ? 'bg-teal-800 text-white font-bold shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-white font-medium' }} rounded-xl w-full transition">
-            <i class="fa-solid fa-trash-can-arrow-up text-amber-400 text-sm"></i>
-            <span class="text-xs">Data Terhapus & Ledger</span>
         </a>
 
         <!-- External Link: Portal Display Board -->

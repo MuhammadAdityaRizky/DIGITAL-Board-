@@ -35,6 +35,13 @@ class ItemPropertiLab extends Model
         return $this->belongsTo(KategoriProperti::class, 'sub_kategori_id');
     }
 
+    public function riwayats()
+    {
+        return $this->hasMany(RiwayatPemeliharaanAlat::class, 'item_properti_id')
+            ->orderBy('tanggal_mulai', 'asc')
+            ->orderBy('id', 'asc');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

@@ -145,7 +145,8 @@
                             </label>
                             <input type="text" name="kode" value="{{ old('kode', $kategori->kode) }}" placeholder="Contoh: PC, M, K, PR, MD, PT, C, AC" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-teal-700 font-mono font-bold uppercase text-teal-900">
                             <p class="text-[10px] text-slate-400 mt-1">
-                                Digunakan pada formula penomoran inventaris: <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-teal-800">[KODE]/SI/209/10/26/16</span>
+                                Digunakan pada formula penomoran inventaris: <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-teal-800">[KODE]/SI/209/{{ date('m') }}/{{ date('y') }}/01</span>
+                                <span class="block text-[9px] text-slate-400 mt-0.5">*(Format: [KODE]/[PRODI]/[RUANG]/[BULAN]/[TAHUN]/[NOMOR_URUT]. Bagian bulan &amp; tahun otomatis ter-update sesuai tanggal pembuatan dokumen)*</span>
                             </p>
                         </div>
 

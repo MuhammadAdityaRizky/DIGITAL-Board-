@@ -18,18 +18,33 @@
         .custom-sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
         
-        /* Gaya Khusus Cetak Sesuai Format Lembar Fisik */
-        @media print {
-            aside, header, #sidebarWrapper, #formTambahWrapper, #actionButtons, .no-print {
-                display: none !important;
+        /* Gaya Khusus Cetak Sesuai Format Lembar Fisik UIKA A4 Landscape */
+        @page {
+            size: A4 landscape;
+            margin: 8mm 8mm 12mm 8mm;
+            @bottom-center {
+                content: counter(page);
+                font-family: Calibri, sans-serif;
+                font-size: 8.5pt;
+                color: #334155;
             }
-            body {
+        }
+
+        @media print {
+            html, body {
+                height: auto !important;
+                overflow: visible !important;
                 background: white !important;
                 color: black !important;
             }
-            main {
+            aside, header, #sidebarWrapper, #formTambahWrapper, #actionButtons, .no-print {
+                display: none !important;
+            }
+            main, div, .flex-grow, .overflow-auto, .overflow-x-auto, .overflow-y-auto, .max-w-7xl {
                 overflow: visible !important;
                 height: auto !important;
+                max-width: 100% !important;
+                width: 100% !important;
                 padding: 0 !important;
                 margin: 0 !important;
             }
@@ -37,20 +52,43 @@
                 box-shadow: none !important;
                 border: none !important;
                 padding: 0 !important;
+                margin: 0 !important;
                 width: 100% !important;
+                max-width: 100% !important;
             }
             table {
-                font-size: 10px !important;
+                width: 100% !important;
+                font-size: 8pt !important;
+                border-collapse: collapse !important;
+                table-layout: auto !important;
+            }
+            thead {
+                display: table-header-group !important;
+            }
+            tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
             table th, table td {
                 border: 1px solid #000 !important;
-                padding: 4px 6px !important;
+                padding: 3px 4px !important;
+                min-width: 0 !important;
+            }
+            .print-text {
+                display: inline-block !important;
+            }
+            select.no-print-select {
+                display: none !important;
             }
             .inline-cell-input {
                 border: none !important;
                 background: transparent !important;
                 padding: 0 !important;
                 box-shadow: none !important;
+                font-size: inherit !important;
+                font-family: inherit !important;
+                color: black !important;
+                width: 100% !important;
             }
         }
     </style>
@@ -132,12 +170,58 @@
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="flex items-center gap-2.5 flex-wrap" id="actionButtons">
+                        <div class="flex items-center gap-2 flex-wrap" id="actionButtons">
+                            <!-- Kartu Riwayat Alat (Khusus Alat Elektronik) -->
+                            <a href="{{ route('admin.properti.riwayat-alat.index', $dokumen->id) }}" class="px-3.5 py-2 bg-white hover:bg-teal-50 rounded-xl transition flex items-center gap-2 border-2 border-teal-600 shadow-xs cursor-pointer group" style="background-color: #ffffff; border-color: #0d9488;" title="Kelola Kartu Riwayat Alat Elektronik (Komputer, PC, Printer, dll)">
+                                <i class="fa-solid fa-microchip text-xs" style="color: #0d9488;"></i>
+                                <span style="color: #064e3b; font-weight: 800; font-size: 12px;">Kartu Riwayat Alat</span>
+                            </a>
+
+                            <!-- Tombol Import Data -->
+                            <button type="button" onclick="openImportModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                                <i class="fa-solid fa-file-arrow-up text-xs"></i> Import Data
+                            </button>
+
+                            <!-- Dropdown Export Data -->
+                            <div class="relative inline-block text-left" id="exportDropdownWrapper">
+                                <button type="button" onclick="toggleExportDropdown(event)" class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-1.5 border border-slate-200 shadow-xs cursor-pointer">
+                                    <i class="fa-solid fa-file-arrow-down text-teal-700 text-xs"></i>
+                                    <span>Export</span>
+                                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                                </button>
+                                <div id="exportDropdownMenu" class="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 z-40 hidden origin-top-right">
+                                    <div class="px-3 py-1.5 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                        Pilih Format Unduhan
+                                    </div>
+                                    <a href="{{ route('admin.properti.dokumen.export', ['dokumenId' => $dokumen->id, 'format' => 'docx']) }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-teal-900 transition">
+                                        <i class="fa-solid fa-file-word text-blue-600 text-sm"></i>
+                                        <div>
+                                            <p class="font-bold leading-tight">Dokumen Word (.docx)</p>
+                                            <p class="text-[10px] text-slate-400">Format formulir & ringkasan</p>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('admin.properti.dokumen.export', ['dokumenId' => $dokumen->id, 'format' => 'xlsx']) }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-teal-900 transition">
+                                        <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i>
+                                        <div>
+                                            <p class="font-bold leading-tight">Spreadsheet Excel (.xlsx)</p>
+                                            <p class="text-[10px] text-slate-400">Data tabular lengkap</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Cetak Dokumen -->
                             <button type="button" onclick="window.print()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-1.5 border border-slate-200 cursor-pointer">
                                 <i class="fa-solid fa-print text-xs"></i> Cetak Dokumen
                             </button>
 
-                            <button type="button" onclick="toggleFormTambah()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+                            <!-- Edit Dokumen & No. Revisi -->
+                            <button type="button" onclick="openModalEditDokumen()" class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs rounded-xl transition flex items-center gap-1.5 border border-amber-300 shadow-2xs cursor-pointer" title="Ubah Nomor Revisi, Nomor Formulir, atau Tanggal Pendataan">
+                                <i class="fa-solid fa-file-pen text-amber-700 text-xs"></i> Edit Revisi / Dokumen
+                            </button>
+
+                            <!-- Tambah Data Properti -->
+                            <button type="button" onclick="toggleFormTambah()" class="px-3.5 py-2 bg-teal-800 hover:bg-teal-900 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer">
                                 <i class="fa-solid fa-plus text-xs"></i> Tambah Data Properti
                             </button>
                         </div>
@@ -294,46 +378,51 @@
                 <!-- LEMBAR KERJA FISIK DOKUMEN (FT-SPR-INS-F-01) -->
                 <div id="printPaper" class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
                     
-                    <!-- HEADER DOKUMEN RESMI UIKA (Persis Foto 2) -->
+                    <!-- HEADER DOKUMEN RESMI UIKA (Persis Format Asli Foto Kertas Fisik) -->
                     <div class="border border-slate-800 rounded-lg overflow-hidden">
                         <div class="grid grid-cols-12 divide-x divide-slate-800">
-                            <!-- Logo & Kop Kiri -->
-                            <div class="col-span-3 sm:col-span-2 p-3 flex flex-col items-center justify-center bg-slate-50">
-                                <img src="{{ asset('images/logo-uika.png') }}" alt="Logo UIKA" class="w-14 h-14 object-contain">
-                                <span class="text-[9px] font-extrabold text-slate-800 text-center mt-1 uppercase tracking-tight">UIKA BOGOR</span>
+                            <!-- 1. Logo Kiri -->
+                            <div class="col-span-2 p-2 sm:p-3 flex items-center justify-center bg-slate-50/50">
+                                <img src="{{ asset('images/logo-uika.png') }}" alt="Logo UIKA" class="w-12 h-12 object-contain">
                             </div>
 
-                            <!-- Judul Dokumen Tengah -->
-                            <div class="col-span-6 sm:col-span-7 p-4 flex flex-col items-center justify-center text-center">
-                                <span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">FORMULIR MUTU</span>
-                                <h1 class="text-base sm:text-lg font-black text-slate-900 uppercase tracking-tight">
+                            <!-- 2. Metadata Tengah (No Dokumen, No Revisi, Tanggal Pendataan) -->
+                            <div class="col-span-5 text-[10px] sm:text-[11px] divide-y divide-slate-800 font-medium flex flex-col justify-center">
+                                <div class="grid grid-cols-12 divide-x divide-slate-800">
+                                    <div class="col-span-7 p-1.5 px-2 flex justify-between items-center group cursor-pointer hover:bg-teal-50/70 transition" onclick="openModalEditDokumen()" title="Klik untuk ubah No. Dokumen / Revisi">
+                                        <span class="text-slate-500">No. Dokumen:</span>
+                                        <div class="flex items-center gap-1">
+                                            <span id="docNomorDokumenDisplay" class="font-bold text-slate-800 font-mono">{{ $dokumen->nomor_dokumen }}</span>
+                                            <i class="fa-solid fa-pen text-[8px] text-teal-600 opacity-0 group-hover:opacity-100 transition no-print"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-span-5 p-1.5 px-2 flex justify-between items-center group cursor-pointer hover:bg-amber-50 transition" onclick="openModalEditDokumen()" title="Klik untuk ubah / tambah Nomor Revisi">
+                                        <span class="text-slate-500">No. Revisi:</span>
+                                        <div class="flex items-center gap-1">
+                                            <span id="docNomorRevisiDisplay" class="font-bold text-slate-900 px-1 rounded bg-amber-100/70 border border-amber-300/60">{{ $dokumen->nomor_revisi ?: '0' }}</span>
+                                            <i class="fa-solid fa-pen text-[8px] text-amber-700 opacity-60 group-hover:opacity-100 transition no-print"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-1.5 px-2 flex justify-between items-center group cursor-pointer hover:bg-teal-50/70 transition" onclick="openModalEditDokumen()" title="Klik untuk ubah Tanggal Pendataan">
+                                    <span class="text-slate-500">Tanggal Pendataan:</span>
+                                    <div class="flex items-center gap-1">
+                                        <span id="docTanggalDisplay" class="font-bold text-slate-800">
+                                            {{ \Carbon\Carbon::parse($dokumen->tanggal_pendataan)->format('d-m-Y') }}
+                                        </span>
+                                        <i class="fa-solid fa-pen text-[8px] text-teal-600 opacity-0 group-hover:opacity-100 transition no-print"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. Judul Dokumen Kanan -->
+                            <div class="col-span-5 p-3 flex flex-col items-center justify-center text-center">
+                                <h1 class="text-sm sm:text-base font-black text-slate-900 uppercase tracking-tight">
                                     DAFTAR FASILITAS DAN PROPERTI
                                 </h1>
-                                <p class="text-[11px] font-semibold text-teal-800 mt-0.5">
+                                <p class="text-[10px] sm:text-[11px] font-bold text-teal-800 mt-0.5">
                                     {{ strtoupper($dokumen->laboratorium->nama_lab ?? 'LABORATORIUM') }}
                                 </p>
-                            </div>
-
-                            <!-- Metadata Kanan (No Dokumen, No Revisi, Tanggal, Halaman) -->
-                            <div class="col-span-3 sm:col-span-3 text-[10px] sm:text-[11px] divide-y divide-slate-800 font-medium">
-                                <div class="p-1.5 px-2 flex justify-between">
-                                    <span class="text-slate-500">No. Dokumen:</span>
-                                    <span class="font-bold text-slate-800 font-mono">{{ $dokumen->nomor_dokumen }}</span>
-                                </div>
-                                <div class="p-1.5 px-2 flex justify-between">
-                                    <span class="text-slate-500">No. Revisi:</span>
-                                    <span class="font-bold text-slate-800">{{ $dokumen->nomor_revisi }}</span>
-                                </div>
-                                <div class="p-1.5 px-2 flex justify-between">
-                                    <span class="text-slate-500">Tgl. Pendataan:</span>
-                                    <span class="font-bold text-slate-800">
-                                        {{ \Carbon\Carbon::parse($dokumen->tanggal_pendataan)->format('d-m-Y') }}
-                                    </span>
-                                </div>
-                                <div class="p-1.5 px-2 flex justify-between">
-                                    <span class="text-slate-500">Halaman:</span>
-                                    <span class="font-bold text-slate-800">1 dari 1</span>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -383,7 +472,8 @@
 
                                         <!-- 2. Kategori Barang -->
                                         <td class="border border-slate-800 p-1">
-                                            <select onchange="updateInline({{ $item->id }}, 'kategori_id', this.value)" class="w-full text-xs p-1 rounded-md border border-transparent hover:border-slate-300 focus:border-teal-700 bg-transparent inline-cell-input font-medium">
+                                            <span id="print-kategori-{{ $item->id }}" class="hidden print-text font-medium text-[8pt]">{{ $item->kategori?->nama ?? '-' }}</span>
+                                            <select onchange="updateInline({{ $item->id }}, 'kategori_id', this.value)" class="w-full text-xs p-1 rounded-md border border-transparent hover:border-slate-300 focus:border-teal-700 bg-transparent inline-cell-input font-medium no-print-select">
                                                 <option value="">-</option>
                                                 @foreach($kategoriList as $k)
                                                     <option value="{{ $k->id }}" {{ $item->kategori_id == $k->id ? 'selected' : '' }}>
@@ -395,7 +485,8 @@
 
                                         <!-- 3. Sub Kategori Barang -->
                                         <td class="border border-slate-800 p-1">
-                                            <select onchange="updateInline({{ $item->id }}, 'sub_kategori_id', this.value)" class="w-full text-xs p-1 rounded-md border border-transparent hover:border-slate-300 focus:border-teal-700 bg-transparent inline-cell-input font-medium">
+                                            <span id="print-sub_kategori-{{ $item->id }}" class="hidden print-text font-medium text-[8pt]">{{ $item->subKategori?->nama ?? '-' }}</span>
+                                            <select onchange="updateInline({{ $item->id }}, 'sub_kategori_id', this.value)" class="w-full text-xs p-1 rounded-md border border-transparent hover:border-slate-300 focus:border-teal-700 bg-transparent inline-cell-input font-medium no-print-select">
                                                 <option value="">-</option>
                                                 @foreach($subKategoriList as $s)
                                                     <option value="{{ $s->id }}" {{ $item->sub_kategori_id == $s->id ? 'selected' : '' }}>
@@ -480,8 +571,8 @@
                             <p>Mengetahui,</p>
                             <p class="font-bold">Kepala Laboratorium</p>
                             <div class="h-20"></div>
-                            <p class="font-bold underline">{{ $dokumen->laboratorium->nama_kepala_lab ?? '( .............................................. )' }}</p>
-                            <p class="text-[10px] text-slate-500">NIP: {{ $dokumen->laboratorium->nip_kepala_lab ?? '-' }}</p>
+                            <p class="font-bold underline">{{ !empty($dokumen->laboratorium?->nama_kepala_lab) ? $dokumen->laboratorium->nama_kepala_lab : 'Dr. Jejen Jaenudin, S.Kom., M.Kom.' }}</p>
+                            <p class="text-[10px] text-slate-500">NIP: {{ !empty($dokumen->laboratorium?->nip_kepala_lab) ? $dokumen->laboratorium->nip_kepala_lab : '410100470' }}</p>
                         </div>
                         <div>
                             <p>Bogor, {{ \Carbon\Carbon::parse($dokumen->tanggal_pendataan)->translatedFormat('d F Y') }}</p>
@@ -498,6 +589,185 @@
         </div>
     </main>
 
+    <!-- MODAL IMPORT DATA PROPERTI (WORD & EXCEL) -->
+    <div id="importModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs hidden p-4 transition-all">
+        <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+            <!-- Modal Header -->
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-file-arrow-up text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-base text-slate-800">Import Data Inventaris</h3>
+                        <p class="text-xs text-slate-500">Mendukung berkas Word (.docx) & Excel (.xlsx, .csv)</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeImportModal()" class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <form id="formImportProperti" action="{{ route('admin.properti.dokumen.import', $dokumen->id) }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+                @csrf
+
+                <!-- File Upload Box -->
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-2">Pilih Berkas Inventaris <span class="text-red-500">*</span></label>
+                    <div id="dropZone" class="border-2 border-dashed border-slate-300 hover:border-emerald-600 bg-slate-50/60 hover:bg-emerald-50/30 rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center group" onclick="document.getElementById('fileInput').click()">
+                        <div class="w-12 h-12 rounded-2xl bg-white shadow-xs border border-slate-200 flex items-center justify-center text-slate-500 group-hover:text-emerald-700 group-hover:scale-105 transition mb-3">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                        </div>
+                        <p class="text-xs font-bold text-slate-700 mb-1">
+                            <span class="text-emerald-700 underline group-hover:text-emerald-800">Klik untuk jelajah berkas</span> atau seret berkas ke sini
+                        </p>
+                        <p class="text-[11px] text-slate-400">Word (.docx) atau Excel (.xlsx, .xls, .csv) • Maks. 20 MB</p>
+
+                        <!-- Selected File Info -->
+                        <div id="selectedFileInfo" class="hidden mt-3 p-2 px-3 bg-white border border-emerald-300 rounded-xl flex items-center gap-2 text-xs font-bold text-emerald-800">
+                            <i class="fa-solid fa-check-circle text-emerald-600"></i>
+                            <span id="selectedFileName" class="truncate max-w-[260px]">-</span>
+                            <span id="selectedFileSize" class="text-[10px] text-slate-400 font-normal">(-)</span>
+                        </div>
+                    </div>
+                    <input type="file" name="file" id="fileInput" accept=".docx,.doc,.xlsx,.xls,.csv" required class="hidden" onchange="handleFileSelected(this)">
+                </div>
+
+                <!-- Mode Import Option -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-extrabold text-slate-700">Mode Impor Data</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 hover:border-teal-700/60 bg-white cursor-pointer transition">
+                            <input type="radio" name="mode" value="append" checked class="mt-0.5 text-teal-700 focus:ring-teal-700">
+                            <div>
+                                <span class="font-bold text-slate-800 block">Tambah Data (Append)</span>
+                                <span class="text-[11px] text-slate-400 leading-tight block">Menambahkan barang tanpa menghapus data sebelumnya.</span>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 hover:border-rose-400 bg-white cursor-pointer transition">
+                            <input type="radio" name="mode" value="replace" class="mt-0.5 text-rose-600 focus:ring-rose-500">
+                            <div>
+                                <span class="font-bold text-slate-800 block text-rose-700">Ganti Semua (Replace)</span>
+                                <span class="text-[11px] text-slate-400 leading-tight block">Hapus semua data di dokumen ini lalu isi data dari berkas.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Petunjuk Format -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-[11px] text-slate-600 space-y-1">
+                    <div class="flex items-center gap-1.5 font-bold text-slate-700">
+                        <i class="fa-solid fa-circle-info text-teal-700 text-xs"></i>
+                        <span>Format Didukung:</span>
+                    </div>
+                    <p class="leading-relaxed">
+                        Mendukung tabel format <b>Daftar Inventaris Barang.docx</b> maupun format mutu fisik <b>FT-SPR-INS-F-01</b> (kategori, sub-kategori, nomor, ruang, dan kondisi ceklis Baik/Sedang/Rusak).
+                    </p>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                    <button type="button" onclick="closeImportModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit" id="btnSubmitImport" class="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition shadow-sm flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-file-arrow-up text-xs"></i>
+                        <span id="btnSubmitImportText">Mulai Impor</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDIT DOKUMEN & NOMOR REVISI -->
+    <div id="editDokumenModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs hidden p-4 transition-all">
+        <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+            <!-- Modal Header -->
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-file-pen text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-base text-slate-800">Ubah No. Revisi & Info Dokumen</h3>
+                        <p class="text-xs text-slate-500">Perbarui nomor revisi, kode dokumen, atau tanggal pendataan</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeEditDokumenModal()" class="w-8 h-8 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body Form -->
+            <form id="formEditDokumen" onsubmit="submitEditDokumen(event)" class="p-6 space-y-4">
+                <!-- No. Revisi (Utama) -->
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1.5">
+                        Nomor Revisi <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="modalNomorRevisi" name="nomor_revisi" value="{{ $dokumen->nomor_revisi ?: '0' }}" required
+                            class="flex-1 text-sm font-bold text-slate-800 px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-amber-50/30">
+                        <button type="button" onclick="stepUpNomorRevisi()" class="px-3.5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer" title="Naikkan nomor revisi +1">
+                            <i class="fa-solid fa-arrow-up"></i> +1 Naik Revisi
+                        </button>
+                    </div>
+                    <!-- Quick Pill Presets -->
+                    <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+                        <span class="text-[11px] text-slate-400 font-medium">Pilihan Cepat:</span>
+                        <button type="button" onclick="setNomorRevisi('0')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">0</button>
+                        <button type="button" onclick="setNomorRevisi('00')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">00</button>
+                        <button type="button" onclick="setNomorRevisi('01')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">01</button>
+                        <button type="button" onclick="setNomorRevisi('02')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">02</button>
+                        <button type="button" onclick="setNomorRevisi('1')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">1</button>
+                        <button type="button" onclick="setNomorRevisi('2')" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition">2</button>
+                    </div>
+                </div>
+
+                <!-- No. Dokumen -->
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1.5">
+                        Nomor Dokumen (Formulir Mutu) <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" id="modalNomorDokumen" name="nomor_dokumen" value="{{ $dokumen->nomor_dokumen }}" required
+                        class="w-full text-xs font-mono font-bold text-slate-800 px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-700">
+                    <p class="text-[10px] text-slate-400 mt-1">Contoh: FT-SPR-INS-F-01 atau format penomoran mutu fakultas.</p>
+                </div>
+
+                <!-- Nama Dokumen -->
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1.5">
+                        Nama Dokumen <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" id="modalNamaDokumen" name="nama_dokumen" value="{{ $dokumen->nama_dokumen }}" required
+                        class="w-full text-xs font-semibold text-slate-800 px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-700">
+                </div>
+
+                <!-- Tanggal Pendataan -->
+                <div>
+                    <label class="block text-xs font-extrabold text-slate-700 mb-1.5">
+                        Tanggal Pendataan <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="date" id="modalTanggalPendataan" name="tanggal_pendataan" value="{{ $dokumen->tanggal_pendataan ? $dokumen->tanggal_pendataan->format('Y-m-d') : '' }}" required
+                        class="w-full text-xs font-semibold text-slate-800 px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-700">
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                    <button type="button" onclick="closeEditDokumenModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit" id="btnSubmitEditDokumen" class="px-5 py-2.5 rounded-xl bg-teal-800 hover:bg-teal-900 text-white font-bold text-xs transition shadow-sm flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                        <span>Simpan Perubahan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const DOKUMEN_ID = {{ $dokumen->id }};
@@ -509,11 +779,209 @@
                 menu.classList.toggle('hidden');
             }
         }
+
+        function toggleExportDropdown(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('exportDropdownMenu');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        }
+
+        function openImportModal() {
+            const modal = document.getElementById('importModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeImportModal() {
+            const modal = document.getElementById('importModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Handler Modal Edit Dokumen & Revisi
+        function openModalEditDokumen() {
+            const modal = document.getElementById('editDokumenModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    const input = document.getElementById('modalNomorRevisi');
+                    if (input) {
+                        input.focus();
+                        input.select();
+                    }
+                }, 100);
+            }
+        }
+
+        function closeEditDokumenModal() {
+            const modal = document.getElementById('editDokumenModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function setNomorRevisi(val) {
+            const input = document.getElementById('modalNomorRevisi');
+            if (input) {
+                input.value = val;
+                input.focus();
+            }
+        }
+
+        function stepUpNomorRevisi() {
+            const input = document.getElementById('modalNomorRevisi');
+            if (!input) return;
+            let val = input.value.trim();
+            if (!val || isNaN(val)) {
+                input.value = '1';
+                return;
+            }
+            const num = parseInt(val, 10) + 1;
+            if (val.length >= 2 && val.startsWith('0')) {
+                input.value = String(num).padStart(val.length, '0');
+            } else {
+                input.value = String(num);
+            }
+            input.focus();
+        }
+
+        function submitEditDokumen(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmitEditDokumen');
+            const originalContent = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Menyimpan...</span>';
+
+            const payload = {
+                nomor_revisi: document.getElementById('modalNomorRevisi').value,
+                nomor_dokumen: document.getElementById('modalNomorDokumen').value,
+                nama_dokumen: document.getElementById('modalNamaDokumen').value,
+                tanggal_pendataan: document.getElementById('modalTanggalPendataan').value,
+            };
+
+            fetch("{{ route('admin.properti.dokumen.update', $dokumen->id) }}", {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': CSRF_TOKEN,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Gagal memperbarui info dokumen.');
+                return res.json();
+            })
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                closeEditDokumenModal();
+
+                if (data.success) {
+                    const revDisplay = document.getElementById('docNomorRevisiDisplay');
+                    if (revDisplay) revDisplay.textContent = data.data.nomor_revisi;
+
+                    const docDisplay = document.getElementById('docNomorDokumenDisplay');
+                    if (docDisplay) docDisplay.textContent = data.data.nomor_dokumen;
+
+                    const tglDisplay = document.getElementById('docTanggalDisplay');
+                    if (tglDisplay && data.data.tanggal_pendataan) tglDisplay.textContent = data.data.tanggal_pendataan;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Diperbarui!',
+                        text: `Nomor Revisi berhasil diubah menjadi: ${data.data.nomor_revisi}`,
+                        timer: 2000,
+                        showConfirmButton: false,
+                        customClass: { popup: 'rounded-2xl shadow-xl' }
+                    });
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Terjadi Kesalahan',
+                    text: err.message || 'Gagal menyimpan perubahan.',
+                    customClass: { popup: 'rounded-2xl shadow-xl' }
+                });
+            });
+        }
+
+        function handleFileSelected(input) {
+            const info = document.getElementById('selectedFileInfo');
+            const nameEl = document.getElementById('selectedFileName');
+            const sizeEl = document.getElementById('selectedFileSize');
+
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                nameEl.textContent = file.name;
+                const sizeKB = (file.size / 1024).toFixed(1);
+                sizeEl.textContent = `(${sizeKB > 1024 ? (sizeKB/1024).toFixed(2) + ' MB' : sizeKB + ' KB'})`;
+                info.classList.remove('hidden');
+            } else {
+                info.classList.add('hidden');
+            }
+        }
+
+        // Drag & Drop handlers for file upload
+        const dropZone = document.getElementById('dropZone');
+        if (dropZone) {
+            ['dragenter', 'dragover'].forEach(evt => {
+                dropZone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.add('border-emerald-600', 'bg-emerald-50/40');
+                });
+            });
+            ['dragleave', 'drop'].forEach(evt => {
+                dropZone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove('border-emerald-600', 'bg-emerald-50/40');
+                });
+            });
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                if (dt && dt.files && dt.files.length) {
+                    const input = document.getElementById('fileInput');
+                    input.files = dt.files;
+                    handleFileSelected(input);
+                }
+            });
+        }
+
+        // Form Import Submit Handler
+        const formImport = document.getElementById('formImportProperti');
+        if (formImport) {
+            formImport.addEventListener('submit', function() {
+                const btn = document.getElementById('btnSubmitImport');
+                const btnText = document.getElementById('btnSubmitImportText');
+                if (btn && btnText) {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-75', 'cursor-not-allowed');
+                    btnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengimpor Data...';
+                }
+            });
+        }
+
         document.addEventListener('click', function(e) {
             const menu = document.getElementById('profileDropdownMenu');
             const wrapper = document.getElementById('profileDropdownWrapper');
             if (menu && wrapper && !wrapper.contains(e.target)) {
                 menu.classList.add('hidden');
+            }
+
+            const exportMenu = document.getElementById('exportDropdownMenu');
+            const exportWrapper = document.getElementById('exportDropdownWrapper');
+            if (exportMenu && exportWrapper && !exportWrapper.contains(e.target)) {
+                exportMenu.classList.add('hidden');
             }
         });
 
@@ -609,7 +1077,8 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': CSRF_TOKEN,
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({ field: field, value: value })
             })
@@ -617,6 +1086,14 @@
             .then(data => {
                 if (data.status === 'success') {
                     saveIndicator.innerHTML = '<i class="fa-solid fa-check text-emerald-600"></i> Tersimpan';
+                    if (field === 'kategori_id' && data.item?.kategori?.nama) {
+                        const printEl = document.getElementById(`print-kategori-${itemId}`);
+                        if (printEl) printEl.innerText = data.item.kategori.nama;
+                    }
+                    if (field === 'sub_kategori_id' && data.item?.sub_kategori?.nama) {
+                        const printEl = document.getElementById(`print-sub_kategori-${itemId}`);
+                        if (printEl) printEl.innerText = data.item.sub_kategori.nama;
+                    }
                     setTimeout(() => {
                         saveIndicator.classList.add('hidden');
                     }, 2000);
@@ -685,8 +1162,20 @@
                 icon: 'success',
                 title: 'Berhasil',
                 text: "{{ session('success') }}",
-                timer: 3000,
+                timer: 3500,
                 showConfirmButton: false,
+                customClass: { popup: 'rounded-2xl shadow-xl' }
+            });
+        </script>
+    @endif
+
+    @if(session('error') || $errors->any())
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Perhatian',
+                text: "{{ session('error') ?? $errors->first() }}",
+                confirmButtonColor: '#0f766e',
                 customClass: { popup: 'rounded-2xl shadow-xl' }
             });
         </script>

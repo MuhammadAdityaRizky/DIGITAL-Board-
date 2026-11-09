@@ -123,7 +123,7 @@
         </header>
 
         <!-- Content Area -->
-        <div class="flex-grow overflow-auto p-4 md:p-6 space-y-6">
+        <div class="flex-grow overflow-auto p-4 md:p-6 space-y-6 pb-24">
             
             <!-- Mobile Profile Summary Card -->
             <div class="bg-teal-50 border border-teal-100 rounded-2xl p-4 flex items-center gap-4 lg:hidden shadow-sm">
@@ -139,100 +139,231 @@
                 </div>
             </div>
 
+            <!-- Header & Filter Section (Identik Template Agenda) -->
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                    <div>
+                        <h2 class="font-bold text-base text-slate-800">Riwayat Kehadiran Praktikum</h2>
+                        <p class="text-[10px] text-slate-500 font-semibold mt-1">
+                            Prodi: {{ $mahasiswa->prodi->nama_prodi ?? 'Informatika' }} • Kelas {{ $mahasiswa->kelas ?: '-' }} • Semester {{ $mahasiswa->semester ?: '-' }}
+                        </p>
+                    </div>
+                </div>
 
+                <!-- 4 Statistik Ringkas Presensi (Sleek, Compact & Responsive) -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs flex items-center gap-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-600 shrink-0">
+                            <i class="fa-solid fa-circle-check text-base"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hadir</p>
+                            <p class="text-lg sm:text-xl font-extrabold text-slate-800 mt-0.5">{{ $hadirCount }} <span class="text-[11px] font-semibold text-slate-400">Sesi</span></p>
+                        </div>
+                    </div>
 
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                <!-- Left Details List -->
-                <div class="xl:col-span-2 space-y-4">
-                    <!-- Attendance Log -->
-                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden p-6 space-y-5">
-                        <!-- Header with Title & Search Form -->
-                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-100">
-                            <div>
-                                <h3 class="font-extrabold text-base text-slate-900 tracking-tight">Daftar Kehadiran Praktikum</h3>
-                                <p class="text-xs text-slate-500 mt-0.5">Riwayat presensi kelas praktikum laboratorium yang telah diikuti</p>
+                    <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs flex items-center gap-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-center text-blue-600 shrink-0">
+                            <i class="fa-solid fa-circle-info text-base"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Izin</p>
+                            <p class="text-lg sm:text-xl font-extrabold text-slate-800 mt-0.5">{{ $izinCount }} <span class="text-[11px] font-semibold text-slate-400">Sesi</span></p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs flex items-center gap-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200/80 flex items-center justify-center text-rose-600 shrink-0">
+                            <i class="fa-solid fa-circle-xmark text-base"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Alpa</p>
+                            <p class="text-lg sm:text-xl font-extrabold text-slate-800 mt-0.5">{{ $alpaCount }} <span class="text-[11px] font-semibold text-slate-400">Sesi</span></p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs flex items-center gap-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200/80 flex items-center justify-center text-teal-700 shrink-0">
+                            <i class="fa-solid fa-chart-pie text-base"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">% Kehadiran</p>
+                            <p class="text-lg sm:text-xl font-extrabold text-slate-800 mt-0.5">{{ $attendancePercentage }}%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Panel (Hemat Ruang & Responsif Mobile - Persis Template Agenda) -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm">
+                    <form id="filterRiwayatForm" action="{{ route('mahasiswa.riwayat') }}" method="GET" class="space-y-3">
+                        <div class="flex flex-col sm:flex-row gap-2.5 items-center text-xs">
+                            <!-- Keyword Search -->
+                            <div class="relative flex-1 w-full">
+                                <input type="text" name="search" value="{{ request('search') }}" 
+                                       placeholder="Cari mata kuliah, lab, dosen..." 
+                                       class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none text-xs text-slate-800 transition">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+                                @if(request('search'))
+                                    <a href="{{ route('mahasiswa.riwayat', request()->except('search')) }}" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-rose-500 text-xs p-0.5" title="Hapus cari">
+                                        <i class="fa-solid fa-circle-xmark"></i>
+                                    </a>
+                                @endif
                             </div>
 
-                            <!-- Search Form -->
-                            <form action="{{ route('mahasiswa.riwayat') }}" method="GET" class="relative w-full lg:w-96">
-                                <div class="relative flex items-center">
-                                    <i class="fa-solid fa-magnifying-glass absolute left-4 text-slate-400 text-sm pointer-events-none"></i>
-                                    <input type="text" name="search" value="{{ request('search') }}" 
-                                           placeholder="Cari mata kuliah, dosen, atau lab..." 
-                                           class="w-full pl-11 pr-10 py-2.5 bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 shadow-xs transition">
-                                    @if(request('search'))
-                                        <a href="{{ route('mahasiswa.riwayat') }}" class="absolute right-3.5 text-slate-400 hover:text-rose-500 transition text-sm p-1" title="Reset pencarian">
-                                            <i class="fa-solid fa-circle-xmark"></i>
-                                        </a>
-                                    @endif
-                                </div>
-                            </form>
-                        </div>
+                            <!-- Date Picker (Auto-Submit onchange) -->
+                            <div class="relative w-full sm:w-48 shrink-0">
+                                <input type="date" name="tanggal" value="{{ request('tanggal') }}" 
+                                       onchange="this.form.submit()" 
+                                       class="w-full py-2.5 px-3 rounded-xl bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700 outline-none text-xs text-slate-700 cursor-pointer font-medium"
+                                       title="Pilih tanggal (otomatis memfilter)">
+                            </div>
 
-                        <!-- Content List (Di bawah header) -->
-                        @if($absensiHistory->count() > 0)
-                            <div class="space-y-4">
-                                @foreach($absensiHistory as $abs)
-                                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
-                                        <div class="flex flex-col md:flex-row gap-5 items-start">
-                                            <!-- Time block -->
-                                            <div class="bg-teal-900 text-white rounded-xl p-3 flex flex-col items-center justify-center min-w-[120px] shadow-sm text-center shrink-0">
-                                                <span class="text-[10px] font-semibold uppercase tracking-wider text-teal-350">{{ date('d M Y', strtotime($abs->agenda->tanggal)) }}</span>
-                                                <span class="text-xs font-bold mt-1.5">{{ substr($abs->agenda->jam_mulai,0,5) }} - {{ substr($abs->agenda->jam_selesai,0,5) }} WIB</span>
-                                            </div>
-                                            
-                                            <!-- Details -->
-                                            <div class="flex-1 space-y-3 w-full">
-                                                <div>
-                                                    <div class="flex items-center gap-2 flex-wrap">
-                                                        <h4 class="font-bold text-slate-800 text-base mb-0.5">{{ $abs->agenda->mata_kuliah }}</h4>
-                                                        @if(strtolower($abs->status_kehadiran) === 'hadir')
-                                                            <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded text-[9px] font-bold uppercase tracking-wider">Hadir</span>
-                                                        @elseif(strtolower($abs->status_kehadiran) === 'izin')
-                                                            <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9px] font-bold uppercase tracking-wider">Izin</span>
-                                                        @elseif(strtolower($abs->status_kehadiran) === 'sakit')
-                                                            <span class="px-2 py-0.5 bg-[#fff8eb] text-[#d89115] border border-[#ffe0b2] rounded text-[9px] font-bold uppercase tracking-wider">Sakit</span>
-                                                        @else
-                                                            <span class="px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-100 rounded text-[9px] font-bold uppercase tracking-wider">Alpa</span>
-                                                        @endif
-                                                    </div>
-                                                    <p class="text-[11px] text-slate-500 mt-1">
-                                                        <i class="fa-solid fa-location-dot mr-1"></i>{{ $abs->agenda->lab->nama_lab }}
-                                                        • Dosen: {{ $abs->agenda->dosen->nama }}
-                                                        • Kelas: {{ $abs->agenda->kelas ?: '-' }}
-                                                        • Semester: {{ $abs->agenda->semester ?: '-' }}
-                                                    </p>
-                                                    <p class="text-[10px] text-slate-400 mt-1">Waktu Scan: <span class="font-mono text-slate-600">{{ $abs->waktu_masuk }}</span></p>
+                            <!-- Tombol Reset / Submit Mobile -->
+                            <div class="flex items-center gap-1.5 w-full sm:w-auto shrink-0 justify-end">
+                                <button type="submit" class="sm:hidden flex-1 py-2.5 bg-teal-800 hover:bg-teal-900 text-white rounded-xl font-bold text-xs transition shadow-xs flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-filter text-[10px]"></i> Cari
+                                </button>
+                                @if(request()->anyFilled(['search', 'tanggal']))
+                                    <a href="{{ route('mahasiswa.riwayat') }}" 
+                                       class="px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl font-bold text-xs transition border border-rose-200 flex items-center gap-1.5 shadow-2xs" 
+                                       title="Reset Semua Filter">
+                                        <i class="fa-solid fa-rotate-left text-[11px]"></i>
+                                        <span class="text-[11px]">Reset</span>
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Attendance History Card List (Persis Template Agenda Personal) -->
+            <div class="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
+                <div class="bg-slate-50/50 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+                    <h3 class="font-bold text-xs text-slate-800">
+                        Log Presensi Praktikum Saya
+                    </h3>
+                    <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                        {{ $absensiHistory->total() }} Sesi Tercatat
+                    </span>
+                </div>
+                
+                <div class="p-4 sm:p-6 space-y-4">
+                    @if($absensiHistory->count() > 0)
+                        @foreach($absensiHistory as $abs)
+                            @php
+                                $statusK = strtolower($abs->status_kehadiran);
+                                $ag = $abs->agenda;
+                            @endphp
+                            <div class="bg-slate-50/70 hover:bg-slate-50 border border-slate-200/90 hover:border-teal-700/30 rounded-2xl p-4 sm:p-5 space-y-3.5 transition shadow-2xs">
+                                <div class="flex flex-col sm:flex-row gap-4 sm:gap-5 items-start">
+                                    <!-- Time block (Blok Tanggal Hijau Tua Tegas Persis Agenda) -->
+                                    <div class="bg-teal-900 text-white rounded-xl p-3 flex flex-row sm:flex-col items-center justify-between sm:justify-center w-full sm:w-auto sm:min-w-[125px] shadow-sm text-center shrink-0">
+                                        <span class="text-[10px] font-semibold uppercase tracking-wider text-teal-350">
+                                            {{ date('d M Y', strtotime($ag->tanggal ?? $abs->waktu_masuk)) }}
+                                        </span>
+                                        <span class="text-xs font-bold sm:mt-1.5">
+                                            @if($ag && $ag->jam_mulai && $ag->jam_selesai)
+                                                {{ substr($ag->jam_mulai,0,5) }} - {{ substr($ag->jam_selesai,0,5) }} WIB
+                                            @else
+                                                {{ date('H:i', strtotime($abs->waktu_masuk)) }} WIB
+                                            @endif
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Details (Tengah) -->
+                                    <div class="flex-1 space-y-3 w-full">
+                                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+                                            <!-- Info Praktikum & Dosen -->
+                                            <div class="space-y-1">
+                                                <h4 class="font-bold text-slate-900 text-base leading-snug">
+                                                    {{ $ag->mata_kuliah ?? 'Praktikum Laboratorium' }}
+                                                </h4>
+                                                <p class="text-xs text-slate-500">
+                                                    <i class="fa-solid fa-location-dot mr-1 text-slate-400"></i>{{ $ag->lab->nama_lab ?? 'Lab' }}
+                                                    • Dosen: <span class="font-semibold text-slate-700">{{ $ag->dosen->nama ?? '-' }}</span>
+                                                    @if($ag && $ag->kelas) • Kelas: <span class="font-semibold text-slate-700">{{ $ag->kelas }}</span> @endif
+                                                    @if($ag && $ag->semester) • Semester: {{ $ag->semester }} @endif
+                                                </p>
+                                                <div class="flex items-center gap-2 pt-0.5">
+                                                    <span class="inline-flex items-center gap-1 text-[11px] text-slate-400">
+                                                        <i class="fa-solid fa-clock-rotate-left text-[10px]"></i>
+                                                        Waktu Presensi:
+                                                    </span>
+                                                    <span class="text-xs font-mono font-semibold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded shadow-2xs">
+                                                        {{ date('d/m/Y H:i:s', strtotime($abs->waktu_masuk)) }} WIB
+                                                    </span>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <div class="pt-4 border-t border-slate-100">
-                                {{ $absensiHistory->links() }}
-                            </div>
-                        @else
-                            <div class="text-center py-10 text-slate-400 italic">
-                                <i class="fa-solid fa-calendar-xmark text-xl block mb-2"></i>
-                                Tidak ada log kehadiran tercatat.
-                            </div>
-                        @endif
-                    </div>
-                </div>
 
-                <!-- Right Card: Information & Tip -->
-                <div class="space-y-6">
-                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                        <h3 class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-teal-800"></i> Ketentuan Presensi</h3>
-                        <ul class="text-xs text-slate-600 space-y-2.5 list-disc list-inside">
-                            <li>Setiap mahasiswa wajib melakukan scan QR Code menggunakan token yang tertera pada Digital Board laboratorium.</li>
-                            <li>Kehadiran tercatat otomatis jika token / ID agenda valid.</li>
-                            <li>Bila terdapat kendala kehadiran atau dispensasi, silakan berkoordinasi langsung dengan Dosen Pengampu matakuliah bersangkutan.</li>
-                        </ul>
-                    </div>
+                                            <!-- Badge Status Kehadiran Personal (Pojok Kanan Atas Persis Agenda) -->
+                                            <div class="shrink-0 flex items-start sm:items-end gap-2 self-start">
+                                                @if($statusK === 'hadir')
+                                                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[10.5px] font-extrabold uppercase tracking-wide inline-flex items-center gap-1.5 shadow-2xs">
+                                                        <i class="fa-solid fa-circle-check text-[10px] text-emerald-600"></i>
+                                                        <span>Masuk (Hadir)</span>
+                                                        @if($abs->waktu_masuk)
+                                                            <span class="text-[9.5px] text-emerald-600/80 font-mono font-semibold">{{ date('H:i', strtotime($abs->waktu_masuk)) }} WIB</span>
+                                                        @endif
+                                                    </span>
+                                                @elseif($statusK === 'izin')
+                                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-[10.5px] font-extrabold uppercase tracking-wide inline-flex items-center gap-1.5 shadow-2xs">
+                                                        <i class="fa-solid fa-circle-info text-[10px] text-blue-600"></i>
+                                                        <span>Izin</span>
+                                                    </span>
+                                                @elseif($statusK === 'sakit')
+                                                    <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[10.5px] font-extrabold uppercase tracking-wide inline-flex items-center gap-1.5 shadow-2xs">
+                                                        <i class="fa-solid fa-notes-medical text-[10px] text-amber-600"></i>
+                                                        <span>Sakit</span>
+                                                    </span>
+                                                @else
+                                                    <span class="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-[10.5px] font-extrabold uppercase tracking-wide inline-flex items-center gap-1.5 shadow-2xs">
+                                                        <i class="fa-solid fa-circle-xmark text-[10px] text-rose-600"></i>
+                                                        <span>Alpa (Tidak Hadir)</span>
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        
+                                        @if($ag && $ag->materi_realisasi)
+                                            <div class="p-3 bg-white border border-slate-150 rounded-xl text-[11px] shadow-2xs">
+                                                <span class="font-bold text-slate-700 block mb-0.5">Materi Praktikum / Realisasi:</span>
+                                                <p class="text-slate-600 font-medium leading-relaxed">{{ $ag->materi_realisasi }}</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                        
+                        <div class="pt-4">
+                            {{ $absensiHistory->links() }}
+                        </div>
+                    @else
+                        <div class="text-center py-16 text-slate-400">
+                            <i class="fa-solid fa-clock-rotate-left text-3xl block mb-2"></i>
+                            <p class="font-semibold text-sm text-slate-500">Tidak ada riwayat kehadiran tercatat.</p>
+                            <p class="text-xs text-slate-400 mt-1">Presensi praktikum yang Anda ikuti akan muncul secara otomatis di sini.</p>
+                        </div>
+                    @endif
                 </div>
-            </div>        </div>
+            </div>
+
+            <!-- Ketentuan Presensi (Tip Strip Elegan di Bawah) -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-2xs flex items-start gap-3.5">
+                <div class="w-8 h-8 rounded-xl bg-teal-50 border border-teal-200/80 flex items-center justify-center text-teal-700 shrink-0 mt-0.5">
+                    <i class="fa-solid fa-circle-info text-sm"></i>
+                </div>
+                <div class="text-xs text-slate-600 space-y-1">
+                    <h5 class="font-bold text-slate-800 text-xs">Ketentuan & Alur Presensi Praktikum</h5>
+                    <p class="leading-relaxed text-slate-500">
+                        Setiap mahasiswa wajib melakukan scan QR Code menggunakan token yang tertera pada Digital Board laboratorium saat sesi praktikum aktif. Kehadiran tercatat otomatis secara real-time. Jika mengalami kendala teknis atau dispensasi kehadiran resmi, silakan berkoordinasi langsung dengan Dosen Pengampu mata kuliah bersangkutan.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </main>
 
     <!-- Bottom Navigation Bar (Mobile Only - Symmetrical 4-tab layout with Center Scan QR) -->
     <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-between px-3 z-40 lg:hidden shadow-lg">

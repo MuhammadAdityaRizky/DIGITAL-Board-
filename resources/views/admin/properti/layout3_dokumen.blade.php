@@ -166,6 +166,11 @@
                                                     <i class="fa-solid fa-folder-open text-[11px]"></i>
                                                     <span>Buka Data</span>
                                                 </a>
+
+                                                <!-- Tombol Edit Dokumen & Revisi -->
+                                                <button type="button" onclick="openModalEditDokumenList({{ $doc->id }}, '{{ addslashes($doc->nama_dokumen) }}', '{{ addslashes($doc->nomor_dokumen) }}', '{{ addslashes($doc->nomor_revisi) }}', '{{ $doc->tanggal_pendataan ? \Carbon\Carbon::parse($doc->tanggal_pendataan)->format('Y-m-d') : '' }}')" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-700 border border-slate-200 flex items-center justify-center transition cursor-pointer" title="Edit Dokumen / Revisi">
+                                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                                </button>
                                                 
                                                 <!-- Tombol Hapus Dokumen -->
                                                 <form action="{{ route('admin.properti.dokumen.destroy', $doc->id) }}" method="POST" onsubmit="return confirmHapusDokumen(event, this)">
@@ -249,6 +254,66 @@
         </div>
     </div>
 
+    <!-- MODAL EDIT DOKUMEN & REVISI (LAYOUT 3) -->
+    <div id="modalEditDokumenList" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden p-4 transition-all">
+        <div id="modalEditDokumenListContainer" class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden transform scale-95 transition-all">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-file-pen"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-800">Edit Info Dokumen & No. Revisi</h3>
+                        <p class="text-xs text-slate-500">Perbarui nomor formulir, nomor revisi, atau tanggal</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalEditDokumenList()" class="w-8 h-8 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="formEditDokumenList" method="POST" class="p-6 space-y-4">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Nama Dokumen / Berkas <span class="text-red-500">*</span></label>
+                    <input type="text" id="editListNamaDokumen" name="nama_dokumen" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-700 font-semibold">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">No. Dokumen <span class="text-red-500">*</span></label>
+                        <input type="text" id="editListNomorDokumen" name="nomor_dokumen" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-700 font-mono font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">No. Revisi <span class="text-red-500">*</span></label>
+                        <div class="flex items-center gap-1.5">
+                            <input type="text" id="editListNomorRevisi" name="nomor_revisi" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold bg-amber-50/30">
+                            <button type="button" onclick="stepUpEditListRevisi()" class="px-2.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer" title="Naikkan revisi +1">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Pendataan <span class="text-red-500">*</span></label>
+                    <input type="date" id="editListTanggal" name="tanggal_pendataan" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-700 font-semibold">
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeModalEditDokumenList()" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 font-bold text-xs transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-teal-800 hover:bg-teal-900 text-white font-bold text-xs transition shadow-sm flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                        <span>Simpan Perubahan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         function toggleProfileDropdown(e) {
             e.stopPropagation();
@@ -285,6 +350,52 @@
             setTimeout(() => {
                 modal.classList.add('hidden');
             }, 200);
+        }
+
+        function openModalEditDokumenList(id, nama, nomor, revisi, tanggal) {
+            const modal = document.getElementById('modalEditDokumenList');
+            const container = document.getElementById('modalEditDokumenListContainer');
+            const form = document.getElementById('formEditDokumenList');
+
+            form.action = `/admin/properti/dokumen/${id}`;
+            document.getElementById('editListNamaDokumen').value = nama;
+            document.getElementById('editListNomorDokumen').value = nomor;
+            document.getElementById('editListNomorRevisi').value = revisi;
+            document.getElementById('editListTanggal').value = tanggal;
+
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                modal.classList.remove('opacity-0');
+                container.classList.remove('scale-95');
+                container.classList.add('scale-100');
+            });
+        }
+
+        function closeModalEditDokumenList() {
+            const modal = document.getElementById('modalEditDokumenList');
+            const container = document.getElementById('modalEditDokumenListContainer');
+            modal.classList.add('opacity-0');
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function stepUpEditListRevisi() {
+            const input = document.getElementById('editListNomorRevisi');
+            if (!input) return;
+            let val = input.value.trim();
+            if (!val || isNaN(val)) {
+                input.value = '1';
+                return;
+            }
+            const num = parseInt(val, 10) + 1;
+            if (val.length >= 2 && val.startsWith('0')) {
+                input.value = String(num).padStart(val.length, '0');
+            } else {
+                input.value = String(num);
+            }
         }
 
         function confirmHapusDokumen(event, form) {

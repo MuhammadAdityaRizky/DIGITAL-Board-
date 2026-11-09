@@ -7,6 +7,11 @@ use App\Models\Fakultas;
 use App\Models\ItemPropertiLab;
 use App\Models\KategoriProperti;
 use App\Models\Laboratorium;
+use App\Models\RiwayatPemeliharaanAlat;
+use App\Imports\PropertiLabImport;
+use App\Exports\PropertiLabDocxExport;
+use App\Exports\PropertiLabExcelExport;
+use App\Exports\KartuRiwayatAlatDocxExport;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -111,6 +116,62 @@ class PropertiLabController extends Controller
 
         return redirect()->route('admin.properti.dokumen.show', ['dokumenId' => $dokumen->id])
             ->with('success', 'Dokumen inventaris berhasil dibuat. Silakan tambahkan data properti.');
+    }
+
+    /**
+     * Update Informasi Dokumen Inventaris & Nomor Revisi
+     */
+    public function updateDokumen(Request $request, $dokumenId)
+    {
+        $dokumen = DokumenPropertiLab::with('laboratorium')->findOrFail($dokumenId);
+        $user = auth()->user();
+
+        if (!$user->canManageLab($dokumen->laboratorium)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+            }
+            abort(403, 'Akses ditolak.');
+        }
+
+        $validated = $request->validate([
+            'nama_dokumen' => 'sometimes|nullable|string|max:150',
+            'nomor_dokumen' => 'sometimes|nullable|string|max:50',
+            'nomor_revisi' => 'required|string|max:20',
+            'tanggal_pendataan' => 'sometimes|nullable|date',
+        ]);
+
+        $payload = [
+            'nomor_revisi' => $validated['nomor_revisi'],
+        ];
+
+        if (!empty($validated['nama_dokumen'])) {
+            $payload['nama_dokumen'] = $validated['nama_dokumen'];
+        }
+        if (!empty($validated['nomor_dokumen'])) {
+            $payload['nomor_dokumen'] = $validated['nomor_dokumen'];
+        }
+        if (!empty($validated['tanggal_pendataan'])) {
+            $payload['tanggal_pendataan'] = $validated['tanggal_pendataan'];
+        }
+
+        $dokumen->update($payload);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Nomor revisi dan informasi dokumen berhasil diperbarui!',
+                'data' => [
+                    'id' => $dokumen->id,
+                    'nama_dokumen' => $dokumen->nama_dokumen,
+                    'nomor_dokumen' => $dokumen->nomor_dokumen,
+                    'nomor_revisi' => $dokumen->nomor_revisi,
+                    'tanggal_pendataan' => $dokumen->tanggal_pendataan ? $dokumen->tanggal_pendataan->format('d-m-Y') : null,
+                    'tanggal_pendataan_raw' => $dokumen->tanggal_pendataan ? $dokumen->tanggal_pendataan->format('Y-m-d') : null,
+                ]
+            ]);
+        }
+
+        return back()->with('success', 'Nomor revisi dan informasi dokumen berhasil diperbarui.');
     }
 
     /**
@@ -454,6 +515,454 @@ class PropertiLabController extends Controller
 
         return redirect()->route('admin.properti.dokumen.show', ['dokumenId' => $dokumenId])
             ->with('success', 'Baris properti berhasil dihapus.');
+    }
+
+    /**
+     * Import Berkas Inventaris ke Dokumen Lab (Word .docx atau Excel .xlsx)
+     */
+    public function importDokumen(Request $request, $dokumenId)
+    {
+        $dokumen = DokumenPropertiLab::with('laboratorium')->findOrFail($dokumenId);
+        $user = auth()->user();
+
+        if (!$user->canManageLab($dokumen->laboratorium)) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $request->validate([
+            'file' => 'required|file|max:20480',
+            'mode' => 'nullable|in:append,replace',
+        ], [
+            'file.required' => 'Silakan pilih berkas inventaris yang akan diimpor.',
+            'file.max' => 'Ukuran berkas maksimal 20 MB.',
+        ]);
+
+        $mode = $request->input('mode', 'append');
+        $file = $request->file('file');
+
+        try {
+            $importer = new PropertiLabImport();
+            $result = $importer->import($dokumen, $file, $mode);
+
+            $pesan = "Berhasil mengimpor {$result['count']} item properti inventaris" . ($mode === 'replace' ? ' (menggantikan data lama).' : '.');
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => $pesan,
+                    'count' => $result['count']
+                ]);
+            }
+
+            return redirect()->route('admin.properti.dokumen.show', ['dokumenId' => $dokumenId])
+                ->with('success', $pesan);
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Gagal mengimpor berkas: ' . $e->getMessage()
+                ], 422);
+            }
+
+            return redirect()->route('admin.properti.dokumen.show', ['dokumenId' => $dokumenId])
+                ->with('error', 'Gagal mengimpor berkas: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Export Dokumen Inventaris ke Word (.docx) atau Excel (.xlsx)
+     */
+    public function exportDokumen(Request $request, $dokumenId)
+    {
+        $dokumen = DokumenPropertiLab::with('laboratorium')->findOrFail($dokumenId);
+        $user = auth()->user();
+
+        if (!$user->canManageLab($dokumen->laboratorium)) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $format = strtolower($request->get('format', 'docx'));
+
+        if ($format === 'xlsx' || $format === 'excel') {
+            $exporter = new PropertiLabExcelExport($dokumen);
+            return $exporter->download();
+        }
+
+        $exporter = new PropertiLabDocxExport($dokumen);
+        return $exporter->download();
+    }
+
+    /**
+     * Tampilan Kumpulan Kartu Riwayat Alat (Khusus Alat Elektronik)
+     * Sesuai Wireframe Layout Kartu Riwayat Alat UIKA
+     */
+    public function riwayatAlatIndex(Request $request, $dokumenId)
+    {
+        $user = auth()->user();
+        $dokumen = DokumenPropertiLab::with(['laboratorium.fakultas', 'creator'])->findOrFail($dokumenId);
+
+        if (!$user->canManageLab($dokumen->laboratorium)) {
+            abort(403, 'Akses ditolak ke laboratorium ini.');
+        }
+
+        // Query barang elektronik dalam dokumen
+        $filterMode = $request->get('filter', 'elektronik');
+        $search = $request->get('search');
+
+        $query = ItemPropertiLab::where('dokumen_id', $dokumenId)
+            ->with([
+                'riwayats' => fn($q) => $q->orderBy('tanggal_mulai', 'asc')->orderBy('id', 'asc'),
+                'kategori',
+                'subKategori'
+            ]);
+
+        // Filter pencarian
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_properti', 'LIKE', "%{$search}%")
+                  ->orWhere('merk_type', 'LIKE', "%{$search}%")
+                  ->orWhere('nomor_inventaris', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Filter strictly ONLY electronic equipment
+        $query->where(function ($q) {
+            $q->whereHas('kategori', function ($k) {
+                $k->where('nama', 'LIKE', '%Elektronik%')
+                  ->orWhere('kode', 'EL')
+                  ->orWhere('kode', 'AE')
+                  ->orWhere('nama', 'LIKE', '%Komputer%');
+            })
+            ->orWhereHas('subKategori', function ($sk) {
+                $sk->where('nama', 'LIKE', '%Elektronik%')
+                  ->orWhere('nama', 'LIKE', '%Komputer%')
+                  ->orWhere('nama', 'LIKE', '%Cetak%')
+                  ->orWhere('nama', 'LIKE', '%CCTV%');
+            })
+            ->orWhere('nama_properti', 'REGEXP', '(?i)(komputer|pc|laptop|printer|cctv|server|monitor|switch|router|proyektor|ups|ac|elektronik)')
+            ->orWhere('merk_type', 'REGEXP', '(?i)(ryzen|intel|core|geforce|radeon|ram|ssd|hdd|gtx|rtx|epson|icsee|daikin|lg|sansui|sharp)');
+        });
+
+        // Filter kondisi rusak jika dipilih
+        if ($filterMode === 'rusak') {
+            $query->where('kondisi', 'rusak');
+        }
+
+        $items = $query->orderBy('urutan', 'asc')->orderBy('id', 'asc')->get();
+
+        // Ambil semua alat elektronik untuk sinkronisasi modal
+        $allElectronicItems = ItemPropertiLab::where('dokumen_id', $dokumenId)
+            ->where(function ($q) {
+                $q->whereHas('kategori', function ($k) {
+                    $k->where('nama', 'LIKE', '%Elektronik%')
+                      ->orWhere('kode', 'EL')
+                      ->orWhere('kode', 'AE')
+                      ->orWhere('nama', 'LIKE', '%Komputer%');
+                })
+                ->orWhereHas('subKategori', function ($sk) {
+                    $sk->where('nama', 'LIKE', '%Elektronik%')
+                      ->orWhere('nama', 'LIKE', '%Komputer%')
+                      ->orWhere('nama', 'LIKE', '%Cetak%')
+                      ->orWhere('nama', 'LIKE', '%CCTV%');
+                })
+                ->orWhere('nama_properti', 'REGEXP', '(?i)(komputer|pc|laptop|printer|cctv|server|monitor|switch|router|proyektor|ups|ac|elektronik)')
+                ->orWhere('merk_type', 'REGEXP', '(?i)(ryzen|intel|core|geforce|radeon|ram|ssd|hdd|gtx|rtx|epson|icsee|daikin|lg|sansui|sharp)');
+            })
+            ->orderBy('urutan', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        // Hitung total alat rusak dan sedang
+        $totalRusak = (clone $allElectronicItems)->where('kondisi', 'rusak')->count();
+        $totalSedang = (clone $allElectronicItems)->where('kondisi', 'sedang')->count();
+
+        // Default Paraf: kosongkan agar tidak terisi otomatis
+        $defaultParaf = '';
+
+        return view('admin.properti.riwayat_alat', compact(
+            'dokumen',
+            'items',
+            'allElectronicItems',
+            'totalRusak',
+            'totalSedang',
+            'filterMode',
+            'search',
+            'defaultParaf',
+            'user'
+        ));
+    }
+
+    /**
+     * Simpan Riwayat Tindakan Baru untuk Alat
+     * Mendukung multi-select alat (catat tindakan yang sama sekaligus ke beberapa komputer)
+     */
+    public function riwayatAlatStore(Request $request, $dokumenId)
+    {
+        $dokumen = DokumenPropertiLab::with('laboratorium')->findOrFail($dokumenId);
+        $user = auth()->user();
+
+        if (!$user->canManageLab($dokumen->laboratorium)) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $validated = $request->validate([
+            'item_ids' => 'required|array|min:1',
+            'item_ids.*' => 'exists:item_properti_lab,id',
+            'tindakan' => 'required|string|max:1000',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'nullable|date',
+            'paraf' => 'nullable|string|max:100',
+            'keterangan' => 'nullable|string|max:1000',
+        ], [
+            'item_ids.required' => 'Pilih setidaknya satu alat elektronik yang akan dicatat riwayatnya.',
+            'tindakan.required' => 'Uraian tindakan pemeliharaan wajib diisi.',
+            'tanggal_mulai.required' => 'Tanggal dan waktu mulai wajib diisi.',
+        ]);
+
+        $rawItemIds = $validated['item_ids'];
+        $items = ItemPropertiLab::whereIn('id', $rawItemIds)
+            ->where('dokumen_id', $dokumenId)
+            ->get();
+
+        $rusakItems = $items->where('kondisi', 'rusak');
+        $nonRusakItems = $items->where('kondisi', '!=', 'rusak');
+
+        // Aturan Pemisahan Alat Rusak:
+        // Jika terdapat campuran alat baik/sedang dengan alat rusak, data TIDAK boleh masuk ke alat rusak (hanya masuk ke alat baik/sedang).
+        // Kecuali jika seluruh alat yang dipilih adalah alat rusak saja (rusakItems->count() === items->count()).
+        $skippedRusakCount = 0;
+        if ($nonRusakItems->count() > 0 && $rusakItems->count() > 0) {
+            $targetItems = $nonRusakItems;
+            $skippedRusakCount = $rusakItems->count();
+        } else {
+            $targetItems = $items;
+        }
+
+        $savedCount = 0;
+        foreach ($targetItems as $targetItem) {
+            RiwayatPemeliharaanAlat::create([
+                'item_properti_id' => $targetItem->id,
+                'tindakan' => $validated['tindakan'],
+                'tanggal_mulai' => $validated['tanggal_mulai'],
+                'tanggal_selesai' => $validated['tanggal_selesai'] ?? null,
+                'paraf' => !empty($validated['paraf']) ? trim($validated['paraf']) : null,
+                'keterangan' => $validated['keterangan'] ?? null,
+                'created_by' => $user->id,
+            ]);
+            $savedCount++;
+        }
+
+        if ($skippedRusakCount > 0) {
+            $msg = "Riwayat tindakan berhasil dicatat untuk {$savedCount} alat (Baik/Sedang). {$skippedRusakCount} alat berstatus RUSAK dilewati otomatis karena tidak dapat dicampur dengan alat baik/sedang.";
+        } else {
+            $msg = "Berhasil mencatat riwayat tindakan untuk {$savedCount} alat elektronik.";
+        }
+
+        if ($request->ajax()) {
+            return response()->json(['status' => 'success', 'message' => $msg]);
+        }
+
+        return redirect()->route('admin.properti.riwayat-alat.index', ['dokumenId' => $dokumenId])
+            ->with('success', $msg);
+    }
+
+    /**
+     * Update Baris Riwayat Tindakan (Mendukung Inline Edit Per-Kolom via AJAX)
+     */
+    public function riwayatAlatUpdate(Request $request, $id)
+    {
+        $isJson = $request->ajax() || $request->wantsJson() || $request->expectsJson() || $request->isJson();
+        $riwayat = RiwayatPemeliharaanAlat::with('itemProperti.dokumen.laboratorium')->find($id);
+
+        if (!$riwayat) {
+            if ($isJson) {
+                return response()->json(['status' => 'error', 'message' => 'Data riwayat tidak ditemukan.'], 404);
+            }
+            abort(404, 'Data riwayat tidak ditemukan.');
+        }
+
+        $user = auth()->user();
+
+        if (!$user->canManageLab($riwayat->itemProperti?->dokumen?->laboratorium)) {
+            if ($isJson) {
+                return response()->json(['status' => 'error', 'message' => 'Akses ditolak.'], 403);
+            }
+            abort(403, 'Akses ditolak.');
+        }
+
+        // Dukungan Inline Single-Field Update (field & value)
+        if ($request->has('field')) {
+            $field = $request->input('field');
+            $value = $request->input('value');
+            $allowedFields = ['tindakan', 'tanggal_mulai', 'tanggal_selesai', 'paraf', 'keterangan'];
+
+            if (!in_array($field, $allowedFields)) {
+                return response()->json(['status' => 'error', 'message' => 'Field tidak diizinkan.'], 422);
+            }
+
+            $value = ($value !== null && trim($value) !== '') ? trim($value) : null;
+
+            if ($field === 'tanggal_mulai' && empty($value)) {
+                return response()->json(['status' => 'error', 'message' => 'Tanggal dan waktu mulai tidak boleh kosong.'], 422);
+            }
+
+            if ($field === 'tindakan' && empty($value)) {
+                $value = 'Pemeriksaan alat';
+            }
+
+            // Normalisasi datetime jika format HTML input: YYYY-MM-DDTHH:mm
+            if (in_array($field, ['tanggal_mulai', 'tanggal_selesai']) && $value) {
+                $value = str_replace('T', ' ', $value);
+            }
+
+            $riwayat->update([$field => $value]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Perubahan berhasil disimpan.',
+                'riwayat' => $riwayat
+            ]);
+        }
+
+        $validated = $request->validate([
+            'tindakan' => 'required|string|max:1000',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'nullable|date',
+            'paraf' => 'nullable|string|max:100',
+            'keterangan' => 'nullable|string|max:1000',
+        ]);
+
+        $riwayat->update($validated);
+
+        if ($isJson) {
+            return response()->json(['status' => 'success', 'message' => 'Riwayat tindakan berhasil diperbarui.', 'riwayat' => $riwayat]);
+        }
+
+        return back()->with('success', 'Riwayat tindakan berhasil diperbarui.');
+    }
+
+    /**
+     * Tambah Baris Tindakan Cepat (Inline) untuk Alat Tertentu
+     */
+    public function riwayatAlatQuickStore(Request $request, $itemId)
+    {
+        $item = ItemPropertiLab::with('dokumen.laboratorium')->findOrFail($itemId);
+        $user = auth()->user();
+
+        if (!$user->canManageLab($item->dokumen?->laboratorium)) {
+            return response()->json(['status' => 'error', 'message' => 'Akses ditolak.'], 403);
+        }
+
+        $tindakan = $request->input('tindakan');
+        if (empty($tindakan)) {
+            $tindakan = 'Pemeriksaan alat';
+        }
+        $tglMulai = $request->input('tanggal_mulai', now()->format('Y-m-d H:i'));
+        $tglSelesai = $request->input('tanggal_selesai', null);
+        $paraf = $request->input('paraf');
+        $paraf = !empty($paraf) ? trim($paraf) : null;
+
+        if ($tglMulai) $tglMulai = str_replace('T', ' ', $tglMulai);
+        if ($tglSelesai) $tglSelesai = str_replace('T', ' ', $tglSelesai);
+
+        $riwayat = RiwayatPemeliharaanAlat::create([
+            'item_properti_id' => $item->id,
+            'tindakan' => $tindakan,
+            'tanggal_mulai' => $tglMulai,
+            'tanggal_selesai' => $tglSelesai,
+            'paraf' => $paraf,
+            'created_by' => $user->id,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Baris tindakan baru berhasil ditambahkan.',
+            'riwayat' => $riwayat
+        ]);
+    }
+
+    /**
+     * Hapus Riwayat Tindakan
+     */
+    public function riwayatAlatDestroy($id)
+    {
+        $isJson = request()->ajax() || request()->wantsJson() || request()->expectsJson() || request()->isJson();
+        $riwayat = RiwayatPemeliharaanAlat::with('itemProperti.dokumen.laboratorium')->find($id);
+
+        if (!$riwayat) {
+            if ($isJson) {
+                return response()->json(['status' => 'success', 'message' => 'Riwayat tindakan telah dihapus.']);
+            }
+            return back()->with('success', 'Riwayat tindakan telah dihapus.');
+        }
+
+        $user = auth()->user();
+
+        if (!$user->canManageLab($riwayat->itemProperti?->dokumen?->laboratorium)) {
+            if ($isJson) {
+                return response()->json(['status' => 'error', 'message' => 'Akses ditolak.'], 403);
+            }
+            abort(403, 'Akses ditolak.');
+        }
+
+        $riwayat->delete();
+
+        if ($isJson) {
+            return response()->json(['status' => 'success', 'message' => 'Riwayat tindakan berhasil dihapus.']);
+        }
+
+        return back()->with('success', 'Riwayat tindakan berhasil dihapus.');
+    }
+
+    /**
+     * Export Kartu Riwayat Alat ke Word (.docx)
+     * Format Template UIKA:
+     * - KARTU RIWAYAT ALAT
+     * - Tabel 4 Kolom: Tindakan | Tanggal Mulai | Tanggal Selesai | Paraf
+     * - Tanda Tangan Kepala Laboratorium
+     */
+    public function riwayatAlatExportDocx(Request $request, $dokumenId)
+    {
+        $dokumen = DokumenPropertiLab::with('laboratorium.fakultas')->findOrFail($dokumenId);
+        $user = auth()->user();
+
+        if (!$user->canManageLab($dokumen->laboratorium)) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        // Cek apakah ada filter item yang dipilih
+        $itemIds = $request->get('item_ids');
+        if (is_string($itemIds)) {
+            $itemIds = array_filter(explode(',', $itemIds));
+        }
+
+        $query = ItemPropertiLab::where('dokumen_id', $dokumenId)
+            ->with(['riwayats' => fn($q) => $q->orderBy('tanggal_mulai', 'asc'), 'dokumen.laboratorium.fakultas']);
+
+        if (!empty($itemIds)) {
+            $query->whereIn('id', $itemIds);
+        } else {
+            // Default export semua alat elektronik
+            $query->where(function ($q) {
+                $q->whereHas('kategori', function ($k) {
+                    $k->where('nama', 'LIKE', '%Elektronik%')
+                      ->orWhere('kode', 'EL')
+                      ->orWhere('kode', 'AE')
+                      ->orWhere('nama', 'LIKE', '%Komputer%');
+                })
+                ->orWhere('nama_properti', 'REGEXP', '(?i)(komputer|pc|laptop|printer|cctv|server|monitor|switch|router|proyektor|ups|ac|elektronik)')
+                ->orWhere('merk_type', 'REGEXP', '(?i)(ryzen|intel|core|geforce|radeon|ram|ssd|hdd|gtx|rtx|epson|icsee|daikin|lg|sansui|sharp)');
+            });
+        }
+
+        $items = $query->orderBy('urutan', 'asc')->orderBy('id', 'asc')->get();
+
+        if ($items->isEmpty()) {
+            return back()->with('error', 'Tidak ada data alat elektronik yang dipilih untuk diexport.');
+        }
+
+        $exporter = new KartuRiwayatAlatDocxExport($items);
+        return $exporter->download();
     }
 
     // -------------------------------------------------------------
