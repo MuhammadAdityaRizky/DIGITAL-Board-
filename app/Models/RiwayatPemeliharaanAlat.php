@@ -15,6 +15,27 @@ class RiwayatPemeliharaanAlat extends Model
     protected $table = 'riwayat_pemeliharaan_alat';
     protected $guarded = [];
 
+    protected static function booted()
+    {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasTable('riwayat_pemeliharaan_alat')) {
+                \Illuminate\Support\Facades\Schema::create('riwayat_pemeliharaan_alat', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->id();
+                    $table->foreignId('item_properti_id')->constrained('item_properti_lab')->onDelete('cascade');
+                    $table->text('tindakan');
+                    $table->dateTime('tanggal_mulai');
+                    $table->dateTime('tanggal_selesai')->nullable();
+                    $table->string('paraf', 100)->nullable();
+                    $table->text('keterangan')->nullable();
+                    $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+                    $table->timestamps();
+                });
+            }
+        } catch (\Throwable $e) {
+            // Ignore if already created or connection issue during early bootstrap
+        }
+    }
+
     protected $casts = [
         'tanggal_mulai' => 'datetime',
         'tanggal_selesai' => 'datetime',

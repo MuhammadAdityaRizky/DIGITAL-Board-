@@ -121,6 +121,24 @@ Route::middleware('auth')->group(function () {
         Route::get('/recovery', fn () => redirect()->route('admin.dashboard'))->name('recovery');
         Route::post('/recovery/{id}/restore', [RecoveryLedgerController::class, 'restore'])->name('recovery.restore');
         Route::get('/recovery/verify', [RecoveryLedgerController::class, 'verifyApi'])->name('recovery.verify');
+
+        // Helper cPanel Hosting (Maintenance / Cache / Migrate tanpa perlu SSH)
+        Route::get('/optimize-clear', function () {
+            \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Cache Laravel (view, route, config) berhasil dibersihkan!',
+            ]);
+        })->name('optimize_clear');
+
+        Route::get('/migrate-db', function () {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Migrasi database berhasil dijalankan!',
+                'output' => trim(\Illuminate\Support\Facades\Artisan::output()),
+            ]);
+        })->name('migrate_db');
         
         // Master Jadwal Penggunaan Lab
         Route::get('/jadwal-lab', [AdminController::class, 'jadwalPenggunaanLab'])->name('jadwal-lab');
