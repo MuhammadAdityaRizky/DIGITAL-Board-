@@ -19,7 +19,7 @@
         .custom-sidebar-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden text-slate-800" x-data="{ activeTab: (window.location.hash ? window.location.hash.replace('#', '') : 'matkul') }">
+<body class="flex h-screen overflow-hidden text-slate-800" x-data="{ activeTab: '{{ session('tab') }}' || (window.location.hash ? window.location.hash.replace('#', '') : 'matkul') }">
 
     <!-- Sidebar -->
     @include('admin.partials.sidebar')
@@ -89,7 +89,17 @@
                 </div>
             @endif
 
-            @if($errors->any())
+            @if(session('error') || session('failed'))
+                <div class="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm w-full">
+                    <i class="fa-solid fa-circle-exclamation text-rose-600 mt-0.5 text-lg"></i>
+                    <div>
+                        <span class="font-bold">Gagal!</span>
+                        <p class="mt-0.5">{{ session('error') ?? session('failed') }}</p>
+                    </div>
+                </div>
+            @endif
+
+            @if($errors->any() && !session('success') && !session('error') && !session('failed'))
                 <div class="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl text-xs flex items-start gap-3 shadow-sm w-full">
                     <i class="fa-solid fa-circle-xmark text-rose-600 mt-0.5 text-lg"></i>
                     <div>
@@ -259,10 +269,10 @@
                                     <td class="p-3 text-center">
                                         <div class="flex items-center justify-center gap-3">
                                             <button type="button" onclick="openEditKelasModal({{ $k->id }}, '{{ addslashes($k->nama_kelas) }}')" class="text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-                                            <form id="delete-kelas-{{ $k->id }}" action="{{ url('admin/akademik/kelas') }}/{{ $k->id }}" method="POST" class="inline">
+                                            <form id="delete-kelas-{{ $k->id }}" action="{{ url('admin/akademik/kelas') }}/{{ $k->id }}" method="POST" onsubmit="return confirmAction(event, 'Apakah Anda yakin ingin menghapus Kelas ini?', 'Hapus Kelas?')" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button" onclick="confirmAction(event, 'Apakah Anda yakin ingin menghapus Kelas ini?', 'Hapus Kelas?')" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+                                                <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-trash-can"></i> Hapus</button>
                                             </form>
                                         </div>
                                     </td>
@@ -1465,6 +1475,8 @@
                 });
             });
         });
+    </script>
+
     <!-- SweetAlert2 Automatic Alerts & Loading Handler -->
     <script>
         function confirmAction(event, text, title = 'Apakah Anda yakin?', confirmText = 'Ya, Lanjutkan!') {
@@ -1505,6 +1517,10 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            @if(session('tab'))
+                window.location.hash = '{{ session('tab') }}';
+            @endif
+
             @if(session('success'))
                 Swal.fire({
                     icon: 'success',
@@ -1514,7 +1530,7 @@
                     timerProgressBar: true,
                     showConfirmButton: false,
                     customClass: {
-                        popup: 'rounded-3xl p-6',
+                        popup: 'rounded-3xl p-6 shadow-2xl',
                         title: 'text-lg font-extrabold text-slate-800',
                         htmlContainer: 'text-xs text-slate-600 font-medium'
                     }
@@ -1528,7 +1544,7 @@
                     text: @json(session('error') ?? session('failed')),
                     confirmButtonColor: '#0c4ea6',
                     customClass: {
-                        popup: 'rounded-3xl p-6',
+                        popup: 'rounded-3xl p-6 shadow-2xl',
                         title: 'text-lg font-extrabold text-slate-800',
                         htmlContainer: 'text-xs text-slate-600 font-medium',
                         confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold'
@@ -1543,7 +1559,7 @@
                     text: @json($errors->first()),
                     confirmButtonColor: '#0c4ea6',
                     customClass: {
-                        popup: 'rounded-3xl p-6',
+                        popup: 'rounded-3xl p-6 shadow-2xl',
                         title: 'text-lg font-extrabold text-slate-800',
                         htmlContainer: 'text-xs text-slate-600 font-medium',
                         confirmButton: 'rounded-xl text-xs px-5 py-2.5 font-extrabold'

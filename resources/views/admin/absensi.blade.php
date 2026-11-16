@@ -270,9 +270,9 @@
                             @endphp
                             <div class="border border-slate-200/80 rounded-2xl overflow-hidden bg-white shadow-2xs hover:shadow-xs transition-all matkul-wrapper">
                                 <!-- HEADER JUDUL MATA KULIAH & KELAS -->
-                                <div onclick="toggleMatkulAccordion(this)" class="matkul-header px-5 sm:px-6 py-3.5 sm:py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3.5 md:gap-4 text-white cursor-pointer select-none transition hover:brightness-105" style="background: linear-gradient(135deg, #0f172a 0%, #042f2e 60%, #0f172a 100%);">
-                                    <div class="flex items-center gap-3.5 min-w-0 flex-1">
-                                        <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 font-bold text-base shrink-0 shadow-2xs">
+                                <div onclick="toggleMatkulAccordion(this)" class="matkul-header px-5 sm:px-6 py-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3.5 sm:gap-4 text-white cursor-pointer select-none transition hover:brightness-105" style="background: linear-gradient(135deg, #0f172a 0%, #042f2e 60%, #0f172a 100%);">
+                                    <div class="flex items-start sm:items-center gap-3.5 min-w-0 flex-1 w-full lg:w-auto">
+                                        <div class="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 font-bold text-base shrink-0 shadow-2xs mt-0.5 sm:mt-0">
                                             <i class="fa-solid fa-book-bookmark"></i>
                                         </div>
                                         <div class="min-w-0 flex-1">
@@ -296,13 +296,13 @@
                                                 </div>
                                             </div>
                                             <p class="text-xs text-slate-300 mt-1 flex items-center gap-2 flex-wrap">
-                                                <span>Dosen: <strong class="text-white font-semibold">{{ $firstAgenda->dosen->nama ?? 'Dosen Pengampu' }}</strong></span>
+                                                <span><i class="fa-solid fa-user-tie text-[11px] text-slate-400 mr-1"></i>Dosen: <strong class="text-white font-semibold">{{ $firstAgenda->dosen->nama ?? 'Dosen Pengampu' }}</strong></span>
                                                 <span class="text-slate-500">•</span>
-                                                <span class="text-teal-300 font-medium whitespace-nowrap">{{ $firstAgenda->lab->nama_lab ?? '-' }}</span>
+                                                <span><i class="fa-solid fa-location-dot text-[11px] text-teal-300 mr-1"></i><span class="text-teal-300 font-medium whitespace-nowrap">{{ $firstAgenda->lab->nama_lab ?? '-' }}</span></span>
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-2 shrink-0 self-end md:self-center w-full md:w-auto justify-between md:justify-end">
+                                    <div class="flex items-center gap-2 shrink-0 self-end lg:self-center flex-wrap sm:flex-nowrap">
                                         <span class="h-9 px-3 bg-white/10 text-slate-200 border border-white/15 rounded-lg text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 shrink-0">
                                             <i class="fa-solid fa-list-check text-teal-300"></i>
                                             <span>{{ $groupItems->count() }} Pertemuan</span>

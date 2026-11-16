@@ -2477,7 +2477,7 @@ class AdminController extends Controller
         $this->ensureSuperAdmin();
         $request->validate(['nama_fakultas' => 'required|string|max:100']);
         Fakultas::create(['nama_fakultas' => $request->nama_fakultas]);
-        return back()->with('success', 'Fakultas berhasil ditambahkan.');
+        return redirect()->to(route('admin.akademik') . '#fakultas')->with('success', 'Fakultas berhasil ditambahkan.')->with('tab', 'fakultas');
     }
 
     public function updateFakultas(Request $request, $id)
@@ -2485,14 +2485,14 @@ class AdminController extends Controller
         $this->ensureSuperAdmin();
         $request->validate(['nama_fakultas' => 'required|string|max:100']);
         Fakultas::findOrFail($id)->update(['nama_fakultas' => $request->nama_fakultas]);
-        return back()->with('success', 'Fakultas berhasil diperbarui.');
+        return redirect()->to(route('admin.akademik') . '#fakultas')->with('success', 'Fakultas berhasil diperbarui.')->with('tab', 'fakultas');
     }
 
     public function deleteFakultas($id)
     {
         $this->ensureSuperAdmin();
         Fakultas::destroy($id);
-        return back()->with('success', 'Fakultas berhasil dihapus.');
+        return redirect()->to(route('admin.akademik') . '#fakultas')->with('success', 'Fakultas berhasil dihapus.')->with('tab', 'fakultas');
     }
 
     // Prodi CRUD
@@ -2507,7 +2507,7 @@ class AdminController extends Controller
             'nama_prodi' => $request->nama_prodi,
             'fakultas_id' => $request->fakultas_id
         ]);
-        return back()->with('success', 'Program Studi berhasil ditambahkan.');
+        return redirect()->to(route('admin.akademik') . '#prodi')->with('success', 'Program Studi berhasil ditambahkan.')->with('tab', 'prodi');
     }
 
     public function updateProdi(Request $request, $id)
@@ -2521,14 +2521,14 @@ class AdminController extends Controller
             'nama_prodi' => $request->nama_prodi,
             'fakultas_id' => $request->fakultas_id
         ]);
-        return back()->with('success', 'Program Studi berhasil diperbarui.');
+        return redirect()->to(route('admin.akademik') . '#prodi')->with('success', 'Program Studi berhasil diperbarui.')->with('tab', 'prodi');
     }
 
     public function deleteProdi($id)
     {
         $this->ensureSuperAdmin();
         Prodi::destroy($id);
-        return back()->with('success', 'Program Studi berhasil dihapus.');
+        return redirect()->to(route('admin.akademik') . '#prodi')->with('success', 'Program Studi berhasil dihapus.')->with('tab', 'prodi');
     }
 
     // Kelas CRUD
@@ -2537,7 +2537,7 @@ class AdminController extends Controller
         $this->ensureSuperAdmin();
         $request->validate(['nama_kelas' => 'required|string|max:50|unique:kelas,nama_kelas']);
         Kelas::create(['nama_kelas' => $request->nama_kelas]);
-        return back()->with('success', 'Kelas baru berhasil ditambahkan.');
+        return redirect()->to(route('admin.akademik') . '#kelas')->with('success', 'Kelas baru berhasil ditambahkan.')->with('tab', 'kelas');
     }
 
     public function updateKelas(Request $request, $id)
@@ -2545,14 +2545,14 @@ class AdminController extends Controller
         $this->ensureSuperAdmin();
         $request->validate(['nama_kelas' => 'required|string|max:50|unique:kelas,nama_kelas,' . $id]);
         Kelas::findOrFail($id)->update(['nama_kelas' => $request->nama_kelas]);
-        return back()->with('success', 'Kelas berhasil diperbarui.');
+        return redirect()->to(route('admin.akademik') . '#kelas')->with('success', 'Kelas berhasil diperbarui.')->with('tab', 'kelas');
     }
 
     public function deleteKelas($id)
     {
         $this->ensureSuperAdmin();
         Kelas::destroy($id);
-        return back()->with('success', 'Kelas berhasil dihapus.');
+        return redirect()->to(route('admin.akademik') . '#kelas')->with('success', 'Kelas berhasil dihapus.')->with('tab', 'kelas');
     }
 
     // Mata Kuliah CRUD
@@ -2574,7 +2574,7 @@ class AdminController extends Controller
             'kategori' => null,
             'id_prodi' => $request->id_prodi,
         ]);
-        return back()->with('success', 'Mata Kuliah berhasil ditambahkan.');
+        return redirect()->to(route('admin.akademik') . '#matkul')->with('success', 'Mata Kuliah berhasil ditambahkan.')->with('tab', 'matkul');
     }
 
     public function updateMataKuliah(Request $request, $id)
@@ -2595,14 +2595,14 @@ class AdminController extends Controller
             'kategori' => null,
             'id_prodi' => $request->id_prodi,
         ]);
-        return back()->with('success', 'Mata Kuliah berhasil diperbarui.');
+        return redirect()->to(route('admin.akademik') . '#matkul')->with('success', 'Mata Kuliah berhasil diperbarui.')->with('tab', 'matkul');
     }
 
     public function deleteMataKuliah($id)
     {
         $this->ensureSuperAdmin();
         MataKuliah::destroy($id);
-        return back()->with('success', 'Mata Kuliah berhasil dihapus.');
+        return redirect()->to(route('admin.akademik') . '#matkul')->with('success', 'Mata Kuliah berhasil dihapus.')->with('tab', 'matkul');
     }
 
     public function bulkDeleteMataKuliah(Request $request)
@@ -2610,10 +2610,10 @@ class AdminController extends Controller
         $this->ensureSuperAdmin();
         $ids = $request->ids;
         if (!$ids || empty($ids)) {
-            return back()->withErrors(['msg' => 'Tidak ada mata kuliah yang dipilih untuk dihapus.']);
+            return redirect()->to(route('admin.akademik') . '#matkul')->withErrors(['msg' => 'Tidak ada mata kuliah yang dipilih untuk dihapus.'])->with('tab', 'matkul');
         }
         MataKuliah::whereIn('id', $ids)->get()->each->delete();
-        return back()->with('success', count($ids) . ' mata kuliah berhasil dihapus.');
+        return redirect()->to(route('admin.akademik') . '#matkul')->with('success', count($ids) . ' mata kuliah berhasil dihapus.')->with('tab', 'matkul');
     }
 
     public function bulkDeleteKelas(Request $request)
@@ -2621,10 +2621,10 @@ class AdminController extends Controller
         $this->ensureSuperAdmin();
         $ids = $request->ids;
         if (!$ids || empty($ids)) {
-            return back()->withErrors(['msg' => 'Tidak ada kelas yang dipilih untuk dihapus.']);
+            return redirect()->to(route('admin.akademik') . '#kelas')->withErrors(['msg' => 'Tidak ada kelas yang dipilih untuk dihapus.'])->with('tab', 'kelas');
         }
         Kelas::whereIn('id', $ids)->get()->each->delete();
-        return back()->with('success', count($ids) . ' kelas berhasil dihapus.');
+        return redirect()->to(route('admin.akademik') . '#kelas')->with('success', count($ids) . ' kelas berhasil dihapus.')->with('tab', 'kelas');
     }
 
     public function importMahasiswa(Request $request)
@@ -2754,9 +2754,9 @@ class AdminController extends Controller
 
         try {
             Excel::import(new FakultasImport, $request->file('file_excel'));
-            return back()->with('success', 'Data Fakultas berhasil diimpor.');
+            return redirect()->to(route('admin.akademik') . '#fakultas')->with('success', 'Data Fakultas berhasil diimpor.')->with('tab', 'fakultas');
         } catch (\Exception $e) {
-            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+            return redirect()->to(route('admin.akademik') . '#fakultas')->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()])->with('tab', 'fakultas');
         }
     }
 
@@ -2769,9 +2769,9 @@ class AdminController extends Controller
 
         try {
             Excel::import(new ProdiImport, $request->file('file_excel'));
-            return back()->with('success', 'Data Program Studi berhasil diimpor.');
+            return redirect()->to(route('admin.akademik') . '#prodi')->with('success', 'Data Program Studi berhasil diimpor.')->with('tab', 'prodi');
         } catch (\Exception $e) {
-            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+            return redirect()->to(route('admin.akademik') . '#prodi')->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()])->with('tab', 'prodi');
         }
     }
 
@@ -2784,9 +2784,9 @@ class AdminController extends Controller
 
         try {
             Excel::import(new KelasImport, $request->file('file_excel'));
-            return back()->with('success', 'Data Kelas berhasil diimpor.');
+            return redirect()->to(route('admin.akademik') . '#kelas')->with('success', 'Data Kelas berhasil diimpor.')->with('tab', 'kelas');
         } catch (\Exception $e) {
-            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+            return redirect()->to(route('admin.akademik') . '#kelas')->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()])->with('tab', 'kelas');
         }
     }
 
@@ -2799,9 +2799,9 @@ class AdminController extends Controller
 
         try {
             Excel::import(new \App\Imports\MataKuliahImport, $request->file('file_excel'));
-            return back()->with('success', 'Data Mata Kuliah berhasil diimpor.');
+            return redirect()->to(route('admin.akademik') . '#matkul')->with('success', 'Data Mata Kuliah berhasil diimpor.')->with('tab', 'matkul');
         } catch (\Exception $e) {
-            return back()->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()]);
+            return redirect()->to(route('admin.akademik') . '#matkul')->withErrors(['msg' => 'Gagal mengimpor data: ' . $e->getMessage()])->with('tab', 'matkul');
         }
     }
 
