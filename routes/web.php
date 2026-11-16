@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 // Guest Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 // File Storage Route (Solusi Shared Hosting/cPanel jika symlink storage:link tidak tersedia/terpisah)
 Route::get('/storage/{path}', function ($path) {
     // Hindari directory traversal & null byte injection
@@ -238,7 +238,7 @@ Route::middleware('auth')->group(function () {
     // Mahasiswa Routes (Hanya untuk Role Mahasiswa)
     Route::prefix('mahasiswa')->middleware('role:mahasiswa')->name('mahasiswa.')->group(function () {
         Route::get('/dashboard', [MahasiswaController::class, 'dashboard'])->name('dashboard');
-        Route::post('/absensi', [MahasiswaController::class, 'submitAttendance'])->middleware('throttle:10,1')->name('absensi.submit');
+        Route::post('/absensi', [MahasiswaController::class, 'submitAttendance'])->middleware('throttle:absensi')->name('absensi.submit');
 
 
         

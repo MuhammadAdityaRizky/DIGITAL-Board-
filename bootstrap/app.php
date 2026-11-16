@@ -24,6 +24,19 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+        $exceptions->render(function (\Illuminate\Http\Exceptions\ThrottleRequestsException $e, Request $request) {
+            if ($request->is('login')) {
+                return back()->withErrors([
+                    'username_or_nim_nip' => 'Terlalu banyak percobaan masuk. Mohon tunggu 1 menit sebelum mencoba kembali.',
+                ])->withInput();
+            }
+            if ($request->is('mahasiswa/absensi') || $request->expectsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Terlalu banyak permintaan presensi. Mohon tunggu beberapa detik lalu coba lagi.',
+                ], 429);
+            }
+        });
     })->create();
 
 // Auto-detect cPanel public_html jika direktori public dipisah ke public_html
