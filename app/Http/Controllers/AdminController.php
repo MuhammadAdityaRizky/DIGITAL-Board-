@@ -790,6 +790,7 @@ class AdminController extends Controller
         }
 
         $user->password = \Illuminate\Support\Facades\Hash::make('password');
+        $user->status = 'aktif';
         $user->save();
 
         return back()->with('success', "Password akun '{$user->username}' berhasil di-reset menjadi 'password'.");

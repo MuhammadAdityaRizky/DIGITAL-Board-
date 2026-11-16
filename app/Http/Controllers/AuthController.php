@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\Dosen;
+use App\Models\Mahasiswa;
 
 class AuthController extends Controller
 {
@@ -29,15 +32,36 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $credentials = [
-            'username' => $request->username_or_nim_nip,
-            'password' => $request->password,
-        ];
+        $identifier = trim($request->username_or_nim_nip);
+        $password = (string) $request->password;
 
-        if (Auth::attempt($credentials)) {
+        // 1. Coba temukan user langsung berdasarkan kolom 'username' (case-insensitive & trimmed)
+        $user = User::where('username', $identifier)->first();
+
+        // 2. Jika tidak ditemukan, cari dosen berdasarkan NIP
+        if (!$user) {
+            $dosen = Dosen::where('nip', $identifier)
+                ->orWhere('nip', ltrim($identifier, '0'))
+                ->first();
+            if ($dosen && $dosen->user) {
+                $user = $dosen->user;
+            }
+        }
+
+        // 3. Jika tidak ditemukan, cari mahasiswa berdasarkan NIM
+        if (!$user) {
+            $mhs = Mahasiswa::where('nim', $identifier)
+                ->orWhere('nim', ltrim($identifier, '0'))
+                ->first();
+            if ($mhs && $mhs->user) {
+                $user = $mhs->user;
+            }
+        }
+
+        // 4. Verifikasi user dan password
+        if ($user && Hash::check($password, $user->password)) {
+            Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
-
-            $user = Auth::user();
 
             if (strtolower($user->status ?? 'aktif') === 'nonaktif') {
                 Auth::logout();
