@@ -15,6 +15,11 @@ class RecoveryLedgerController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
+        if (!$user || !$user->isSuperAdmin()) {
+            abort(403, 'Akses ditolak! Fitur Ledger Pemulihan hanya untuk Super Admin.');
+        }
+
         $actionFilter = $request->get('action', 'DELETED'); // Default tampilkan data terhapus
         $tableFilter = $request->get('table', '');
         $search = $request->get('search', '');
@@ -74,6 +79,14 @@ class RecoveryLedgerController extends Controller
      */
     public function restore(Request $request, $id)
     {
+        $user = auth()->user();
+        if (!$user || !$user->isSuperAdmin()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Akses ditolak! Fitur Ledger Pemulihan hanya untuk Super Admin.'], 403);
+            }
+            abort(403, 'Akses ditolak! Fitur Ledger Pemulihan hanya untuk Super Admin.');
+        }
+
         $block = BlockchainLedger::findOrFail($id);
         $tableName = $block->table_name;
         $recordId = $block->record_id;
@@ -85,6 +98,11 @@ class RecoveryLedgerController extends Controller
 
         if (!Schema::hasTable($tableName)) {
             return back()->with('error', "Gagal memulihkan: Tabel '{$tableName}' tidak ditemukan di Database 1.");
+        }
+
+        // Jangan timpa password dengan string placeholder [PROTECTED] saat pemulihan
+        if (isset($payload['password']) && $payload['password'] === '[PROTECTED]') {
+            unset($payload['password']);
         }
 
         try {
@@ -126,8 +144,13 @@ class RecoveryLedgerController extends Controller
     /**
      * API Cek Keaslian Rantai Blockchain
      */
-    public function verifyApi()
+    public function verifyApi(Request $request)
     {
+        $user = auth()->user();
+        if (!$user || !$user->isSuperAdmin()) {
+            return response()->json(['success' => false, 'message' => 'Akses ditolak!'], 403);
+        }
+
         $status = BlockchainService::verifyChain();
         return response()->json($status);
     }

@@ -13,7 +13,6 @@
     $isAkademik = request()->routeIs('admin.akademik*');
     $isPengumuman = request()->routeIs('admin.pengumuman*');
     $isAktivitas = request()->routeIs('admin.aktivitas*');
-    $isRecovery = request()->routeIs('admin.recovery*');
 @endphp
 
 <!-- Desktop Sidebar Admin -->

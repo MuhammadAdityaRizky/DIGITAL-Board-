@@ -530,10 +530,11 @@ class PropertiLabController extends Controller
         }
 
         $request->validate([
-            'file' => 'required|file|max:20480',
+            'file' => 'required|file|mimes:docx,doc,xlsx,xls,csv|max:20480',
             'mode' => 'nullable|in:append,replace',
         ], [
             'file.required' => 'Silakan pilih berkas inventaris yang akan diimpor.',
+            'file.mimes' => 'Format berkas tidak didukung. Harap unggah berkas Word (.docx) atau Excel (.xlsx, .xls, .csv).',
             'file.max' => 'Ukuran berkas maksimal 20 MB.',
         ]);
 

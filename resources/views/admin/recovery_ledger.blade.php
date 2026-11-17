@@ -326,9 +326,12 @@
             for (const [key, val] of Object.entries(payload)) {
                 const box = document.createElement('div');
                 box.className = 'p-2 bg-slate-50 border border-slate-200/70 rounded-xl';
+                const displayVal = (key === 'password' || key === 'remember_token') 
+                    ? '<span class="text-amber-600 font-mono text-[11px]">[PROTECTED]</span>' 
+                    : (val !== null ? val : '<span class="text-slate-300 italic">null</span>');
                 box.innerHTML = `
                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${key}</div>
-                    <div class="font-semibold text-slate-800 text-xs mt-0.5 break-words">${val !== null ? val : '<span class="text-slate-300 italic">null</span>'}</div>
+                    <div class="font-semibold text-slate-800 text-xs mt-0.5 break-words">${displayVal}</div>
                 `;
                 grid.appendChild(box);
             }

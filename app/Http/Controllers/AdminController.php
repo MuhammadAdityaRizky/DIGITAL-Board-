@@ -2630,7 +2630,9 @@ class AdminController extends Controller
     public function importMahasiswa(Request $request)
     {
         $request->validate([
-            'file_excel' => 'required',
+            'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:20480',
+        ], [
+            'file_excel.mimes' => 'Format berkas tidak didukung. Harap unggah file Excel (.xlsx, .xls, .csv).',
         ]);
 
         try {
@@ -2671,7 +2673,9 @@ class AdminController extends Controller
     public function importDosen(Request $request)
     {
         $request->validate([
-            'file_excel' => 'required',
+            'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:20480',
+        ], [
+            'file_excel.mimes' => 'Format berkas tidak didukung. Harap unggah file Excel (.xlsx, .xls, .csv).',
         ]);
 
         try {
@@ -2710,7 +2714,9 @@ class AdminController extends Controller
     public function importAgenda(Request $request)
     {
         $request->validate([
-            'file_excel' => 'required|max:10240',
+            'file_excel' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+        ], [
+            'file_excel.mimes' => 'Format berkas tidak didukung. Harap unggah file Excel (.xlsx, .xls, .csv).',
         ]);
 
         try {

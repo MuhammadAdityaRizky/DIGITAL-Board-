@@ -7,6 +7,20 @@ use App\Services\BlockchainService;
 trait SemiBlockchainLedger
 {
     /**
+     * Saring atribut sensitif (seperti password hash) sebelum disimpan ke snapshot blockchain ledger
+     */
+    protected static function sanitizeLedgerSnapshot(array $attributes): array
+    {
+        $sensitiveKeys = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'];
+        foreach ($sensitiveKeys as $key) {
+            if (array_key_exists($key, $attributes)) {
+                $attributes[$key] = '[PROTECTED]';
+            }
+        }
+        return $attributes;
+    }
+
+    /**
      * Boot trait untuk merekam setiap aksi data di DB 1 langsung ke DB 2
      */
     public static function bootSemiBlockchainLedger()
@@ -18,7 +32,7 @@ trait SemiBlockchainLedger
                     $model->getTable(),
                     $model->getKey(),
                     'CREATED',
-                    $model->getAttributes()
+                    static::sanitizeLedgerSnapshot($model->getAttributes())
                 );
             } catch (\Throwable $e) {
                 // Log error jika diperlukan agar proses DB 1 tidak terhenti bila DB 2 down
@@ -33,7 +47,7 @@ trait SemiBlockchainLedger
                     $model->getTable(),
                     $model->getKey(),
                     'UPDATED',
-                    $model->getAttributes()
+                    static::sanitizeLedgerSnapshot($model->getAttributes())
                 );
             } catch (\Throwable $e) {
                 report($e);
@@ -50,7 +64,7 @@ trait SemiBlockchainLedger
                     $model->getTable(),
                     $model->getKey(),
                     'DELETED',
-                    $snapshot
+                    static::sanitizeLedgerSnapshot($snapshot)
                 );
             } catch (\Throwable $e) {
                 report($e);
@@ -58,3 +72,4 @@ trait SemiBlockchainLedger
         });
     }
 }
+

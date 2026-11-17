@@ -181,7 +181,7 @@
 
     <!-- Hidden Payload JSON for Modals -->
     <script id="urgent-pengumuman-payload" type="application/json">
-        {!! json_encode($urgentPengumuman->keyBy('id')) !!}
+        @json($urgentPengumuman->keyBy('id'))
     </script>
 
     <script>
