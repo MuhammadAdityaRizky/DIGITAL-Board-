@@ -17,7 +17,23 @@ class User extends Authenticatable
 
     protected $guarded = [];
 
-    protected $hidden = ['password'];
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected static function booted()
+    {
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('users') && !\Illuminate\Support\Facades\Schema::hasColumn('users', 'remember_token')) {
+                \Illuminate\Support\Facades\Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->rememberToken();
+                });
+            }
+        } catch (\Throwable $e) {
+            // Silently ignore
+        }
+    }
 
     protected function casts(): array
     {
