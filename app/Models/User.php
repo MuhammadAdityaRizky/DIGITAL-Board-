@@ -22,17 +22,61 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    protected static function booted()
+    protected static ?bool $hasRememberTokenCol = null;
+
+    /**
+     * Cek apakah kolom remember_token ada di tabel users, jika belum coba buat otomatis.
+     */
+    public static function checkRememberTokenColumn(): bool
     {
+        if (static::$hasRememberTokenCol !== null) {
+            return static::$hasRememberTokenCol;
+        }
+
         try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('users') && !\Illuminate\Support\Facades\Schema::hasColumn('users', 'remember_token')) {
-                \Illuminate\Support\Facades\Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
-                    $table->rememberToken();
-                });
+            if (\Illuminate\Support\Facades\Schema::hasTable('users')) {
+                if (!\Illuminate\Support\Facades\Schema::hasColumn('users', 'remember_token')) {
+                    try {
+                        \Illuminate\Support\Facades\Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+                            $table->rememberToken();
+                        });
+                        static::$hasRememberTokenCol = true;
+                        return true;
+                    } catch (\Throwable $e) {
+                        try {
+                            \Illuminate\Support\Facades\DB::statement("ALTER TABLE users ADD COLUMN remember_token VARCHAR(100) NULL");
+                            static::$hasRememberTokenCol = true;
+                            return true;
+                        } catch (\Throwable $e2) {
+                            static::$hasRememberTokenCol = false;
+                            return false;
+                        }
+                    }
+                }
+                static::$hasRememberTokenCol = true;
+                return true;
             }
         } catch (\Throwable $e) {
-            // Silently ignore
+            // DB connection/schema exception
         }
+
+        static::$hasRememberTokenCol = false;
+        return false;
+    }
+
+    protected static function booted()
+    {
+        static::checkRememberTokenColumn();
+    }
+
+    /**
+     * Dapatkan nama kolom remember token.
+     * Jika database belum memiliki kolom ini dan tidak dapat dibuat, kembalikan string kosong
+     * agar Laravel tidak mengeksekusi UPDATE yang menyebabkan QueryException: 1054 Unknown column.
+     */
+    public function getRememberTokenName()
+    {
+        return static::checkRememberTokenColumn() ? 'remember_token' : '';
     }
 
     protected function casts(): array

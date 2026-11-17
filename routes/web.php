@@ -10,6 +10,24 @@ use App\Http\Controllers\RecoveryLedgerController;
 use App\Http\Controllers\TemplateController;
 use Illuminate\Support\Facades\Route;
 
+// Helper cPanel Hosting (Maintenance / Cache / Migrate tanpa perlu SSH)
+Route::get('/optimize-clear', function () {
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Cache Laravel (view, route, config) berhasil dibersihkan!',
+    ]);
+});
+
+Route::get('/migrate-db', function () {
+    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Migrasi database berhasil dijalankan!',
+        'output' => trim(\Illuminate\Support\Facades\Artisan::output()),
+    ]);
+});
+
 // Guest Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');

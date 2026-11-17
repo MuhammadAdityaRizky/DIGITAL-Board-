@@ -60,7 +60,23 @@ class AuthController extends Controller
 
         // 4. Verifikasi user dan password
         if ($user && Hash::check($password, $user->password)) {
-            Auth::login($user, $request->boolean('remember'));
+            $remember = $request->boolean('remember');
+            try {
+                Auth::login($user, $remember);
+            } catch (\Throwable $e) {
+                // Jika error karena kolom remember_token belum ada di database server, coba buat kolomnya
+                if (str_contains($e->getMessage(), 'remember_token')) {
+                    try {
+                        \Illuminate\Support\Facades\DB::statement("ALTER TABLE users ADD COLUMN remember_token VARCHAR(100) NULL");
+                        Auth::login($user, $remember);
+                    } catch (\Throwable $ex) {
+                        // Fallback aman: jika ALTER TABLE tidak diizinkan, tetap izinkan login tanpa remember me
+                        Auth::login($user, false);
+                    }
+                } else {
+                    throw $e;
+                }
+            }
             $request->session()->regenerate();
 
             if (strtolower($user->status ?? 'aktif') === 'nonaktif') {
